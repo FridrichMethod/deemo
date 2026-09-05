@@ -13,4 +13,8 @@ music, fonts, or other third-party media. Public availability of a source
 does not change its ownership. Per-file attribution and source URLs are
 recorded in data/sources/*.json and data/catalog.json.
 
-Third-party software notices embedded in src/main.js are retained.
+Third-party software notices embedded in src/vendor/legacy-ui.js are retained.
+Inherited site media are organized under assets/site/, and both versions
+of the inherited artwork are preserved under assets/legacy/. Attribution
+and license locations are indexed in licenses/README.md; relocation does
+not change the rights of the original creators.

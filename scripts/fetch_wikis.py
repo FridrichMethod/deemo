@@ -353,7 +353,7 @@ def fetch_song_keys():
         "source_url": "https://github.com/syuchan1005/DeemoSongs", "download_url": url,
         "sha256": hashlib.sha256(response.content).hexdigest(), "data": data,
         "notes": "Public legacy game-key/song-title mapping; upstream data may predate later DEEMO releases. No art included.",
-        "license": "MIT", "license_path": "docs/licenses/DeemoSongs-MIT.txt",
+        "license": "MIT", "license_path": "licenses/DeemoSongs-MIT.txt",
     })
 
 

@@ -1,21 +1,21 @@
 ﻿@font-face {
     font-family: Coprhtl;
-    src: url(src/COPRGTL.ttf);
+    src: url(../assets/site/fonts/COPRGTL.ttf);
 }
 
 @font-face {
     font-family: COPRGTL;
-    src: url(src/COPRGTL.ttf);
+    src: url(../assets/site/fonts/COPRGTL.ttf);
 }
 
 @font-face {
     font-family: Fantique;
-    src: url(src/Fantique-Four.ttf);
+    src: url(../assets/site/fonts/Fantique-Four.ttf);
 }
 
 @font-face {
     font-family: RocknRoll;
-    src: url(src/RocknRoll_Typo_bold.ttf);
+    src: url(../assets/site/fonts/RocknRoll_Typo_bold.ttf);
 }
 
 html,
@@ -23,7 +23,7 @@ body {
     font-family: Coprhtl;
     color: #333;
     font-size: 16px;
-    background-image: url(src/bg.png);
+    background-image: url(../assets/site/images/bg.png);
     background-color: #fff;
     background-size: cover;
     background-repeat: no-repeat;
@@ -350,7 +350,7 @@ canvas {
 }
 
 .speaker {
-    background-image: url(./src/play.svg);
+    background-image: url(../assets/site/icons/play.svg);
     background-repeat: no-repeat;
     background-size: 100%;
     background-position: 100% 0;
@@ -360,7 +360,7 @@ canvas {
 }
 
 .speakerplay {
-    background-image: url(./src/pause.svg);
+    background-image: url(../assets/site/icons/pause.svg);
 }
 
 .pace {

@@ -14,7 +14,7 @@
 - `data/sources/wiki-discovery.json`：可复查和继续下载的候选快照，包含原始 MediaWiki imageinfo。
 - `data/sources/wiki-song-index.json`：公开歌页的标题、曲包、作曲家和图片引用。模板字段 `Artist` 是作曲家，存为 `composer`，不会被误当成画师。
 - `data/sources/wiki-illustrator-index.json`：日本 Wiki 目录的 479 条按原页面顺序保存的标题/表格行；页面同时含作曲家、Vocalist 和独立 `illustrator` 区段，最后者列出 9 位画师，不把其他区段当成画师归属。
-- `data/sources/song-mapping.json`：来自 [syuchan1005/DeemoSongs](https://github.com/syuchan1005/DeemoSongs) 的 legacy 游戏内部 key 与歌曲信息，其 [MIT license](licenses/DeemoSongs-MIT.txt) 原样保留。该映射较旧，不能代表当前完整曲目集。
+- `data/sources/song-mapping.json`：来自 [syuchan1005/DeemoSongs](https://github.com/syuchan1005/DeemoSongs) 的 legacy 游戏内部 key 与歌曲信息，其 [MIT license](../licenses/DeemoSongs-MIT.txt) 原样保留。该映射较旧，不能代表当前完整曲目集。
 
 Wiki 歌页还包含已移除歌曲、端口独占曲与不同版本图片，因此歌页数/图片数不能直接当成当前手机版的唯一歌曲数量。来自不同 Wiki 的图片、同曲多版本和相同 SHA-256 的重复来源记录均保留，供上层图库按来源比较。
 
@@ -30,7 +30,7 @@ Fandom CDN 请求使用公开的 `format=original`，避免默认协商成 WebP�
 
 ## 复现
 
-环境依赖：Python 3.10+、`requests`、`Pillow`；抓取可选日本画师索引时还使用 `beautifulsoup4`。仓库根目录存在 legacy `html.py`，建议以隔离模式运行：
+环境依赖：Python 3.10+、`requests`、`Pillow`；抓取可选日本画师索引时还使用 `beautifulsoup4`。可以隔离模式运行：
 
 ```sh
 python -I scripts/fetch_wikis.py --workers 4

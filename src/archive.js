@@ -112,6 +112,14 @@
       if (p.wiki_original_sha1_matches === false) block.append(element("p", "此下载文件与 Wiki 上传元数据的 checksum 不一致；实际文件已原样保留。"));
       if (p.mapping_status === "unmapped" || p.title_status === "unmapped" || p.title_status === "internal_key") block.append(element("p", "此版本尚未确认完整曲名映射。"));
       if (p.download_url) block.append(sourceLink("远程图片地址 ↗", p.download_url));
+      for (const variant of p.variants || []) {
+        const link = element("a", `旧量化版本（tiny） · ${variant.width} × ${variant.height} · ${size(variant.bytes)}`, "legacy-variant-link");
+        link.href = variant.url;
+        link.download = variant.path.split("/").pop();
+        const paragraph = element("p");
+        paragraph.append(link);
+        block.append(paragraph);
+      }
       $("provenance").append(block);
     }
     if (!$("viewer").open) $("viewer").showModal();

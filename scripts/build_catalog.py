@@ -27,7 +27,7 @@ def safe_path(root: Path, value: str) -> Path:
     path = (root / relative).resolve()
     if not path.is_relative_to(root.resolve()):
         raise ValueError(f"Asset outside repository: {value}")
-    if relative.parts[0] not in {"assets", "trans"}:
+    if relative.parts[0] != "assets":
         raise ValueError(f"Unexpected asset directory: {value}")
     return path
 
@@ -38,7 +38,12 @@ def legacy_assets(root: Path) -> list[dict]:
     mapping = json.loads(mapping_path.read_text(encoding="utf-8")) if mapping_path.exists() else {}
     song_data = mapping.get("data", {})
     songs, books = song_data.get("songs", {}), song_data.get("books", [])
-    for path in sorted((root / "trans").glob("*.png")):
+    original_dir = root / "assets/legacy/trans"
+    quantized_dir = root / "assets/legacy/tiny"
+    originals = sorted(original_dir.glob("*.png"))
+    if {path.name for path in originals} != {path.name for path in quantized_dir.glob("*.png")}:
+        raise ValueError("Legacy trans/tiny filenames must be paired exactly")
+    for path in originals:
         raw = path.read_bytes()
         with Image.open(path) as image:
             width, height = image.size
@@ -48,7 +53,7 @@ def legacy_assets(root: Path) -> list[dict]:
         book_index = song.get("book")
         book = books[book_index].get("name") if isinstance(book_index, int) and 0 <= book_index < len(books) else None
         is_cover = any(word in key.lower() for word in ("booksprite", "bookcover"))
-        assets.append({
+        asset = {
             "id": f"legacy:{key}", "source_id": "legacy",
             "title": song.get("name", key), "internal_key": key, "artist": None,
             "composer": song.get("artist"), "collection": book,
@@ -61,7 +66,22 @@ def legacy_assets(root: Path) -> list[dict]:
             "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(),
             "fetched_at": None, "game": "DEEMO", "title_status": "mapped_exact_internal_key" if song else "internal_key",
             "notes": "Inherited game texture; upstream made pure-white pixels transparent.",
-        })
+        }
+        quantized_path = quantized_dir / path.name
+        quantized = quantized_path.read_bytes()
+        with Image.open(quantized_path) as image:
+            tiny_width, tiny_height = image.size
+            tiny_format = image.format
+        variant = {
+            **asset, "id": f"legacy:tiny:{key}", "role": "palette_quantized",
+            "path": quantized_path.relative_to(root).as_posix(),
+            "url": quote(quantized_path.relative_to(root).as_posix(), safe="/"),
+            "width": tiny_width, "height": tiny_height, "format": tiny_format,
+            "bytes": len(quantized), "sha256": hashlib.sha256(quantized).hexdigest(),
+            "notes": "Historical palette-quantized copy from the upstream tiny directory; retained as an alternative, not used for gallery display.",
+        }
+        asset["variants"] = [variant]
+        assets.append(asset)
     return assets
 
 
@@ -98,7 +118,7 @@ def combine(root: Path, verify: bool = False) -> dict:
     sources = [{
         "id": "legacy", "name": "原仓库 · 游戏纹理", "family": "legacy",
         "url": "https://github.com/mashirozx/deemo", "status": "inherited",
-        "notes": "Inherited trans/ PNG files; tiny/ quantized copies are not displayed.",
+        "notes": "Original PNGs are in assets/legacy/trans/. Paired palette-quantized copies in assets/legacy/tiny/ are available as alternate downloads.",
     }]
     assets, failures, snapshots = [], [], {}
     for family in SOURCE_MANIFESTS:
@@ -119,6 +139,9 @@ def combine(root: Path, verify: bool = False) -> dict:
     seen_ids, by_hash = set(), {}
     for asset in assets:
         validate_asset(root, asset, verify)
+        for variant in asset.get("variants", []):
+            validate_asset(root, variant, verify)
+            variant["url"] = quote(variant["path"], safe="/")
         if asset["id"] in seen_ids:
             raise ValueError(f"Duplicate asset ID: {asset['id']}")
         seen_ids.add(asset["id"])
@@ -147,6 +170,7 @@ def combine(root: Path, verify: bool = False) -> dict:
             "unique_files": len(entries),
             "gallery_images": sum(entry["gallery"] for entry in entries),
             "exact_duplicate_records": len(assets) - len(entries),
+            "legacy_quantized_files": sum(len(asset.get("variants", [])) for asset in assets if asset["family"] == "legacy"),
             "by_family": dict(counts), "failure_count": len(failures),
             "downloaded_bytes": sum(asset["bytes"] for asset in assets if asset["family"] != "legacy"),
         },
@@ -154,7 +178,7 @@ def combine(root: Path, verify: bool = False) -> dict:
 
 
 def render_slideshow(root: Path, catalog: dict) -> str:
-    template = (root / "test.html").read_text(encoding="utf-8-sig")
+    template = (root / "templates/slideshow.html").read_text(encoding="utf-8-sig")
     slides = []
     for asset in catalog["assets"]:
         if not asset["gallery"] or asset["kind"] == "reference":

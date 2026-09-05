@@ -7,6 +7,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -37,6 +38,15 @@ class CatalogTests(unittest.TestCase):
         content = {"sources": [{"id": asset["source_id"], "name": family, "url": asset["page_url"]}], "assets": [asset]}
         (self.root / f"data/sources/{family}.json").write_text(json.dumps(content), encoding="utf-8")
 
+    def legacy_pair(self, key="magnolia"):
+        for variant in ("trans", "tiny"):
+            path = self.root / f"assets/legacy/{variant}/{key}.png"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            image = Image.new("RGB", (4, 4), "white")
+            if variant == "tiny":
+                image = image.quantize(colors=256)
+            image.save(path)
+
     def test_exact_duplicates_keep_both_provenances(self):
         self.manifest("artists", self.asset)
         duplicate = {**self.asset, "id": "wiki:sample", "source_id": "wiki"}
@@ -63,8 +73,7 @@ class CatalogTests(unittest.TestCase):
             build.validate_asset(self.root, {**self.asset, "width": 9}, True)
 
     def test_legacy_mapping_distinguishes_composer_and_illustrator(self):
-        (self.root / "trans").mkdir()
-        Image.new("RGB", (4, 4), "white").save(self.root / "trans/magnolia.png")
+        self.legacy_pair()
         mapping = {"source_url": "https://example.com/mapping", "data": {"songs": {"magnolia": {"name": "Magnolia", "artist": "M2U", "book": 0}}, "books": [{"name": "Collection"}]}}
         (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping))
         asset = build.legacy_assets(self.root)[0]
@@ -74,8 +83,50 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(asset["collection"], "Collection")
         self.assertEqual(asset["kind"], "song_art")
 
+    def test_quantized_legacy_file_is_a_verified_variant_not_an_extra_slide(self):
+        self.legacy_pair()
+        catalog = build.combine(self.root, verify=True)
+        self.assertEqual(catalog["summary"]["legacy_quantized_files"], 1)
+        self.assertEqual(catalog["summary"]["source_asset_records"], 1)
+        self.assertEqual(catalog["summary"]["gallery_images"], 1)
+        self.assertEqual(catalog["summary"]["unique_files"], 1)
+        asset = catalog["assets"][0]
+        self.assertEqual(asset["path"], "assets/legacy/trans/magnolia.png")
+        self.assertEqual(len(asset["variants"]), 1)
+        variant = asset["variants"][0]
+        self.assertEqual(variant["id"], "legacy:tiny:magnolia")
+        self.assertEqual(variant["role"], "palette_quantized")
+        self.assertEqual(variant["source_id"], "legacy")
+        self.assertEqual(variant["path"], "assets/legacy/tiny/magnolia.png")
+        self.assertEqual(variant["url"], "assets/legacy/tiny/magnolia.png")
+        self.assertEqual(variant["width"], 4)
+        self.assertEqual(variant["height"], 4)
+        raw = (self.root / variant["path"]).read_bytes()
+        self.assertEqual(variant["bytes"], len(raw))
+        self.assertEqual(variant["sha256"], hashlib.sha256(raw).hexdigest())
+        self.assertEqual(asset["provenance"][0]["variants"], asset["variants"])
+
+    def test_corrupted_quantized_variant_fails_catalog_verification(self):
+        self.legacy_pair()
+        recorded = build.legacy_assets(self.root)
+        path = self.root / recorded[0]["variants"][0]["path"]
+        raw = bytearray(path.read_bytes())
+        raw[len(raw) // 2] ^= 1
+        path.write_bytes(raw)
+        # Freeze the previously recorded hashes, then alter only the tiny file.
+        # This exercises combine's nested validation, not just validate_asset.
+        with patch.object(build, "legacy_assets", return_value=recorded):
+            with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
+                build.combine(self.root, verify=True)
+
+    def test_missing_quantized_legacy_pair_is_rejected(self):
+        self.legacy_pair()
+        (self.root / "assets/legacy/tiny/magnolia.png").unlink()
+        with self.assertRaises((ValueError, FileNotFoundError)):
+            build.legacy_assets(self.root)
+
     def test_unsafe_paths_rejected(self):
-        for path in ("../secret.png", "/tmp/secret.png", "assets/../../secret.png", "README.md", ""):
+        for path in ("../secret.png", "/tmp/secret.png", "assets/../../secret.png", "README.md", "trans/magnolia.png", "tiny/magnolia.png", ""):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 build.safe_path(self.root, path)
 
@@ -84,7 +135,8 @@ class CatalogTests(unittest.TestCase):
             build.validate_asset(self.root, {**self.asset, "page_url": "javascript:alert(1)"})
 
     def test_html_escapes_remote_metadata(self):
-        (self.root / "test.html").write_text("<main>@python-work-area</main>")
+        (self.root / "templates").mkdir()
+        (self.root / "templates/slideshow.html").write_text("<main>@python-work-area</main>")
         asset = copy.deepcopy(self.asset)
         asset.update(gallery=True, url="assets/public/sample.png", source_name="Artist", title='A & B "><script>alert(1)</script>')
         rendered = build.render_slideshow(self.root, {"assets": [asset]})

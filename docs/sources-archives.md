@@ -34,4 +34,4 @@ python -I scripts/fetch_archives.py
 python -I scripts/fetch_archives.py --verify
 ```
 
-依赖为 `requests`、`beautifulsoup4`、`Pillow`。`-I` 避免旧仓库根目录 `html.py` 遮蔽 Python 标准库 `html`。抓取器按 3–5 个线程并行请求，遇到失败会写入 `failures`；Tumblr 每个标签按 API `posts-total` 分页，不设置静默截断上限。文件按内容校验后写入；远端内容如变化，旧文件保留并以 hash 后缀保存新版本。
+依赖为 `requests`、`beautifulsoup4`、`Pillow`；`-I` 使用 Python 隔离模式。抓取器按 3–5 个线程并行请求，遇到失败会写入 `failures`；Tumblr 每个标签按 API `posts-total` 分页，不设置静默截断上限。文件按内容校验后写入；远端内容如变化，旧文件保留并以 hash 后缀保存新版本。

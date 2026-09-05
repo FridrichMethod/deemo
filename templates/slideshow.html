@@ -24,21 +24,22 @@ https://github.com/FridrichMethod/deemo
     <meta name="keywords" content="DEEMO 1, FridrichMethod, 曲绘">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
-    <meta property="og:image" content="apple-touch-icon.png">
+    <meta property="og:image" content="assets/site/icons/apple-touch-icon.png">
     <meta property="og:type" content="website">
     <meta property="og:title" content="DEEMO 1 曲绘集 · FridrichMethod">
     <meta property="og:site_name" content="FridrichMethod / deemo">
     <meta property="og:description" content="DEEMO 1 曲绘与公开来源档案">
     <meta property="og:locale" content="zh_CN">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/site/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/site/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/site/icons/favicon-16x16.png">
     <link rel="manifest" href="site.webmanifest">
-    <link rel="mask-icon" href="safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="mask-icon" href="assets/site/icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-config" content="browserconfig.xml">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="src/slideshow.css">
     <style>
         html,
         body {
@@ -74,24 +75,24 @@ https://github.com/FridrichMethod/deemo
 
         <div class="photo bt">
             <a href="javascript:screenshot();">
-                <div class="pop"><img src="src/camera.svg" class="css-1bgbwga" data-reactid="50"></div>
+                <div class="pop"><img src="assets/site/icons/camera.svg" class="css-1bgbwga" data-reactid="50"></div>
             </a>
         </div>
 
         <div class="iplayer bt">
             <div class="speaker" id="speaker"></div>
-            <img src="src/pause.svg" style="width:0;height:0;">
+            <img src="assets/site/icons/pause.svg" style="width:0;height:0;">
         </div>
 
         <div class="random bt">
             <a href="javascript:randomClick();">
-                <div class="pop"><img src="src/sand-clock.svg" class="sand-clock" data-reactid="50"></div>
+                <div class="pop"><img src="assets/site/icons/sand-clock.svg" class="sand-clock" data-reactid="50"></div>
             </a>
         </div>
 
         <div class="github bt">
             <a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer" aria-label="GitHub 仓库">
-                <div class="pop"><img src="src/github.svg" class="css-1bgbwga" data-reactid="50"></div>
+                <div class="pop"><img src="assets/site/icons/github.svg" class="css-1bgbwga" data-reactid="50"></div>
             </a>
         </div>
 
@@ -100,7 +101,7 @@ https://github.com/FridrichMethod/deemo
         <div id="screenshot" class="overlay">
             <div class="save bt">
                 <a href="javascript:downloadCanvas();">
-                    <div class="pop"><img src="src/save.svg" class="css-1bgbwga" data-reactid="50"></div>
+                    <div class="pop"><img src="assets/site/icons/save.svg" class="css-1bgbwga" data-reactid="50"></div>
                 </a>
             </div>
             <div class="popup">
@@ -111,10 +112,10 @@ https://github.com/FridrichMethod/deemo
     </main>
 
     <audio loop="loop" id="player">
-      <source src="src/Riin - Alice good night.mp3" type="audio/mpeg">
+      <source src="assets/site/audio/Riin%20-%20Alice%20good%20night.mp3" type="audio/mpeg">
     </audio>
 
-    <script src="src/main.js"></script>
+    <script src="src/vendor/legacy-ui.js"></script>
 
     <script>
         "use strict";

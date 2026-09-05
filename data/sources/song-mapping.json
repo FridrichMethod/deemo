@@ -3487,5 +3487,5 @@
   },
   "notes": "Public legacy game-key/song-title mapping; upstream data may predate later DEEMO releases. No art included.",
   "license": "MIT",
-  "license_path": "docs/licenses/DeemoSongs-MIT.txt"
+  "license_path": "licenses/DeemoSongs-MIT.txt"
 }
