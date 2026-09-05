@@ -1,0 +1,3491 @@
+{
+  "schema_version": 1,
+  "fetched_at": "2026-09-05T08:45:33.582532Z",
+  "source_url": "https://github.com/syuchan1005/DeemoSongs",
+  "download_url": "https://raw.githubusercontent.com/syuchan1005/DeemoSongs/master/DeemoSongs.json",
+  "sha256": "6bf4bf615ec9546eadb19fb83f89bee8c85b8b5f5da7bb5fddf37b5764d32e52",
+  "data": {
+    "songs": {
+      "dream": {
+        "name": "Dream",
+        "artist": "Rabpit",
+        "bpm": "151",
+        "difficulty": [
+          1,
+          4,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 0
+      },
+      "mirrornight": {
+        "name": "Reflection (Mirror Night)",
+        "artist": "V.K",
+        "bpm": "85",
+        "difficulty": [
+          1,
+          4,
+          8,
+          -1
+        ],
+        "track": 2,
+        "book": 0
+      },
+      "Jumpystar": {
+        "name": "Jumpy star",
+        "artist": "Yuk-cheung Chun Jeff Li Justine Lu",
+        "bpm": "104",
+        "difficulty": [
+          3,
+          3,
+          6,
+          -1
+        ],
+        "track": 3,
+        "book": 0
+      },
+      "wingsofpiano": {
+        "name": "Wings of piano",
+        "artist": "V.K",
+        "bpm": "68-84",
+        "difficulty": [
+          1,
+          6,
+          7,
+          -1
+        ],
+        "track": 4,
+        "book": 0
+      },
+      "ninepointeight": {
+        "name": "Nine point eight",
+        "artist": "Mili",
+        "bpm": "164",
+        "difficulty": [
+          1,
+          5,
+          7,
+          -1
+        ],
+        "track": 5,
+        "book": 0
+      },
+      "lightpollution": {
+        "name": "Light pollution",
+        "artist": "Yuk-cheung Chun feat. Europa Huang",
+        "bpm": "122",
+        "difficulty": [
+          1,
+          3,
+          8,
+          -1
+        ],
+        "track": 6,
+        "book": 0
+      },
+      "chai": {
+        "name": "Undo",
+        "artist": "Yuk-cheung Chun feat. Misi Ke",
+        "bpm": "141",
+        "difficulty": [
+          2,
+          3,
+          7,
+          -1
+        ],
+        "track": 7,
+        "book": 0
+      },
+      "platinum": {
+        "name": "Platinum",
+        "artist": "Sta",
+        "bpm": "100",
+        "difficulty": [
+          2,
+          6,
+          6,
+          -1
+        ],
+        "track": 8,
+        "book": 0
+      },
+      "Utopiosphere": {
+        "name": "Utopiosphere",
+        "artist": "Mili",
+        "bpm": "176",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 9,
+        "book": 0
+      },
+      "reverse": {
+        "name": "Reverse - Parallel Universe",
+        "artist": "V.K",
+        "bpm": "120",
+        "difficulty": [
+          1,
+          5,
+          8,
+          -1
+        ],
+        "track": 10,
+        "book": 0
+      },
+      "ihatetotellyou": {
+        "name": "I hate to tell you",
+        "artist": "Yuk-cheung Chun",
+        "bpm": "120",
+        "difficulty": [
+          2,
+          6,
+          8,
+          -1
+        ],
+        "track": 11,
+        "book": 0
+      },
+      "saika": {
+        "name": "Saika",
+        "artist": "Rabpit",
+        "bpm": "128",
+        "difficulty": [
+          2,
+          4,
+          6,
+          8
+        ],
+        "track": 12,
+        "book": 0
+      },
+      "yubikiri_genman": {
+        "name": "YUBIKIRI-GENMAN",
+        "artist": "Mili",
+        "bpm": "146",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 13,
+        "book": 0
+      },
+      "evolution_era": {
+        "name": "Evolution Era",
+        "artist": "V.K",
+        "bpm": "90",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 1
+      },
+      "invite": {
+        "name": "Invite",
+        "artist": "Sun Chen feat. Bibi Chao",
+        "bpm": "134",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 1
+      },
+      "rungorun": {
+        "name": "Run Go Run",
+        "artist": "Kaeru Underground",
+        "bpm": "180",
+        "difficulty": [
+          2,
+          3,
+          8,
+          -1
+        ],
+        "track": 3,
+        "book": 1
+      },
+      "lion": {
+        "name": "Yawning Lion",
+        "artist": "V.K",
+        "bpm": "*",
+        "difficulty": [
+          2,
+          4,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 1
+      },
+      "pulse": {
+        "name": "Pulses",
+        "artist": "Sta feat. A",
+        "bpm": "92",
+        "difficulty": [
+          1,
+          6,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 1
+      },
+      "electron": {
+        "name": "Electron",
+        "artist": "Yuk-cheung Chun feat. Misi Ke",
+        "bpm": "125",
+        "difficulty": [
+          1,
+          6,
+          8,
+          -1
+        ],
+        "track": 6,
+        "book": 1
+      },
+      "untitled2": {
+        "name": "Untitled2",
+        "artist": "Fabric Factory",
+        "bpm": "111",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 7,
+        "book": 1
+      },
+      "walking_by_the_sea": {
+        "name": "Walking by the sea",
+        "artist": "Edmund Fu",
+        "bpm": "93",
+        "difficulty": [
+          2,
+          5,
+          8,
+          -1
+        ],
+        "track": 8,
+        "book": 1
+      },
+      "beyond_the_stratus": {
+        "name": "Beyond The Stratus",
+        "artist": "Ice",
+        "bpm": "130",
+        "difficulty": [
+          2,
+          4,
+          7,
+          -1
+        ],
+        "track": 9,
+        "book": 1
+      },
+      "sairai": {
+        "name": "Sairai",
+        "artist": "Shinichi Kobayashi",
+        "bpm": "95",
+        "difficulty": [
+          3,
+          5,
+          7,
+          8
+        ],
+        "track": 10,
+        "book": 1
+      },
+      "entrance": {
+        "name": "Entrance",
+        "artist": "Ice",
+        "bpm": "180",
+        "difficulty": [
+          2,
+          8,
+          10,
+          "L"
+        ],
+        "track": 11,
+        "book": 1
+      },
+      "magnolia": {
+        "name": "Magnolia",
+        "artist": "M2U Vocal by Guriri",
+        "bpm": "160",
+        "difficulty": [
+          4,
+          7,
+          10,
+          "M"
+        ],
+        "track": 12,
+        "book": 1
+      },
+      "angelicsphere": {
+        "name": "Angelic Sphere",
+        "artist": "3R2",
+        "bpm": "143",
+        "difficulty": [
+          4,
+          5,
+          7,
+          -1
+        ],
+        "track": 13,
+        "book": 1
+      },
+      "leviathan": {
+        "name": "Leviathan",
+        "artist": "NeLiME",
+        "bpm": "185",
+        "difficulty": [
+          3,
+          7,
+          9,
+          10
+        ],
+        "track": 14,
+        "book": 1
+      },
+      "suspenseful_third_day": {
+        "name": "Suspenseful Third Day",
+        "artist": "Kaeru Underground",
+        "bpm": "99",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 1,
+        "book": 2
+      },
+      "livingintheone": {
+        "name": "Living In The One",
+        "artist": "Edmund Fu",
+        "bpm": "139",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 2
+      },
+      "v20legacy": {
+        "name": "Legacy",
+        "artist": "switchworks",
+        "bpm": "113",
+        "difficulty": [
+          1,
+          4,
+          6,
+          -1
+        ],
+        "track": 3,
+        "book": 2
+      },
+      "v20sunset": {
+        "name": "Sunset",
+        "artist": "Alex Vourtsanis",
+        "bpm": "180",
+        "difficulty": [
+          2,
+          6,
+          8,
+          -1
+        ],
+        "track": 4,
+        "book": 2
+      },
+      "v20sakuraironoyume": {
+        "name": "Sakura iro no yume",
+        "artist": "Baba Band",
+        "bpm": "98",
+        "difficulty": [
+          2,
+          4,
+          6,
+          -1
+        ],
+        "track": 5,
+        "book": 2
+      },
+      "v20lapromesse": {
+        "name": "La Promesse",
+        "artist": "cranky",
+        "bpm": "164",
+        "difficulty": [
+          5,
+          5,
+          8,
+          -1
+        ],
+        "track": 6,
+        "book": 2
+      },
+      "v20anima": {
+        "name": "ANiMA",
+        "artist": "xi",
+        "bpm": "183.5",
+        "difficulty": [
+          5,
+          9,
+          10,
+          "xi"
+        ],
+        "track": 7,
+        "book": 2
+      },
+      "v20thebeautifulmonnlight": {
+        "name": "The Beautiful Moonlight",
+        "artist": "Mai Aoyagi",
+        "bpm": "135",
+        "difficulty": [
+          2,
+          4,
+          6,
+          -1
+        ],
+        "track": 8,
+        "book": 2
+      },
+      "v20fluquor": {
+        "name": "Fluquor",
+        "artist": "onoken / Vocal: Rin",
+        "bpm": "136",
+        "difficulty": [
+          2,
+          5,
+          8,
+          -1
+        ],
+        "track": 9,
+        "book": 2
+      },
+      "v20myosotis": {
+        "name": "Myosotis",
+        "artist": "M2U / Arranger: M2U & NICODE / Vocal: Guriri & Lucy",
+        "bpm": "160",
+        "difficulty": [
+          5,
+          9,
+          11,
+          -1
+        ],
+        "track": 10,
+        "book": 2
+      },
+      "v21altale": {
+        "name": "Altale",
+        "artist": "Sakuzyo",
+        "bpm": "90",
+        "difficulty": [
+          4,
+          8,
+          10,
+          "S"
+        ],
+        "track": 11,
+        "book": 2
+      },
+      "v22runladsrun": {
+        "name": "Run Lads Run",
+        "artist": "KillerBlood",
+        "bpm": "160→*",
+        "difficulty": [
+          5,
+          8,
+          10,
+          "V"
+        ],
+        "track": 1,
+        "book": 3
+      },
+      "v22startingwind": {
+        "name": "Starting Wind",
+        "artist": "Edmund Fu",
+        "bpm": "160",
+        "difficulty": [
+          4,
+          6,
+          9,
+          -1
+        ],
+        "track": 2,
+        "book": 3
+      },
+      "v22farewellwaltz": {
+        "name": "Farewell Waltz",
+        "artist": "Stone",
+        "bpm": "201",
+        "difficulty": [
+          1,
+          4,
+          8,
+          -1
+        ],
+        "track": 3,
+        "book": 3
+      },
+      "v22revival": {
+        "name": "Revival",
+        "artist": "TQ",
+        "bpm": "136",
+        "difficulty": [
+          3,
+          7,
+          9,
+          "10"
+        ],
+        "track": 4,
+        "book": 3
+      },
+      "v23arkofdesire": {
+        "name": "Ark of Desire",
+        "artist": "Edmund Fu",
+        "bpm": "170⇔145",
+        "difficulty": [
+          4,
+          7,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 3
+      },
+      "v23futarimiti": {
+        "name": "Futarimiti",
+        "artist": "Morrigan & Cranky",
+        "bpm": "94→150",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 6,
+        "book": 3
+      },
+      "v23shadowinthemirror": {
+        "name": "Shadow in the mirror",
+        "artist": "Abia Ng",
+        "bpm": "80→120",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 7,
+        "book": 3
+      },
+      "v23nightfall": {
+        "name": "nightfall",
+        "artist": "ginkiha",
+        "bpm": "92",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 8,
+        "book": 3
+      },
+      "v23yaoyue": {
+        "name": "Yaoyue",
+        "artist": "gondayu",
+        "bpm": "132",
+        "difficulty": [
+          4,
+          7,
+          10,
+          -1
+        ],
+        "track": 9,
+        "book": 3
+      },
+      "v24kimiganokoshitasekaide": {
+        "name": "Kimi ga Nokoshita Sekai de",
+        "artist": "The SxPlay",
+        "bpm": "106",
+        "difficulty": [
+          2,
+          6,
+          8,
+          -1
+        ],
+        "track": 10,
+        "book": 3
+      },
+      "v24guardian": {
+        "name": "Guardian",
+        "artist": "The SxPlay",
+        "bpm": "80",
+        "difficulty": [
+          1,
+          5,
+          7,
+          -1
+        ],
+        "track": 11,
+        "book": 3
+      },
+      "v24rainbowsend": {
+        "name": "Rainbow's End",
+        "artist": "Edmund Fu",
+        "bpm": "65-75",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 12,
+        "book": 3
+      },
+      "v24postscript": {
+        "name": "Post-script",
+        "artist": "The Hoshizora Project",
+        "bpm": "82",
+        "difficulty": [
+          3,
+          4,
+          5,
+          -1
+        ],
+        "track": 13,
+        "book": 3
+      },
+      "v24h": {
+        "name": "H",
+        "artist": "orangentle",
+        "bpm": "110",
+        "difficulty": [
+          5,
+          9,
+          10,
+          "H"
+        ],
+        "track": 14,
+        "book": 3
+      },
+      "v30treeofdreams": {
+        "name": "Tree of Dreams",
+        "artist": "Michiru Oshima",
+        "bpm": "81",
+        "difficulty": [
+          3,
+          5,
+          8,
+          -1
+        ],
+        "track": 15,
+        "book": 3
+      },
+      "v30whiterain": {
+        "name": "White Rain",
+        "artist": "Michiru Oshima",
+        "bpm": "80",
+        "difficulty": [
+          4,
+          6,
+          8,
+          -1
+        ],
+        "track": 16,
+        "book": 3
+      },
+      "v30infinitepuzzle": {
+        "name": "Infinite Puzzle",
+        "artist": "Y-SHIN",
+        "bpm": "162",
+        "difficulty": [
+          6,
+          8,
+          10,
+          -1
+        ],
+        "track": 17,
+        "book": 3,
+        "format": "wav"
+      },
+      "v30springsnowflake": {
+        "name": "Spring Snowflake Flower",
+        "artist": "masaki kawasaki",
+        "bpm": "135→115",
+        "difficulty": [
+          5,
+          7,
+          9,
+          -1
+        ],
+        "track": 18,
+        "book": 3
+      },
+      "v31littlelove": {
+        "name": "Little Love",
+        "artist": "Michiru Oshima",
+        "bpm": "60~70",
+        "difficulty": [
+          1,
+          4,
+          5,
+          -1
+        ],
+        "track": 19,
+        "book": 3
+      },
+      "v31lonelypianist": {
+        "name": "Lonely Pianist",
+        "artist": "Michiru Oshima",
+        "bpm": "130",
+        "difficulty": [
+          2,
+          3,
+          6,
+          -1
+        ],
+        "track": 20,
+        "book": 3
+      },
+      "v31miracle": {
+        "name": "Miracle of Daybreak",
+        "artist": "WhiteCapella",
+        "bpm": "76→90",
+        "difficulty": [
+          1,
+          5,
+          7,
+          -1
+        ],
+        "track": 21,
+        "book": 3
+      },
+      "v31waltz": {
+        "name": "Waltz in Devil's Playground",
+        "artist": "Ramenbot Jr.",
+        "bpm": "85",
+        "difficulty": [
+          2,
+          4,
+          7,
+          -1
+        ],
+        "track": 22,
+        "book": 3
+      },
+      "samsaravoiceofcell": {
+        "name": "Voice of Cell",
+        "artist": "Michiru Oshima",
+        "bpm": "174",
+        "difficulty": [
+          4,
+          6,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 4
+      },
+      "samsaravalledeloscaidos": {
+        "name": "Valle De Los Cados",
+        "artist": "Triodust",
+        "bpm": "98",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 4
+      },
+      "samsaralostinthenowhere": {
+        "name": "Lost in the nowhere",
+        "artist": "Rave Cyanide",
+        "bpm": "160",
+        "difficulty": [
+          6,
+          8,
+          10,
+          -1
+        ],
+        "track": 3,
+        "book": 4
+      },
+      "samsara105": {
+        "name": "The 105th Days",
+        "artist": "Pianoboy",
+        "bpm": "96",
+        "difficulty": [
+          2,
+          4,
+          6,
+          -1
+        ],
+        "track": 4,
+        "book": 4
+      },
+      "samsarareverence": {
+        "name": "Reverence (Deemo ver)",
+        "artist": "vospi",
+        "bpm": "173",
+        "difficulty": [
+          3,
+          7,
+          9,
+          -1
+        ],
+        "track": 5,
+        "book": 4
+      },
+      "samsaraaragami": {
+        "name": "Aragami",
+        "artist": "xi",
+        "bpm": "196",
+        "difficulty": [
+          7,
+          9,
+          10,
+          "xi"
+        ],
+        "track": 6,
+        "book": 4
+      },
+      "samsaraparodiasonatina": {
+        "name": "Parodia Sonatina Var.II",
+        "artist": "Ice",
+        "bpm": "170",
+        "difficulty": [
+          5,
+          8,
+          10,
+          "L"
+        ],
+        "track": 7,
+        "book": 4
+      },
+      "samsaraamberwishes": {
+        "name": "Amber Wishes (Deemo edit)",
+        "artist": "Ice",
+        "bpm": "196",
+        "difficulty": [
+          5,
+          8,
+          10,
+          -1
+        ],
+        "track": 8,
+        "book": 4
+      },
+      "samsarathewayhome": {
+        "name": "The way home",
+        "artist": "Kiva",
+        "bpm": "92",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 9,
+        "book": 4
+      },
+      "samsaramarigold": {
+        "name": "Marigold",
+        "artist": "M2U",
+        "bpm": "160",
+        "difficulty": [
+          5,
+          9,
+          12,
+          -1
+        ],
+        "track": 10,
+        "book": 4
+      },
+      "classic01": {
+        "name": "Tristesse",
+        "artist": "Chopin",
+        "bpm": "45-55",
+        "jpName": "ショパン「別れの曲」",
+        "difficulty": [
+          1,
+          5,
+          -1,
+          -1
+        ],
+        "track": 1,
+        "book": 5
+      },
+      "classic02": {
+        "name": "Intermezzo in A Major",
+        "artist": "Brahms",
+        "bpm": "*",
+        "jpName": "ブラームス「インテルメッツォ イ長調」",
+        "difficulty": [
+          2,
+          7,
+          -1,
+          -1
+        ],
+        "track": 2,
+        "book": 5
+      },
+      "classic03": {
+        "name": "Rhapsody in B minor",
+        "artist": "Brahms",
+        "bpm": "80-95",
+        "jpName": "ブラームス「ラプソディー ロ短調」",
+        "difficulty": [
+          3,
+          8,
+          -1,
+          -1
+        ],
+        "track": 3,
+        "book": 5
+      },
+      "classic04": {
+        "name": "Pathetique",
+        "artist": "Beethoven",
+        "bpm": "125-150",
+        "jpName": "ベートーベン「ピアノソナタ第8番 ハ短調 作品13『大ソナタ悲愴』第1楽章」",
+        "difficulty": [
+          3,
+          9,
+          -1,
+          -1
+        ],
+        "track": 4,
+        "book": 5
+      },
+      "classic05": {
+        "name": "Ballade No.1",
+        "artist": "Chopin",
+        "bpm": "*",
+        "jpName": "ショパン「バラード 第1番 ト短調」",
+        "difficulty": [
+          5,
+          8,
+          -1,
+          -1
+        ],
+        "track": 5,
+        "book": 5
+      },
+      "classic06": {
+        "name": "Invention No.1",
+        "artist": "J.S.Bach",
+        "bpm": "130",
+        "jpName": "バッハ「インベンション 第1番」",
+        "difficulty": [
+          3,
+          7,
+          -1,
+          -1
+        ],
+        "track": 6,
+        "book": 5
+      },
+      "classic07": {
+        "name": "Aufschwung",
+        "artist": "Schumann",
+        "bpm": "*",
+        "jpName": "シューマン「幻想小曲集 op.12『飛翔』」",
+        "difficulty": [
+          5,
+          9,
+          -1,
+          -1
+        ],
+        "track": 7,
+        "book": 5
+      },
+      "classic08": {
+        "name": "Turkish March",
+        "artist": "Mozart",
+        "bpm": "135",
+        "jpName": "モーツァルト「ピアノソナタ第11番イ長調第3楽章『トルコ行進曲』」",
+        "difficulty": [
+          5,
+          8,
+          -1,
+          -1
+        ],
+        "track": 8,
+        "book": 5
+      },
+      "classic09": {
+        "name": "Moonlight",
+        "artist": "Beethoven",
+        "bpm": "160-175",
+        "jpName": "ベートーベン「ピアノソナタ第14番嬰ハ短調 作品27-2 『幻想曲風ソナタ』」",
+        "difficulty": [
+          6,
+          9,
+          -1,
+          -1
+        ],
+        "track": 9,
+        "book": 5
+      },
+      "classic10": {
+        "name": "Flight of the Bumblebee",
+        "artist": "Nikolai Rimsky-Korsakov",
+        "bpm": "170",
+        "jpName": "リムスキー・コルサコフ「熊蜂の飛行」",
+        "difficulty": [
+          5,
+          9,
+          -1,
+          -1
+        ],
+        "track": 10,
+        "book": 5
+      },
+      "classic11": {
+        "name": "Impromptu No.3",
+        "artist": "Schubert",
+        "bpm": "120-130",
+        "jpName": "シューベルト「4つの即興曲 第3曲」",
+        "difficulty": [
+          2,
+          8,
+          -1,
+          -1
+        ],
+        "track": 11,
+        "book": 5
+      },
+      "classic12": {
+        "name": "Venetian Gondellied",
+        "artist": "Mendelssohn",
+        "bpm": "80-95",
+        "jpName": "メンデルスゾーン「無言歌集 第2巻作品30-6 『ヴェネツィアの舟歌 第2』」",
+        "difficulty": [
+          2,
+          7,
+          -1,
+          -1
+        ],
+        "track": 12,
+        "book": 5
+      },
+      "classic13": {
+        "name": "Piano Sonata No.3",
+        "artist": "Chopin",
+        "bpm": "121",
+        "jpName": "ショパン「ピアノソナタ第3番 ロ短調 作品58 第4楽章」",
+        "difficulty": [
+          6,
+          10,
+          -1,
+          -1
+        ],
+        "track": 13,
+        "book": 5
+      },
+      "classic14": {
+        "name": "Waltz No.1",
+        "artist": "Chopin",
+        "bpm": "200-240",
+        "jpName": "ショパン「『華麗なる大円舞曲』変ホ長調 Op.18」",
+        "difficulty": [
+          4,
+          9,
+          -1,
+          -1
+        ],
+        "track": 14,
+        "book": 5
+      },
+      "classic15": {
+        "name": "La Campenella",
+        "artist": "Liszt",
+        "bpm": "",
+        "jpName": "リスト「パガニーニによる大練習曲」",
+        "difficulty": [
+          7,
+          10,
+          -1,
+          -1
+        ],
+        "track": 15,
+        "book": 5
+      },
+      "crosshyakkaryouran": {
+        "name": "HYAKKA RYOURAN",
+        "artist": "Kakumi Nishigomi",
+        "bpm": "148",
+        "difficulty": [
+          6,
+          6,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 6
+      },
+      "crossknotsway": {
+        "name": "Knots Way",
+        "artist": "nicode. feat.Romelon",
+        "bpm": "184",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 2,
+        "book": 6
+      },
+      "corsskiminonamae": {
+        "name": "Kimi no namae no kazegafuku",
+        "artist": "ZENTA",
+        "bpm": "96→192",
+        "difficulty": [
+          1,
+          4,
+          6,
+          -1
+        ],
+        "track": 3,
+        "book": 6
+      },
+      "randall": {
+        "name": "Randall",
+        "artist": "Hikoshi Hashimoto",
+        "bpm": "82",
+        "difficulty": [
+          1,
+          3,
+          5,
+          -1
+        ],
+        "track": 4,
+        "book": 6
+      },
+      "will": {
+        "name": "Will",
+        "artist": "Hikoshi Hashimoto",
+        "bpm": "93",
+        "difficulty": [
+          2,
+          6,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 6
+      },
+      "landofgiants": {
+        "name": "Land of Giants",
+        "artist": "Hikoshi Hashimoto",
+        "bpm": "136",
+        "difficulty": [
+          1,
+          2,
+          7,
+          -1
+        ],
+        "track": 6,
+        "book": 6
+      },
+      "metalhypnotized": {
+        "name": "Metal Hypnotized",
+        "artist": "EARTHBOUND PAPAS",
+        "bpm": "108",
+        "difficulty": [
+          1,
+          6,
+          6,
+          -1
+        ],
+        "track": 1,
+        "book": 7
+      },
+      "pianoconcert": {
+        "name": "Rainy Memory",
+        "artist": "Rabpit",
+        "bpm": "135",
+        "difficulty": [
+          1,
+          2,
+          5,
+          -1
+        ],
+        "track": 2,
+        "book": 7
+      },
+      "peachlady": {
+        "name": "Peach Lady",
+        "artist": "Yuk-cheung Chun Trevor Lin feat. Silvia Su",
+        "bpm": "167",
+        "difficulty": [
+          2,
+          5,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 7
+      },
+      "heyboy": {
+        "name": "Hey Boy",
+        "artist": "Jerry Barnes Katreese Barnes  Rodger Green",
+        "bpm": "107",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 4,
+        "book": 7
+      },
+      "pilot": {
+        "name": "Pilot",
+        "artist": "Rabpit",
+        "bpm": "133",
+        "difficulty": [
+          2,
+          4,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 7
+      },
+      "viverelavita": {
+        "name": "vivere la vita",
+        "artist": "Sta",
+        "bpm": "225",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 6,
+        "book": 7
+      },
+      "friction": {
+        "name": "Friction",
+        "artist": "HAMO from Mili",
+        "bpm": "130",
+        "difficulty": [
+          2,
+          5,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 8
+      },
+      "iracethedawn": {
+        "name": "I race the dawn",
+        "artist": "Kevin Penkin feat. Michiyo Honda",
+        "bpm": "162",
+        "difficulty": [
+          1,
+          2,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 8
+      },
+      "moonwithoutthestars": {
+        "name": "Moon without the stars",
+        "artist": "Jerry Barnes Quiana",
+        "bpm": "122",
+        "difficulty": [
+          1,
+          2,
+          6,
+          -1
+        ],
+        "track": 3,
+        "book": 8
+      },
+      "sanctity": {
+        "name": "Sanctity",
+        "artist": "Rabpit",
+        "bpm": "164",
+        "difficulty": [
+          2,
+          3,
+          8,
+          -1
+        ],
+        "track": 4,
+        "book": 8
+      },
+      "hua": {
+        "name": "Hua Sui Yue",
+        "artist": "V.K",
+        "bpm": "148",
+        "difficulty": [
+          2,
+          4,
+          7,
+          -1
+        ],
+        "track": 5,
+        "book": 8
+      },
+      "fable": {
+        "name": "Fable",
+        "artist": "Mili",
+        "bpm": "146",
+        "difficulty": [
+          2,
+          7,
+          9,
+          -1
+        ],
+        "track": 1,
+        "book": 9
+      },
+      "past_the_stargazing_season": {
+        "name": "Past the Stargazing Season",
+        "artist": "H△G Remixed by Mili",
+        "bpm": "71",
+        "difficulty": [
+          1,
+          4,
+          6,
+          -1
+        ],
+        "track": 2,
+        "book": 9
+      },
+      "ephemeral": {
+        "name": "Ephemeral",
+        "artist": "Mili",
+        "bpm": "80",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 3,
+        "book": 9
+      },
+      "rosetta": {
+        "name": "Rosetta",
+        "artist": "Mili",
+        "bpm": "138",
+        "difficulty": [
+          1,
+          5,
+          8,
+          -1
+        ],
+        "track": 4,
+        "book": 9
+      },
+      "witchs_invitation": {
+        "name": "Witch's Invitation",
+        "artist": "Mili",
+        "bpm": "132",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 9
+      },
+      "atlantis_love": {
+        "name": "Atlantis Love",
+        "artist": "V.K",
+        "bpm": "138",
+        "difficulty": [
+          1,
+          2,
+          5,
+          -1
+        ],
+        "track": 1,
+        "book": 10
+      },
+      "melody_of_elves": {
+        "name": "Melody Of Elves",
+        "artist": "V.K",
+        "bpm": "94→108",
+        "difficulty": [
+          1,
+          3,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 10
+      },
+      "paperplane": {
+        "name": "Paper Plane's Adventure",
+        "artist": "V.K",
+        "bpm": "120",
+        "difficulty": [
+          1,
+          4,
+          6,
+          -1
+        ],
+        "track": 3,
+        "book": 10
+      },
+      "purewhite": {
+        "name": "Pure White",
+        "artist": "V.K",
+        "bpm": "135-160",
+        "difficulty": [
+          4,
+          8,
+          10,
+          -1
+        ],
+        "track": 4,
+        "book": 10
+      },
+      "xue_wu": {
+        "name": "Xue Wu",
+        "artist": "V.K",
+        "bpm": "69",
+        "difficulty": [
+          1,
+          4,
+          9,
+          -1
+        ],
+        "track": 5,
+        "book": 10
+      },
+      "dreamofdreams": {
+        "name": "Dream of Dreams",
+        "artist": "Brian Crain",
+        "bpm": "119",
+        "difficulty": [
+          3,
+          4,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 11
+      },
+      "findinghome": {
+        "name": "Finding Home",
+        "artist": "Brian Crain",
+        "bpm": "141",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 11
+      },
+      "imagining": {
+        "name": "Imagining",
+        "artist": "Brian Crain",
+        "bpm": "97",
+        "difficulty": [
+          2,
+          6,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 11
+      },
+      "reminiscence": {
+        "name": "Reminiscence",
+        "artist": "Brian Crain",
+        "bpm": "33",
+        "difficulty": [
+          2,
+          5,
+          6,
+          -1
+        ],
+        "track": 4,
+        "book": 11
+      },
+      "timeforgotten": {
+        "name": "Time Forgotten",
+        "artist": "Brian Crain",
+        "bpm": "197",
+        "difficulty": [
+          4,
+          6,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 11
+      },
+      "seasideroad": {
+        "name": "Sea Side Road",
+        "artist": "Eshen",
+        "bpm": "123",
+        "difficulty": [
+          1,
+          4,
+          6,
+          -1
+        ],
+        "track": 1,
+        "book": 12
+      },
+      "runawayrun": {
+        "name": "Run Away Run",
+        "artist": "Eshen",
+        "bpm": "160",
+        "difficulty": [
+          1,
+          3,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 12
+      },
+      "fallingears": {
+        "name": "Falling Ears",
+        "artist": "Eshen",
+        "bpm": "111",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 3,
+        "book": 12
+      },
+      "flowersaboveyourhead": {
+        "name": "Flowers Above Your Head",
+        "artist": "Eshen",
+        "bpm": "116",
+        "difficulty": [
+          2,
+          4,
+          7,
+          -1
+        ],
+        "track": 4,
+        "book": 12
+      },
+      "almostmorning": {
+        "name": "Almost Morning",
+        "artist": "Eshen",
+        "bpm": "98",
+        "difficulty": [
+          1,
+          4,
+          5,
+          -1
+        ],
+        "track": 5,
+        "book": 12
+      },
+      "littlecorgisdream": {
+        "name": "Little Corgi's Dream",
+        "artist": "KillerBlood",
+        "bpm": "216",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 13
+      },
+      "morningdrops": {
+        "name": "Morning Drops",
+        "artist": "KIVA",
+        "bpm": "73",
+        "difficulty": [
+          2,
+          4,
+          8,
+          -1
+        ],
+        "track": 2,
+        "book": 13
+      },
+      "theletter": {
+        "name": "The Letter",
+        "artist": "KIVA",
+        "bpm": "153",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 3,
+        "book": 13
+      },
+      "thetruththatyouleave": {
+        "name": "The Truth That You Leave",
+        "artist": "Pianoboy",
+        "bpm": "127",
+        "difficulty": [
+          1,
+          4,
+          6,
+          -1
+        ],
+        "track": 4,
+        "book": 13
+      },
+      "veritas": {
+        "name": "Veritas",
+        "artist": "Presti",
+        "bpm": "175",
+        "difficulty": [
+          2,
+          7,
+          9,
+          -1
+        ],
+        "track": 5,
+        "book": 13
+      },
+      "drg": {
+        "name": "DRG",
+        "artist": "Ani",
+        "bpm": "155",
+        "difficulty": [
+          2,
+          5,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 14
+      },
+      "liberame": {
+        "name": "Libera me",
+        "artist": "Cranky",
+        "bpm": "165",
+        "difficulty": [
+          3,
+          8,
+          10,
+          -1
+        ],
+        "track": 2,
+        "book": 14
+      },
+      "precipitation": {
+        "name": "Precipitation",
+        "artist": "Ice",
+        "bpm": "167",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 14
+      },
+      "sacred": {
+        "name": "Sacred",
+        "artist": "Rabpit",
+        "bpm": "150",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 4,
+        "book": 14
+      },
+      "theblackcase": {
+        "name": "The Black Case",
+        "artist": "KillerBlood",
+        "bpm": "155",
+        "difficulty": [
+          2,
+          4,
+          7,
+          -1
+        ],
+        "track": 5,
+        "book": 14
+      },
+      "futureworld": {
+        "name": "Future World",
+        "artist": "Killerblood",
+        "bpm": "120",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 15
+      },
+      "holyknight": {
+        "name": "Holy Knight",
+        "artist": "Eyemedia",
+        "bpm": "155",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 15
+      },
+      "niflheimr": {
+        "name": "Niflheimr",
+        "artist": "xi",
+        "bpm": "180",
+        "difficulty": [
+          2,
+          6,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 15
+      },
+      "parousia": {
+        "name": "Parousia",
+        "artist": "xi",
+        "bpm": "158",
+        "difficulty": [
+          4,
+          8,
+          10,
+          -1
+        ],
+        "track": 4,
+        "book": 15
+      },
+      "recollections": {
+        "name": "Recollections",
+        "artist": "Yamajet",
+        "bpm": "240",
+        "difficulty": [
+          4,
+          6,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 15
+      },
+      "k01thewaywewere": {
+        "name": "The Way We Were",
+        "artist": "NICODE",
+        "bpm": "140",
+        "difficulty": [
+          3,
+          5,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 16
+      },
+      "k02thesanctuary": {
+        "name": "The Sanctuary",
+        "artist": "Eye AC",
+        "bpm": "160",
+        "difficulty": [
+          3,
+          7,
+          8,
+          -1
+        ],
+        "track": 2,
+        "book": 16
+      },
+      "k03theredcoronation": {
+        "name": "The Red Coronation",
+        "artist": "Eye RH",
+        "bpm": "154",
+        "difficulty": [
+          3,
+          7,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 16
+      },
+      "k04forbiddencodex": {
+        "name": "Forbidden Codex",
+        "artist": "Hoskey",
+        "bpm": "176",
+        "difficulty": [
+          4,
+          6,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 16
+      },
+      "k05knightoffirmament": {
+        "name": "Knight Of Firmament",
+        "artist": "Eye XY feat.Yoneko",
+        "bpm": "155",
+        "difficulty": [
+          2,
+          6,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 16
+      },
+      "k06lordofcrimsonrose": {
+        "name": "Lord Of Crimson Rose",
+        "artist": "Eye DT feat. Searlait",
+        "bpm": "125",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 1,
+        "book": 17
+      },
+      "k07predawn": {
+        "name": "Predawn",
+        "artist": "Nicode",
+        "bpm": "140",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 2,
+        "book": 17
+      },
+      "k08thefallenbloom": {
+        "name": "The Fallen Bloom",
+        "artist": "Hoskey",
+        "bpm": "160",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 3,
+        "book": 17
+      },
+      "k09whereyouarenot": {
+        "name": "Where You Are Not",
+        "artist": "Nicode",
+        "bpm": "180",
+        "difficulty": [
+          3,
+          7,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 17
+      },
+      "k10music": {
+        "name": "Music",
+        "artist": "Mai Aoyagi",
+        "bpm": "102",
+        "difficulty": [
+          2,
+          6,
+          9,
+          -1
+        ],
+        "track": 5,
+        "book": 17
+      },
+      "AI01creamstew": {
+        "name": "CREAM STEW (Deemo Ver.)",
+        "artist": "aioi feat. KAMATA JUNKO",
+        "bpm": "103",
+        "difficulty": [
+          3,
+          6,
+          9,
+          -1
+        ],
+        "track": 1,
+        "book": 18
+      },
+      "AI02ienakunaru": {
+        "name": "I can not say (Deemo Ver.)",
+        "artist": "aioi feat. KAMATA JUNKO",
+        "bpm": "148",
+        "difficulty": [
+          3,
+          5,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 18
+      },
+      "AI03image": {
+        "name": "Image (Deemo Ver.)",
+        "artist": "aioi feat. KAMATA JUNKO",
+        "bpm": "88",
+        "difficulty": [
+          4,
+          6,
+          8,
+          -1
+        ],
+        "track": 3,
+        "book": 18
+      },
+      "AI04kireigoto": {
+        "name": "kireigoto (Deemo Ver.)",
+        "artist": "aioi feat. KAMATA JUNKO",
+        "bpm": "111",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 4,
+        "book": 18
+      },
+      "AI05newworld": {
+        "name": "NEW WORLD (Deemo Ver.)",
+        "artist": "aioi feat. KAMATA JUNKO",
+        "bpm": "92",
+        "difficulty": [
+          4,
+          6,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 18
+      },
+      "MN01loadstar": {
+        "name": "Loadstar",
+        "artist": "M2U / Arranger: M2U × Nicode",
+        "bpm": "90",
+        "difficulty": [
+          2,
+          6,
+          7,
+          -1
+        ],
+        "track": 1,
+        "book": 19
+      },
+      "MN02lune": {
+        "name": "Lune",
+        "artist": "M2U / Arranger: M2U × Nicode",
+        "bpm": "160",
+        "difficulty": [
+          4,
+          8,
+          10,
+          -1
+        ],
+        "track": 2,
+        "book": 19
+      },
+      "MN03moonhalo": {
+        "name": "Moon Halo",
+        "artist": "M2U",
+        "bpm": "120",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 3,
+        "book": 19
+      },
+      "MN04stellar": {
+        "name": "Stellar",
+        "artist": "M2U / Arranger: M2U × Nicode",
+        "bpm": "100",
+        "difficulty": [
+          4,
+          6,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 19
+      },
+      "MN05wickedfate": {
+        "name": "Wicked Fate",
+        "artist": "M2U",
+        "bpm": "140",
+        "difficulty": [
+          4,
+          7,
+          10,
+          -1
+        ],
+        "track": 5,
+        "book": 19
+      },
+      "NMST01farewell": {
+        "name": "Farewell",
+        "artist": "3R2",
+        "bpm": "160",
+        "difficulty": [
+          1,
+          4,
+          6,
+          -1
+        ],
+        "track": 1,
+        "book": 20
+      },
+      "NMST02winter": {
+        "name": "Winter (Deemo Ver.)",
+        "artist": "3R2",
+        "bpm": "134",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 20
+      },
+      "NMST03fluffiepartie": {
+        "name": "Fluffie Partie",
+        "artist": "N.M.S.T.",
+        "bpm": "130",
+        "difficulty": [
+          3,
+          7,
+          8,
+          -1
+        ],
+        "track": 3,
+        "book": 20
+      },
+      "NMST04snowflakes": {
+        "name": "Snowflakes",
+        "artist": "N.M.S.T.",
+        "bpm": "174",
+        "difficulty": [
+          3,
+          6,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 20
+      },
+      "NMST05kouyou": {
+        "name": "KOUYOU",
+        "artist": "Ice",
+        "bpm": "170",
+        "difficulty": [
+          3,
+          7,
+          10,
+          -1
+        ],
+        "track": 5,
+        "book": 20
+      },
+      "mili02aturtlesheart": {
+        "name": "A Turtle's Heart",
+        "artist": "Mili",
+        "bpm": "148",
+        "difficulty": [
+          2,
+          6,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 21
+      },
+      "mili02cerebrite": {
+        "name": "Cerebrite",
+        "artist": "Mili",
+        "bpm": "148",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 2,
+        "book": 21
+      },
+      "mili02imaginedflight": {
+        "name": "Imagined Flight",
+        "artist": "Mili",
+        "bpm": "116",
+        "difficulty": [
+          3,
+          6,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 21
+      },
+      "mili02spacecolony": {
+        "name": "Space Colony",
+        "artist": "Mili",
+        "bpm": "230",
+        "difficulty": [
+          2,
+          6,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 21
+      },
+      "mili02ufo": {
+        "name": "UFO",
+        "artist": "Mili",
+        "bpm": "120",
+        "difficulty": [
+          3,
+          5,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 21
+      },
+      "adpiano01oceanus": {
+        "name": "Oceanus",
+        "artist": "cosMo@bousou-P",
+        "bpm": "196",
+        "difficulty": [
+          6,
+          9,
+          10,
+          -1
+        ],
+        "track": 1,
+        "book": 22
+      },
+      "adpiano01dedication": {
+        "name": "Dedication",
+        "artist": "void",
+        "bpm": "170",
+        "difficulty": [
+          5,
+          8,
+          9,
+          -1
+        ],
+        "track": 2,
+        "book": 22
+      },
+      "adpiano01snowscape": {
+        "name": "Snowscape",
+        "artist": "Yuta Murase",
+        "bpm": "130",
+        "difficulty": [
+          2,
+          4,
+          7,
+          -1
+        ],
+        "track": 3,
+        "book": 22
+      },
+      "adpiano01white_palette": {
+        "name": "White Palette",
+        "artist": "tigerlily",
+        "bpm": "81",
+        "difficulty": [
+          2,
+          4,
+          7,
+          -1
+        ],
+        "track": 4,
+        "book": 22
+      },
+      "adpiano01long_summer": {
+        "name": "Long Summer",
+        "artist": "Chroma",
+        "bpm": "120-160",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 5,
+        "book": 22
+      },
+      "rabpit01delivery": {
+        "name": "Delivery",
+        "artist": "Rabpit",
+        "bpm": "93",
+        "difficulty": [
+          2,
+          5,
+          9,
+          -1
+        ],
+        "track": 1,
+        "book": 23
+      },
+      "rabpit01encumbrance": {
+        "name": "Encumbrance",
+        "artist": "Rabpit",
+        "bpm": "120",
+        "difficulty": [
+          3,
+          4,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 23
+      },
+      "rabpit01expansion": {
+        "name": "Expansion",
+        "artist": "Rabpit",
+        "bpm": "150",
+        "difficulty": [
+          3,
+          5,
+          8,
+          -1
+        ],
+        "track": 3,
+        "book": 23
+      },
+      "rabpit01mellow": {
+        "name": "Mellow",
+        "artist": "Rabpit",
+        "bpm": "130",
+        "difficulty": [
+          1,
+          4,
+          8,
+          -1
+        ],
+        "track": 4,
+        "book": 23,
+        "format": "wav"
+      },
+      "rabpit01overlong": {
+        "name": "Overlong",
+        "artist": "Rabpit",
+        "bpm": "68",
+        "difficulty": [
+          2,
+          5,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 23
+      },
+      "llowloneliness": {
+        "name": "L1: Loneliness",
+        "artist": "Ice",
+        "bpm": "77.5",
+        "difficulty": [
+          4,
+          8,
+          10,
+          -1
+        ],
+        "track": 1,
+        "book": 24
+      },
+      "llowliberation": {
+        "name": "L2: Liberation",
+        "artist": "Ice",
+        "bpm": "68",
+        "difficulty": [
+          3,
+          6,
+          9,
+          -1
+        ],
+        "track": 2,
+        "book": 24
+      },
+      "llowleverage": {
+        "name": "L3: Leverage",
+        "artist": "Ice",
+        "bpm": "63.5",
+        "difficulty": [
+          4,
+          8,
+          10,
+          -1
+        ],
+        "track": 3,
+        "book": 24
+      },
+      "llowlatent": {
+        "name": "L4: Latent",
+        "artist": "Ice",
+        "bpm": "72",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 4,
+        "book": 24
+      },
+      "llowlapse": {
+        "name": "L5: Lapse",
+        "artist": "Ice",
+        "bpm": "75",
+        "difficulty": [
+          3,
+          7,
+          10,
+          -1
+        ],
+        "track": 5,
+        "book": 24
+      },
+      "luplunatic": {
+        "name": "L6: Lunatic",
+        "artist": "Ice",
+        "bpm": "72",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 1,
+        "book": 25
+      },
+      "luplegion": {
+        "name": "L7: Legion",
+        "artist": "Ice",
+        "bpm": "72",
+        "difficulty": [
+          5,
+          8,
+          10,
+          -1
+        ],
+        "track": 2,
+        "book": 25
+      },
+      "luplost": {
+        "name": "L8: Lost",
+        "artist": "Ice",
+        "bpm": "72",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 25
+      },
+      "luplament": {
+        "name": "L9: Lament",
+        "artist": "Ice",
+        "bpm": "72",
+        "difficulty": [
+          3,
+          8,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 25
+      },
+      "luplargo": {
+        "name": "L10: Largo",
+        "artist": "Ice",
+        "bpm": "60",
+        "difficulty": [
+          3,
+          6,
+          9,
+          -1
+        ],
+        "track": 5,
+        "book": 25
+      },
+      "rac01aciculignosa": {
+        "name": "AciculignosA",
+        "artist": "Kaneko Chiharu",
+        "bpm": "148",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 1,
+        "book": 26
+      },
+      "rac01bloomingspring": {
+        "name": "blooming spring",
+        "artist": "Go raibh maith agat Orchestra",
+        "bpm": "123",
+        "difficulty": [
+          4,
+          6,
+          8,
+          -1
+        ],
+        "track": 2,
+        "book": 26
+      },
+      "rac01lifill": {
+        "name": "Lifill",
+        "artist": "Feryquitous feat. Sennzai",
+        "bpm": "184",
+        "difficulty": [
+          3,
+          5,
+          7,
+          -1
+        ],
+        "track": 3,
+        "book": 26
+      },
+      "rac01toysetude": {
+        "name": "Toys Etude",
+        "artist": "soyomogi",
+        "bpm": "178",
+        "difficulty": [
+          5,
+          8,
+          10,
+          -1
+        ],
+        "track": 4,
+        "book": 26
+      },
+      "rac01rethefullmoonworld": {
+        "name": "Re: the Full moon World.",
+        "artist": "Ayatsugu Otowa",
+        "bpm": "86.5",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 5,
+        "book": 26
+      },
+      "rac02aliceinsecretcircus": {
+        "name": "Alice in Secret Circus",
+        "artist": "Kaname Shigeyoshi",
+        "bpm": "211",
+        "difficulty": [
+          3,
+          6,
+          9,
+          -1
+        ],
+        "track": 1,
+        "book": 27
+      },
+      "rac02anticipation": {
+        "name": "Anticipation",
+        "artist": "Shi Kuang Lee",
+        "bpm": "115",
+        "difficulty": [
+          3,
+          6,
+          9,
+          -1
+        ],
+        "track": 2,
+        "book": 27
+      },
+      "rac02graduationsong": {
+        "name": "Graduation Song",
+        "artist": "Kitkit Lu",
+        "bpm": "122",
+        "difficulty": [
+          1,
+          4,
+          6,
+          -1
+        ],
+        "track": 3,
+        "book": 27
+      },
+      "rac02lili": {
+        "name": "LILI",
+        "artist": "Rigel Theatre",
+        "bpm": "91",
+        "difficulty": [
+          4,
+          7,
+          10,
+          -1
+        ],
+        "track": 4,
+        "book": 27
+      },
+      "rac02sprout": {
+        "name": "Sprout",
+        "artist": "HALLPBESTUDIO",
+        "bpm": "80",
+        "difficulty": [
+          2,
+          4,
+          6,
+          -1
+        ],
+        "track": 5,
+        "book": 27
+      },
+      "sakuzyo01angelfalse": {
+        "name": "AngelFalse",
+        "artist": "Sakuzyo",
+        "bpm": "173",
+        "difficulty": [
+          3,
+          8,
+          10,
+          -1
+        ],
+        "track": 1,
+        "book": 28
+      },
+      "sakuzyo01imp": {
+        "name": "imp",
+        "artist": "Sakuzyo",
+        "bpm": "90",
+        "difficulty": [
+          4,
+          6,
+          9,
+          -1
+        ],
+        "track": 2,
+        "book": 28
+      },
+      "sakuzyo01magicatz": {
+        "name": "MagiCatz",
+        "artist": "Sakuzyo",
+        "bpm": "135-145",
+        "difficulty": [
+          4,
+          9,
+          10,
+          -1
+        ],
+        "track": 3,
+        "book": 28
+      },
+      "sakuzyo01poemofrapture": {
+        "name": "Poem of Rapture",
+        "artist": "Sakuzyo",
+        "bpm": "*",
+        "difficulty": [
+          5,
+          8,
+          10,
+          -1
+        ],
+        "track": 4,
+        "book": 28
+      },
+      "sakuzyo01rondofor97keys": {
+        "name": "Rondo for 97Keys",
+        "artist": "Sakuzyo",
+        "bpm": "157",
+        "difficulty": [
+          4,
+          8,
+          9,
+          -1
+        ],
+        "track": 5,
+        "book": 28
+      },
+      "dspiano01eltina": {
+        "name": "Eltina",
+        "artist": "Feryquitous",
+        "bpm": "110",
+        "difficulty": [
+          2,
+          5,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 29
+      },
+      "dspiano01samishigariyanogaisen": {
+        "name": "Samishigariya no gaisen",
+        "artist": "b",
+        "bpm": "73",
+        "difficulty": [
+          1,
+          5,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 29
+      },
+      "dspiano01caramelcustard": {
+        "name": "Caramel Custard",
+        "artist": "xi",
+        "bpm": "146.5",
+        "difficulty": [
+          3,
+          7,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 29
+      },
+      "dspiano01noblesseoblige": {
+        "name": "Noblesse Oblige",
+        "artist": "Powerless",
+        "bpm": "120",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 29
+      },
+      "dspiano01hanomai": {
+        "name": "Hanomai",
+        "artist": "b",
+        "bpm": "140",
+        "difficulty": [
+          2,
+          5,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 29
+      },
+      "rac03levelzero": {
+        "name": "Level Zero",
+        "artist": "I.O",
+        "bpm": "160⇔230",
+        "difficulty": [
+          1,
+          5,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 30
+      },
+      "rac03pupa": {
+        "name": "PUPA",
+        "artist": "Morimori Atsushi",
+        "bpm": "202",
+        "difficulty": [
+          6,
+          8,
+          10,
+          -1
+        ],
+        "track": 2,
+        "book": 30
+      },
+      "rac03ragnarok": {
+        "name": "Ragnarok",
+        "artist": "FIG",
+        "bpm": "188",
+        "difficulty": [
+          6,
+          8,
+          10,
+          -1
+        ],
+        "track": 3,
+        "book": 30
+      },
+      "rac03tonextpage": {
+        "name": "To next page",
+        "artist": "kamome sano",
+        "bpm": "176",
+        "difficulty": [
+          3,
+          5,
+          8,
+          -1
+        ],
+        "track": 4,
+        "book": 30
+      },
+      "rac03memoryofskyblue": {
+        "name": "Memory of Skyblue",
+        "artist": "Ujico*",
+        "bpm": "186",
+        "difficulty": [
+          2,
+          6,
+          8,
+          -1
+        ],
+        "track": 5,
+        "book": 30
+      },
+      "rac04butterfly": {
+        "name": "Butterfly",
+        "artist": "Shi Kuang Lee & Pico",
+        "bpm": "160",
+        "difficulty": [
+          3,
+          4,
+          6,
+          -1
+        ],
+        "track": 1,
+        "book": 31
+      },
+      "rac04diary": {
+        "name": "DIARY",
+        "artist": "Xiaoming",
+        "bpm": "91",
+        "difficulty": [
+          2,
+          4,
+          7,
+          -1
+        ],
+        "track": 2,
+        "book": 31
+      },
+      "rac04fissure": {
+        "name": "Fis-sure",
+        "artist": "Triodust",
+        "bpm": "77",
+        "difficulty": [
+          2,
+          4,
+          6,
+          -1
+        ],
+        "track": 3,
+        "book": 31
+      },
+      "rac04wishuponashootingstar": {
+        "name": "Wish upon a shooting star",
+        "artist": "SUi",
+        "bpm": "128",
+        "difficulty": [
+          2,
+          5,
+          8,
+          -1
+        ],
+        "track": 4,
+        "book": 31
+      },
+      "rac04theyseemlikeblossomsyet": {
+        "name": "They seem like blossoms yet ...",
+        "artist": "Air Carrier",
+        "bpm": "110",
+        "difficulty": [
+          1,
+          4,
+          7,
+          -1
+        ],
+        "track": 5,
+        "book": 31
+      },
+      "rac05yoakeomatsukiminouta": {
+        "name": "Yoake o matsu kimi no uta",
+        "artist": "TAKU1175",
+        "bpm": "181",
+        "difficulty": [
+          3,
+          6,
+          9,
+          -1
+        ],
+        "track": 1,
+        "book": 32
+      },
+      "rac05finalrush": {
+        "name": "Final Rush",
+        "artist": "ReZister",
+        "bpm": "182",
+        "difficulty": [
+          4,
+          7,
+          9,
+          -1
+        ],
+        "track": 2,
+        "book": 32
+      },
+      "rac05likeasianspirit": {
+        "name": "Like Asian Spirit",
+        "artist": "Valunava",
+        "bpm": "143",
+        "difficulty": [
+          5,
+          8,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 32
+      },
+      "rac05paraline": {
+        "name": "Paraline",
+        "artist": "Yuta Murase",
+        "bpm": "133",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 4,
+        "book": 32
+      },
+      "rac05scherzo": {
+        "name": "Scherzo",
+        "artist": "gondayu",
+        "bpm": "181",
+        "difficulty": [
+          2,
+          7,
+          7,
+          -1
+        ],
+        "track": 5,
+        "book": 32
+      },
+      "timeline01penglaimovement": {
+        "name": "Penglai Movement",
+        "artist": "Video Game Orchestra",
+        "bpm": "157.5",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 33
+      },
+      "timeline01moneymoney": {
+        "name": "Money & Money",
+        "artist": "Video Game Orchestra",
+        "bpm": "170",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 2,
+        "book": 33
+      },
+      "timeline01phubbing": {
+        "name": "Phubbing",
+        "artist": "Video Game Orchestra",
+        "bpm": "120",
+        "difficulty": [
+          2,
+          6,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 33
+      },
+      "timeline01protest": {
+        "name": "Protest",
+        "artist": "Video Game Orchestra",
+        "bpm": "144",
+        "difficulty": [
+          4,
+          8,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 33
+      },
+      "timeline01anewhome": {
+        "name": "A New Home",
+        "artist": "Video Game Orchestra",
+        "bpm": "185",
+        "difficulty": [
+          1,
+          5,
+          7,
+          -1
+        ],
+        "track": 5,
+        "book": 33
+      },
+      "rac06ancientrose": {
+        "name": "Ancient Rose",
+        "artist": "SUU",
+        "bpm": "160",
+        "difficulty": [
+          1,
+          5,
+          7,
+          -1
+        ],
+        "track": 1,
+        "book": 34
+      },
+      "rac06carnation": {
+        "name": "Carnation",
+        "artist": "himmel",
+        "bpm": "118",
+        "difficulty": [
+          1,
+          5,
+          8,
+          -1
+        ],
+        "track": 2,
+        "book": 34
+      },
+      "rac06delusion": {
+        "name": "Delusion (Yume-Maboroshi)",
+        "artist": "NIKITA",
+        "bpm": "180",
+        "difficulty": [
+          4,
+          8,
+          10,
+          -1
+        ],
+        "track": 3,
+        "book": 34
+      },
+      "rac06frozenemotion": {
+        "name": "Frozen Emotion",
+        "artist": "XEN",
+        "bpm": "160",
+        "difficulty": [
+          2,
+          7,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 34
+      },
+      "rac06scent": {
+        "name": "Scent",
+        "artist": "farhan",
+        "bpm": "170",
+        "difficulty": [
+          2,
+          5,
+          7,
+          -1
+        ],
+        "track": 5,
+        "book": 34
+      },
+      "mili03bathtubmermaid": {
+        "name": "Bathtub Mermaid",
+        "artist": "Mili",
+        "bpm": "79",
+        "difficulty": [
+          3,
+          7,
+          9,
+          -1
+        ],
+        "track": 1,
+        "book": 35
+      },
+      "mili03dk": {
+        "name": "DK",
+        "artist": "Mili",
+        "bpm": "142",
+        "difficulty": [
+          3,
+          5,
+          8,
+          -1
+        ],
+        "track": 2,
+        "book": 35
+      },
+      "mili03ga1ahad": {
+        "name": "Ga1ahad and Scientific Witchery",
+        "artist": "Mili",
+        "bpm": "166",
+        "difficulty": [
+          5,
+          8,
+          10,
+          -1
+        ],
+        "track": 3,
+        "book": 35
+      },
+      "mili03ikutoshitsuki": {
+        "name": "Ikutoshitsuki",
+        "artist": "Mili",
+        "bpm": "87",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 4,
+        "book": 35
+      },
+      "mili03milk": {
+        "name": "Milk",
+        "artist": "Mili",
+        "bpm": "132",
+        "difficulty": [
+          3,
+          7,
+          9,
+          -1
+        ],
+        "track": 5,
+        "book": 35
+      },
+      "crankyrainofflowers": {
+        "name": "Rain of Flowers",
+        "artist": "VILA",
+        "bpm": "",
+        "difficulty": [
+          1,
+          3,
+          5,
+          -1
+        ],
+        "track": 1,
+        "book": 36
+      },
+      "cranky14bunnies": {
+        "name": "The Bisque Doll and 14 Bunnies",
+        "artist": "VILA",
+        "bpm": "",
+        "difficulty": [
+          4,
+          6,
+          8,
+          -1
+        ],
+        "track": 2,
+        "book": 36
+      },
+      "crankyanotherkatharsis": {
+        "name": "Another Katharsis",
+        "artist": "VILA",
+        "bpm": "",
+        "difficulty": [
+          2,
+          7,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 36
+      },
+      "crankyeternity": {
+        "name": "Eternity",
+        "artist": "Cranky",
+        "bpm": "",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 4,
+        "book": 36
+      },
+      "crankyconflict": {
+        "name": "Conflict (VILA Remix)",
+        "artist": "shiromaru + cranky",
+        "bpm": "",
+        "difficulty": [
+          5,
+          7,
+          10,
+          -1
+        ],
+        "track": 5,
+        "book": 36
+      },
+      "yamajetamidelicious": {
+        "name": "Am I delicious",
+        "artist": "Yamajet feat. Amane(COOL&CREATE) & Godspeed",
+        "bpm": "",
+        "difficulty": [
+          3,
+          6,
+          8,
+          -1
+        ],
+        "track": 1,
+        "book": 37
+      },
+      "yamajetmerrygoroundgirl": {
+        "name": "Merry go round girl",
+        "artist": "Yamajet",
+        "bpm": "",
+        "difficulty": [
+          2,
+          5,
+          8,
+          -1
+        ],
+        "track": 2,
+        "book": 37
+      },
+      "yamajetmonokuronokaze": {
+        "name": "Monokuro no kaze",
+        "artist": "Yamajet feat. TEA & Godspeed",
+        "bpm": "",
+        "difficulty": [
+          4,
+          6,
+          9,
+          -1
+        ],
+        "track": 3,
+        "book": 37
+      },
+      "yamajetorca": {
+        "name": "Orca",
+        "artist": "Yamajet",
+        "bpm": "",
+        "difficulty": [
+          3,
+          5,
+          9,
+          -1
+        ],
+        "track": 4,
+        "book": 37
+      },
+      "yamajetsincerity": {
+        "name": "Sincerity",
+        "artist": "Yamajet",
+        "bpm": "",
+        "difficulty": [
+          2,
+          6,
+          9,
+          -1
+        ],
+        "track": 5,
+        "book": 37
+      },
+      "bgm_basement": {
+        "name": "BGM Basement",
+        "artist": "?",
+        "bpm": "?",
+        "difficulty": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "track": 1,
+        "book": 38
+      },
+      "bgm_first_floor": {
+        "name": "BGM First Floor",
+        "artist": "?",
+        "bpm": "?",
+        "difficulty": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "track": 2,
+        "book": 38
+      },
+      "bgm_second_floor": {
+        "name": "BGM Second Floor",
+        "artist": "?",
+        "bpm": "?",
+        "difficulty": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "track": 3,
+        "book": 38
+      },
+      "bgm_top": {
+        "name": "BGM Top",
+        "artist": "?",
+        "bpm": "?",
+        "difficulty": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "track": 4,
+        "book": 38
+      },
+      "Deemo Manual Day Music": {
+        "name": "Deemo Manual Day Music",
+        "artist": "?",
+        "bpm": "?",
+        "difficulty": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "track": 5,
+        "book": 38
+      },
+      "Deemo Manual Night Music": {
+        "name": "Deemo Manual Night Music",
+        "artist": "?",
+        "bpm": "?",
+        "difficulty": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "track": 6,
+        "book": 38
+      },
+      "feastofspring": {
+        "name": "Feast of Spring",
+        "artist": "K-Run & M2U",
+        "bpm": "200",
+        "difficulty": [
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "track": 7,
+        "book": 38
+      }
+    },
+    "books": [
+      {
+        "name": "Deemo's collection Vol.1A",
+        "track": 13
+      },
+      {
+        "name": "Deemo's collection Vol.1B",
+        "track": 14
+      },
+      {
+        "name": "Deemo's collection Vol.2",
+        "track": 11
+      },
+      {
+        "name": "Shattered Memories",
+        "track": 22
+      },
+      {
+        "name": "Samsara collection",
+        "track": 10
+      },
+      {
+        "name": "Etude collection",
+        "track": 15
+      },
+      {
+        "name": "Collaboration collection",
+        "track": 6
+      },
+      {
+        "name": "Rayark selection Vol.1",
+        "track": 6
+      },
+      {
+        "name": "Rayark selection Vol.2",
+        "track": 5
+      },
+      {
+        "name": "MILI collection",
+        "track": 5
+      },
+      {
+        "name": "V.K collection",
+        "track": 5
+      },
+      {
+        "name": "Brian Crain collection",
+        "track": 5
+      },
+      {
+        "name": "Eshen Chen collection Vol.1 Transmission",
+        "track": 5
+      },
+      {
+        "name": "Rayark selection Vol.3",
+        "track": 5
+      },
+      {
+        "name": "Cytus selection Vol.1",
+        "track": 5
+      },
+      {
+        "name": "Cytus selection Vol.2",
+        "track": 5
+      },
+      {
+        "name": "Knight Iris collection",
+        "track": 5
+      },
+      {
+        "name": "Knight Rosabell collection",
+        "track": 5
+      },
+      {
+        "name": "Aioi collection",
+        "track": 5
+      },
+      {
+        "name": "M2U × Nicode collection",
+        "track": 5
+      },
+      {
+        "name": "N.M.S.T. collection",
+        "track": 5
+      },
+      {
+        "name": "MILI collection Vol.2",
+        "track": 5
+      },
+      {
+        "name": "AD:PIANO collection",
+        "track": 5
+      },
+      {
+        "name": "Rabpit collection",
+        "track": 5
+      },
+      {
+        "name": "L: The Lower collection",
+        "track": 5
+      },
+      {
+        "name": "L: The Upper collection",
+        "track": 5
+      },
+      {
+        "name": "RAC collection #1",
+        "track": 5
+      },
+      {
+        "name": "RAC collection #2",
+        "track": 5
+      },
+      {
+        "name": "Sakuzyo collection",
+        "track": 5
+      },
+      {
+        "name": "DS:PIANO collection",
+        "track": 5
+      },
+      {
+        "name": "RAC collection #3",
+        "track": 5
+      },
+      {
+        "name": "RAC collection #4",
+        "track": 5
+      },
+      {
+        "name": "RAC collection #5",
+        "track": 5
+      },
+      {
+        "name": "Timeline collection",
+        "track": 5
+      },
+      {
+        "name": "RAC Collection #6",
+        "track": 5
+      },
+      {
+        "name": "MILI collection Vol.3",
+        "track": 5
+      },
+      {
+        "name": "Cranky collection",
+        "track": 5
+      },
+      {
+        "name": "Yamajet collection",
+        "track": 5
+      },
+      {
+        "name": "Other",
+        "track": 7
+      }
+    ]
+  },
+  "notes": "Public legacy game-key/song-title mapping; upstream data may predate later DEEMO releases. No art included.",
+  "license": "MIT",
+  "license_path": "docs/licenses/DeemoSongs-MIT.txt"
+}
