@@ -1,0 +1,440 @@
+﻿@font-face {
+    font-family: Coprhtl;
+    src: url(src/COPRGTL.ttf);
+}
+
+@font-face {
+    font-family: COPRGTL;
+    src: url(src/COPRGTL.ttf);
+}
+
+@font-face {
+    font-family: Fantique;
+    src: url(src/Fantique-Four.ttf);
+}
+
+@font-face {
+    font-family: RocknRoll;
+    src: url(src/RocknRoll_Typo_bold.ttf);
+}
+
+html,
+body {
+    font-family: Coprhtl;
+    color: #333;
+    font-size: 16px;
+    background-image: url(src/bg.png);
+    background-color: #fff;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    -webkit-touch-callout: none;
+    /* iOS Safari */
+    -webkit-user-select: none;
+    /* Chrome/Safari/Opera */
+    -khtml-user-select: none;
+    /* Konqueror */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer/Edge */
+    user-select: none;
+    /* Non-prefixed version, currently not supported by any browser */
+}
+
+.mashiro {
+    opacity: 0;
+    -webkit-transition: opacity 0.3s; /* Safari */
+    -webkit-transition-timing-function: linear; /* Safari */
+    transition: opacity 0.3s;
+    transition-timing-function: linear;
+}
+
+.dear-alice {
+    font-family: Fantique, RocknRoll;
+    font-size: 3em;
+    position: absolute;
+    top: 60%;
+    transform: translateY(-50%);
+    left: 5%;
+    text-align: center;
+    z-index: 999;
+}
+
+.dear-alice p {
+    text-align: right
+}
+
+.signature {
+    font-family: COPRGTL;
+    font-size: 20px;
+    position: fixed;
+    left: 15px;
+    top: 5px;
+    z-index: 9999
+}
+
+.signature a {
+    color: #333
+}
+
+.signature a:hover {
+    color: #333
+}
+
+.mySlides {
+    opacity:0;
+    display: block
+}
+
+.mySlides {
+    position: absolute;
+    right: 0px;
+    height: 100%;
+    opacity: 1;
+    -webkit-transition: opacity 1s; /* Safari */
+    -webkit-transition-timing-function: linear; /* Safari */
+    transition: opacity 1s;
+    transition-timing-function: linear;
+}
+
+img {
+    vertical-align: middle;
+    height: 100%
+}
+
+img:not([src]) {
+    visibility: hidden;
+}
+
+@media screen and (max-width: 1100px) {
+    .dear-alice {
+        display: none
+    }
+    .signature {
+        font-size: 15px
+    }
+    .mySlides {
+        position: absolute;
+        right: 0px;
+        height: auto;
+        width: 100%
+    }
+
+    img {
+        vertical-align: middle;
+        height: auto;
+        width: 100%
+    }
+}
+
+/* Slideshow container */
+
+.slideshow-container {
+    margin: auto;
+}
+
+/* Next & previous buttons */
+
+.prev,
+.next {
+    cursor: pointer;
+    position: fixed;
+    top: 50%;
+    width: auto;
+    padding: 16px;
+    margin-top: -22px;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    transition: 0.6s ease;
+    border-radius: 0 3px 3px 0;
+}
+
+.prev {
+    left: 0
+}
+
+/* Position the "next button" to the right */
+
+.next {
+    right: 0;
+    border-radius: 3px 0 0 3px;
+}
+
+/* On hover, add a black background color with a little bit see-through */
+
+.prev:hover,
+.next:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.active,
+.dot:hover {
+    background-color: #717171;
+}
+
+/* Fading animation */
+
+.fade {
+    -webkit-animation-name: fade;
+    -webkit-animation-duration: 1.5s;
+    animation-name: fade;
+    animation-duration: 1.5s;
+}
+
+@-webkit-keyframes fade {
+    from {
+        opacity: .2
+    }
+    to {
+        opacity: 1
+    }
+}
+
+@keyframes fade {
+    from {
+        opacity: .2
+    }
+    to {
+        opacity: 1
+    }
+}
+
+/* On smaller screens, decrease text size */
+
+@media only screen and (max-width: 300px) {
+    .prev,
+    .next,
+    .text {
+        font-size: 11px
+    }
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    transition: opacity 500ms;
+    visibility: hidden;
+    opacity: 0;
+    z-index: 1000;
+}
+
+.overlay:target {
+    visibility: visible;
+    opacity: 1;
+}
+
+.overlay:target .save {
+    display: block !important;
+}
+
+.overlay:target .photo {
+    display: none!important;
+}
+
+.popup {
+    margin: 0;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0);
+    border-radius: 5px;
+    width: 100%;
+    height: 100% position: relative;
+    transition: all 2s ease-in-out;
+}
+
+.normal {
+    margin: 70px auto;
+    background: #fff;
+    width: 80%;
+}
+
+.popup .close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    transition: all 200ms;
+    font-size: 30px;
+    font-weight: bold;
+    text-decoration: none;
+    color: #fff;
+}
+
+.popup .content {
+    max-height: 30%;
+    overflow: auto;
+}
+
+canvas {
+    transform: scale(0.8);
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.pop {
+    display: block;
+    width: 100%;
+    height: 100%
+}
+
+.bt {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 50px;
+    padding: 10px;
+    background-color: #333;
+    cursor: pointer;
+    transform: translate(50%, -50%);
+    border-radius: 50%;
+    opacity: 0;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+    -webkit-transition: opacity 0.3s; /* Safari */
+    -webkit-transition-timing-function: linear; /* Safari */
+    transition: opacity 0.3s;
+    transition-timing-function: linear;
+}
+
+.photo {
+    display: block
+}
+
+.save {
+    display: none
+}
+
+.github {
+    left: 90px;
+}
+
+.weibo {
+    left: 270px;
+}
+
+.wordpress {
+    left: 180px;
+}
+
+.iplayer {
+    left: 360px;
+}
+
+.random {
+    left: 450px;
+}
+
+.random img {
+    transform:rotate(20deg);
+    -webkit-transition: transform 0.3s; /* Safari */
+    -webkit-transition-timing-function: linear; /* Safari */
+    transition: transform 0.3s;
+    transition-timing-function: linear;
+}
+
+/* Give the player a height & width of 0. Otherwise the player is visible on mobile devices (tested on iPhone 5). */
+
+#player {
+    height: 0;
+    width: 0
+}
+
+.speaker {
+    background-image: url(./src/play.svg);
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-position: 100% 0;
+    height: 50px;
+    width: 50px;
+    display: block;
+}
+
+.speakerplay {
+    background-image: url(./src/pause.svg);
+}
+
+.pace {
+  -webkit-pointer-events: none;
+  pointer-events: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.pace-inactive {
+  display: none;
+}
+
+.pace .pace-progress {
+  background: #333333;
+  position: fixed;
+  z-index: 2000;
+  top: 0;
+  right: 100%;
+  width: 100%;
+  height: 2px;
+}
+
+.pace .pace-progress-inner {
+  display: block;
+  position: absolute;
+  right: 0px;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 10px #333333, 0 0 5px #333333;
+  opacity: 1.0;
+  -webkit-transform: rotate(3deg) translate(0px, -4px);
+  -moz-transform: rotate(3deg) translate(0px, -4px);
+  -ms-transform: rotate(3deg) translate(0px, -4px);
+  -o-transform: rotate(3deg) translate(0px, -4px);
+  transform: rotate(3deg) translate(0px, -4px);
+}
+
+.pace .pace-activity {
+  display: block;
+  position: fixed;
+  z-index: 2000;
+  top: 15px;
+  right: 15px;
+  width: 14px;
+  height: 14px;
+  border: solid 2px transparent;
+  border-top-color: #333333;
+  border-left-color: #333333;
+  border-radius: 10px;
+  -webkit-animation: pace-spinner 400ms linear infinite;
+  -moz-animation: pace-spinner 400ms linear infinite;
+  -ms-animation: pace-spinner 400ms linear infinite;
+  -o-animation: pace-spinner 400ms linear infinite;
+  animation: pace-spinner 400ms linear infinite;
+}
+
+@-webkit-keyframes pace-spinner {
+  0% { -webkit-transform: rotate(0deg); transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+}
+@-moz-keyframes pace-spinner {
+  0% { -moz-transform: rotate(0deg); transform: rotate(0deg); }
+  100% { -moz-transform: rotate(360deg); transform: rotate(360deg); }
+}
+@-o-keyframes pace-spinner {
+  0% { -o-transform: rotate(0deg); transform: rotate(0deg); }
+  100% { -o-transform: rotate(360deg); transform: rotate(360deg); }
+}
+@-ms-keyframes pace-spinner {
+  0% { -ms-transform: rotate(0deg); transform: rotate(0deg); }
+  100% { -ms-transform: rotate(360deg); transform: rotate(360deg); }
+}
+@keyframes pace-spinner {
+  0% { transform: rotate(0deg); transform: rotate(0deg); }
+  100% { transform: rotate(360deg); transform: rotate(360deg); }
+}
