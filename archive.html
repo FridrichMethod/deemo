@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="FridrichMethod 的 DEEMO 1 曲绘档案，保留公开下载原文件及逐图来源。">
+  <title>DEEMO 1 曲绘档案 · FridrichMethod</title>
+  <link rel="icon" href="favicon.ico">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="src/archive.css">
+  <script src="data/catalog.js" defer></script>
+  <script src="src/archive.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">FRIDRICHMETHOD / PERSONAL COLLECTION</p>
+    <div class="heading-row">
+      <div><h1>DEEMO 1 曲绘档案</h1><p>画师发布、游戏纹理与社区版本。保留文件原貌，逐张追溯来源。</p></div>
+      <nav aria-label="导航"><a href="index.html">幻灯片</a><a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
+    </div>
+  </header>
+  <main>
+    <form id="filters" class="filters" role="search">
+      <label class="search">搜索曲名、画师、曲包<input id="query" type="search" placeholder="Magnolia / SnowEgg / Sakuzyo …" autocomplete="off"></label>
+      <label>来源<select id="family">
+        <option value="">全部来源</option>
+        <option value="artists">画师本人</option>
+        <option value="wikis">Wiki</option>
+        <option value="archives">公开档案 / 转载</option>
+        <option value="legacy">原仓库</option>
+      </select></label>
+      <label>类型<select id="kind"><option value="">全部图片</option><option value="song_art">单曲曲绘</option><option value="collection_cover">曲包封面</option><option value="contact_sheet">长图 / 拼图</option><option value="illustration">其他插画 / 未映射</option><option value="reference">扫描 / 参考</option></select></label>
+      <label>最小长边<select id="minimum"><option value="0">不限尺寸</option><option value="1024">1024 px</option><option value="1500">1500 px</option><option value="2048">2048 px</option><option value="3000">3000 px</option></select></label>
+      <label>排序<select id="sort"><option value="source">来源优先</option><option value="title">标题</option><option value="resolution">像素面积 ↓</option></select></label>
+      <button id="reset-filters" type="button">重置</button>
+    </form>
+    <div class="result-row"><p id="count" role="status" aria-live="polite">正在载入本地目录…</p><p>尺寸不等同于画质；不同裁切和版本均保留。</p></div>
+    <div id="grid" class="grid"></div>
+    <p id="empty" hidden>没有匹配的图片。可以缩短搜索词或放宽筛选条件。</p>
+    <button id="more" class="more" type="button" hidden>加载更多</button>
+    <details class="source-inventory"><summary>来源清单、参考文件与获取状态</summary><p id="inventory-summary"></p><div id="references"></div><div class="table-scroll"><table><thead><tr><th>来源</th><th>文件记录</th><th>状态 / 说明</th></tr></thead><tbody id="sources"></tbody></table></div><div id="failures"></div></details>
+  </main>
+  <footer>Maintained by <a href="https://github.com/FridrichMethod">FridrichMethod</a> · Original gallery by Mashiro · Artwork © Rayark Inc. / respective artists · <a href="NOTICE">Attribution</a> · <a href="data/catalog.json">完整来源清单 JSON</a></footer>
+  <dialog id="viewer" aria-labelledby="viewer-title">
+    <button id="close" class="close" type="button" aria-label="关闭预览">×</button>
+    <div class="viewer-image"><img id="full-image" alt=""><p id="image-error" hidden>图片加载失败，请使用原文件链接检查。</p></div>
+    <div class="viewer-info"><div class="viewer-controls"><button id="previous" type="button" aria-label="上一张">←</button><span id="position"></span><button id="next" type="button" aria-label="下一张">→</button></div><h2 id="viewer-title"></h2><p id="viewer-meta"></p><p class="links"><a id="download" download>下载原文件</a><a id="slideshow">幻灯片查看</a><a id="original" target="_blank" rel="noopener noreferrer">浏览器打开原文件 ↗</a></p><div id="provenance"></div><details><summary>文件信息</summary><p id="file-info"></p></details></div>
+  </dialog>
+  <noscript>浏览图库需要 JavaScript。原始文件仍可从 assets/public/ 与 trans/ 目录查看。</noscript>
+</body>
+</html>

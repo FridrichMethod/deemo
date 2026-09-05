@@ -1,0 +1,97 @@
+"""Checks for catalog integrity, attribution, and safe generated markup."""
+
+import copy
+import hashlib
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from PIL import Image
+
+spec = importlib.util.spec_from_file_location("build_catalog", Path(__file__).resolve().parents[1] / "scripts/build_catalog.py")
+build = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(build)
+
+
+class CatalogTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        (self.root / "data/sources").mkdir(parents=True)
+        path = self.root / "assets/public/artists/sample.png"
+        path.parent.mkdir(parents=True)
+        Image.new("RGB", (8, 12), "white").save(path)
+        raw = path.read_bytes()
+        self.asset = {
+            "id": "artist:sample", "source_id": "artist", "title": "Sample",
+            "kind": "song_art", "page_url": "https://example.com/art",
+            "path": "assets/public/artists/sample.png", "bytes": len(raw),
+            "sha256": hashlib.sha256(raw).hexdigest(), "width": 8, "height": 12,
+            "format": "PNG", "game": "DEEMO",
+        }
+
+    def manifest(self, family, asset):
+        content = {"sources": [{"id": asset["source_id"], "name": family, "url": asset["page_url"]}], "assets": [asset]}
+        (self.root / f"data/sources/{family}.json").write_text(json.dumps(content), encoding="utf-8")
+
+    def test_exact_duplicates_keep_both_provenances(self):
+        self.manifest("artists", self.asset)
+        duplicate = {**self.asset, "id": "wiki:sample", "source_id": "wiki"}
+        self.manifest("wikis", duplicate)
+        result = build.combine(self.root, verify=True)
+        self.assertEqual(result["summary"]["unique_files"], 1)
+        self.assertEqual(len(result["assets"][0]["provenance"]), 2)
+        self.assertEqual(result["assets"][0]["family"], "artists")
+
+    def test_same_title_different_bytes_keeps_versions(self):
+        self.manifest("artists", self.asset)
+        path = self.root / "assets/public/artists/other.png"
+        Image.new("RGB", (8, 12), "black").save(path)
+        raw = path.read_bytes()
+        other = {**self.asset, "id": "wiki:other", "source_id": "wiki", "path": path.relative_to(self.root).as_posix(), "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+        self.manifest("wikis", other)
+        self.assertEqual(len(build.combine(self.root, verify=True)["assets"]), 2)
+
+    def test_hash_and_dimensions_are_verified(self):
+        bad_hash = {**self.asset, "sha256": "0" * 64}
+        with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
+            build.validate_asset(self.root, bad_hash, True)
+        with self.assertRaisesRegex(ValueError, "Dimension mismatch"):
+            build.validate_asset(self.root, {**self.asset, "width": 9}, True)
+
+    def test_legacy_mapping_distinguishes_composer_and_illustrator(self):
+        (self.root / "trans").mkdir()
+        Image.new("RGB", (4, 4), "white").save(self.root / "trans/magnolia.png")
+        mapping = {"source_url": "https://example.com/mapping", "data": {"songs": {"magnolia": {"name": "Magnolia", "artist": "M2U", "book": 0}}, "books": [{"name": "Collection"}]}}
+        (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping))
+        asset = build.legacy_assets(self.root)[0]
+        self.assertEqual(asset["title"], "Magnolia")
+        self.assertEqual(asset["composer"], "M2U")
+        self.assertIsNone(asset["artist"])
+        self.assertEqual(asset["collection"], "Collection")
+        self.assertEqual(asset["kind"], "song_art")
+
+    def test_unsafe_paths_rejected(self):
+        for path in ("../secret.png", "/tmp/secret.png", "assets/../../secret.png", "README.md", ""):
+            with self.subTest(path=path), self.assertRaises(ValueError):
+                build.safe_path(self.root, path)
+
+    def test_source_urls_are_web_pages(self):
+        with self.assertRaisesRegex(ValueError, "Unsafe source URL"):
+            build.validate_asset(self.root, {**self.asset, "page_url": "javascript:alert(1)"})
+
+    def test_html_escapes_remote_metadata(self):
+        (self.root / "test.html").write_text("<main>@python-work-area</main>")
+        asset = copy.deepcopy(self.asset)
+        asset.update(gallery=True, url="assets/public/sample.png", source_name="Artist", title='A & B "><script>alert(1)</script>')
+        rendered = build.render_slideshow(self.root, {"assets": [asset]})
+        self.assertNotIn("<script>", rendered)
+        self.assertIn("&lt;script&gt;", rendered)
+        self.assertIn("A &amp; B", rendered)
+
+
+if __name__ == "__main__":
+    unittest.main()

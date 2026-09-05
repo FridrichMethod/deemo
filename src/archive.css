@@ -1,0 +1,62 @@
+:root { color-scheme: light; --paper: #f6f4ef; --ink: #282927; --muted: #6a6b64; --border: #d6d5cc; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.6 system-ui, sans-serif; }
+a { color: inherit; text-underline-offset: 3px; }
+a:hover { color: #726140; }
+button, input, select { font: inherit; color: inherit; }
+button, select { cursor: pointer; }
+button, input, select { border: 1px solid var(--border); border-radius: 5px; background: #fffc; padding: 9px 12px; }
+button:hover { border-color: var(--ink); }
+:focus-visible { outline: 3px solid #9c8656; outline-offset: 3px; }
+header, main, footer { max-width: 1600px; margin: auto; padding: 26px 40px; }
+header { padding-top: 46px; padding-bottom: 15px; }
+.eyebrow { font-size: 11px; letter-spacing: .16em; color: var(--muted); }
+.heading-row { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+h1 { font-family: Georgia, "Songti SC", serif; font-size: clamp(25px, 3vw, 40px); font-weight: 500; margin: 0; }
+h2 { font: 500 24px/1.3 Georgia, "Songti SC", serif; }
+header p, .result-row p { color: var(--muted); }
+nav { display: flex; gap: 24px; white-space: nowrap; }
+.filters { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 20px; }
+label { display: grid; gap: 5px; font-size: 12px; color: var(--muted); }
+input, select { font-size: 14px; color: var(--ink); height: 42px; }
+.search { flex: 1; min-width: 250px; }
+.result-row { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; margin: 14px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 22px; }
+.card { min-width: 0; }
+.card-image { display: block; padding: 0; width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 5px; background: #e7e5df; }
+.card-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.card h2 { font: 500 15px/1.4 system-ui, sans-serif; margin: 10px 0 3px; overflow-wrap: anywhere; }
+.card p { color: var(--muted); font-size: 12px; margin: 3px 0; }
+.card .tag { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+.more { display: block; margin: 32px auto; padding: 10px 40px; }
+[hidden] { display: none !important; }
+.source-inventory { border-top: 1px solid var(--border); margin-top: 32px; padding-top: 20px; }
+summary { cursor: pointer; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; margin: 15px 0; }
+th, td { text-align: left; vertical-align: top; padding: 10px; border-bottom: 1px solid var(--border); }
+th:first-child, td:first-child { min-width: 180px; }
+td:nth-child(2) { white-space: nowrap; }
+footer { border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+dialog { width: min(1400px, 95vw); height: min(900px, 93vh); padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--paper); color: var(--ink); }
+dialog[open] { display: grid; grid-template-columns: minmax(0, 1fr) 360px; }
+dialog::backdrop { background: #171918d9; }
+.viewer-image { min-height: 0; display: flex; align-items: center; justify-content: center; background: #e7e5df; overflow: auto; }
+.viewer-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.viewer-info { padding: 48px 24px 24px; overflow-y: auto; overflow-wrap: anywhere; font-size: 13px; }
+.close { position: absolute; top: 8px; right: 8px; width: 35px; height: 35px; border-radius: 50%; background: var(--paper); padding: 0; font-size: 24px; z-index: 2; }
+.viewer-controls { display: flex; align-items: center; gap: 14px; }
+.links { display: flex; gap: 12px; flex-wrap: wrap; }
+.provenance-item { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 14px; }
+.provenance-item p { margin: 5px 0; }
+#file-info { white-space: pre-wrap; font: 11px/1.6 monospace; }
+@media (max-width: 760px) {
+  header, main, footer { padding: 22px 16px; }
+  .heading-row, .result-row { display: block; }
+  nav { margin-top: 15px; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+  .search { flex-basis: 100%; }
+  .filters label:not(.search) { flex: 1; min-width: 110px; }
+  dialog[open] { grid-template-columns: 1fr; grid-template-rows: minmax(180px, 48vh) 1fr; }
+  .viewer-info { padding: 20px; }
+}

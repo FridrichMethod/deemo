@@ -1,40 +1,41 @@
-﻿<!-- 
+﻿<!--
 
 ##########################################
                Deemo 复刻
          「古树旋律游戏界面复刻」
 ##########################################
 
-Designed by Mashiro.
+Maintained by FridrichMethod (Zhaoyang Li).
+Original design by Mashiro; see NOTICE for attribution.
 
 所有素材版权为雷亞遊戲（Rayark Inc.）所有。
 
-https://github.com/mashirozx/deemo
+https://github.com/FridrichMethod/deemo
 
 -->
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
-    <title>Deemo 复刻 - by Mashiro</title>
+    <title>DEEMO 1 曲绘集 · FridrichMethod</title>
     <meta charset="utf-8">
-    <meta name="description" content="「Deemo 曲绘集 Online」">
-    <meta name="keywords" content="Deemo, 复刻, Mashiro, 曲封">
-    <meta name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1">
-    <meta property="og:url" content="https://deemo.shino.cc">
-    <meta property="og:image" content="/apple-touch-icon.png">
+    <meta name="description" content="FridrichMethod 的 DEEMO 1 曲绘收藏：公开原文件、画师发布与逐图来源记录。">
+    <meta name="keywords" content="DEEMO 1, FridrichMethod, 曲绘">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <meta property="og:image" content="apple-touch-icon.png">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Deemo 复刻 - by Mashiro">
-    <meta property="og:site_name" content="deemo.shino.cc">
-    <meta property="og:description" content="Deemo 复刻 - by Mashiro">
+    <meta property="og:title" content="DEEMO 1 曲绘集 · FridrichMethod">
+    <meta property="og:site_name" content="FridrichMethod / deemo">
+    <meta property="og:description" content="DEEMO 1 曲绘与公开来源档案">
     <meta property="og:locale" content="zh_CN">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="mask-icon" href="safari-pinned-tab.svg" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
     <link rel="stylesheet" href="style.css">
@@ -44,30 +45,17 @@ https://github.com/mashirozx/deemo
             background-color: #fff;
         }
 
-        mashiro,
+        .deemo-view,
         .bt {
             opacity: 0
         }
 
     </style>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-100439904-6"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag('js', new Date());
-
-        gtag('config', 'UA-100439904-6');
-
-    </script>
 
 </head>
 
 <body>
-    <mashiro>
+    <main class="deemo-view">
         <div class="slideshow-container">
             @python-work-area
 
@@ -77,7 +65,12 @@ https://github.com/mashirozx/deemo
         <div class="dear-alice">To the lovely, lonely stranger<br>And my dearest brother,<br>Hans.
             <p>-Alice</p>
         </div>
-        <div class="signature">Crafted with <img src="src/love.svg" style="height:0.8em;width:0.8em" alt="love" /> by <a href="https://2heng.xin" target="_blank">Mashiro</a></div>
+        <div class="signature">DEEMO 1 · <a href="https://github.com/FridrichMethod" target="_blank" rel="noopener noreferrer">FridrichMethod</a></div>
+        <div class="asset-caption">
+            <span id="asset-title"></span><br>
+            <span id="asset-size"></span> · <a id="asset-source" target="_blank" rel="noopener noreferrer">来源</a>
+            · <a id="asset-original" download>原文件</a> · <a href="archive.html">浏览全部 / 搜索</a>
+        </div>
 
         <div class="photo bt">
             <a href="javascript:screenshot();">
@@ -97,22 +90,12 @@ https://github.com/mashirozx/deemo
         </div>
 
         <div class="github bt">
-            <a href="https://github.com/mashirozx/deemo" target="_blank">
+            <a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer" aria-label="GitHub 仓库">
                 <div class="pop"><img src="src/github.svg" class="css-1bgbwga" data-reactid="50"></div>
             </a>
         </div>
 
-        <div class="weibo bt">
-            <a href="https://weibo.com/2960337711" target="_blank">
-                <div class="pop"><img src="src/weibo.svg" class="css-1bgbwga" data-reactid="50"></div>
-            </a>
-        </div>
-
-        <div class="wordpress bt">
-            <a href="https://2heng.xin/" target="_blank">
-                <div class="pop"><img src="src/wordpress.svg" class="css-1bgbwga" data-reactid="50"></div>
-            </a>
-        </div>
+        <div class="archive-link bt"><a href="archive.html" aria-label="浏览曲绘档案">图集</a></div>
 
         <div id="screenshot" class="overlay">
             <div class="save bt">
@@ -125,17 +108,7 @@ https://github.com/mashirozx/deemo
                 <div id="scerrn-content"></div>
             </div>
         </div>
-        <div id="message" class="overlay">
-            <div class="popup normal">
-                <a class="close" href="#">&times;</a>
-                <div class="content">
-                    <p>建议用屏幕宽度大于1100px的电脑访问。手机的话把屏幕<img src="src/rotate.svg" style="height:1em;width:1em" />试试？</p>
-                    <p>正常视图是这样的~</p>
-                    <img src="src/Capture.png" style="width:100%">
-                </div>
-            </div>
-        </div>
-    </mashiro>
+    </main>
 
     <audio loop="loop" id="player">
       <source src="src/Riin - Alice good night.mp3" type="audio/mpeg">
@@ -146,16 +119,20 @@ https://github.com/mashirozx/deemo
     <script>
         "use strict";
 
-        if (screen.width <= 1100) {
-            location.href = "#message";
-        }
-
         var slideIndex = 1;
         var imgTargets = document.getElementsByClassName("deemo-draw");
+        var requestedAsset = new URLSearchParams(location.search).get("asset");
+        var requestedIndex = Array.from(imgTargets).findIndex(function(img) { return img.dataset.id === requestedAsset; });
 
-        Pace.on('done', function() {
-            document.getElementsByTagName("mashiro")[0].style.opacity = "1";
-            true ? randomSlide() : showSlides(slideIndex);
+        window.addEventListener('load', function() {
+            document.querySelector(".deemo-view").style.opacity = "1";
+            if (requestedIndex >= 0) {
+                slideIndex = requestedIndex + 1;
+                showSlides();
+                randomClick();
+            } else {
+                randomSlide();
+            }
             for (var i = 0; i < document.getElementsByClassName("bt").length; i++) {
                 document.getElementsByClassName("bt")[i].style.opacity = "1";
             }
@@ -183,7 +160,13 @@ https://github.com/mashirozx/deemo
                 slideIndex = 1;
             }
             // title
-            document.title = (slideIndex) + '/' + slides.length + ' | Deemo 复刻 - by Mashiro';
+            document.title = slideIndex + '/' + slides.length + ' | DEEMO 1 · FridrichMethod';
+            var target = imgTargets[slideIndex - 1];
+            document.getElementById("asset-title").textContent = target.dataset.title;
+            document.getElementById("asset-size").textContent = target.dataset.size;
+            document.getElementById("asset-source").textContent = target.dataset.source;
+            document.getElementById("asset-source").href = target.dataset.page;
+            document.getElementById("asset-original").href = target.dataset.src;
             // load
             lazyload(slideIndex - 1);
             // hide
@@ -191,9 +174,10 @@ https://github.com/mashirozx/deemo
                 slides[i].style.opacity = 0;
             }
             // check load condition
-            imgLoad((slideIndex - 1), function() {
+            var displayedIndex = slideIndex - 1;
+            imgLoad(displayedIndex, function() {
                 // display
-                slides[slideIndex - 1].style.opacity = 1;
+                if (slideIndex - 1 === displayedIndex) slides[displayedIndex].style.opacity = 1;
             });
             // preload
             //if (slideIndex < imgTargets.length) {
@@ -206,12 +190,9 @@ https://github.com/mashirozx/deemo
 
         // check picture load condition
         function imgLoad(n, callback) {
-            var timer = setInterval(function() {
-                if (imgTargets[n].complete) {
-                    callback(imgTargets[n]);
-                    clearInterval(timer);
-                }
-            }, 50)
+            var img = imgTargets[n];
+            if (img.complete) callback(img);
+            else img.addEventListener("load", function() { callback(img); }, {once: true});
         }
 
         function lazyload(n) {
@@ -224,7 +205,7 @@ https://github.com/mashirozx/deemo
 
         // Random
         function randomSlide() {
-            var rand = Math.floor(Math.random() * (imgTargets.length + 1));
+            var rand = Math.floor(Math.random() * imgTargets.length) + 1;
             showSlides(slideIndex = rand);
         }
 
@@ -270,7 +251,7 @@ https://github.com/mashirozx/deemo
         }
 
         function screenshot() {
-            var sholdHide = new Array("photo", "iplayer", "random", "weibo", "github", "wordpress", "signature", "prev", "next");
+            var sholdHide = new Array("photo", "iplayer", "random", "github", "archive-link", "asset-caption", "signature", "prev", "next");
             for (var i = 0; i < sholdHide.length; i++) document.getElementsByClassName(sholdHide[i])[0].style.visibility = 'hidden';
 
             let opt = {

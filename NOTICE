@@ -1,0 +1,16 @@
+DEEMO 1 artwork archive
+Maintained by FridrichMethod (Zhaoyang Li)
+https://github.com/FridrichMethod/deemo
+
+Original gallery design and processing scripts by Mashiro:
+https://github.com/mashirozx/deemo
+The original Git history and Apache-2.0 license are retained.
+The gallery, metadata, fetching tools, and documentation were adapted in 2026.
+
+DEEMO artwork and game assets belong to Rayark Inc. and their respective
+creators. The software license does not grant a license to the artwork,
+music, fonts, or other third-party media. Public availability of a source
+does not change its ownership. Per-file attribution and source URLs are
+recorded in data/sources/*.json and data/catalog.json.
+
+Third-party software notices embedded in src/main.js are retained.

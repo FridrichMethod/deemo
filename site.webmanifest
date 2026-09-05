@@ -1,9 +1,10 @@
 {
-    "name": "",
-    "short_name": "",
+    "name": "DEEMO 1 曲绘集 · FridrichMethod",
+    "short_name": "DEEMO 1",
+    "start_url": "./archive.html",
     "icons": [
         {
-            "src": "/android-chrome-192x192.png",
+            "src": "./android-chrome-192x192.png",
             "sizes": "192x192",
             "type": "image/png"
         }
