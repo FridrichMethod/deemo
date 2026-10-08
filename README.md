@@ -1,12 +1,12 @@
 # DEEMO 1 曲绘档案
 
-[FridrichMethod / deemo](https://github.com/FridrichMethod/deemo) 的私人曲绘收藏，由 FridrichMethod（Zhaoyang Li）维护。收集 DEEMO 原版及相关 Last Recital / Reborn 的公开曲绘；DEEMO II 不在收集范围内。
+[FridrichMethod / deemo](https://github.com/FridrichMethod/deemo) 的个人曲绘收藏，由 FridrichMethod（Zhaoyang Li）维护。收集 DEEMO 原版及相关 Last Recital / Reborn 的公开曲绘；DEEMO II 不在收集范围内。
 
-原项目来自 [mashirozx/deemo](https://github.com/mashirozx/deemo)。上游历史已压缩为一个初始快照；游戏纹理、界面设计署名和 Apache-2.0 软件许可证保留。此版本已替换维护者链接、页面信息和 manifest，移除原站 CNAME、Google Analytics 和社交账号入口。仓库保持 private，网站通过 GitHub Pages 公开发布。
+原项目来自 [mashirozx/deemo](https://github.com/mashirozx/deemo)。上游历史已压缩为一个初始快照；游戏纹理、界面设计署名和 Apache-2.0 软件许可证保留。此版本已替换维护者链接、页面信息和 manifest，移除原站 CNAME、Google Analytics 和社交账号入口。仓库公开，网站通过 GitHub Pages 发布。
 
 ## 浏览
 
-在线访问：[可搜索图库](https://fridrichmethod.github.io/deemo/archive.html) · [幻灯片](https://fridrichmethod.github.io/deemo/)。网站和曲绘无需登录即可访问；private 仓库权限不保护已发布的静态文件。
+在线访问：[可搜索图库](https://fridrichmethod.github.io/deemo/archive.html) · [幻灯片](https://fridrichmethod.github.io/deemo/)。仓库、网站和曲绘均公开，无需登录即可访问。
 
 启动仅限本机的静态服务：
 
@@ -20,7 +20,7 @@ python -I -m http.server 8765 --bind 127.0.0.1
 
 ## 网站部署
 
-推送到 `main` 后，[Pages 工作流](.github/workflows/pages.yml) 自动发布。`scripts/prepare_pages.py` 只复制 Git 跟踪的 `assets/`、`data/`、`src/`、`docs/`、`licenses/` 和明确列出的根目录网页、配置、署名文件；不会发布 `.git/`、工作流、抓取脚本、测试或未跟踪文件。上传目标仅为独立生成的站点目录，不是仓库根目录。白名单不是敏感内容检测器；向这些公开目录新增文件前仍需检查内容。
+推送到 `main` 后，[Pages 工作流](.github/workflows/pages.yml) 自动发布。`scripts/prepare_pages.py` 只复制 Git 跟踪的 `assets/`、`data/`、`src/`、`docs/`、`licenses/` 和明确列出的根目录网页、配置、署名文件；不会发布 `.git/`、工作流、抓取脚本、测试或未跟踪文件。上传目标仅为独立生成的站点目录，不是仓库根目录。白名单只限定网站发布范围，不是敏感内容检测器；仓库本身公开，提交任何文件前仍需检查内容。
 
 页面保留 `noindex,nofollow`，但这不是访问控制。发布包以 950 MB 为硬上限，给 GitHub Pages 的 1 GB 上限留出余量；新增素材超限时部署会停止，现有线上版本不变。保留全部原图字节，不在发布时重新压缩素材。
 

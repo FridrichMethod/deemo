@@ -26,7 +26,7 @@ Fandom CDN 请求使用公开的 `format=original`，避免默认协商成 WebP�
 
 `wiki_original_size_matches` 与 `wiki_original_sha1_matches` 表示所下载文件是否和 Wiki 发布的原上传元数据一致。少数 CDN 文件可能尺寸相同但 checksum/size 不同；这些记录不宣称与上传母文件相同。1024×2048 或 2048×1024 文件可能是 atlas 或拼图，原样保留并标记，不自动裁开。
 
-公开 Wiki 上传本身不等于画师制作母档，也没有从颜色数量推断原生清晰度。画师和 Rayark 的原有署名及权利归属不因私有仓库收集而改变。
+公开 Wiki 上传本身不等于画师制作母档，也没有从颜色数量推断原生清晰度。画师和 Rayark 的原有署名及权利归属不因本仓库收集而改变。
 
 ## 复现
 

@@ -1,4 +1,4 @@
-"""Ensure private repository tooling cannot leak into the public Pages payload."""
+"""Ensure only tracked, allowlisted website files reach the GitHub Pages payload."""
 
 import importlib.util
 from pathlib import Path
@@ -32,7 +32,7 @@ class PagesTests(unittest.TestCase):
     def test_only_tracked_allowlisted_files_are_copied(self):
         self.add("assets/public/art.png")
         self.add("data/catalog.js")
-        self.add("scripts/private.py")
+        self.add("scripts/build_catalog.py")
         self.add(".github/workflows/pages.yml")
         self.add(".git/config")
         self.add("assets/.env")
