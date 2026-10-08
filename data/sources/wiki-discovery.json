@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "fetched_at": "2026-09-05T08:45:33.359968Z",
+  "fetched_at": "2026-10-08T11:40:06.359430Z",
   "candidates": [
     {
       "source": "fandom",
@@ -5033,7 +5033,7 @@
         },
         "mime": "image/png"
       },
-      "kind": "song_art",
+      "kind": "collection_cover",
       "song_titles": [
         "AM 05:25",
         "Daylife"
@@ -25967,6 +25967,84 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:AD：PIANO collection.png",
+      "info": {
+        "name": "AD：PIANO_collection.png",
+        "timestamp": "2021-12-15T08:36:11Z",
+        "size": 32948,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/4/44/6sdsetmht1sx3bbhq7mfc6fh13ufjfl.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:AD%EF%BC%9APIANO_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=598",
+        "sha1": "3a1d4d7b823ed40c864c5cba909e49c9b4842a21",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:AD：PIANO collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "AD:PIANO Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/AD%3APIANO%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:AD：PIANO collection 2.png",
+      "info": {
+        "name": "AD：PIANO_collection_2.png",
+        "timestamp": "2021-12-15T08:36:10Z",
+        "size": 42093,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/e/e6/pyyppvaoen2dq02nnk85aa6gnz0rpew.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:AD%EF%BC%9APIANO_collection_2.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=597",
+        "sha1": "de55cef8320e22b6b16cf388fcc6adab35149568",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:AD：PIANO collection 2.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "AD:PIANO Collection 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/AD%3APIANO%20Collection%202"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:AD：PIANO collection 3.png",
+      "info": {
+        "name": "AD：PIANO_collection_3.png",
+        "timestamp": "2021-12-15T08:22:32Z",
+        "size": 39380,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/4/47/k4a2p2qot56vbwosi5fuxyx5z6221tl.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:AD%EF%BC%9APIANO_collection_3.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=573",
+        "sha1": "ac3bf9a825ae68af313a21c0e054355d1503ffb9",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:AD：PIANO collection 3.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "AD:PIANO Collection 3"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/AD%3APIANO%20Collection%203"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:ANiMA.png",
       "info": {
         "name": "ANiMA.png",
@@ -26113,6 +26191,58 @@
       ],
       "related_pages": [
         "https://wiki.biligame.com/deemo/Adventure%20selection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Aioi collection.png",
+      "info": {
+        "name": "Aioi_collection.png",
+        "timestamp": "2021-12-15T08:49:05Z",
+        "size": 45029,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/6/6f/tw6upqchakkfir67kzrnghas08qlolg.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Aioi_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=604",
+        "sha1": "ffeb39fb0bcc58eb4ee44d6f2862cffe477be9c4",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Aioi collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Aioi collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Aioi%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Aioi collection Vol.2.png",
+      "info": {
+        "name": "Aioi_collection_Vol.2.png",
+        "timestamp": "2021-12-15T08:49:04Z",
+        "size": 47473,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/a/a2/7380k8ndmi0re6vmxb09xftg9pwwsdk.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Aioi_collection_Vol.2.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=603",
+        "sha1": "3cb12fab360c57e24f8089c819d8d41ff9ca0ba8",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Aioi collection Vol.2.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Aioi Collection Vol.2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Aioi%20Collection%20Vol.2"
       ]
     },
     {
@@ -26550,6 +26680,58 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Autumn selection.png",
+      "info": {
+        "name": "Autumn_selection.png",
+        "timestamp": "2021-12-15T08:26:07Z",
+        "size": 55996,
+        "width": 180,
+        "height": 173,
+        "url": "https://patchwiki.biligame.com/images/deemo/e/e5/jjh4wcyfdhqxieveg9u525h64waygmr.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Autumn_selection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=578",
+        "sha1": "a7497fc80001b34fbfc9d21b02591af5cd0412b3",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Autumn selection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Autumn selection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Autumn%20selection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Ayatsugu Otowa collection.png",
+      "info": {
+        "name": "Ayatsugu_Otowa_collection.png",
+        "timestamp": "2021-12-15T08:18:36Z",
+        "size": 39565,
+        "width": 180,
+        "height": 142,
+        "url": "https://patchwiki.biligame.com/images/deemo/9/99/6h33zvi0k8ad5uggvty9z1ef020kd2b.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Ayatsugu_Otowa_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=567",
+        "sha1": "376d9943565e74cbdba584dcbe64d934ac6b8723",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Ayatsugu Otowa collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Ayatsugu_Otowa collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Ayatsugu_Otowa%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Ballade No.1.png",
       "info": {
         "name": "Ballade_No.1.png",
@@ -26644,6 +26826,110 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Book of Alice.png",
+      "info": {
+        "name": "Book_of_Alice.png",
+        "timestamp": "2021-12-15T08:36:06Z",
+        "size": 36124,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/f/ff/4gyvcpcm7tp0tmlsrq9w6jrvycnpavv.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Book_of_Alice.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=593",
+        "sha1": "264749180ca13bed1586cb8b59259b7d3ad00a5b",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Book of Alice.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Book of Alice"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Book%20of%20Alice"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Book of Celia.png",
+      "info": {
+        "name": "Book_of_Celia.png",
+        "timestamp": "2021-12-15T08:36:05Z",
+        "size": 30165,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/3/37/9ar7jfx17s8flvxa2k3ywt3dajt3h80.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Book_of_Celia.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=592",
+        "sha1": "4f9aece96136ec9f1b969dda8fa256abee7ac2f0",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Book of Celia.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Book of Celia"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Book%20of%20Celia"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Brian Crain collection.png",
+      "info": {
+        "name": "Brian_Crain_collection.png",
+        "timestamp": "2021-12-15T08:49:08Z",
+        "size": 44762,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/6/65/4zerwrloie8ckvs384bc306t1517jna.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Brian_Crain_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=607",
+        "sha1": "2aa9f74c294b3f66bb2fee78578ce6efafc68436",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Brian Crain collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Brian Crain Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Brian%20Crain%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Capchii collection.png",
+      "info": {
+        "name": "Capchii_collection.png",
+        "timestamp": "2021-12-15T08:18:38Z",
+        "size": 42057,
+        "width": 180,
+        "height": 147,
+        "url": "https://patchwiki.biligame.com/images/deemo/1/11/2u7tr0gnk2d8skbjcmta2f2tsyqj8or.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Capchii_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=569",
+        "sha1": "184eaff1f6969efed4afa4e54a27588f4e82d4bb",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Capchii collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Capchii collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Capchii%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Clover Snow.png",
       "info": {
         "name": "Clover_Snow.png",
@@ -26692,10 +26978,218 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "Collaboration collection"
+        "Collaboration Collection"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Collaboration%20collection"
+        "https://wiki.biligame.com/deemo/Collaboration%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Cranky collection.png",
+      "info": {
+        "name": "Cranky_collection.png",
+        "timestamp": "2021-12-15T08:49:01Z",
+        "size": 38364,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/e/e4/5ia5pxzlvv3dy2ik528brndyslvdjw7.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cranky_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=600",
+        "sha1": "2f26d284720f0f32b405692150888ac36736d8f7",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Cranky collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Cranky Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cranky%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Cytus II collection Vol.1.png",
+      "info": {
+        "name": "Cytus_II_collection_Vol.1.png",
+        "timestamp": "2021-12-15T08:26:09Z",
+        "size": 45938,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/8/82/kctzh4xfygdn207e0k30mbz3c12tohj.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cytus_II_collection_Vol.1.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=580",
+        "sha1": "ae44a90ef6f74f717838845fb585f6cf16418737",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Cytus II collection Vol.1.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Cytus II collection Vol.1"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cytus%20II%20collection%20Vol.1"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Cytus II collection Vol.2.png",
+      "info": {
+        "name": "Cytus_II_collection_Vol.2.png",
+        "timestamp": "2021-12-15T08:26:05Z",
+        "size": 56781,
+        "width": 180,
+        "height": 174,
+        "url": "https://patchwiki.biligame.com/images/deemo/5/53/blqvsaazoqjxkt7pylmt8nnc5ldpulx.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cytus_II_collection_Vol.2.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=577",
+        "sha1": "635729c6905d3f9cbcd0f899de346730fd085835",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Cytus II collection Vol.2.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Cytus II collection Vol.2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cytus%20II%20collection%20Vol.2"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Cytus selection Vol.1.png",
+      "info": {
+        "name": "Cytus_selection_Vol.1.png",
+        "timestamp": "2021-12-15T08:53:07Z",
+        "size": 44052,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/2/23/2qyua5vqsg38hs4k0vda4rg4amaykko.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cytus_selection_Vol.1.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=612",
+        "sha1": "1788dcb06ec65e14d5c2c1b62841f0b987ee9ea8",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Cytus selection Vol.1.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Cytus Selection Vol. 1"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cytus%20Selection%20Vol.%201"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Cytus selection Vol.2.png",
+      "info": {
+        "name": "Cytus_selection_Vol.2.png",
+        "timestamp": "2021-12-15T08:53:06Z",
+        "size": 44991,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/f/fa/kxmu3jejfpegcncyuuuqcloibum0sd4.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cytus_selection_Vol.2.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=611",
+        "sha1": "b336fcbfe979e83c6881166a94ad7e478c75cd98",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Cytus selection Vol.2.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Cytus Selection Vol. 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cytus%20Selection%20Vol.%202"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:DEEMO -Reborn- collection.png",
+      "info": {
+        "name": "DEEMO_-Reborn-_collection.png",
+        "timestamp": "2021-12-15T08:26:08Z",
+        "size": 37185,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/5/51/bgvd71t3o91rwoviztukig4vfsdnvfh.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:DEEMO_-Reborn-_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=579",
+        "sha1": "622e5c33f281b594336a0abbe3e423b76ec7cbdd",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:DEEMO -Reborn- collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "DEEMO -Reborn- collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/DEEMO%20-Reborn-%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:DJMAX collection.png",
+      "info": {
+        "name": "DJMAX_collection.png",
+        "timestamp": "2021-12-15T08:31:07Z",
+        "size": 43257,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/9/94/3y9a23ytktx5hczc9b1y9p5edu501ep.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:DJMAX_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=583",
+        "sha1": "21d4394c86de7f842c3eb3fc78e2c0aa3b53b421",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:DJMAX collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "DJMAX Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/DJMAX%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:DS：PIANO collection.png",
+      "info": {
+        "name": "DS：PIANO_collection.png",
+        "timestamp": "2021-12-15T08:36:12Z",
+        "size": 48090,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/a/ab/ho8csndxyv5obgzsn5hfj12t0lube3w.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:DS%EF%BC%9APIANO_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=599",
+        "sha1": "974be48aaa1ffe5f9f5500778146f8d2107bae2c",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:DS：PIANO collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "DS:PIANO Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/DS%3APIANO%20Collection"
       ]
     },
     {
@@ -26748,10 +27242,10 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "Deemo's collection Vol.1A"
+        "Deemo's Collection Vol. 1A"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Deemo%27s%20collection%20Vol.1A"
+        "https://wiki.biligame.com/deemo/Deemo%27s%20Collection%20Vol.%201A"
       ]
     },
     {
@@ -26800,10 +27294,10 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "Deemo's collection Vol.2"
+        "Deemo's Collection Vol.2"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Deemo%27s%20collection%20Vol.2"
+        "https://wiki.biligame.com/deemo/Deemo%27s%20Collection%20Vol.2"
       ]
     },
     {
@@ -26933,6 +27427,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Emotional Addict collection.png",
+      "info": {
+        "name": "Emotional_Addict_collection.png",
+        "timestamp": "2021-12-15T08:22:34Z",
+        "size": 56185,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/5/54/jwkh63rxajr3lzlpd4n95dxigs7gq26.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Emotional_Addict_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=574",
+        "sha1": "aa668ca862675750d989cea5f99c3644dbffbeee",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Emotional Addict collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Emotional Addict Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Emotional%20Addict%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Empedrado.png",
       "info": {
         "name": "Empedrado.png",
@@ -27051,6 +27571,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Eshen Chen collection Vol.1：Transmission.png",
+      "info": {
+        "name": "Eshen_Chen_collection_Vol.1：Transmission.png",
+        "timestamp": "2021-12-15T08:49:07Z",
+        "size": 39685,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/b/b0/b9uq6xzct1qx849cxeambmntcgc3fp4.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Eshen_Chen_collection_Vol.1%EF%BC%9ATransmission.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=606",
+        "sha1": "60832407d19a46dc41cb23b49119bde906213e38",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Eshen Chen collection Vol.1：Transmission.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Eshen Chen collection Vol.1：Transmission"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Eshen%20Chen%20collection%20Vol.1%EF%BC%9ATransmission"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Etude collection.png",
       "info": {
         "name": "Etude_collection.png",
@@ -27108,6 +27654,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Exotic Collections Titletab.png",
+      "info": {
+        "name": "Exotic_Collections_Titletab.png",
+        "timestamp": "2021-09-01T01:49:34Z",
+        "size": 3573,
+        "width": 70,
+        "height": 47,
+        "url": "https://patchwiki.biligame.com/images/deemo/a/ac/gqk9bkcg5c6jsb74wg5qm5wpkf9iqoj.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Exotic_Collections_Titletab.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=249",
+        "sha1": "8f4a344dfffc0bbaa26cc5805b6803fbee591c93",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Exotic Collections Titletab.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Exotic Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Exotic%20Collections%20Titletab"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Farewell Waltz.png",
       "info": {
         "name": "Farewell_Waltz.png",
@@ -27156,10 +27728,36 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "Feryquitous collection"
+        "Feryquitous Collection"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Feryquitous%20collection"
+        "https://wiki.biligame.com/deemo/Feryquitous%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Feryquitous collection 2.png",
+      "info": {
+        "name": "Feryquitous_collection_2.png",
+        "timestamp": "2021-12-15T08:26:10Z",
+        "size": 40165,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/9/95/nk99g8tsg0tmq8aewh66kuw38epis02.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Feryquitous_collection_2.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=581",
+        "sha1": "c9b7590aa18d216923bca64fdde1957b46ae4f42",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Feryquitous collection 2.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Feryquitous collection 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Feryquitous%20collection%202"
       ]
     },
     {
@@ -27255,6 +27853,32 @@
         "Rayark selection Vol.2"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Funkot collection.png",
+      "info": {
+        "name": "Funkot_collection.png",
+        "timestamp": "2021-12-15T08:31:12Z",
+        "size": 56999,
+        "width": 180,
+        "height": 166,
+        "url": "https://patchwiki.biligame.com/images/deemo/f/f6/7e36r205vc8alvre0hgkih6dmx2ff37.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Funkot_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=587",
+        "sha1": "3f46ab2ccb495ceabd1a3f87fee5b0ee65ec0023",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Funkot collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Funkot Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Funkot%20Collection"
+      ]
     },
     {
       "source": "bwiki",
@@ -27710,6 +28334,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Ice collection.png",
+      "info": {
+        "name": "Ice_collection.png",
+        "timestamp": "2021-12-15T08:31:08Z",
+        "size": 43638,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/8/88/czpbkt4fz5hcvm0aaya6ss6kt52dwzj.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Ice_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=584",
+        "sha1": "6f385f4d2ff34308358a39f155f332565efa2e3f",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Ice collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Ice collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Ice%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:If I Can See You Again.png",
       "info": {
         "name": "If_I_Can_See_You_Again.png",
@@ -28018,6 +28668,58 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Knight Iris collection.png",
+      "info": {
+        "name": "Knight_Iris_collection.png",
+        "timestamp": "2021-12-15T08:53:09Z",
+        "size": 46673,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/1/19/ghrp7tazyl1mk9wkjjkiprphn2xa9m0.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Knight_Iris_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=614",
+        "sha1": "8d32e5327381b531436165af96812755a2ac0828",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Knight Iris collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Knight Iris Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Knight%20Iris%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Knight Rosabell collection.png",
+      "info": {
+        "name": "Knight_Rosabell_collection.png",
+        "timestamp": "2021-12-15T08:53:08Z",
+        "size": 41523,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/b/be/qo9z4ycg34s6tynq4efc2zx3tz0tsxz.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Knight_Rosabell_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=613",
+        "sha1": "e45ac6e19bbb3dfb66d20a4260ae6d3ec4e633c7",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Knight Rosabell collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Knight Rosabell collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Knight%20Rosabell%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Knots Way.png",
       "info": {
         "name": "Knots_Way.png",
@@ -28046,6 +28748,32 @@
         "Collaboration collection"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Kobayashi collection.png",
+      "info": {
+        "name": "Kobayashi_collection.png",
+        "timestamp": "2021-12-15T08:31:11Z",
+        "size": 66603,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/b/bc/5vjz0vx8f0yvl66rra8272lbihkmfbi.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Kobayashi_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=586",
+        "sha1": "324ed1a37019cd061efe4cee97e0efed40de4f0e",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Kobayashi collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Kobayashi Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Kobayashi%20Collection"
+      ]
     },
     {
       "source": "bwiki",
@@ -28636,6 +29364,214 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Lyrical Collections Titletab.png",
+      "info": {
+        "name": "Lyrical_Collections_Titletab.png",
+        "timestamp": "2021-09-01T01:49:33Z",
+        "size": 3208,
+        "width": 70,
+        "height": 47,
+        "url": "https://patchwiki.biligame.com/images/deemo/8/8f/ghxxc41jv6yufhds26vm3a36ptlccxi.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Lyrical_Collections_Titletab.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=248",
+        "sha1": "8d3d6c40682a2fee5f7b3cb80c17f4acb460a576",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Lyrical Collections Titletab.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Lyrical Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Lyrical%20Collections%20Titletab"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:L：The Lower collection.png",
+      "info": {
+        "name": "L：The_Lower_collection.png",
+        "timestamp": "2021-12-15T08:53:05Z",
+        "size": 39037,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/e/e6/3ohsxnlwsa8c9kjcox0dbdokxdb1qzv.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:L%EF%BC%9AThe_Lower_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=610",
+        "sha1": "1f81de6d152bf2f92c5bab305a45bfb06ccf8deb",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:L：The Lower collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "L: The Lower Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/L%3A%20The%20Lower%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:L：The Upper collection.png",
+      "info": {
+        "name": "L：The_Upper_collection.png",
+        "timestamp": "2021-12-15T08:53:04Z",
+        "size": 41515,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/a/ae/pzffmi838knkvmxm50umx3cuhp48yi0.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:L%EF%BC%9AThe_Upper_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=609",
+        "sha1": "de7214f251f557cc61d6519ca9e3c2eacf4a78a8",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:L：The Upper collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "L: The Upper Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/L%3A%20The%20Upper%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:M2U × Nicode collection.png",
+      "info": {
+        "name": "M2U_×_Nicode_collection.png",
+        "timestamp": "2021-12-15T08:36:09Z",
+        "size": 37199,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/0/07/0mk96d8abjkrzhka4j533wu0frnncx0.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:M2U_%C3%97_Nicode_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=596",
+        "sha1": "055d8b99f63274095067b934404b03e16aed5424",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:M2U × Nicode collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "M2U × Nicode collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/M2U%20%C3%97%20Nicode%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:M2U × Nicode collection Vol.2.png",
+      "info": {
+        "name": "M2U_×_Nicode_collection_Vol.2.png",
+        "timestamp": "2021-12-15T08:36:08Z",
+        "size": 42428,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/5/5a/852kl2zlobbh2piwym0ww8eqmpsfk71.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:M2U_%C3%97_Nicode_collection_Vol.2.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=595",
+        "sha1": "45b14e5bfc091fa83634abec6730b6b9f69e93fd",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:M2U × Nicode collection Vol.2.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "M2U × Nicode collection Vol.2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/M2U%20%C3%97%20Nicode%20collection%20Vol.2"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:MILI collection.png",
+      "info": {
+        "name": "MILI_collection.png",
+        "timestamp": "2021-12-15T08:53:12Z",
+        "size": 48734,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/5/5d/1g2u71ammvd7guvp0lzijuy1r88u31q.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:MILI_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=617",
+        "sha1": "0c62675aa6433260981d002205eb0e00604682ee",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:MILI collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Mili collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Mili%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:MILI collection Vol.2.png",
+      "info": {
+        "name": "MILI_collection_Vol.2.png",
+        "timestamp": "2021-12-15T08:53:11Z",
+        "size": 35213,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/9/92/dniwjdwtvbwrp7wgmej8o1nysqqy9a0.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:MILI_collection_Vol.2.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=616",
+        "sha1": "74e2913cce7e5654df39c5bf875433dd1d4ca578",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:MILI collection Vol.2.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Mili Collection Vol. 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Mili%20Collection%20Vol.%202"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:MILI collection Vol.3.png",
+      "info": {
+        "name": "MILI_collection_Vol.3.png",
+        "timestamp": "2021-12-15T08:53:10Z",
+        "size": 43041,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/f/f0/nol8zpuo74s6jkl2onjrhlsjr4oxmd2.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:MILI_collection_Vol.3.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=615",
+        "sha1": "cabf206434535ee013d98955bdccebcf036f0776",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:MILI collection Vol.3.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Mili Collection Vol.3"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Mili%20Collection%20Vol.3"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Magnolia.png",
       "info": {
         "name": "Magnolia.png",
@@ -28968,6 +29904,58 @@
         "Deemo's collection Vol.2"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:N.M.S.T. collection.png",
+      "info": {
+        "name": "N.M.S.T._collection.png",
+        "timestamp": "2021-12-15T08:31:15Z",
+        "size": 44269,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/4/45/q3p30d9gjhhxiofsbb1aww50j6ctz2x.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:N.M.S.T._collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=590",
+        "sha1": "df75e850b5674c4221dcc1fd69615fce8e5bead9",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:N.M.S.T. collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "N.M.S.T. Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/N.M.S.T.%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:N.M.S.T. collection 2.png",
+      "info": {
+        "name": "N.M.S.T._collection_2.png",
+        "timestamp": "2021-12-15T08:31:14Z",
+        "size": 36897,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/3/39/mwq2gi2f6qt6cnvu8tvfmcn7dplsj4a.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:N.M.S.T._collection_2.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=589",
+        "sha1": "c41eb818ef8182b346db4654644c51b557b718ca",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:N.M.S.T. collection 2.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "N.M.S.T. Collection 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/N.M.S.T.%20Collection%202"
+      ]
     },
     {
       "source": "bwiki",
@@ -29338,6 +30326,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Piano Collections Titletab.png",
+      "info": {
+        "name": "Piano_Collections_Titletab.png",
+        "timestamp": "2021-09-01T01:49:32Z",
+        "size": 3665,
+        "width": 70,
+        "height": 47,
+        "url": "https://patchwiki.biligame.com/images/deemo/5/53/tp2t0eysxwbtznyji6iqal1rntns9h7.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Piano_Collections_Titletab.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=247",
+        "sha1": "fe3a3e53c42e902d5a052d176ad6e2749ed659fb",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Piano Collections Titletab.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Piano Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Piano%20Collections%20Titletab"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Piano Sonata No.3.png",
       "info": {
         "name": "Piano_Sonata_No.3.png",
@@ -29512,10 +30526,10 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "RAC collection -1"
+        "RAC Collection #1"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/RAC%20collection%20-1"
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%231"
       ]
     },
     {
@@ -29538,10 +30552,10 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "RAC collection -2"
+        "RAC Collection #2"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/RAC%20collection%20-2"
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%232"
       ]
     },
     {
@@ -29564,10 +30578,10 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "RAC collection -3"
+        "RAC Collection #3"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/RAC%20collection%20-3"
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%233"
       ]
     },
     {
@@ -29590,10 +30604,88 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "RAC collection #4"
+        "RAC Collection #4"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/RAC%20collection%20%234"
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%234"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:RAC collection -5.png",
+      "info": {
+        "name": "RAC_collection_-5.png",
+        "timestamp": "2021-12-15T08:56:34Z",
+        "size": 47594,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/8/87/b0agc2f4jv72m0clzis6tttcl7t9073.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:RAC_collection_-5.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=619",
+        "sha1": "5e3cf6da887b298527fcf2e2c58f17069b00723f",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:RAC collection -5.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "RAC Collection #5"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%235"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:RAC collection -6.png",
+      "info": {
+        "name": "RAC_collection_-6.png",
+        "timestamp": "2021-12-15T08:56:33Z",
+        "size": 45150,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/9/93/o02vlta2retw6v6l6lg2t8iutnaphjn.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:RAC_collection_-6.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=618",
+        "sha1": "cd7a9544ea9adac062025f667aca3207d7a97b13",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:RAC collection -6.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "RAC Collection #6"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%236"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Rabpit collection.png",
+      "info": {
+        "name": "Rabpit_collection.png",
+        "timestamp": "2021-12-15T08:49:06Z",
+        "size": 33490,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/7/79/k9mtfg1g3mbposillob2c7ntmkcf1kw.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Rabpit_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=605",
+        "sha1": "ad81e87f06319d65b318ccf560ac63ab1dfeb1c0",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Rabpit collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Rabpit collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Rabpit%20collection"
       ]
     },
     {
@@ -29782,6 +30874,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Rayark Collections Titletab.png",
+      "info": {
+        "name": "Rayark_Collections_Titletab.png",
+        "timestamp": "2021-09-01T01:49:35Z",
+        "size": 3168,
+        "width": 70,
+        "height": 47,
+        "url": "https://patchwiki.biligame.com/images/deemo/e/ee/pbrn9a0k5xjxinaijjh0c7poue2752k.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Rayark_Collections_Titletab.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=250",
+        "sha1": "d8d1af5bfcb95a4b7c1951ae15176ec3aefc2f6c",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Rayark Collections Titletab.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Rayark Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Rayark%20Collections%20Titletab"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Rayark selection Vol.1.png",
       "info": {
         "name": "Rayark_selection_Vol.1.png",
@@ -29800,10 +30918,10 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "Rayark selection Vol.1"
+        "Rayark selection Vol. 1"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Rayark%20selection%20Vol.1"
+        "https://wiki.biligame.com/deemo/Rayark%20selection%20Vol.%201"
       ]
     },
     {
@@ -29852,10 +30970,10 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "Rayark selection Vol.3"
+        "Rayark Selection Vol. 3"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Rayark%20selection%20Vol.3"
+        "https://wiki.biligame.com/deemo/Rayark%20Selection%20Vol.%203"
       ]
     },
     {
@@ -30356,6 +31474,58 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Sakuzyo collection.png",
+      "info": {
+        "name": "Sakuzyo_collection.png",
+        "timestamp": "2021-12-15T08:49:02Z",
+        "size": 41273,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/3/36/imphc0v3qgjncjju9skf2frw9azv6e6.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Sakuzyo_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=601",
+        "sha1": "9f7eabc18c973730db7fe6578b55fd5cb7f82d1e",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Sakuzyo collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Sakuzyo collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Sakuzyo%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Sakuzyo collection Vol.2.png",
+      "info": {
+        "name": "Sakuzyo_collection_Vol.2.png",
+        "timestamp": "2021-12-15T08:18:42Z",
+        "size": 45841,
+        "width": 180,
+        "height": 145,
+        "url": "https://patchwiki.biligame.com/images/deemo/b/bd/dhaeawu9ftnsmbin2nllcpomst22klo.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Sakuzyo_collection_Vol.2.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=572",
+        "sha1": "7366ebae0bf361f4c578d6e4aab2eec23054eacc",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Sakuzyo collection Vol.2.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Sakuzyo collection Vol.2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Sakuzyo%20collection%20Vol.2"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Samsara collection.png",
       "info": {
         "name": "Samsara_collection.png",
@@ -30374,10 +31544,10 @@
       "kind": "collection_cover",
       "song_titles": [],
       "collections": [
-        "Samsara collection"
+        "Samsara Collection"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Samsara%20collection"
+        "https://wiki.biligame.com/deemo/Samsara%20Collection"
       ]
     },
     {
@@ -30409,6 +31579,32 @@
         "Rayark selection Vol.2"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Sdorica collection.png",
+      "info": {
+        "name": "Sdorica_collection.png",
+        "timestamp": "2021-12-15T08:31:06Z",
+        "size": 70897,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/b/b0/4a8iwzr0t3lfo8s9rx7z5uu2ctqudi2.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Sdorica_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=582",
+        "sha1": "24ad7903e1c402cf80257a5d95b60ab504cbcdda",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Sdorica collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Sdorica Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Sdorica%20Collection"
+      ]
     },
     {
       "source": "bwiki",
@@ -30524,6 +31720,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Sherwin collection.png",
+      "info": {
+        "name": "Sherwin_collection.png",
+        "timestamp": "2021-12-15T08:18:37Z",
+        "size": 47071,
+        "width": 180,
+        "height": 144,
+        "url": "https://patchwiki.biligame.com/images/deemo/a/a6/2s2846c2mha6fo1udz84vg5me39vhdj.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Sherwin_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=568",
+        "sha1": "17cb76420c6a48261981d8385121b20d57ce5eb7",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Sherwin collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Sherwin collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Sherwin%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Sonatina for Bygone Piano.png",
       "info": {
         "name": "Sonatina_for_Bygone_Piano.png",
@@ -30555,6 +31777,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Spiritual Collections Titletab.png",
+      "info": {
+        "name": "Spiritual_Collections_Titletab.png",
+        "timestamp": "2021-09-01T01:49:31Z",
+        "size": 3907,
+        "width": 70,
+        "height": 47,
+        "url": "https://patchwiki.biligame.com/images/deemo/1/1c/8eev9fg0atx3kqaz0rwypmc9lk90kis.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Spiritual_Collections_Titletab.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=245",
+        "sha1": "47e9fe27dca1685738d33cef0b6ae8523eac70e4",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Spiritual Collections Titletab.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Spiritual Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Spiritual%20Collections%20Titletab"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Spring Snowflake Flower.png",
       "info": {
         "name": "Spring_Snowflake_Flower.png",
@@ -30582,6 +31830,32 @@
         "Shattered Memories"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Spring selection.png",
+      "info": {
+        "name": "Spring_selection.png",
+        "timestamp": "2021-12-15T08:22:35Z",
+        "size": 41840,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/f/f4/ek1k4yviz49wo8res0byrs6u4zy6mvm.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Spring_selection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=575",
+        "sha1": "7c9e2d8d4b349fc38030b593cfad584fc63e4752",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Spring selection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Spring Selection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Spring%20Selection"
+      ]
     },
     {
       "source": "bwiki",
@@ -30800,6 +32074,84 @@
         "Deemo's collection Vol.2"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Taiko no Tatsujin collection.png",
+      "info": {
+        "name": "Taiko_no_Tatsujin_collection.png",
+        "timestamp": "2021-12-15T08:18:39Z",
+        "size": 39997,
+        "width": 180,
+        "height": 144,
+        "url": "https://patchwiki.biligame.com/images/deemo/7/7b/h1qyzz1oeztxz76ky7shzayfntz0ttw.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Taiko_no_Tatsujin_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=570",
+        "sha1": "91f33418e26b81ee328016c1dc17a7b0fcb05e04",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Taiko no Tatsujin collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Taiko no Tatsujin Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Taiko%20no%20Tatsujin%20Collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Taishi collection.png",
+      "info": {
+        "name": "Taishi_collection.png",
+        "timestamp": "2021-12-15T08:26:04Z",
+        "size": 53638,
+        "width": 180,
+        "height": 162,
+        "url": "https://patchwiki.biligame.com/images/deemo/c/c0/kgmnqsgxwj4sppejvrjm7hdxx5g7nyi.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Taishi_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=576",
+        "sha1": "af2bc7b1ff4739f6229cce5c478b67d7b58d090a",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Taishi collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Taishi collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Taishi%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Team Grimoire collection.png",
+      "info": {
+        "name": "Team_Grimoire_collection.png",
+        "timestamp": "2021-12-15T08:31:10Z",
+        "size": 78239,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/9/92/4xbyfgphnkae1kt7xqypp2vankoskem.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Team_Grimoire_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=585",
+        "sha1": "2a2b71f7a2681aa25bcb5088e6dd7b9d0b602e4e",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Team Grimoire collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Team Grimoire Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Team%20Grimoire%20Collection"
+      ]
     },
     {
       "source": "bwiki",
@@ -31077,6 +32429,32 @@
         "Mirai's selection"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Timeline collection.png",
+      "info": {
+        "name": "Timeline_collection.png",
+        "timestamp": "2021-12-15T08:49:03Z",
+        "size": 49326,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/9/9a/8ulc9jssrhxuy4uzlm7nru0pe39n77z.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Timeline_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=602",
+        "sha1": "4bc2f82d7b5187b7a3fe662aed5f5ff3c596394f",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Timeline collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Timeline Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Timeline%20Collection"
+      ]
     },
     {
       "source": "bwiki",
@@ -31421,6 +32799,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:V.K. collection.png",
+      "info": {
+        "name": "V.K._collection.png",
+        "timestamp": "2021-12-15T08:49:09Z",
+        "size": 52032,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/9/91/kcpqi7o6b3a80q5q0a8se4l9cjrphyi.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:V.K._collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=608",
+        "sha1": "ae3d799482846be894bc964abc06e7090cca4e2a",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:V.K. collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "V.K collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/V.K%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:Valle De Los Caidos.png",
       "info": {
         "name": "Valle_De_Los_Caidos.png",
@@ -31542,6 +32946,32 @@
         "Rayark selection Vol.1"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Vocal selection.png",
+      "info": {
+        "name": "Vocal_selection.png",
+        "timestamp": "2021-12-15T08:31:13Z",
+        "size": 47305,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/c/cb/npo0jxqbihslwuhwl4k6jwa6vt305vp.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Vocal_selection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=588",
+        "sha1": "cb00ae2311c1f30ca5b12b633539c074fae404c5",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Vocal selection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Vocal Selection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Vocal%20Selection"
+      ]
     },
     {
       "source": "bwiki",
@@ -31822,6 +33252,32 @@
     },
     {
       "source": "bwiki",
+      "file_title": "文件:Xi collection.png",
+      "info": {
+        "name": "Xi_collection.png",
+        "timestamp": "2021-12-15T08:18:41Z",
+        "size": 37560,
+        "width": 180,
+        "height": 151,
+        "url": "https://patchwiki.biligame.com/images/deemo/a/a9/iyzk0sanmk0vdsdvoyyw4r7q86gdkbj.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Xi_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=571",
+        "sha1": "a26a3b35dc91f7eac9a999a0439bad7f4ba1901f",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Xi collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "xi collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/xi%20collection"
+      ]
+    },
+    {
+      "source": "bwiki",
       "file_title": "文件:YUBIKIRI-GENMAN.png",
       "info": {
         "name": "YUBIKIRI-GENMAN.png",
@@ -31851,6 +33307,32 @@
         "Duet collection Vol.1"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "source": "bwiki",
+      "file_title": "文件:Yamajet collection.png",
+      "info": {
+        "name": "Yamajet_collection.png",
+        "timestamp": "2021-12-15T08:36:04Z",
+        "size": 41997,
+        "width": 180,
+        "height": 180,
+        "url": "https://patchwiki.biligame.com/images/deemo/f/f6/tchnnztsvd3zrmfpcphj8e2jmj1c71c.png",
+        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Yamajet_collection.png",
+        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=591",
+        "sha1": "fb3bf4fca35369c0a7c46845b04bd895c0409ba0",
+        "mime": "image/png",
+        "ns": 6,
+        "title": "文件:Yamajet collection.png"
+      },
+      "kind": "collection_cover",
+      "song_titles": [],
+      "collections": [
+        "Yamajet Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Yamajet%20Collection"
+      ]
     },
     {
       "source": "bwiki",
