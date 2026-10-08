@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "fetched_at": "2026-09-05T09:04:31.580679Z",
+  "fetched_at": "2026-10-08T11:50:01.560814Z",
   "sources": [
     {
       "id": "wikis:fandom",
@@ -274,7 +274,7 @@
         ]
       },
       "notes": "Only original DEEMO and its ports. DEEMO II categories, audio, charts, screenshots and unrelated UI are excluded.",
-      "asset_count": 196,
+      "asset_count": 253,
       "failure_count": 0
     },
     {
@@ -324,6 +324,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:01a4468d931de3b9",
+      "source_id": "wikis:bwiki",
+      "title": "Sherwin collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Sherwin_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/a/a6/2s2846c2mha6fo1udz84vg5me39vhdj.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/a/a6/2s2846c2mha6fo1udz84vg5me39vhdj.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/a/a6/2s2846c2mha6fo1udz84vg5me39vhdj.png",
+      "path": "assets/public/wikis/bwiki/Sherwin_collection--231d5d8b23b6.png",
+      "width": 180,
+      "height": 144,
+      "format": "PNG",
+      "bytes": 47071,
+      "sha256": "231d5d8b23b674e144f979f7cc011cbd5d02cb171e0f26e74e905158f474d944",
+      "fetched_at": "2026-10-08T11:49:59.105817Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "17cb76420c6a48261981d8385121b20d57ce5eb7",
+      "wiki_timestamp": "2021-12-15T08:18:37Z",
+      "download_sha1": "17cb76420c6a48261981d8385121b20d57ce5eb7",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Sherwin collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Sherwin%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:04f04f5b19f71bc1",
@@ -438,6 +471,105 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:072d50fb18829f42",
+      "source_id": "wikis:bwiki",
+      "title": "Cytus selection Vol.1",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cytus_selection_Vol.1.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/2/23/2qyua5vqsg38hs4k0vda4rg4amaykko.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/2/23/2qyua5vqsg38hs4k0vda4rg4amaykko.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/2/23/2qyua5vqsg38hs4k0vda4rg4amaykko.png",
+      "path": "assets/public/wikis/bwiki/Cytus_selection_Vol.1--2779965c9182.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 44052,
+      "sha256": "2779965c91822e13b168067ec7230568e3d0d1d1d46e5ceb0b95bd19b25d5cd9",
+      "fetched_at": "2026-10-08T11:49:53.739546Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "1788dcb06ec65e14d5c2c1b62841f0b987ee9ea8",
+      "wiki_timestamp": "2021-12-15T08:53:07Z",
+      "download_sha1": "1788dcb06ec65e14d5c2c1b62841f0b987ee9ea8",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Cytus Selection Vol. 1"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cytus%20Selection%20Vol.%201"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:0737a3ba7c39f9ee",
+      "source_id": "wikis:bwiki",
+      "title": "V.K. collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:V.K._collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/9/91/kcpqi7o6b3a80q5q0a8se4l9cjrphyi.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/9/91/kcpqi7o6b3a80q5q0a8se4l9cjrphyi.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/9/91/kcpqi7o6b3a80q5q0a8se4l9cjrphyi.png",
+      "path": "assets/public/wikis/bwiki/V.K._collection--f60bb31e1233.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 52032,
+      "sha256": "f60bb31e1233f37115514900cc0e9c29ce2f76f553fb56732f29940accf07ef6",
+      "fetched_at": "2026-10-08T11:50:00.649376Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "ae3d799482846be894bc964abc06e7090cca4e2a",
+      "wiki_timestamp": "2021-12-15T08:49:09Z",
+      "download_sha1": "ae3d799482846be894bc964abc06e7090cca4e2a",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "V.K collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/V.K%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:07e4b7508dea27db",
+      "source_id": "wikis:bwiki",
+      "title": "Kobayashi collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Kobayashi_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/b/bc/5vjz0vx8f0yvl66rra8272lbihkmfbi.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/b/bc/5vjz0vx8f0yvl66rra8272lbihkmfbi.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/b/bc/5vjz0vx8f0yvl66rra8272lbihkmfbi.png",
+      "path": "assets/public/wikis/bwiki/Kobayashi_collection--b263df44f017.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 66603,
+      "sha256": "b263df44f0179c540291f5a4b56f5564ceb4e5b5d252556f7a54e42ccd5eef74",
+      "fetched_at": "2026-10-08T11:49:56.114428Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "324ed1a37019cd061efe4cee97e0efed40de4f0e",
+      "wiki_timestamp": "2021-12-15T08:31:11Z",
+      "download_sha1": "324ed1a37019cd061efe4cee97e0efed40de4f0e",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Kobayashi Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Kobayashi%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:08a6bf97c94e7bd4",
@@ -665,6 +797,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:11c41c2a7461385f",
+      "source_id": "wikis:bwiki",
+      "title": "AD：PIANO collection 3",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:AD%EF%BC%9APIANO_collection_3.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/4/47/k4a2p2qot56vbwosi5fuxyx5z6221tl.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/4/47/k4a2p2qot56vbwosi5fuxyx5z6221tl.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/4/47/k4a2p2qot56vbwosi5fuxyx5z6221tl.png",
+      "path": "assets/public/wikis/bwiki/AD_PIANO_collection_3--820f582d0002.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 39380,
+      "sha256": "820f582d000252b30c4b6194f1274b8d29b5bf3086df25fd6bbab74e0675700f",
+      "fetched_at": "2026-10-08T11:49:50.998117Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "ac3bf9a825ae68af313a21c0e054355d1503ffb9",
+      "wiki_timestamp": "2021-12-15T08:22:32Z",
+      "download_sha1": "ac3bf9a825ae68af313a21c0e054355d1503ffb9",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "AD:PIANO Collection 3"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/AD%3APIANO%20Collection%203"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:139a8c7813414d62",
       "source_id": "wikis:bwiki",
       "title": "Starry Night",
@@ -761,10 +926,76 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "RAC collection -3"
+        "RAC Collection #3"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/RAC%20collection%20-3"
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%233"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:1889ba550f2bd604",
+      "source_id": "wikis:bwiki",
+      "title": "M2U × Nicode collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:M2U_%C3%97_Nicode_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/0/07/0mk96d8abjkrzhka4j533wu0frnncx0.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/0/07/0mk96d8abjkrzhka4j533wu0frnncx0.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/0/07/0mk96d8abjkrzhka4j533wu0frnncx0.png",
+      "path": "assets/public/wikis/bwiki/M2U_Nicode_collection--674564dd06ae.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 37199,
+      "sha256": "674564dd06ae5ac7e0ce040eafba1d02ac2906d55bde44e338eb094f506e36f7",
+      "fetched_at": "2026-10-08T11:49:56.676239Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "055d8b99f63274095067b934404b03e16aed5424",
+      "wiki_timestamp": "2021-12-15T08:36:09Z",
+      "download_sha1": "055d8b99f63274095067b934404b03e16aed5424",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "M2U × Nicode collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/M2U%20%C3%97%20Nicode%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:19aaef59e2f4c9ca",
+      "source_id": "wikis:bwiki",
+      "title": "Capchii collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Capchii_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/1/11/2u7tr0gnk2d8skbjcmta2f2tsyqj8or.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/1/11/2u7tr0gnk2d8skbjcmta2f2tsyqj8or.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/1/11/2u7tr0gnk2d8skbjcmta2f2tsyqj8or.png",
+      "path": "assets/public/wikis/bwiki/Capchii_collection--6cd5b32227c1.png",
+      "width": 180,
+      "height": 147,
+      "format": "PNG",
+      "bytes": 42057,
+      "sha256": "6cd5b32227c1a58cb7e898f6a65627562106bed59be4566a5d2e036e25fa5fe3",
+      "fetched_at": "2026-10-08T11:49:52.749110Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "184eaff1f6969efed4afa4e54a27588f4e82d4bb",
+      "wiki_timestamp": "2021-12-15T08:18:38Z",
+      "download_sha1": "184eaff1f6969efed4afa4e54a27588f4e82d4bb",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Capchii collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Capchii%20collection"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -827,10 +1058,43 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "Collaboration collection"
+        "Collaboration Collection"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Collaboration%20collection"
+        "https://wiki.biligame.com/deemo/Collaboration%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:1b103848971f8e7d",
+      "source_id": "wikis:bwiki",
+      "title": "Lyrical Collections Titletab",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Lyrical_Collections_Titletab.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/8/8f/ghxxc41jv6yufhds26vm3a36ptlccxi.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/8/8f/ghxxc41jv6yufhds26vm3a36ptlccxi.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/8/8f/ghxxc41jv6yufhds26vm3a36ptlccxi.png",
+      "path": "assets/public/wikis/bwiki/Lyrical_Collections_Titletab--2cc98550159f.png",
+      "width": 70,
+      "height": 47,
+      "format": "PNG",
+      "bytes": 3208,
+      "sha256": "2cc98550159f58bf91802125aa1f6b08aabe3a5700f4560c21de0e2caff70a22",
+      "fetched_at": "2026-10-08T11:49:56.119048Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "8d3d6c40682a2fee5f7b3cb80c17f4acb460a576",
+      "wiki_timestamp": "2021-09-01T01:49:33Z",
+      "download_sha1": "8d3d6c40682a2fee5f7b3cb80c17f4acb460a576",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Lyrical Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Lyrical%20Collections%20Titletab"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -1545,6 +1809,105 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:33e09060a8ef809d",
+      "source_id": "wikis:bwiki",
+      "title": "Emotional Addict collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Emotional_Addict_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/5/54/jwkh63rxajr3lzlpd4n95dxigs7gq26.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/5/54/jwkh63rxajr3lzlpd4n95dxigs7gq26.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/5/54/jwkh63rxajr3lzlpd4n95dxigs7gq26.png",
+      "path": "assets/public/wikis/bwiki/Emotional_Addict_collection--2ec1d27a41e2.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 56185,
+      "sha256": "2ec1d27a41e20156354d73352c03f674742adc50115b28113c4257366e873ff2",
+      "fetched_at": "2026-10-08T11:49:55.705086Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "aa668ca862675750d989cea5f99c3644dbffbeee",
+      "wiki_timestamp": "2021-12-15T08:22:34Z",
+      "download_sha1": "aa668ca862675750d989cea5f99c3644dbffbeee",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Emotional Addict Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Emotional%20Addict%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:34088c2487a6a000",
+      "source_id": "wikis:bwiki",
+      "title": "L：The Lower collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:L%EF%BC%9AThe_Lower_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/e/e6/3ohsxnlwsa8c9kjcox0dbdokxdb1qzv.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/e/e6/3ohsxnlwsa8c9kjcox0dbdokxdb1qzv.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/e/e6/3ohsxnlwsa8c9kjcox0dbdokxdb1qzv.png",
+      "path": "assets/public/wikis/bwiki/L_The_Lower_collection--d1897db06185.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 39037,
+      "sha256": "d1897db0618512dc30ea3a2a95698f8310f7b6c1d1e12ec9371bf4e91a7d0681",
+      "fetched_at": "2026-10-08T11:49:56.589106Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "1f81de6d152bf2f92c5bab305a45bfb06ccf8deb",
+      "wiki_timestamp": "2021-12-15T08:53:05Z",
+      "download_sha1": "1f81de6d152bf2f92c5bab305a45bfb06ccf8deb",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "L: The Lower Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/L%3A%20The%20Lower%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:355f64fc0aa7f7a6",
+      "source_id": "wikis:bwiki",
+      "title": "Book of Celia",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Book_of_Celia.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/3/37/9ar7jfx17s8flvxa2k3ywt3dajt3h80.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/3/37/9ar7jfx17s8flvxa2k3ywt3dajt3h80.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/3/37/9ar7jfx17s8flvxa2k3ywt3dajt3h80.png",
+      "path": "assets/public/wikis/bwiki/Book_of_Celia--8c52a11f8880.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 30165,
+      "sha256": "8c52a11f8880d653bdf477157cc575d8cdaa6ed0d19947d7327c55376f23a923",
+      "fetched_at": "2026-10-08T11:49:52.577146Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "4f9aece96136ec9f1b969dda8fa256abee7ac2f0",
+      "wiki_timestamp": "2021-12-15T08:36:05Z",
+      "download_sha1": "4f9aece96136ec9f1b969dda8fa256abee7ac2f0",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Book of Celia"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Book%20of%20Celia"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:36e052cdddf0003b",
       "source_id": "wikis:bwiki",
       "title": "Metal Hypnotized",
@@ -1694,6 +2057,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:39ea1d67afe693e7",
+      "source_id": "wikis:bwiki",
+      "title": "Funkot collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Funkot_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/f/f6/7e36r205vc8alvre0hgkih6dmx2ff37.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/f/f6/7e36r205vc8alvre0hgkih6dmx2ff37.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/f/f6/7e36r205vc8alvre0hgkih6dmx2ff37.png",
+      "path": "assets/public/wikis/bwiki/Funkot_collection--15548cd6abf9.png",
+      "width": 180,
+      "height": 166,
+      "format": "PNG",
+      "bytes": 56999,
+      "sha256": "15548cd6abf9510d97b7e851de85c713f1ffffddd3ff02ebfc188f4a48f8014c",
+      "fetched_at": "2026-10-08T11:49:55.808139Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "3f46ab2ccb495ceabd1a3f87fee5b0ee65ec0023",
+      "wiki_timestamp": "2021-12-15T08:31:12Z",
+      "download_sha1": "3f46ab2ccb495ceabd1a3f87fee5b0ee65ec0023",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Funkot Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Funkot%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:3a9f0de2cb47b161",
@@ -1961,6 +2357,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:446e2cdae48b7f09",
+      "source_id": "wikis:bwiki",
+      "title": "Rabpit collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Rabpit_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/7/79/k9mtfg1g3mbposillob2c7ntmkcf1kw.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/7/79/k9mtfg1g3mbposillob2c7ntmkcf1kw.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/7/79/k9mtfg1g3mbposillob2c7ntmkcf1kw.png",
+      "path": "assets/public/wikis/bwiki/Rabpit_collection--f2d52937e19f.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 33490,
+      "sha256": "f2d52937e19f73a89339c66e4ce97f5d72cc37e81d73fcae4a84f6b46572b7f3",
+      "fetched_at": "2026-10-08T11:49:58.552326Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "ad81e87f06319d65b318ccf560ac63ab1dfeb1c0",
+      "wiki_timestamp": "2021-12-15T08:49:06Z",
+      "download_sha1": "ad81e87f06319d65b318ccf560ac63ab1dfeb1c0",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Rabpit collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Rabpit%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:44ea04c58f3a6bfa",
       "source_id": "wikis:bwiki",
       "title": "Rayark selection Vol.1",
@@ -1986,10 +2415,43 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "Rayark selection Vol.1"
+        "Rayark selection Vol. 1"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Rayark%20selection%20Vol.1"
+        "https://wiki.biligame.com/deemo/Rayark%20selection%20Vol.%201"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:46df82deddf15af8",
+      "source_id": "wikis:bwiki",
+      "title": "MILI collection Vol.3",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:MILI_collection_Vol.3.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/f/f0/nol8zpuo74s6jkl2onjrhlsjr4oxmd2.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/f/f0/nol8zpuo74s6jkl2onjrhlsjr4oxmd2.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/f/f0/nol8zpuo74s6jkl2onjrhlsjr4oxmd2.png",
+      "path": "assets/public/wikis/bwiki/MILI_collection_Vol.3--549c87e07c5d.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 43041,
+      "sha256": "549c87e07c5ddc169c2df3e41fe93f4cc73f06934e854c6de20f093264e4033c",
+      "fetched_at": "2026-10-08T11:49:58.598366Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "cabf206434535ee013d98955bdccebcf036f0776",
+      "wiki_timestamp": "2021-12-15T08:53:10Z",
+      "download_sha1": "cabf206434535ee013d98955bdccebcf036f0776",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Mili Collection Vol.3"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Mili%20Collection%20Vol.3"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -2359,10 +2821,43 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "Deemo's collection Vol.1A"
+        "Deemo's Collection Vol. 1A"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Deemo%27s%20collection%20Vol.1A"
+        "https://wiki.biligame.com/deemo/Deemo%27s%20Collection%20Vol.%201A"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:5006028cf65cf614",
+      "source_id": "wikis:bwiki",
+      "title": "N.M.S.T. collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:N.M.S.T._collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/4/45/q3p30d9gjhhxiofsbb1aww50j6ctz2x.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/4/45/q3p30d9gjhhxiofsbb1aww50j6ctz2x.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/4/45/q3p30d9gjhhxiofsbb1aww50j6ctz2x.png",
+      "path": "assets/public/wikis/bwiki/N.M.S.T._collection--82aa74a07afa.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 44269,
+      "sha256": "82aa74a07afa78a73c886c73bb5c4727e934fbb15e5411b7b43d6a8623d57822",
+      "fetched_at": "2026-10-08T11:49:57.737451Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "df75e850b5674c4221dcc1fd69615fce8e5bead9",
+      "wiki_timestamp": "2021-12-15T08:31:15Z",
+      "download_sha1": "df75e850b5674c4221dcc1fd69615fce8e5bead9",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "N.M.S.T. Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/N.M.S.T.%20Collection"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -2727,10 +3222,76 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "RAC collection -1"
+        "RAC Collection #1"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/RAC%20collection%20-1"
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%231"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:5b4c87af465cd79e",
+      "source_id": "wikis:bwiki",
+      "title": "Taiko no Tatsujin collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Taiko_no_Tatsujin_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/7/7b/h1qyzz1oeztxz76ky7shzayfntz0ttw.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/7/7b/h1qyzz1oeztxz76ky7shzayfntz0ttw.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/7/7b/h1qyzz1oeztxz76ky7shzayfntz0ttw.png",
+      "path": "assets/public/wikis/bwiki/Taiko_no_Tatsujin_collection--ba62f32ec819.png",
+      "width": 180,
+      "height": 144,
+      "format": "PNG",
+      "bytes": 39997,
+      "sha256": "ba62f32ec8198424b30999958eba773bfe5a1d5bccd11fd7f1dbf73ec1ccdf14",
+      "fetched_at": "2026-10-08T11:50:00.143677Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "91f33418e26b81ee328016c1dc17a7b0fcb05e04",
+      "wiki_timestamp": "2021-12-15T08:18:39Z",
+      "download_sha1": "91f33418e26b81ee328016c1dc17a7b0fcb05e04",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Taiko no Tatsujin Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Taiko%20no%20Tatsujin%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:5c2cb2aaae5b7c43",
+      "source_id": "wikis:bwiki",
+      "title": "Exotic Collections Titletab",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Exotic_Collections_Titletab.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/a/ac/gqk9bkcg5c6jsb74wg5qm5wpkf9iqoj.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/a/ac/gqk9bkcg5c6jsb74wg5qm5wpkf9iqoj.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/a/ac/gqk9bkcg5c6jsb74wg5qm5wpkf9iqoj.png",
+      "path": "assets/public/wikis/bwiki/Exotic_Collections_Titletab--fa970778047a.png",
+      "width": 70,
+      "height": 47,
+      "format": "PNG",
+      "bytes": 3573,
+      "sha256": "fa970778047a034e128aa33704fc9311410b597e79694c788e3d7258f25915d5",
+      "fetched_at": "2026-10-08T11:49:54.316705Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "8f4a344dfffc0bbaa26cc5805b6803fbee591c93",
+      "wiki_timestamp": "2021-09-01T01:49:34Z",
+      "download_sha1": "8f4a344dfffc0bbaa26cc5805b6803fbee591c93",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Exotic Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Exotic%20Collections%20Titletab"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -2760,10 +3321,10 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "Rayark selection Vol.3"
+        "Rayark Selection Vol. 3"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Rayark%20selection%20Vol.3"
+        "https://wiki.biligame.com/deemo/Rayark%20Selection%20Vol.%203"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -2842,6 +3403,72 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:5dba20e7b975fc24",
+      "source_id": "wikis:bwiki",
+      "title": "Aioi collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Aioi_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/6/6f/tw6upqchakkfir67kzrnghas08qlolg.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/6/6f/tw6upqchakkfir67kzrnghas08qlolg.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/6/6f/tw6upqchakkfir67kzrnghas08qlolg.png",
+      "path": "assets/public/wikis/bwiki/Aioi_collection--a703a2fd7f09.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 45029,
+      "sha256": "a703a2fd7f0955dfda4f816dccb955ff4f8b4f2ad52b114943606584f6f4fb03",
+      "fetched_at": "2026-10-08T11:49:52.040539Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "ffeb39fb0bcc58eb4ee44d6f2862cffe477be9c4",
+      "wiki_timestamp": "2021-12-15T08:49:05Z",
+      "download_sha1": "ffeb39fb0bcc58eb4ee44d6f2862cffe477be9c4",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Aioi collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Aioi%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:5f5dbeb3a46f3fc6",
+      "source_id": "wikis:bwiki",
+      "title": "Team Grimoire collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Team_Grimoire_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/9/92/4xbyfgphnkae1kt7xqypp2vankoskem.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/9/92/4xbyfgphnkae1kt7xqypp2vankoskem.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/9/92/4xbyfgphnkae1kt7xqypp2vankoskem.png",
+      "path": "assets/public/wikis/bwiki/Team_Grimoire_collection--6cb2a8348f98.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 78239,
+      "sha256": "6cb2a8348f988d73ba71f66b82b749150713c29f66189832c01df4b53eaf9bfe",
+      "fetched_at": "2026-10-08T11:49:59.858496Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "2a2b71f7a2681aa25bcb5088e6dd7b9d0b602e4e",
+      "wiki_timestamp": "2021-12-15T08:31:10Z",
+      "download_sha1": "2a2b71f7a2681aa25bcb5088e6dd7b9d0b602e4e",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Team Grimoire Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Team%20Grimoire%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:5f7100391666e055",
@@ -2958,6 +3585,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:65b320ac3b83a8f4",
+      "source_id": "wikis:bwiki",
+      "title": "Cytus II collection Vol.2",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cytus_II_collection_Vol.2.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/5/53/blqvsaazoqjxkt7pylmt8nnc5ldpulx.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/5/53/blqvsaazoqjxkt7pylmt8nnc5ldpulx.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/5/53/blqvsaazoqjxkt7pylmt8nnc5ldpulx.png",
+      "path": "assets/public/wikis/bwiki/Cytus_II_collection_Vol.2--f417ac6d6b44.png",
+      "width": 180,
+      "height": 174,
+      "format": "PNG",
+      "bytes": 56781,
+      "sha256": "f417ac6d6b445af087e3cffcd3f247744c1e071466b362d34fb5f46c6e0ed5d3",
+      "fetched_at": "2026-10-08T11:49:53.417978Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "635729c6905d3f9cbcd0f899de346730fd085835",
+      "wiki_timestamp": "2021-12-15T08:26:05Z",
+      "download_sha1": "635729c6905d3f9cbcd0f899de346730fd085835",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Cytus II collection Vol.2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cytus%20II%20collection%20Vol.2"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:65d9f8160b9774ea",
       "source_id": "wikis:bwiki",
       "title": "White Fantasy",
@@ -3072,6 +3732,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:67d3b0e42653d769",
+      "source_id": "wikis:bwiki",
+      "title": "Cranky collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cranky_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/e/e4/5ia5pxzlvv3dy2ik528brndyslvdjw7.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/e/e4/5ia5pxzlvv3dy2ik528brndyslvdjw7.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/e/e4/5ia5pxzlvv3dy2ik528brndyslvdjw7.png",
+      "path": "assets/public/wikis/bwiki/Cranky_collection--a766de793a9f.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 38364,
+      "sha256": "a766de793a9fd36ee010ef76ea543e406923edd1b961e4bc64c44883e4696ab0",
+      "fetched_at": "2026-10-08T11:49:53.315381Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "2f26d284720f0f32b405692150888ac36736d8f7",
+      "wiki_timestamp": "2021-12-15T08:49:01Z",
+      "download_sha1": "2f26d284720f0f32b405692150888ac36736d8f7",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Cranky Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cranky%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:68cafb210eec8406",
       "source_id": "wikis:bwiki",
       "title": "Land of Giants",
@@ -3146,6 +3839,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:6c164f61f44e888d",
+      "source_id": "wikis:bwiki",
+      "title": "Book of Alice",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Book_of_Alice.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/f/ff/4gyvcpcm7tp0tmlsrq9w6jrvycnpavv.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/f/ff/4gyvcpcm7tp0tmlsrq9w6jrvycnpavv.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/f/ff/4gyvcpcm7tp0tmlsrq9w6jrvycnpavv.png",
+      "path": "assets/public/wikis/bwiki/Book_of_Alice--22f5a649ba5e.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 36124,
+      "sha256": "22f5a649ba5eaeba420a064582d83d999dcc323336a9b59ef1f87aa8cdb54aaa",
+      "fetched_at": "2026-10-08T11:49:52.397983Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "264749180ca13bed1586cb8b59259b7d3ad00a5b",
+      "wiki_timestamp": "2021-12-15T08:36:06Z",
+      "download_sha1": "264749180ca13bed1586cb8b59259b7d3ad00a5b",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Book of Alice"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Book%20of%20Alice"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:6df199ad521b1c9f",
@@ -3401,10 +4127,10 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "Deemo's collection Vol.2"
+        "Deemo's Collection Vol.2"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Deemo%27s%20collection%20Vol.2"
+        "https://wiki.biligame.com/deemo/Deemo%27s%20Collection%20Vol.2"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -3444,6 +4170,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:78ed0b43fb89a1f3",
+      "source_id": "wikis:bwiki",
+      "title": "Autumn selection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Autumn_selection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/e/e5/jjh4wcyfdhqxieveg9u525h64waygmr.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/e/e5/jjh4wcyfdhqxieveg9u525h64waygmr.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/e/e5/jjh4wcyfdhqxieveg9u525h64waygmr.png",
+      "path": "assets/public/wikis/bwiki/Autumn_selection--e4b5910cdfe0.png",
+      "width": 180,
+      "height": 173,
+      "format": "PNG",
+      "bytes": 55996,
+      "sha256": "e4b5910cdfe080bda797524e36795808de61b6c1f2e48459fa3860a3ebfac82d",
+      "fetched_at": "2026-10-08T11:49:51.615512Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "a7497fc80001b34fbfc9d21b02591af5cd0412b3",
+      "wiki_timestamp": "2021-12-15T08:26:07Z",
+      "download_sha1": "a7497fc80001b34fbfc9d21b02591af5cd0412b3",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Autumn selection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Autumn%20selection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:797f1942fd86e839",
@@ -3510,10 +4269,10 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "RAC collection #4"
+        "RAC Collection #4"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/RAC%20collection%20%234"
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%234"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -3543,10 +4302,10 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "Samsara collection"
+        "Samsara Collection"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Samsara%20collection"
+        "https://wiki.biligame.com/deemo/Samsara%20Collection"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -3627,6 +4386,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:7b63d8725811cc21",
+      "source_id": "wikis:bwiki",
+      "title": "Spiritual Collections Titletab",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Spiritual_Collections_Titletab.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/1/1c/8eev9fg0atx3kqaz0rwypmc9lk90kis.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/1/1c/8eev9fg0atx3kqaz0rwypmc9lk90kis.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/1/1c/8eev9fg0atx3kqaz0rwypmc9lk90kis.png",
+      "path": "assets/public/wikis/bwiki/Spiritual_Collections_Titletab--e2f02975e755.png",
+      "width": 70,
+      "height": 47,
+      "format": "PNG",
+      "bytes": 3907,
+      "sha256": "e2f02975e755ca488e59ffcb7378ddff4c86da4389642134e7d7880b5e21b63b",
+      "fetched_at": "2026-10-08T11:49:59.158331Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "47e9fe27dca1685738d33cef0b6ae8523eac70e4",
+      "wiki_timestamp": "2021-09-01T01:49:31Z",
+      "download_sha1": "47e9fe27dca1685738d33cef0b6ae8523eac70e4",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Spiritual Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Spiritual%20Collections%20Titletab"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:7b7999e3a657a969",
       "source_id": "wikis:bwiki",
       "title": "Girl Meets World",
@@ -3701,6 +4493,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:7b9b3089ebd365ca",
+      "source_id": "wikis:bwiki",
+      "title": "Knight Rosabell collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Knight_Rosabell_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/b/be/qo9z4ycg34s6tynq4efc2zx3tz0tsxz.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/b/be/qo9z4ycg34s6tynq4efc2zx3tz0tsxz.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/b/be/qo9z4ycg34s6tynq4efc2zx3tz0tsxz.png",
+      "path": "assets/public/wikis/bwiki/Knight_Rosabell_collection--be5969e63782.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 41523,
+      "sha256": "be5969e637827fb90147b910f76d11958c1b4f3ba8305326592b7ff9cf2a8320",
+      "fetched_at": "2026-10-08T11:49:55.801451Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "e45ac6e19bbb3dfb66d20a4260ae6d3ec4e633c7",
+      "wiki_timestamp": "2021-12-15T08:53:08Z",
+      "download_sha1": "e45ac6e19bbb3dfb66d20a4260ae6d3ec4e633c7",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Knight Rosabell collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Knight%20Rosabell%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:7d25341ad517e681",
@@ -3964,6 +4789,39 @@
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
+      "id": "wikis:bwiki:829cb1f605e2f3df",
+      "source_id": "wikis:bwiki",
+      "title": "AD：PIANO collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:AD%EF%BC%9APIANO_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/4/44/6sdsetmht1sx3bbhq7mfc6fh13ufjfl.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/4/44/6sdsetmht1sx3bbhq7mfc6fh13ufjfl.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/4/44/6sdsetmht1sx3bbhq7mfc6fh13ufjfl.png",
+      "path": "assets/public/wikis/bwiki/AD_PIANO_collection--2dafbb6a375c.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 32948,
+      "sha256": "2dafbb6a375cc17979f86f48ef96081ab9ce814d90f02b0ca3efe54237f2a8ef",
+      "fetched_at": "2026-10-08T11:49:50.702946Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "3a1d4d7b823ed40c864c5cba909e49c9b4842a21",
+      "wiki_timestamp": "2021-12-15T08:36:11Z",
+      "download_sha1": "3a1d4d7b823ed40c864c5cba909e49c9b4842a21",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "AD:PIANO Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/AD%3APIANO%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:83e8bcd03f0799b6",
       "source_id": "wikis:bwiki",
       "title": "Dream",
@@ -4079,6 +4937,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:84ffe95f04dceffe",
+      "source_id": "wikis:bwiki",
+      "title": "Feryquitous collection 2",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Feryquitous_collection_2.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/9/95/nk99g8tsg0tmq8aewh66kuw38epis02.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/9/95/nk99g8tsg0tmq8aewh66kuw38epis02.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/9/95/nk99g8tsg0tmq8aewh66kuw38epis02.png",
+      "path": "assets/public/wikis/bwiki/Feryquitous_collection_2--f05ad5400529.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 40165,
+      "sha256": "f05ad540052947b0edebabac3ef8a1b3e4a56bf37b94537053eaca82bcd7921d",
+      "fetched_at": "2026-10-08T11:49:54.727740Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "c9b7590aa18d216923bca64fdde1957b46ae4f42",
+      "wiki_timestamp": "2021-12-15T08:26:10Z",
+      "download_sha1": "c9b7590aa18d216923bca64fdde1957b46ae4f42",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Feryquitous collection 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Feryquitous%20collection%202"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:85b67f5acb4c11ca",
       "source_id": "wikis:bwiki",
       "title": "Suspenseful Third Day",
@@ -4156,6 +5047,105 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:87a8b11db1d83324",
+      "source_id": "wikis:bwiki",
+      "title": "Rayark Collections Titletab",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Rayark_Collections_Titletab.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/e/ee/pbrn9a0k5xjxinaijjh0c7poue2752k.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/e/ee/pbrn9a0k5xjxinaijjh0c7poue2752k.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/e/ee/pbrn9a0k5xjxinaijjh0c7poue2752k.png",
+      "path": "assets/public/wikis/bwiki/Rayark_Collections_Titletab--f3ff1cfbddfe.png",
+      "width": 70,
+      "height": 47,
+      "format": "PNG",
+      "bytes": 3168,
+      "sha256": "f3ff1cfbddfe34cd7e52fdeaeda25a38cfa53f81be0d345a09963ab0da46a08f",
+      "fetched_at": "2026-10-08T11:49:58.421665Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "d8d1af5bfcb95a4b7c1951ae15176ec3aefc2f6c",
+      "wiki_timestamp": "2021-09-01T01:49:35Z",
+      "download_sha1": "d8d1af5bfcb95a4b7c1951ae15176ec3aefc2f6c",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Rayark Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Rayark%20Collections%20Titletab"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:87e75add16b64d5a",
+      "source_id": "wikis:bwiki",
+      "title": "Ice collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Ice_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/8/88/czpbkt4fz5hcvm0aaya6ss6kt52dwzj.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/8/88/czpbkt4fz5hcvm0aaya6ss6kt52dwzj.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/8/88/czpbkt4fz5hcvm0aaya6ss6kt52dwzj.png",
+      "path": "assets/public/wikis/bwiki/Ice_collection--6d1848b1c5b0.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 43638,
+      "sha256": "6d1848b1c5b070547cac4379227390a383da3e83c1067082a7e152329858a4e6",
+      "fetched_at": "2026-10-08T11:49:55.326430Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "6f385f4d2ff34308358a39f155f332565efa2e3f",
+      "wiki_timestamp": "2021-12-15T08:31:08Z",
+      "download_sha1": "6f385f4d2ff34308358a39f155f332565efa2e3f",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Ice collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Ice%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:888622799856b3b2",
+      "source_id": "wikis:bwiki",
+      "title": "N.M.S.T. collection 2",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:N.M.S.T._collection_2.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/3/39/mwq2gi2f6qt6cnvu8tvfmcn7dplsj4a.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/3/39/mwq2gi2f6qt6cnvu8tvfmcn7dplsj4a.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/3/39/mwq2gi2f6qt6cnvu8tvfmcn7dplsj4a.png",
+      "path": "assets/public/wikis/bwiki/N.M.S.T._collection_2--a4ab37e3c68d.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 36897,
+      "sha256": "a4ab37e3c68d53ae6b7e03c512b1060a593d4798ca04df925b548b1fde982ea2",
+      "fetched_at": "2026-10-08T11:49:57.782019Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "c41eb818ef8182b346db4654644c51b557b718ca",
+      "wiki_timestamp": "2021-12-15T08:31:14Z",
+      "download_sha1": "c41eb818ef8182b346db4654644c51b557b718ca",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "N.M.S.T. Collection 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/N.M.S.T.%20Collection%202"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:8a2dcc044bb4b0ca",
       "source_id": "wikis:bwiki",
       "title": "Toshi no kokyu",
@@ -4191,6 +5181,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:8c54511b8a50a6ff",
+      "source_id": "wikis:bwiki",
+      "title": "Aioi collection Vol.2",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Aioi_collection_Vol.2.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/a/a2/7380k8ndmi0re6vmxb09xftg9pwwsdk.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/a/a2/7380k8ndmi0re6vmxb09xftg9pwwsdk.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/a/a2/7380k8ndmi0re6vmxb09xftg9pwwsdk.png",
+      "path": "assets/public/wikis/bwiki/Aioi_collection_Vol.2--07b6e2e206ad.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 47473,
+      "sha256": "07b6e2e206ad7093054bbc76bb0636c3908bcccdc71564398771620fe11bd77e",
+      "fetched_at": "2026-10-08T11:49:52.050703Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "3cb12fab360c57e24f8089c819d8d41ff9ca0ba8",
+      "wiki_timestamp": "2021-12-15T08:49:04Z",
+      "download_sha1": "3cb12fab360c57e24f8089c819d8d41ff9ca0ba8",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Aioi Collection Vol.2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Aioi%20Collection%20Vol.2"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:8c61cb9d3cfae9ef",
@@ -4268,6 +5291,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:8e9c3647d2426ac4",
+      "source_id": "wikis:bwiki",
+      "title": "Ayatsugu Otowa collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Ayatsugu_Otowa_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/9/99/6h33zvi0k8ad5uggvty9z1ef020kd2b.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/9/99/6h33zvi0k8ad5uggvty9z1ef020kd2b.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/9/99/6h33zvi0k8ad5uggvty9z1ef020kd2b.png",
+      "path": "assets/public/wikis/bwiki/Ayatsugu_Otowa_collection--c3bc652d2f1f.png",
+      "width": 180,
+      "height": 142,
+      "format": "PNG",
+      "bytes": 39565,
+      "sha256": "c3bc652d2f1ff6a61523a62733ac4995e41ccfe78d6059960121c3504c33cd32",
+      "fetched_at": "2026-10-08T11:49:51.806683Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "376d9943565e74cbdba584dcbe64d934ac6b8723",
+      "wiki_timestamp": "2021-12-15T08:18:36Z",
+      "download_sha1": "376d9943565e74cbdba584dcbe64d934ac6b8723",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Ayatsugu_Otowa collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Ayatsugu_Otowa%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:922bef929a81dc6a",
       "source_id": "wikis:bwiki",
       "title": "Infinite Puzzle",
@@ -4305,6 +5361,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:93b6dc4ebd06ba53",
+      "source_id": "wikis:bwiki",
+      "title": "AD：PIANO collection 2",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:AD%EF%BC%9APIANO_collection_2.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/e/e6/pyyppvaoen2dq02nnk85aa6gnz0rpew.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/e/e6/pyyppvaoen2dq02nnk85aa6gnz0rpew.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/e/e6/pyyppvaoen2dq02nnk85aa6gnz0rpew.png",
+      "path": "assets/public/wikis/bwiki/AD_PIANO_collection_2--26722f7b8b37.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 42093,
+      "sha256": "26722f7b8b37e41adb1943ce6e0c294bbd10f586f7006d248ddd4b5600df57ab",
+      "fetched_at": "2026-10-08T11:49:50.702916Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "de55cef8320e22b6b16cf388fcc6adab35149568",
+      "wiki_timestamp": "2021-12-15T08:36:10Z",
+      "download_sha1": "de55cef8320e22b6b16cf388fcc6adab35149568",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "AD:PIANO Collection 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/AD%3APIANO%20Collection%202"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:94c3b2578dd05661",
       "source_id": "wikis:bwiki",
       "title": "Shadow in the mirror",
@@ -4340,6 +5429,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:9688424ffc478d17",
+      "source_id": "wikis:bwiki",
+      "title": "Yamajet collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Yamajet_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/f/f6/tchnnztsvd3zrmfpcphj8e2jmj1c71c.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/f/f6/tchnnztsvd3zrmfpcphj8e2jmj1c71c.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/f/f6/tchnnztsvd3zrmfpcphj8e2jmj1c71c.png",
+      "path": "assets/public/wikis/bwiki/Yamajet_collection--b7222f0bc55c.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 41997,
+      "sha256": "b7222f0bc55c1a24f7060b187a89444638f01f57e6b5e118df7885003b398175",
+      "fetched_at": "2026-10-08T11:50:01.202508Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "fb3bf4fca35369c0a7c46845b04bd895c0409ba0",
+      "wiki_timestamp": "2021-12-15T08:36:04Z",
+      "download_sha1": "fb3bf4fca35369c0a7c46845b04bd895c0409ba0",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Yamajet Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Yamajet%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:9768bf2e245e1242",
@@ -4518,10 +5640,10 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "Feryquitous collection"
+        "Feryquitous Collection"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/Feryquitous%20collection"
+        "https://wiki.biligame.com/deemo/Feryquitous%20Collection"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -4746,6 +5868,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:a2ee76e4b454c2d4",
+      "source_id": "wikis:bwiki",
+      "title": "Eshen Chen collection Vol.1：Transmission",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Eshen_Chen_collection_Vol.1%EF%BC%9ATransmission.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/b/b0/b9uq6xzct1qx849cxeambmntcgc3fp4.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/b/b0/b9uq6xzct1qx849cxeambmntcgc3fp4.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/b/b0/b9uq6xzct1qx849cxeambmntcgc3fp4.png",
+      "path": "assets/public/wikis/bwiki/Eshen_Chen_collection_Vol.1_Transmission--54431aaf3eee.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 39685,
+      "sha256": "54431aaf3eeef149c41b1906fa2b5c9863f1b98181fc005bd7fbd67c8e0df48d",
+      "fetched_at": "2026-10-08T11:49:54.751448Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "60832407d19a46dc41cb23b49119bde906213e38",
+      "wiki_timestamp": "2021-12-15T08:49:07Z",
+      "download_sha1": "60832407d19a46dc41cb23b49119bde906213e38",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Eshen Chen collection Vol.1：Transmission"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Eshen%20Chen%20collection%20Vol.1%EF%BC%9ATransmission"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:a3134b59a99fc57d",
@@ -5049,6 +6204,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:b080730c414fbf67",
+      "source_id": "wikis:bwiki",
+      "title": "MILI collection Vol.2",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:MILI_collection_Vol.2.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/9/92/dniwjdwtvbwrp7wgmej8o1nysqqy9a0.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/9/92/dniwjdwtvbwrp7wgmej8o1nysqqy9a0.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/9/92/dniwjdwtvbwrp7wgmej8o1nysqqy9a0.png",
+      "path": "assets/public/wikis/bwiki/MILI_collection_Vol.2--ace47ad3084b.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 35213,
+      "sha256": "ace47ad3084b3277b34622674e3d1d7e216a167ced1743f4d11d41c16c121897",
+      "fetched_at": "2026-10-08T11:49:57.343573Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "74e2913cce7e5654df39c5bf875433dd1d4ca578",
+      "wiki_timestamp": "2021-12-15T08:53:11Z",
+      "download_sha1": "74e2913cce7e5654df39c5bf875433dd1d4ca578",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Mili Collection Vol. 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Mili%20Collection%20Vol.%202"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:b0935baf88ba19d5",
       "source_id": "wikis:bwiki",
       "title": "Aquamarine",
@@ -5084,6 +6272,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:b1a09d5b6f029d77",
+      "source_id": "wikis:bwiki",
+      "title": "RAC collection -6",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:RAC_collection_-6.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/9/93/o02vlta2retw6v6l6lg2t8iutnaphjn.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/9/93/o02vlta2retw6v6l6lg2t8iutnaphjn.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/9/93/o02vlta2retw6v6l6lg2t8iutnaphjn.png",
+      "path": "assets/public/wikis/bwiki/RAC_collection_-6--f16b540d4103.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 45150,
+      "sha256": "f16b540d410339dfb550d6910fcec65c786912e8033834021e15d97f373d722a",
+      "fetched_at": "2026-10-08T11:49:58.393296Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "cd7a9544ea9adac062025f667aca3207d7a97b13",
+      "wiki_timestamp": "2021-12-15T08:56:33Z",
+      "download_sha1": "cd7a9544ea9adac062025f667aca3207d7a97b13",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "RAC Collection #6"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%236"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:b222ec9dd600714d",
@@ -5160,6 +6381,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:b41be570dfaf7b47",
+      "source_id": "wikis:bwiki",
+      "title": "Sakuzyo collection Vol.2",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Sakuzyo_collection_Vol.2.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/b/bd/dhaeawu9ftnsmbin2nllcpomst22klo.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/b/bd/dhaeawu9ftnsmbin2nllcpomst22klo.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/b/bd/dhaeawu9ftnsmbin2nllcpomst22klo.png",
+      "path": "assets/public/wikis/bwiki/Sakuzyo_collection_Vol.2--4d94dadbc36c.png",
+      "width": 180,
+      "height": 145,
+      "format": "PNG",
+      "bytes": 45841,
+      "sha256": "4d94dadbc36c95955a0b4ddf253db7290e13ece9b08e9ff069017078599badff",
+      "fetched_at": "2026-10-08T11:49:59.301712Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "7366ebae0bf361f4c578d6e4aab2eec23054eacc",
+      "wiki_timestamp": "2021-12-15T08:18:42Z",
+      "download_sha1": "7366ebae0bf361f4c578d6e4aab2eec23054eacc",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Sakuzyo collection Vol.2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Sakuzyo%20collection%20Vol.2"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:b4683d329dd4f97a",
@@ -5383,6 +6637,39 @@
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
+      "id": "wikis:bwiki:b8d261a7a5a788c3",
+      "source_id": "wikis:bwiki",
+      "title": "Cytus selection Vol.2",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cytus_selection_Vol.2.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/f/fa/kxmu3jejfpegcncyuuuqcloibum0sd4.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/f/fa/kxmu3jejfpegcncyuuuqcloibum0sd4.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/f/fa/kxmu3jejfpegcncyuuuqcloibum0sd4.png",
+      "path": "assets/public/wikis/bwiki/Cytus_selection_Vol.2--e9717d731f8f.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 44991,
+      "sha256": "e9717d731f8f60255330059dc89a46f40ed970097cdbda2783399134c112383b",
+      "fetched_at": "2026-10-08T11:49:54.658095Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "b336fcbfe979e83c6881166a94ad7e478c75cd98",
+      "wiki_timestamp": "2021-12-15T08:53:06Z",
+      "download_sha1": "b336fcbfe979e83c6881166a94ad7e478c75cd98",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Cytus Selection Vol. 2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cytus%20Selection%20Vol.%202"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:b941641b24268235",
       "source_id": "wikis:bwiki",
       "title": "Aragami",
@@ -5494,6 +6781,72 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:bb47487876fafad9",
+      "source_id": "wikis:bwiki",
+      "title": "Sdorica collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Sdorica_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/b/b0/4a8iwzr0t3lfo8s9rx7z5uu2ctqudi2.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/b/b0/4a8iwzr0t3lfo8s9rx7z5uu2ctqudi2.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/b/b0/4a8iwzr0t3lfo8s9rx7z5uu2ctqudi2.png",
+      "path": "assets/public/wikis/bwiki/Sdorica_collection--715ecdd7db61.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 70897,
+      "sha256": "715ecdd7db6163ca232fac1f241b991fee4ee6c3be798ac68bb3276122bc5dc2",
+      "fetched_at": "2026-10-08T11:49:59.262826Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "24ad7903e1c402cf80257a5d95b60ab504cbcdda",
+      "wiki_timestamp": "2021-12-15T08:31:06Z",
+      "download_sha1": "24ad7903e1c402cf80257a5d95b60ab504cbcdda",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Sdorica Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Sdorica%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:bd7fd6826e7702d2",
+      "source_id": "wikis:bwiki",
+      "title": "Knight Iris collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Knight_Iris_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/1/19/ghrp7tazyl1mk9wkjjkiprphn2xa9m0.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/1/19/ghrp7tazyl1mk9wkjjkiprphn2xa9m0.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/1/19/ghrp7tazyl1mk9wkjjkiprphn2xa9m0.png",
+      "path": "assets/public/wikis/bwiki/Knight_Iris_collection--193a2549ee28.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 46673,
+      "sha256": "193a2549ee287bd60e79eb200867438ddb14ae466c2d9757b2ada7d89e429598",
+      "fetched_at": "2026-10-08T11:49:55.565726Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "8d32e5327381b531436165af96812755a2ac0828",
+      "wiki_timestamp": "2021-12-15T08:53:09Z",
+      "download_sha1": "8d32e5327381b531436165af96812755a2ac0828",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Knight Iris Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Knight%20Iris%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:bf140f57fe8a8b32",
@@ -5647,6 +7000,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:c279384932fffc65",
+      "source_id": "wikis:bwiki",
+      "title": "Spring selection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Spring_selection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/f/f4/ek1k4yviz49wo8res0byrs6u4zy6mvm.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/f/f4/ek1k4yviz49wo8res0byrs6u4zy6mvm.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/f/f4/ek1k4yviz49wo8res0byrs6u4zy6mvm.png",
+      "path": "assets/public/wikis/bwiki/Spring_selection--e337e44ceae5.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 41840,
+      "sha256": "e337e44ceae5f154d693e71b343d5a2610247d5743affe422f00ccbf0246423c",
+      "fetched_at": "2026-10-08T11:50:00.197066Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "7c9e2d8d4b349fc38030b593cfad584fc63e4752",
+      "wiki_timestamp": "2021-12-15T08:22:35Z",
+      "download_sha1": "7c9e2d8d4b349fc38030b593cfad584fc63e4752",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Spring Selection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Spring%20Selection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:c31361de90ffc9c0",
@@ -5837,6 +7223,105 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:c955806b985cf4c8",
+      "source_id": "wikis:bwiki",
+      "title": "Taishi collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Taishi_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/c/c0/kgmnqsgxwj4sppejvrjm7hdxx5g7nyi.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/c/c0/kgmnqsgxwj4sppejvrjm7hdxx5g7nyi.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/c/c0/kgmnqsgxwj4sppejvrjm7hdxx5g7nyi.png",
+      "path": "assets/public/wikis/bwiki/Taishi_collection--929e21936324.png",
+      "width": 180,
+      "height": 162,
+      "format": "PNG",
+      "bytes": 53638,
+      "sha256": "929e21936324c41374ed13ff9cbe34d8d8c55966c73edee01acfa5d3714b4b20",
+      "fetched_at": "2026-10-08T11:50:00.661062Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "af2bc7b1ff4739f6229cce5c478b67d7b58d090a",
+      "wiki_timestamp": "2021-12-15T08:26:04Z",
+      "download_sha1": "af2bc7b1ff4739f6229cce5c478b67d7b58d090a",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Taishi collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Taishi%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:c96f84846de728a1",
+      "source_id": "wikis:bwiki",
+      "title": "DS：PIANO collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:DS%EF%BC%9APIANO_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/a/ab/ho8csndxyv5obgzsn5hfj12t0lube3w.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/a/ab/ho8csndxyv5obgzsn5hfj12t0lube3w.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/a/ab/ho8csndxyv5obgzsn5hfj12t0lube3w.png",
+      "path": "assets/public/wikis/bwiki/DS_PIANO_collection--1775f6bdf2b1.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 48090,
+      "sha256": "1775f6bdf2b182b1ccfa3afbdcdd83eb86fcfa3bdc27ddc579dda013a2a86d60",
+      "fetched_at": "2026-10-08T11:49:54.299405Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "974be48aaa1ffe5f9f5500778146f8d2107bae2c",
+      "wiki_timestamp": "2021-12-15T08:36:12Z",
+      "download_sha1": "974be48aaa1ffe5f9f5500778146f8d2107bae2c",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "DS:PIANO Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/DS%3APIANO%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:cc65f3e7ba90c509",
+      "source_id": "wikis:bwiki",
+      "title": "Piano Collections Titletab",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Piano_Collections_Titletab.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/5/53/tp2t0eysxwbtznyji6iqal1rntns9h7.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/5/53/tp2t0eysxwbtznyji6iqal1rntns9h7.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/5/53/tp2t0eysxwbtznyji6iqal1rntns9h7.png",
+      "path": "assets/public/wikis/bwiki/Piano_Collections_Titletab--3267e3752485.png",
+      "width": 70,
+      "height": 47,
+      "format": "PNG",
+      "bytes": 3665,
+      "sha256": "3267e375248583c2e24c3706b623f5ba64af6deb5bf1645a9fa33349aa7bf06f",
+      "fetched_at": "2026-10-08T11:49:57.372757Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "fe3a3e53c42e902d5a052d176ad6e2749ed659fb",
+      "wiki_timestamp": "2021-09-01T01:49:32Z",
+      "download_sha1": "fe3a3e53c42e902d5a052d176ad6e2749ed659fb",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Piano Collections Titletab"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Piano%20Collections%20Titletab"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:cc7ef9f56f302719",
       "source_id": "wikis:bwiki",
       "title": "Naughty Cats",
@@ -6024,6 +7509,72 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:d2c5f1bc8501b72e",
+      "source_id": "wikis:bwiki",
+      "title": "Brian Crain collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Brian_Crain_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/6/65/4zerwrloie8ckvs384bc306t1517jna.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/6/65/4zerwrloie8ckvs384bc306t1517jna.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/6/65/4zerwrloie8ckvs384bc306t1517jna.png",
+      "path": "assets/public/wikis/bwiki/Brian_Crain_collection--b8913be716ff.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 44762,
+      "sha256": "b8913be716ff292a794562d7562b389a6014aeecd7f3d311e4edb40a0b89b7f9",
+      "fetched_at": "2026-10-08T11:49:52.807160Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "2aa9f74c294b3f66bb2fee78578ce6efafc68436",
+      "wiki_timestamp": "2021-12-15T08:49:08Z",
+      "download_sha1": "2aa9f74c294b3f66bb2fee78578ce6efafc68436",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Brian Crain Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Brian%20Crain%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:d331251475aa55d5",
+      "source_id": "wikis:bwiki",
+      "title": "RAC collection -5",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:RAC_collection_-5.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/8/87/b0agc2f4jv72m0clzis6tttcl7t9073.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/8/87/b0agc2f4jv72m0clzis6tttcl7t9073.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/8/87/b0agc2f4jv72m0clzis6tttcl7t9073.png",
+      "path": "assets/public/wikis/bwiki/RAC_collection_-5--78e3dfde9979.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 47594,
+      "sha256": "78e3dfde99792ef30c6a4de6e44b773d8d6bd495aa4e09e11cbd325ea6a3ebed",
+      "fetched_at": "2026-10-08T11:49:58.529097Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "5e3cf6da887b298527fcf2e2c58f17069b00723f",
+      "wiki_timestamp": "2021-12-15T08:56:34Z",
+      "download_sha1": "5e3cf6da887b298527fcf2e2c58f17069b00723f",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "RAC Collection #5"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%235"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:d396c673bf089658",
@@ -6328,6 +7879,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:d7f16ed0303703b9",
+      "source_id": "wikis:bwiki",
+      "title": "M2U × Nicode collection Vol.2",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:M2U_%C3%97_Nicode_collection_Vol.2.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/5/5a/852kl2zlobbh2piwym0ww8eqmpsfk71.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/5/5a/852kl2zlobbh2piwym0ww8eqmpsfk71.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/5/5a/852kl2zlobbh2piwym0ww8eqmpsfk71.png",
+      "path": "assets/public/wikis/bwiki/M2U_Nicode_collection_Vol.2--cb6570fe1477.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 42428,
+      "sha256": "cb6570fe1477e7f09b85a2688a120ac6c44af31ef7576fd0e2e8f49e46610b83",
+      "fetched_at": "2026-10-08T11:49:56.817070Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "45b14e5bfc091fa83634abec6730b6b9f69e93fd",
+      "wiki_timestamp": "2021-12-15T08:36:08Z",
+      "download_sha1": "45b14e5bfc091fa83634abec6730b6b9f69e93fd",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "M2U × Nicode collection Vol.2"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/M2U%20%C3%97%20Nicode%20collection%20Vol.2"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:d8764c80ef0e8468",
@@ -6933,6 +8517,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:e73a6ddf1faed0d3",
+      "source_id": "wikis:bwiki",
+      "title": "DEEMO -Reborn- collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:DEEMO_-Reborn-_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/5/51/bgvd71t3o91rwoviztukig4vfsdnvfh.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/5/51/bgvd71t3o91rwoviztukig4vfsdnvfh.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/5/51/bgvd71t3o91rwoviztukig4vfsdnvfh.png",
+      "path": "assets/public/wikis/bwiki/DEEMO_-Reborn-_collection--447a7cf06618.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 37185,
+      "sha256": "447a7cf066188235007898631bd46e59b80f56e2ef6093f26b005d8ed0c36c66",
+      "fetched_at": "2026-10-08T11:49:53.895366Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "622e5c33f281b594336a0abbe3e423b76ec7cbdd",
+      "wiki_timestamp": "2021-12-15T08:26:08Z",
+      "download_sha1": "622e5c33f281b594336a0abbe3e423b76ec7cbdd",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "DEEMO -Reborn- collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/DEEMO%20-Reborn-%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:e78b4d5ab1ca763e",
       "source_id": "wikis:bwiki",
       "title": "Ragnarok",
@@ -6971,6 +8588,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:e7d8694f587c910c",
+      "source_id": "wikis:bwiki",
+      "title": "Cytus II collection Vol.1",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Cytus_II_collection_Vol.1.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/8/82/kctzh4xfygdn207e0k30mbz3c12tohj.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/8/82/kctzh4xfygdn207e0k30mbz3c12tohj.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/8/82/kctzh4xfygdn207e0k30mbz3c12tohj.png",
+      "path": "assets/public/wikis/bwiki/Cytus_II_collection_Vol.1--1e7b4e11c328.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 45938,
+      "sha256": "1e7b4e11c3287e275090c45fdd58b2e856c1cb1cefc9a9e4992460212b86398f",
+      "fetched_at": "2026-10-08T11:49:53.549193Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "ae44a90ef6f74f717838845fb585f6cf16418737",
+      "wiki_timestamp": "2021-12-15T08:26:09Z",
+      "download_sha1": "ae44a90ef6f74f717838845fb585f6cf16418737",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Cytus II collection Vol.1"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Cytus%20II%20collection%20Vol.1"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:e89a7e11331149e0",
       "source_id": "wikis:bwiki",
       "title": "Rayark 7th Main Theme",
@@ -7007,6 +8657,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:e9f7f5efbbe0320f",
+      "source_id": "wikis:bwiki",
+      "title": "Timeline collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Timeline_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/9/9a/8ulc9jssrhxuy4uzlm7nru0pe39n77z.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/9/9a/8ulc9jssrhxuy4uzlm7nru0pe39n77z.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/9/9a/8ulc9jssrhxuy4uzlm7nru0pe39n77z.png",
+      "path": "assets/public/wikis/bwiki/Timeline_collection--158aca538313.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 49326,
+      "sha256": "158aca538313c45a914f0f61980e58517c2b807e7e7766665cd091932db56728",
+      "fetched_at": "2026-10-08T11:50:00.388110Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "4bc2f82d7b5187b7a3fe662aed5f5ff3c596394f",
+      "wiki_timestamp": "2021-12-15T08:49:03Z",
+      "download_sha1": "4bc2f82d7b5187b7a3fe662aed5f5ff3c596394f",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Timeline Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Timeline%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:eadc2f272732ad0f",
@@ -7125,6 +8808,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:ec671d57dd384233",
+      "source_id": "wikis:bwiki",
+      "title": "Sakuzyo collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Sakuzyo_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/3/36/imphc0v3qgjncjju9skf2frw9azv6e6.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/3/36/imphc0v3qgjncjju9skf2frw9azv6e6.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/3/36/imphc0v3qgjncjju9skf2frw9azv6e6.png",
+      "path": "assets/public/wikis/bwiki/Sakuzyo_collection--b9c2b135281d.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 41273,
+      "sha256": "b9c2b135281d0026368f463b8cfd3354461e49c4e1f33c5ffc032bef9fd9d0d7",
+      "fetched_at": "2026-10-08T11:49:59.068580Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "9f7eabc18c973730db7fe6578b55fd5cb7f82d1e",
+      "wiki_timestamp": "2021-12-15T08:49:02Z",
+      "download_sha1": "9f7eabc18c973730db7fe6578b55fd5cb7f82d1e",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Sakuzyo collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Sakuzyo%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:ee0ac46d2333823b",
       "source_id": "wikis:bwiki",
       "title": "RAC collection -2",
@@ -7150,10 +8866,10 @@
       "wiki_original_sha1_matches": true,
       "song_titles": [],
       "collections": [
-        "RAC collection -2"
+        "RAC Collection #2"
       ],
       "related_pages": [
-        "https://wiki.biligame.com/deemo/RAC%20collection%20-2"
+        "https://wiki.biligame.com/deemo/RAC%20Collection%20%232"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -7232,6 +8948,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:f0819fe20ac35d49",
+      "source_id": "wikis:bwiki",
+      "title": "Xi collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Xi_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/a/a9/iyzk0sanmk0vdsdvoyyw4r7q86gdkbj.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/a/a9/iyzk0sanmk0vdsdvoyyw4r7q86gdkbj.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/a/a9/iyzk0sanmk0vdsdvoyyw4r7q86gdkbj.png",
+      "path": "assets/public/wikis/bwiki/Xi_collection--6df09ce5553f.png",
+      "width": 180,
+      "height": 151,
+      "format": "PNG",
+      "bytes": 37560,
+      "sha256": "6df09ce5553ff0e4e0fda7c5cfde9f4575c652a238eaf984ca27c5c2ec159e16",
+      "fetched_at": "2026-10-08T11:50:01.050682Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "a26a3b35dc91f7eac9a999a0439bad7f4ba1901f",
+      "wiki_timestamp": "2021-12-15T08:18:41Z",
+      "download_sha1": "a26a3b35dc91f7eac9a999a0439bad7f4ba1901f",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "xi collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/xi%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:f151d374444fd9e8",
       "source_id": "wikis:bwiki",
       "title": "If I Can See You Again",
@@ -7267,6 +9016,72 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:f18ebe6741c6fb84",
+      "source_id": "wikis:bwiki",
+      "title": "DJMAX collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:DJMAX_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/9/94/3y9a23ytktx5hczc9b1y9p5edu501ep.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/9/94/3y9a23ytktx5hczc9b1y9p5edu501ep.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/9/94/3y9a23ytktx5hczc9b1y9p5edu501ep.png",
+      "path": "assets/public/wikis/bwiki/DJMAX_collection--5c4ba5ed1478.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 43257,
+      "sha256": "5c4ba5ed1478420e5f05718f8e4c4ebe372b91daa926c256a7c397e4e7835cfb",
+      "fetched_at": "2026-10-08T11:49:54.208465Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "21d4394c86de7f842c3eb3fc78e2c0aa3b53b421",
+      "wiki_timestamp": "2021-12-15T08:31:07Z",
+      "download_sha1": "21d4394c86de7f842c3eb3fc78e2c0aa3b53b421",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "DJMAX Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/DJMAX%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
+      "id": "wikis:bwiki:f2a6122c11771693",
+      "source_id": "wikis:bwiki",
+      "title": "MILI collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:MILI_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/5/5d/1g2u71ammvd7guvp0lzijuy1r88u31q.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/5/5d/1g2u71ammvd7guvp0lzijuy1r88u31q.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/5/5d/1g2u71ammvd7guvp0lzijuy1r88u31q.png",
+      "path": "assets/public/wikis/bwiki/MILI_collection--e45a763810b2.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 48734,
+      "sha256": "e45a763810b2493cd86fbac8ae471ddb1868f7aca9d9cd697c8938d4b948ef6b",
+      "fetched_at": "2026-10-08T11:49:56.978944Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "0c62675aa6433260981d002205eb0e00604682ee",
+      "wiki_timestamp": "2021-12-15T08:53:12Z",
+      "download_sha1": "0c62675aa6433260981d002205eb0e00604682ee",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Mili collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Mili%20collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:f305b52bdf175b97",
@@ -7456,6 +9271,39 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
+      "id": "wikis:bwiki:f6b3dd91f1a80056",
+      "source_id": "wikis:bwiki",
+      "title": "Vocal selection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Vocal_selection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/c/cb/npo0jxqbihslwuhwl4k6jwa6vt305vp.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/c/cb/npo0jxqbihslwuhwl4k6jwa6vt305vp.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/c/cb/npo0jxqbihslwuhwl4k6jwa6vt305vp.png",
+      "path": "assets/public/wikis/bwiki/Vocal_selection--dbc978918b49.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 47305,
+      "sha256": "dbc978918b497e3b1e45491c299cb0f6ea5353a64e2cf42f4e5107b75575f7d0",
+      "fetched_at": "2026-10-08T11:50:01.114181Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "cb00ae2311c1f30ca5b12b633539c074fae404c5",
+      "wiki_timestamp": "2021-12-15T08:31:13Z",
+      "download_sha1": "cb00ae2311c1f30ca5b12b633539c074fae404c5",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "Vocal Selection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/Vocal%20Selection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+    },
+    {
       "id": "wikis:bwiki:f6f866f56f584f2f",
       "source_id": "wikis:bwiki",
       "title": "Venetian Gondellied",
@@ -7606,6 +9454,39 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
+    },
+    {
+      "id": "wikis:bwiki:fd6727a30b26fe4c",
+      "source_id": "wikis:bwiki",
+      "title": "L：The Upper collection",
+      "kind": "collection_cover",
+      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:L%EF%BC%9AThe_Upper_collection.png",
+      "download_url": "https://patchwiki.biligame.com/images/deemo/a/ae/pzffmi838knkvmxm50umx3cuhp48yi0.png",
+      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/a/ae/pzffmi838knkvmxm50umx3cuhp48yi0.png",
+      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/a/ae/pzffmi838knkvmxm50umx3cuhp48yi0.png",
+      "path": "assets/public/wikis/bwiki/L_The_Upper_collection--8c13dbfd35f6.png",
+      "width": 180,
+      "height": 180,
+      "format": "PNG",
+      "bytes": 41515,
+      "sha256": "8c13dbfd35f625ed75b76e05f4dd61ce66fb14d7aa45bb75de96b0a81ad44737",
+      "fetched_at": "2026-10-08T11:49:56.153844Z",
+      "game": "DEEMO",
+      "content_type": "image/png",
+      "wiki_mime": "image/png",
+      "wiki_sha1": "de7214f251f557cc61d6519ca9e3c2eacf4a78a8",
+      "wiki_timestamp": "2021-12-15T08:53:04Z",
+      "download_sha1": "de7214f251f557cc61d6519ca9e3c2eacf4a78a8",
+      "wiki_original_size_matches": true,
+      "wiki_original_sha1_matches": true,
+      "song_titles": [],
+      "collections": [
+        "L: The Upper Collection"
+      ],
+      "related_pages": [
+        "https://wiki.biligame.com/deemo/L%3A%20The%20Upper%20Collection"
+      ],
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:fandom:019a9d4431a3de17",
