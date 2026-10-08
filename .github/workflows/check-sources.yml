@@ -1,0 +1,75 @@
+name: Check wiki sources
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Mondays 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-sources
+  cancel-in-progress: false
+
+env:
+  SNAPSHOT_BRANCH: auto/wiki-source-check
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        # Credentials are kept so the job can push the snapshot branch below.
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install fetch dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet -r requirements.txt
+      - name: Keep the committed snapshot as baseline
+        run: cp data/sources/wiki-discovery.json "$RUNNER_TEMP/baseline-discovery.json"
+      - name: Discover wiki candidates without downloading images
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/fetch_wikis.py --metadata-only'
+      - name: Drop the unrelated song-key refresh
+        run: git checkout -- data/sources/song-mapping.json
+      - name: Compare with the committed snapshot
+        id: compare
+        run: |
+          python3 -I scripts/check_sources.py \
+            --baseline "$RUNNER_TEMP/baseline-discovery.json" \
+            --current data/sources/wiki-discovery.json \
+            --manifest data/sources/wikis.json \
+            --report "$RUNNER_TEMP/report.md" \
+            --summary "$RUNNER_TEMP/summary.json"
+          python3 -I - "$RUNNER_TEMP/summary.json" >> "$GITHUB_OUTPUT" <<'PY'
+          import json, sys
+          summary = json.load(open(sys.argv[1], encoding="utf-8"))
+          print("changed=" + str(summary["changed"]).lower())
+          print("title=" + summary["title"].replace("\n", " "))
+          PY
+          cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Open or update the snapshot pull request
+        if: steps.compare.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ steps.compare.outputs.title }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$SNAPSHOT_BRANCH"
+          git add data/sources/wiki-discovery.json data/sources/wiki-song-index.json
+          git commit -m "chore: refresh wiki discovery snapshot" -m "$TITLE" -m "Metadata only; no images downloaded. $RUN_URL"
+          git push --force origin "$SNAPSHOT_BRANCH"
+          printf '\n---\n来源：%s\n' "$RUN_URL" >> "$RUNNER_TEMP/report.md"
+          number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open --json number --jq '.[0].number')"
+          if [ "${number:-}" != "" ]; then
+            gh pr edit "$number" --title "$TITLE" --body-file "$RUNNER_TEMP/report.md"
+            gh pr comment "$number" --body "快照已由新的检查运行刷新：$RUN_URL"
+          else
+            gh pr create --base main --head "$SNAPSHOT_BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/report.md"
+          fi

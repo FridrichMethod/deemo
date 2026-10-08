@@ -24,6 +24,14 @@ python -I -m http.server 8765 --bind 127.0.0.1
 
 页面保留 `noindex,nofollow`，但这不是访问控制。发布包以 950 MB 为硬上限，给 GitHub Pages 的 1 GB 上限留出余量；新增素材超限时部署会停止，现有线上版本不变。保留全部原图字节，不在发布时重新压缩素材。
 
+## 来源更新检查
+
+[检查工作流](.github/workflows/check-sources.yml) 每周一 03:00 UTC 自动运行，也可在 Actions 页手动触发。它以 `--metadata-only` 重新枚举 Fandom 与 BWIKI 的曲绘候选，不下载任何图片，再用 `scripts/check_sources.py` 与 `main` 上的 `data/sources/wiki-discovery.json` 比较。候选集合没有变化时只在运行摘要里记录；出现新增、重新上传（SHA-1 或尺寸变化）或移除的文件时，工作流把新的发现快照和歌曲索引推到 `auto/wiki-source-check` 分支，并创建或更新一个标题形如"Wiki 来源更新：新增 N · 重新上传 M · 移除 K"的 PR，正文列出每个文件的来源页、尺寸、曲名和本地是否已有下载。
+
+合并该 PR 只更新快照，不改变图库。随后在本地运行 `scripts/fetch_wikis.py --resume` 下载新增和重新上传的文件，再 build、verify、检查 `failures` 与 checksum 字段并提交图片与清单（命令见 PR 正文和下文"目录与复现"）。首次启用前需要在仓库 Settings → Actions → General → Workflow permissions 勾选 "Allow GitHub Actions to create and approve pull requests"，否则工作流能推分支但无法创建 PR。公开仓库 60 天没有提交时 GitHub 会暂停 `schedule` 触发，需在 Actions 页重新启用。
+
+画师来源（`fetch_artists.py`）的 Pixiv 作品 ID 写在脚本里，公开档案来源基本是静态内容，二者都不在自动检查范围内；要补充新作品仍需手动编辑脚本并重新抓取。
+
 ## 已整理的来源
 
 | 来源 | 内容与说明 |
