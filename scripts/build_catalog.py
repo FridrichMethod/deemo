@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 from xml.sax.saxutils import escape
@@ -206,19 +207,54 @@ def slide_notes(asset: dict) -> dict:
     return {f"data-{key}": "\n".join(values) for key, values in found.items() if values}
 
 
+def art_layout(root: Path, asset: dict) -> dict:
+    """Stage layout fields for a legacy game texture: a cut-out on a transparent canvas (upstream made the white
+    transparent), often padded to 2048 x 1024 or 2048 x 2048 with the art off to one side, and sometimes cropped
+    hard at a canvas edge. data-art-box is the box of the visibly opaque pixels (alpha above 24), as "x y w h"
+    fractions of the canvas, so the stage can size and centre the art rather than the canvas. data-bleed names
+    the edges the art is cut at (opaque along more than 2% of that edge), so the stage can soften the cut; a
+    texture cut at every edge is a rectangular picture and keeps its edges. Other sources are framed pictures."""
+    if asset.get("family") != "legacy":
+        return {}
+    with Image.open(safe_path(root, asset["path"])) as image:
+        if "A" not in image.getbands():
+            return {}
+        opaque = image.getchannel("A").point([0] * 25 + [255] * 231)
+    width, height = opaque.size
+    box = opaque.getbbox()
+    if not box:
+        return {}
+    fields = {}
+    if box != (0, 0, width, height):
+        left, top, right, bottom = box
+        fractions = (left / width, top / height, (right - left) / width, (bottom - top) / height)
+        fields["data-art-box"] = " ".join(f"{round(value, 4):g}" for value in fractions)
+    bands = {"left": (0, 0, 2, height), "top": (0, 0, width, 2), "right": (width - 2, 0, width, height), "bottom": (0, height - 2, width, height)}
+    cut = []
+    for edge, band in bands.items():
+        strip = opaque.crop(band)
+        if strip.histogram()[255] > .02 * strip.width * strip.height:
+            cut.append(edge)
+    if cut and len(cut) < 4:
+        fields["data-bleed"] = " ".join(cut)
+    return fields
+
+
 def render_slideshow(root: Path, catalog: dict) -> str:
     template = (root / "templates/slideshow.html").read_text(encoding="utf-8-sig")
+    assets = [asset for asset in catalog["assets"] if asset["gallery"] and asset["kind"] != "reference"]
+    # Decoding the textures dominates the build; Pillow decodes outside the GIL, so threads share the work.
+    with ThreadPoolExecutor() as pool:
+        layouts = list(pool.map(lambda asset: art_layout(root, asset), assets))
     slides = []
-    for asset in catalog["assets"]:
-        if not asset["gallery"] or asset["kind"] == "reference":
-            continue
+    for asset, layout in zip(assets, layouts):
         fields = {
             "class": "deemo-draw", "data-src": asset["url"],
             "data-id": asset["id"], "data-title": asset["title"],
             "data-source": asset["source_name"], "data-source-id": asset["source_id"],
             "data-page": asset["page_url"],
             "data-size": f"{asset['width']} × {asset['height']}", "data-kind": asset["kind"],
-            **slide_notes(asset), "alt": asset["title"],
+            **layout, **slide_notes(asset), "alt": asset["title"],
         }
         attributes = " ".join(f'{key}="{attr(value)}"' for key, value in fields.items())
         slides.append(f'        <div class="mySlides fade"><img {attributes}></div>')
