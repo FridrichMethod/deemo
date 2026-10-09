@@ -17,7 +17,7 @@ SOURCE_MANIFESTS = ("artists", "wikis", "archives")
 
 
 def attr(value: object) -> str:
-    return escape(str(value), {'"': "&quot;", "'": "&#39;"})
+    return escape(str(value), {'"': "&quot;", "'": "&#39;", "\n": "&#10;"})
 
 
 def safe_path(root: Path, value: str) -> Path:
@@ -177,6 +177,27 @@ def combine(root: Path, verify: bool = False) -> dict:
     }
 
 
+def slide_notes(asset: dict) -> dict:
+    """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated."""
+    found = {"composer": [], "artist": [], "collection": [], "post": []}
+    seen = {key: set() for key in found}
+
+    def add(key: str, value: object) -> None:
+        text = str(value or "").strip()
+        folded = "".join(char for char in text.casefold() if char.isalnum())
+        if text and folded not in seen[key]:
+            seen[key].add(folded)
+            found[key].append(text)
+
+    for record in asset.get("provenance") or [asset]:
+        add("composer", record.get("composer"))
+        add("artist", record.get("artist"))
+        add("post" if record.get("collection_scope") == "source_post_grouping" else "collection", record.get("collection"))
+        for value in record.get("collections") or []:
+            add("collection", value)
+    return {f"data-{key}": "\n".join(values) for key, values in found.items() if values}
+
+
 def render_slideshow(root: Path, catalog: dict) -> str:
     template = (root / "templates/slideshow.html").read_text(encoding="utf-8-sig")
     slides = []
@@ -188,7 +209,8 @@ def render_slideshow(root: Path, catalog: dict) -> str:
             "data-id": asset["id"], "data-title": asset["title"],
             "data-source": asset["source_name"], "data-source-id": asset["source_id"],
             "data-page": asset["page_url"],
-            "data-size": f"{asset['width']} × {asset['height']}", "alt": asset["title"],
+            "data-size": f"{asset['width']} × {asset['height']}", "data-kind": asset["kind"],
+            **slide_notes(asset), "alt": asset["title"],
         }
         attributes = " ".join(f'{key}="{attr(value)}"' for key, value in fields.items())
         slides.append(f'        <div class="mySlides fade"><img {attributes}></div>')

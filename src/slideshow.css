@@ -31,6 +31,7 @@ body {
     background-position: center;
     width: 100%;
     height: 100%;
+    margin: 0;
     overflow: hidden;
     -webkit-touch-callout: none;
     /* iOS Safari */
@@ -54,19 +55,162 @@ body {
     transition-timing-function: linear;
 }
 
+/* Liner-notes composition. Wide screens: a text column on the left (Alice's dedication, then each slide's
+   notes, then the file caption above the round controls) and an artwork stage on the right, clear of the
+   language toggle (top right, 105px tall) and the side arrows. Every artwork is fitted to the same visual
+   area (--art-size squared) inside the stage, so square, tall and wide pieces carry the same weight and none
+   is blown up to the full screen height. Portrait screens stack the stage above the notes. */
+.deemo-view {
+    --ink: #333;
+    --muted: #6b6256;
+    --rule: rgba(51, 51, 51, .22);
+    --gutter: clamp(56px, 6vw, 112px);
+    --art-size: min(66vh, 42vw);
+    --display: Fantique, RocknRoll, "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", serif;
+    --small-caps: COPRGTL, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 40vw minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "liner stage";
+}
+
+.liner {
+    grid-area: liner;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 64px 32px 120px var(--gutter);
+}
+
+/* Lowers the centred notes toward the artwork's centre; it gives way first when the column is short. */
+.liner::before {
+    content: "";
+    flex: 0 1 10vh;
+}
+
+.liner-text {
+    display: grid;
+    margin: auto 0;
+}
+
+/* The dedication and the notes share one cell and crossfade. */
+.liner-text > * {
+    grid-area: 1 / 1;
+    align-self: center;
+    -webkit-transition: opacity .8s ease .2s, transform .8s ease .2s, visibility 0s;
+    transition: opacity .8s ease .2s, transform .8s ease .2s, visibility 0s;
+}
+
+.liner-text.is-dedication .slide-notes,
+.liner-text:not(.is-dedication) .dear-alice {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    -webkit-transition: opacity .4s ease, transform .4s ease, visibility 0s .4s;
+    transition: opacity .4s ease, transform .4s ease, visibility 0s .4s;
+}
+
+.slide-notes.is-turning {
+    opacity: 0;
+    transform: translateY(6px);
+    -webkit-transition: opacity .25s ease, transform .25s ease;
+    transition: opacity .25s ease, transform .25s ease;
+}
+
 .dear-alice {
-    font-family: Fantique, RocknRoll;
-    font-size: 3em;
-    position: absolute;
-    top: 60%;
-    transform: translateY(-50%);
-    left: 5%;
+    justify-self: start;
+    margin: 0;
+    font-family: var(--display);
+    /* Its longest line is about 12.2em wide; keep it inside the text column without wrapping. */
+    font-size: clamp(16px, (40vw - var(--gutter) - 32px) / 12.6, 46px);
+    line-height: 1.3;
     text-align: center;
-    z-index: 999;
+    white-space: nowrap;
 }
 
 .dear-alice p {
-    text-align: right
+    margin: .5em 0 0;
+    text-align: right;
+}
+
+.slide-notes {
+    min-width: 0;
+    color: var(--ink);
+}
+
+.notes-eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 .9em;
+    margin: 0 0 1em;
+    font: clamp(12px, .9vw, 16px)/1.5 var(--small-caps);
+    letter-spacing: .16em;
+    color: var(--muted);
+}
+
+.notes-kind::after {
+    content: "\00b7";
+    margin-left: .9em;
+}
+
+.notes-title {
+    margin: 0;
+    font-family: var(--display);
+    font-size: clamp(40px, 4.3vw, 84px);
+    line-height: 1.06;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+}
+
+.notes-title[data-length="long"] {
+    font-size: clamp(32px, 3.4vw, 66px);
+}
+
+.notes-title[data-length="longer"] {
+    font-size: clamp(28px, 2.8vw, 54px);
+}
+
+/* Album-sleeve credits: small-caps labels, verbatim names. */
+.notes-meta {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: baseline;
+    gap: .55em 1.3em;
+    margin: 1.6em 0 0;
+    font: clamp(15px, 1.1vw, 20px)/1.45 var(--small-caps);
+}
+
+/* A short rule between the title and the credits (a pseudo-element, which the screenshot renderer draws faithfully). */
+.notes-meta::before {
+    content: "";
+    grid-column: 1 / -1;
+    width: 56px;
+    height: 1px;
+    margin-bottom: .75em;
+    background: var(--rule);
+}
+
+.notes-meta dt {
+    font-size: .72em;
+    letter-spacing: .16em;
+    color: var(--muted);
+}
+
+/* Han labels need size rather than tracking to stay legible. */
+.notes-eyebrow:lang(zh-CN),
+.notes-meta dt:lang(zh-CN) {
+    letter-spacing: .06em;
+}
+
+.notes-meta dt:lang(zh-CN) {
+    font-size: .86em;
+}
+
+.notes-meta dd {
+    margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .signature {
@@ -86,15 +230,20 @@ body {
     color: #333
 }
 
-.mySlides {
-    opacity:0;
-    display: block
+/* Artwork stage: right margin clears the language toggle and the next arrow; the left one holds the prev arrow. */
+.slideshow-container {
+    grid-area: stage;
+    position: relative;
+    margin: 8vh 120px 8vh 64px;
+    container-type: size;
 }
 
 .mySlides {
     position: absolute;
-    right: 0px;
-    height: 100%;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 1;
     -webkit-transition: opacity 1s; /* Safari */
     -webkit-transition-timing-function: linear; /* Safari */
@@ -111,66 +260,67 @@ img:not([src]) {
     visibility: hidden;
 }
 
+/* Contained in the stage and scaled to the shared visual area, at most twice the natural size;
+   --ratio, --root and --natural-width are set by lazyload(). */
+.deemo-draw {
+    width: min(100cqw, 100cqh * var(--ratio, 1), var(--art-size) * var(--root, 1), 2 * var(--natural-width, 100vw));
+    height: auto;
+}
+
 @media screen and (max-width: 1100px) {
-    .dear-alice {
-        display: none
-    }
     .signature {
         font-size: 15px
     }
-    .mySlides {
-        position: absolute;
-        right: 0px;
-        height: auto;
-        width: 100%
-    }
-
-    img {
-        vertical-align: middle;
-        height: auto;
-        width: 100%
-    }
 }
 
-/* Slideshow container */
-
-.slideshow-container {
-    margin: auto;
-}
-
-/* Next & previous buttons */
-
+/* Next & previous: CSS-drawn chevrons in quiet round buttons flanking the stage. */
 .prev,
 .next {
     cursor: pointer;
-    position: fixed;
+    position: absolute;
     top: 50%;
-    width: auto;
-    padding: 16px;
+    width: 44px;
+    height: 44px;
     margin-top: -22px;
-    color: white;
-    font-weight: bold;
-    font-size: 18px;
-    transition: 0.6s ease;
-    border-radius: 0 3px 3px 0;
+    border-radius: 50%;
+    color: var(--ink);
+    font-size: 0;
+    opacity: .6;
+    transition: background-color .3s ease, color .3s ease, opacity .3s ease;
+}
+
+.prev::before,
+.next::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    margin: -6px 0 0 -4px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: rotate(45deg);
+}
+
+.prev::before {
+    margin-left: -8px;
+    transform: rotate(-135deg);
 }
 
 .prev {
-    left: 0
+    right: calc(100% + 10px);
 }
-
-/* Position the "next button" to the right */
 
 .next {
-    right: 0;
-    border-radius: 3px 0 0 3px;
+    left: calc(100% + 38px);
 }
-
-/* On hover, add a black background color with a little bit see-through */
 
 .prev:hover,
 .next:hover {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(51, 51, 51, .88);
+    color: #fff;
+    opacity: 1;
 }
 
 .active,
@@ -208,8 +358,6 @@ img:not([src]) {
 /* On smaller screens, decrease text size */
 
 @media only screen and (max-width: 300px) {
-    .prev,
-    .next,
     .text {
         font-size: 11px
     }
@@ -353,9 +501,11 @@ canvas {
     visibility: hidden !important;
 }
 
-.asset-caption { position: fixed; left: 20px; bottom: 120px; max-width: min(650px, 90vw); padding: 10px 14px; border-radius: 6px; background: rgba(255,255,255,.88); font: 14px/1.6 system-ui, sans-serif; z-index: 1000; user-select: text; }
-.asset-caption a { color: #333; }
-.deemo-draw { max-width: 100vw; max-height: 100vh; object-fit: contain; }
+/* File details as the sleeve's fine print, at the foot of the text column. Three lines are reserved so a
+   longer source name does not shift the notes or the stage between slides. */
+.asset-caption { flex: none; box-sizing: content-box; min-height: 4.8em; margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--rule); max-width: 36em; font: 13px/1.6 system-ui, sans-serif; color: #555; user-select: text; }
+.asset-caption a { color: #333; white-space: nowrap; }
+#asset-size { white-space: nowrap; }
 
 .iplayer {
     left: 270px;
@@ -502,5 +652,159 @@ canvas {
     }
     .random {
         left: calc(-20px + 100vw - 72px);
+    }
+}
+
+/* Below ~1040px the stage's left edge comes within reach of the bottom control row (it ends at 465px),
+   so the stage stops above that row. */
+@media screen and (max-width: 1039px) {
+    .slideshow-container {
+        margin-bottom: max(8vh, 105px);
+    }
+}
+
+/* Short landscape screens (phones turned sideways): tighter column, type sized by height. */
+@media screen and (orientation: landscape) and (max-height: 560px) {
+    .deemo-view {
+        --gutter: 32px;
+    }
+    .liner {
+        padding: 30px 24px 112px var(--gutter);
+    }
+    .liner::before {
+        display: none;
+    }
+    .slideshow-container {
+        margin-top: 24px;
+    }
+    .dear-alice {
+        font-size: min((40vw - var(--gutter) - 24px) / 12.6, 4.6vh);
+    }
+    .notes-eyebrow {
+        margin-bottom: .5em;
+        font-size: 11px;
+    }
+    .notes-title {
+        font-size: min(3.6vw, 7.6vh);
+    }
+    .notes-title[data-length="long"] {
+        font-size: min(3vw, 6.4vh);
+    }
+    .notes-title[data-length="longer"] {
+        font-size: min(2.6vw, 5.6vh);
+    }
+    .notes-meta {
+        gap: .3em 1em;
+        margin-top: .8em;
+        font-size: 13px;
+    }
+    .notes-meta::before {
+        margin-bottom: .4em;
+    }
+    .asset-caption {
+        min-height: 0;
+        margin-top: 10px;
+        padding-top: 6px;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+}
+
+/* Phones held sideways: the credits give way so the title and the caption stay clear of the control row. */
+@media screen and (orientation: landscape) and (max-height: 430px) {
+    .dear-alice {
+        font-size: min((40vw - var(--gutter) - 24px) / 12.6, 4.2vh);
+    }
+    .notes-meta {
+        display: none;
+    }
+}
+
+/* Portrait screens: the stage on top (below the language toggle), then a fixed-height notes
+   block and the caption, clear of the bottom control row. Fixed heights keep the artwork from jumping
+   as titles change length. */
+@media screen and (orientation: portrait) {
+    .deemo-view {
+        --art-size: 100cqmin;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
+        grid-template-areas: "stage" "liner";
+        padding: 116px 0 120px;
+    }
+    .slideshow-container {
+        margin: 0 48px 20px;
+    }
+    .prev {
+        right: calc(100% + 2px);
+    }
+    .next {
+        left: calc(100% + 2px);
+    }
+    .liner {
+        padding: 0 24px;
+    }
+    .liner::before {
+        display: none;
+    }
+    .liner-text {
+        min-height: clamp(176px, 24vh, 240px);
+        margin: 0;
+    }
+    .liner-text > * {
+        align-self: start;
+    }
+    .dear-alice {
+        justify-self: center;
+        font-size: clamp(22px, 5.8vw, 36px);
+    }
+    .notes-title {
+        font-size: clamp(30px, 8vw, 48px);
+    }
+    .notes-title[data-length="long"] {
+        font-size: clamp(25px, 6.4vw, 40px);
+    }
+    .notes-title[data-length="longer"] {
+        font-size: clamp(22px, 5.4vw, 34px);
+    }
+    .notes-eyebrow {
+        margin-bottom: .7em;
+        font-size: 12px;
+    }
+    .notes-meta {
+        margin-top: 1em;
+        font-size: 14px;
+    }
+    .notes-meta::before {
+        margin-bottom: .35em;
+    }
+    .asset-caption {
+        margin-top: 12px;
+        max-width: none;
+    }
+}
+
+@media screen and (orientation: portrait) and (max-width: 480px) {
+    .deemo-view {
+        padding-bottom: 96px;
+    }
+    .slideshow-container {
+        margin: 0 40px 16px;
+    }
+    .liner {
+        padding: 0 20px;
+    }
+    .asset-caption {
+        font-size: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .liner-text > *,
+    .liner-text.is-dedication .slide-notes,
+    .liner-text:not(.is-dedication) .dear-alice,
+    .slide-notes.is-turning {
+        transform: none;
+        -webkit-transition: none;
+        transition: none;
     }
 }
