@@ -101,6 +101,7 @@ python -m venv .venv
 .venv/bin/python -I tests/test_layout.py
 .venv/bin/python -I tests/test_pages.py
 .venv/bin/python -I tests/test_i18n.py
+.venv/bin/python -I tests/test_check_sources.py
 .venv/bin/python scripts/build_catalog.py --verify --check
 .venv/bin/python scripts/build_legacy_inventory.py
 .venv/bin/python -I scripts/fetch_archives.py --verify
