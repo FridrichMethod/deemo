@@ -470,3 +470,37 @@ canvas {
   0% { transform: rotate(0deg); transform: rotate(0deg); }
   100% { transform: rotate(360deg); transform: rotate(360deg); }
 }
+
+/* Phones: the five bottom controls are 70px wide on a 90px grid, so the last ones fell off narrow screens.
+   Shrink them to 56px and spread them evenly between 8px margins. .bt is shifted right by half its width
+   (28px), hence left = 8px - 28px + i * (100vw - 2 * 8px - 56px) / 4. The language toggle keeps its size. */
+@media screen and (max-width: 480px) {
+    .bt:not(.lang-toggle) {
+        width: 40px;
+        height: 40px;
+        padding: 8px;
+    }
+    .speaker {
+        width: 40px;
+        height: 40px;
+    }
+    .archive-link a {
+        font-size: 13px;
+    }
+    .photo,
+    .save {
+        left: -20px;
+    }
+    .github {
+        left: calc(-20px + (100vw - 72px) / 4);
+    }
+    .archive-link {
+        left: calc(-20px + (100vw - 72px) / 2);
+    }
+    .iplayer {
+        left: calc(-20px + (100vw - 72px) * 3 / 4);
+    }
+    .random {
+        left: calc(-20px + 100vw - 72px);
+    }
+}
