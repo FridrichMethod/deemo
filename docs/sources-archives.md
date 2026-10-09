@@ -19,7 +19,7 @@ The [Tunes of Rayark FAQ](https://rayarkmusic.tumblr.com/faq) states explicitly 
 How each of the other sources was handled is recorded in the JSON and can be looked up by `status` / `access_status`:
 
 - The official KADOKAWA/BookWalker art book and Steam Reborn are marked `purchase_required`; nothing was purchased, and neither the game nor the paid book was downloaded.
-- Reddit 3.4/4.x/5.x are only historical sharing leads: evidence from the previous search points to Wikia re-hosts or upscaled images, and to shares that have since gone offline. A discussion page that still opens does not mean the shared files are still alive.
+- The Reddit 3.4/4.x/5.x threads are only historical sharing leads: evidence from the previous search points to Wikia re-hosts or upscaled images, and to shares that have since gone offline. A discussion page that still opens does not mean the shared files are still alive.
 - The [historical Dropbox](https://www.dropbox.com/sh/qdzxn3menwuk5he/AAAL2v6303lMlAf1ma54tJjga?dl=0) share returned HTTP 200 when tested, but the page content is `Dropbox - Error`; no shared files were obtained.
 - The original repository's [extraction-process blog post](https://2heng.xin/2018/04/05/python-pil/) and the old Baidu shares are kept as provenance. The Baidu pages open, but anonymous direct file download was not verified, and the old unpacked assets are not misrepresented as a new high-resolution source.
 - The [Internet Archive 202606 item](https://archive.org/details/deemo_ost-_202606) lists 443 FLAC, 443 MP3, 443 PNG and 443 spectrogram files. Sampled ordinary PNGs are actually 800×200 audio waveforms, and the audio descriptions also attribute the embedded cover art to DEEMO Wiki. The audio and the waveform/spectrogram images are therefore not downloaded.
@@ -27,7 +27,7 @@ How each of the other sources was handled is recorded in the JSON and can be loo
 - The third-party Tumgik mirror and SteamDB currently return HTTP 403. The Blaze Wu works that the former points to are fetched from the original Tumblr pages by the artist-source importer.
 - The Bilibili video search is kept as a lead. Video frames have gone through video encoding, so they are not used as a source of original standalone images.
 
-Whether these sources are accessible and who holds their copyright are two separate matters. Attribution to the original authors and to Rayark is kept here; only public sources are recorded, and neither the maintainer's identity nor the repository's code license is applied to the artwork.
+Whether these sources are accessible and their copyright status are two separate matters. Attribution to the original authors and to Rayark is kept here; only public sources are recorded, and neither the maintainer's identity nor the repository's code license is applied to the artwork.
 
 To reproduce the fetch and verify offline:
 
