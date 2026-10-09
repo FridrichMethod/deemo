@@ -1,53 +1,55 @@
-# DEEMO 1 公开 Wiki 曲绘来源
+# DEEMO 1 public wiki artwork sources
 
-本目录记录 Fandom DEEMO Wiki 与 Bilibili DEEMO Wiki 的公开曲绘。下载对象是原版 DEEMO 及其 Last Recital / Reborn 移植内容；不包含 DEEMO II、音频或谱面。
+**English** · [简体中文](sources-wikis.zh-CN.md)
 
-2026-09-05 导入结果：**757 / 757 个候选图片全部成功，最终失败 0 项**，共 **457,462,452 bytes**（约 436.27 MiB）。Fandom 561 张、BWIKI 196 张；其中单曲图 662 张、曲包封面 95 张；实际格式为 756 PNG、1 JPEG。
+This directory records the public song artwork from the Fandom DEEMO Wiki and the Bilibili DEEMO Wiki. The downloads cover the original DEEMO and its Last Recital / Reborn ports; DEEMO II, audio, and charts are not included.
 
-全量审计已逐文件核对 byte count、SHA-256、SHA-1、Pillow 实际格式与尺寸，并检查 manifest 唯一 ID 与磁盘文件一一对应；757 张全部通过，无孤立文件。753 张与 Wiki 发布的原上传 SHA-1 一致。4 张不同：`Spring Snowflake Flower`、`Ark of Desire`、`I Race The Dawn x Sunset`、`Protest`，均保留差异标记。7 张通过 full-size `format=png` 回退取得，其 SHA-1 最终也都与原上传一致。
+Import result on 2026-09-05: **all 757 / 757 candidate images succeeded, with 0 final failures**, totaling **457,462,452 bytes** (about 436.27 MiB). Fandom supplied 561 images and BWIKI 196; of these, 662 are song artwork and 95 are collection covers; the actual formats are 756 PNG and 1 JPEG.
 
-2026-10-08 增量：来源检查工作流发现 57 个 BWIKI 曲包封面候选（约 180×180 的缩略图，均为 2021 年上传，属于 `allimages` 枚举差异而非新发布曲绘），以 `--resume` 导入，全部与 Wiki 原上传 SHA-1 一致，另有 11 条已有记录的 `collections`/`related_pages` 随新候选元数据更新。现为 **814 张**（Fandom 561、BWIKI 253；单曲图 662、曲包封面 152），共 **459,827,277 bytes**（约 438.53 MiB），813 PNG、1 JPEG；SHA-1 不一致的仍为上述 4 张。
+A full audit checked each file's byte count, SHA-256, SHA-1, and actual format and dimensions as read by Pillow, and confirmed that the manifest's unique IDs and the files on disk correspond one to one; all 757 passed, with no orphaned files. 753 match the original-upload SHA-1 published by the wiki. 4 differ: `Spring Snowflake Flower`, `Ark of Desire`, `I Race The Dawn x Sunset`, and `Protest`; all of them keep their mismatch flags. 7 were retrieved through the full-size `format=png` fallback, and their SHA-1 values also all ended up matching the original uploads.
 
-## 文件与来源
+Incremental update on 2026-10-08: the source-check workflow found 57 BWIKI collection cover candidates (thumbnails of about 180×180, all uploaded in 2021; they reflect a difference in the `allimages` enumeration rather than newly published artwork). They were imported with `--resume`, and all of them match the wiki's original-upload SHA-1; in addition, the `collections`/`related_pages` of 11 existing records were updated along with the new candidate metadata. The total is now **814 images** (Fandom 561, BWIKI 253; song artwork 662, collection covers 152), **459,827,277 bytes** in all (about 438.53 MiB), 813 PNG and 1 JPEG; the SHA-1 mismatches are still the same 4 images listed above.
 
-- `assets/public/wikis/fandom/`：从原版 `Category:Songs` 的歌页，以及原版曲包页面取得图片引用。
-- `assets/public/wikis/bwiki/`：枚举 `allimages` 全部分页，以歌曲索引的规范化标题匹配图片名，另收录可确认的曲包封面。
-- `data/sources/wikis.json`：最终图片清单、下载状态与失败记录，是图库整合的输入。
-- `data/sources/wiki-discovery.json`：可复查和继续下载的候选快照，包含原始 MediaWiki imageinfo。
-- `data/sources/wiki-song-index.json`：公开歌页的标题、曲包、作曲家和图片引用。模板字段 `Artist` 是作曲家，存为 `composer`，不会被误当成画师。
-- `data/sources/wiki-illustrator-index.json`：日本 Wiki 目录的 479 条按原页面顺序保存的标题/表格行；页面同时含作曲家、Vocalist 和独立 `illustrator` 区段，最后者列出 9 位画师，不把其他区段当成画师归属。
-- `data/sources/song-mapping.json`：来自 [syuchan1005/DeemoSongs](https://github.com/syuchan1005/DeemoSongs) 的 legacy 游戏内部 key 与歌曲信息，其 [MIT license](../licenses/DeemoSongs-MIT.txt) 原样保留。该映射较旧，不能代表当前完整曲目集。
+## Files and sources
 
-Wiki 歌页还包含已移除歌曲、端口独占曲与不同版本图片，因此歌页数/图片数不能直接当成当前手机版的唯一歌曲数量。来自不同 Wiki 的图片、同曲多版本和相同 SHA-256 的重复来源记录均保留，供上层图库按来源比较。
+- `assets/public/wikis/fandom/`: image references are taken from the song pages in the original DEEMO's `Category:Songs` and from the original DEEMO's collection pages.
+- `assets/public/wikis/bwiki/`: every page of `allimages` is enumerated and image names are matched against the normalized titles in the song index; collection covers that can be confirmed are included as well.
+- `data/sources/wikis.json`: the final image inventory, download status, and failure records; it is the input to the gallery integration.
+- `data/sources/wiki-discovery.json`: the candidate snapshot, which can be re-checked and used to resume downloading; it contains the raw MediaWiki imageinfo.
+- `data/sources/wiki-song-index.json`: titles, collections, composers, and image references from the public song pages. The template field `Artist` is the composer; it is stored as `composer` and is not mistaken for the illustrator.
+- `data/sources/wiki-illustrator-index.json`: 479 heading/table rows from the Japanese wiki's directory, saved in their original page order. The page contains composer and Vocalist sections as well as a separate `illustrator` section; the last of these lists 9 illustrators, and the other sections are not treated as illustrator attribution.
+- `data/sources/song-mapping.json`: legacy in-game internal keys and song information from [syuchan1005/DeemoSongs](https://github.com/syuchan1005/DeemoSongs); its [MIT license](../licenses/DeemoSongs-MIT.txt) is kept verbatim. The mapping is fairly old and cannot be taken as the current complete song set.
 
-## 图像保真
+The wiki song pages also include removed songs, port-exclusive songs, and images of different versions, so the number of song pages or images cannot be taken directly as the number of unique songs in the current mobile version. Images from different wikis, multiple versions of the same song, and duplicate provenance records with the same SHA-256 are all kept, so the gallery layer above can compare them by source.
 
-脚本保存 HTTP 响应的原始 bytes，不重新编码、放大、裁切、调色或去背景。每张图片均用 Pillow 验证实际格式与尺寸，并记录 SHA-256、下载时间、真实 Content-Type、来源页、请求 URL、最终响应 URL 和 Wiki 元数据。
+## Image fidelity
 
-Fandom CDN 请求使用公开的 `format=original`，避免默认协商成 WebP；先请求直接文件 URL，遇到 CDN 后端错误再尝试 API 提供的完整 revision URL。两个 original 端点都失败时，最后尝试公开的全尺寸 `format=png`，明确标记可能经过 CDN 重编码，仍逐项比较原上传 checksum/size。保存文件扩展名来自解码验证的实际格式，不盲信 URL 扩展名。
+The script saves the raw bytes of the HTTP response; it does not re-encode, upscale, crop, color-correct, or remove backgrounds. Every image's actual format and dimensions are verified with Pillow, and its SHA-256, download time, real Content-Type, source page, request URL, final response URL, and wiki metadata are recorded.
 
-`wiki_original_size_matches` 与 `wiki_original_sha1_matches` 表示所下载文件是否和 Wiki 发布的原上传元数据一致。少数 CDN 文件可能尺寸相同但 checksum/size 不同；这些记录不宣称与上传母文件相同。1024×2048 或 2048×1024 文件可能是 atlas 或拼图，原样保留并标记，不自动裁开。
+Fandom CDN requests use the public `format=original` option to avoid default negotiation to WebP. The direct file URL is requested first; on a CDN backend error, the full revision URL provided by the API is tried next. If both original endpoints fail, the public full-size `format=png` is tried last; the result is explicitly flagged as possibly re-encoded by the CDN, and its checksum/size is still compared item by item against the original upload. The saved file's extension comes from the actual format verified by decoding; the URL extension is not blindly trusted.
 
-公开 Wiki 上传本身不等于画师制作母档，也没有从颜色数量推断原生清晰度。画师和 Rayark 的原有署名及权利归属不因本仓库收集而改变。
+`wiki_original_size_matches` and `wiki_original_sha1_matches` indicate whether the downloaded file matches the original-upload metadata published by the wiki. A few CDN files may have the same dimensions but a different checksum/size; these records do not claim to be identical to the uploaded master file. Files of 1024×2048 or 2048×1024 may be atlases or contact sheets; they are kept as is and flagged, and are not cropped apart automatically.
 
-## 复现
+A public wiki upload is not in itself the artist's working master, and native resolution has not been inferred from color counts. Collecting the files in this repository does not change the original attribution or rights ownership of the artists and Rayark.
 
-环境依赖：Python 3.10+、`requests`、`Pillow`；抓取可选日本画师索引时还使用 `beautifulsoup4`。可以隔离模式运行：
+## Reproduction
+
+Requirements: Python 3.10+, `requests`, and `Pillow`; fetching the optional Japanese illustrator index also uses `beautifulsoup4`. The script can be run in isolated mode:
 
 ```sh
 python -I scripts/fetch_wikis.py --workers 4
 ```
 
-仅继续已保存的候选快照（先验证已存在文件的 SHA-256，再重试缺失下载）：
+To only resume the saved candidate snapshot (first verifying the SHA-256 of files that already exist, then retrying missing downloads):
 
 ```sh
 python -I scripts/fetch_wikis.py --resume --workers 4
 ```
 
-脚本限制最多 4 个并发请求，设置超时和有限重试，逐 25 个结果保存 manifest。`--metadata-only` 只更新候选元数据；已经存在的最终图片 manifest 会保留。
+The script allows at most 4 concurrent requests, sets timeouts and limited retries, and saves the manifest after every 25 results. `--metadata-only` only updates the candidate metadata; an existing final image manifest is kept.
 
-## 本次访问限制
+## Access limits in this run
 
-初次已完整读取 BWIKI 的 480 项 `allimages` 与 182 个歌页；后续刷新 API 遇到 EdgeOne HTTP 567，继续下载使用先前保存的候选快照。最终清单不宣称包含该站每一项未经核对的图片。源列表 `discovery.excluded_large_images` 保留未能明确映射的大图名和尺寸。
+The first pass fully read BWIKI's 480 `allimages` entries and 182 song pages; later API refreshes hit EdgeOne HTTP 567, so the continued downloads used the previously saved candidate snapshot. The final inventory does not claim to include every unverified image on that site. In the source list, `discovery.excluded_large_images` keeps the names and dimensions of large images that could not be clearly mapped.
 
-[日本 DEEMO Wiki 的画师目录](https://wikiwiki.jp/deemo/アーティスト別リスト2)最初返回 Cloudflare 403，在下载完成后的正常索引请求中恢复 200，已保存索引。没有绕过挑战或使用登录凭据。实际成败以 `wikis.json` 为准。
+[The Japanese DEEMO Wiki's illustrator directory](https://wikiwiki.jp/deemo/アーティスト別リスト2) initially returned Cloudflare 403; it was back to 200 on a normal index request after the downloads finished, and the index has been saved. No challenge was bypassed and no login credentials were used. `wikis.json` is authoritative for what actually succeeded or failed.
