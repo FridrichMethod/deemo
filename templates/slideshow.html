@@ -77,9 +77,10 @@ https://github.com/FridrichMethod/deemo
                 <div class="slide-notes"></div>
             </div>
             <div class="asset-caption">
-                <span id="asset-title"></span><span class="asset-title-sep"> · </span><span id="asset-size"></span><br>
-                <a id="asset-source" target="_blank" rel="noopener noreferrer"><span data-i18n="slideshow.caption.source">Source</span></a>
-                · <a id="asset-original" download data-i18n="slideshow.caption.original">Original file</a> · <a href="archive.html" data-lang-link data-i18n="slideshow.caption.browse">Browse all / Search</a>
+                <div class="asset-heading"><span id="asset-title"></span><span class="asset-title-sep"> · </span><span id="asset-size"></span></div>
+                <!-- Each separator keeps to the end of its line (no-break space before it), so no line starts with a dot. -->
+                <a id="asset-source" target="_blank" rel="noopener noreferrer"><span data-i18n="slideshow.caption.source">Source</span></a>&nbsp;·
+                <a id="asset-original" download data-i18n="slideshow.caption.original">Original file</a>&nbsp;· <a href="archive.html" data-lang-link data-i18n="slideshow.caption.browse">Browse all / Search</a>
             </div>
         </section>
         <div class="signature">DEEMO 1 · <a href="https://github.com/FridrichMethod" target="_blank" rel="noopener noreferrer">FridrichMethod</a></div>
@@ -188,6 +189,8 @@ https://github.com/FridrichMethod/deemo
         // Each autoplay beat first hands Alice's dedication over to the current slide's notes, then moves on;
         // every fifth turn brings the dedication back over the new slide.
         function autoplayTick() {
+            // A beat before the page has loaded (and shown its first slide) would spend the opening dedication.
+            if (!slideShown) return;
             if (dedicationShown) {
                 setDedication(false);
                 return;
@@ -280,6 +283,17 @@ https://github.com/FridrichMethod/deemo
             list.append(element("dt", null, label), dd);
         }
 
+        // A title that is only a file name ("booksprites_10", "Rac01lifill", "Celia02forsis fc", "MN2 Booksprites")
+        // stays verbatim but is set as a quiet file reference rather than as the headline (see src/slideshow.css).
+        function isFileName(title, id) {
+            var words = title.split(" ");
+            return /_|booksprite/i.test(title)
+                || (title === id.slice(id.lastIndexOf(":") + 1) && title === title.toLowerCase())
+                || (/^[A-Za-z0-9 ]+$/.test(title)
+                    && words.some(function(word) { return /[A-Za-z]/.test(word) && /\d/.test(word); })
+                    && words.slice(1).every(function(word) { return word === word.toLowerCase(); }));
+        }
+
         // Liner notes from the slide's data-* attributes: names stay verbatim, only labels are translated.
         function notesFor(target) {
             var data = target.dataset;
@@ -288,12 +302,19 @@ https://github.com/FridrichMethod/deemo
             var kind = DEEMO_I18N.has("slideshow.kind." + data.kind) ? DEEMO_I18N.t("slideshow.kind." + data.kind) : "";
             if (kind) eyebrow.append(element("span", "notes-kind", kind));
             eyebrow.append(element("span", "notes-count", slideIndex + " / " + imgTargets.length));
+            // A wrapping title breaks after its last spaced dash ("Book of Alice —" / "page 1"), never before a dash
+            // or a trailing number: each side of that dash is kept whole where it fits (see src/slideshow.css).
+            var title = element("p", "notes-title");
+            var glued = data.title.replace(/ — /g, "\u00a0— ").replace(/ (\d+)$/, "\u00a0$1");
+            var dash = glued.lastIndexOf("\u00a0— ");
+            if (dash > 0) title.append(element("span", "notes-title-part", glued.slice(0, dash + 2)), " ", element("span", "notes-title-part", glued.slice(dash + 3)));
+            else title.textContent = glued;
             // CJK characters count double, so long titles step down a size before they wrap into many lines.
-            var title = element("p", "notes-title", data.title);
             var weight = Array.from(data.title).reduce(function(sum, char) {
                 return sum + (/[\u1100-\u11ff\u2e80-\ua4cf\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/.test(char) ? 2 : 1);
             }, 0);
-            if (weight > 30) title.dataset.length = "longer";
+            if (isFileName(data.title, data.id)) title.dataset.length = "file";
+            else if (weight > 30) title.dataset.length = "longer";
             else if (weight > 18) title.dataset.length = "long";
             var meta = element("dl", "notes-meta");
             metaRow(meta, DEEMO_I18N.t("slideshow.notes.music"), data.composer);
@@ -301,7 +322,6 @@ https://github.com/FridrichMethod/deemo
             if (data.collection) {
                 metaRow(meta, data.collection.indexOf("\n") >= 0 ? DEEMO_I18N.t("slideshow.notes.collections") : DEEMO_I18N.t("slideshow.notes.collection"), data.collection);
             }
-            metaRow(meta, DEEMO_I18N.t("slideshow.notes.post"), data.post);
             notes.append(eyebrow, title);
             if (meta.childElementCount) notes.append(meta);
             return notes;
