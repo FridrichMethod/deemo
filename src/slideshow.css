@@ -404,15 +404,16 @@ img:not([src]) {
     left: 50%;
     width: 10px;
     height: 10px;
-    margin: -6px 0 0 -4px;
+    /* Centre the 12px box (10px + 2px border), then pull the stroke back: after the rotation the visible
+       top and right borders sit 5px / sqrt(2) = 3.54px towards the tip, so the chevron's ink is centred. */
+    margin: -6px 0 0 -6px;
     border-top: 2px solid currentColor;
     border-right: 2px solid currentColor;
-    transform: rotate(45deg);
+    transform: translateX(-3.54px) rotate(45deg);
 }
 
 .prev::before {
-    margin-left: -8px;
-    transform: rotate(-135deg);
+    transform: translateX(3.54px) rotate(-135deg);
 }
 
 .prev {
