@@ -3,6 +3,7 @@
 import hashlib
 import importlib.util
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -14,6 +15,16 @@ check = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(check)
 
 NO_CHANGE = {"added": 0, "reuploaded": 0, "removed": 0, "added_after_baseline": 0}
+# Han characters plus CJK / full-width punctuation such as （）：，。
+CHINESE = re.compile(r"[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]")
+DETAILS = "\n<details>\n<summary>简体中文</summary>\n\n"
+
+
+def split_languages(markdown):
+    """Split a bilingual report into its English part and the Chinese copy inside <details>."""
+    english, chinese = markdown.split(DETAILS)
+    assert chinese.endswith("\n</details>\n"), chinese[-40:]
+    return english, chinese[:-len("\n</details>\n")]
 
 
 def candidate(source, name, sha1="a" * 40, size=1000, width=1024, height=1024, timestamp="2026-01-01T00:00:00Z", **extra):
@@ -45,8 +56,19 @@ class CompareTests(unittest.TestCase):
         report = check.compare(same, snapshot(candidate("fandom", "Kept.png"), fetched_at="2026-03-03T00:00:00Z"), self.manifest)
         self.assertFalse(report["changed"])
         self.assertEqual(report["counts"], {**NO_CHANGE, "baseline": 1, "current": 1})
-        self.assertIn("没有变化", check.render(report))
-        self.assertNotIn("### ", check.render(report))
+        self.assertEqual(check.render(report), (
+            "## Wiki source check\n\n"
+            "Baseline snapshot 2026-02-02T00:00:00Z (1 candidate) → current discovery 2026-03-03T00:00:00Z (1 candidate).\n\n"
+            "- 0 added (0 of them uploaded after the baseline) · 0 re-uploaded · 0 removed\n\n"
+            "The candidate set has not changed; nothing to do.\n"))
+        self.assertEqual(check.render(report, "zh-CN"), (
+            "## Wiki 来源检查\n\n"
+            "基线快照 2026-02-02T00:00:00Z（1 个候选）→ 本次发现 2026-03-03T00:00:00Z（1 个候选）。\n\n"
+            "- 新增 0（其中 0 个在基线之后上传）· 重新上传 0 · 移除 0\n\n"
+            "候选集合没有变化，无需处理。\n"))
+        self.assertEqual(report["title"], "Wiki source update: 0 added · 0 re-uploaded · 0 removed (2026-03-03)")
+        for markdown in split_languages(check.render_bilingual(report)):
+            self.assertNotIn("### ", markdown)
 
     def test_added_reuploaded_and_removed_candidates(self):
         baseline = snapshot(candidate("fandom", "Kept.png"), candidate("bwiki", "Gone.png"), candidate("fandom", "Same.png"))
@@ -56,7 +78,8 @@ class CompareTests(unittest.TestCase):
         report = check.compare(baseline, current, self.manifest)
         self.assertTrue(report["changed"])
         self.assertEqual(report["counts"], {"added": 2, "reuploaded": 1, "removed": 1, "added_after_baseline": 1, "baseline": 3, "current": 4})
-        self.assertEqual(report["title"], "Wiki 来源更新：新增 2 · 重新上传 1 · 移除 1（2026-02-02）")
+        self.assertEqual(report["title"], "Wiki source update: 2 added · 1 re-uploaded · 1 removed (2026-02-02)")
+        self.assertNotRegex(report["title"], CHINESE)
         new, old = report["added"]
         self.assertEqual((new["file_title"], new["local_path"], new["uploaded_after_baseline"]), ("File:New.png", None, True))
         self.assertEqual((old["file_title"], old["uploaded_after_baseline"]), ("File:Old.png", False))
@@ -67,18 +90,44 @@ class CompareTests(unittest.TestCase):
         removed, = report["removed"]
         self.assertEqual(removed["file_title"], "File:Gone.png")
         markdown = check.render(report)
-        self.assertIn("新增 2（其中 1 个在基线之后上传）", markdown)
-        self.assertIn("180×180 ⚠小图", markdown)
-        self.assertIn("2026-02-20（基线之后）", markdown)
-        self.assertIn("`aaaaaaaaaa` → `bbbbbbbbbb`", markdown)
-        self.assertIn("SHA-1 曾一致", markdown)
+        self.assertIn("Baseline snapshot 2026-02-02T00:00:00Z (3 candidates) → current discovery 2026-02-02T00:00:00Z (4 candidates).", markdown)
+        self.assertIn("- 2 added (1 of them uploaded after the baseline) · 1 re-uploaded · 1 removed", markdown)
+        self.assertIn("### Added (2)", markdown)
+        self.assertIn("| Source | File | Type | Dimensions | Size | Uploaded | Song title / collection |", markdown)
+        self.assertIn("### Re-uploaded (1)", markdown)
+        self.assertIn("| Source | File | Dimensions | Size | Wiki SHA-1 | Uploaded | Local file |", markdown)
+        self.assertIn("### Removed (1)\n\n| Source | File | Local file |", markdown)
+        self.assertIn("| BWIKI | [New.png](https://example.test/wiki/File:New.png) | collection_cover | 1024×1024 | 0.00 MiB | "
+                      "2026-02-20 (after baseline) | New / Pack |", markdown)
+        self.assertIn("180×180 ⚠ small image", markdown)
+        self.assertIn("| 1024×1024 → 2048×2048 | 0.00 MiB → 0.00 MiB | `aaaaaaaaaa` → `bbbbbbbbbb` | "
+                      "2026-02-10 (after baseline) |", markdown)
+        self.assertIn("`assets/public/wikis/fandom/Kept--abc.png` (SHA-1 matched at download)", markdown)
+        self.assertIn("| BWIKI | [Gone.png](https://example.test/wiki/File:Gone.png) | none |", markdown)
+        self.assertIn("### Local steps after merging", markdown)
+        self.assertNotRegex(markdown, CHINESE)
+        english, chinese = split_languages(check.render_bilingual(report))
+        self.assertEqual((english, chinese), (markdown, check.render(report, "zh-CN")))
+        for text in ("## Wiki 来源检查", "基线快照 2026-02-02T00:00:00Z（3 个候选）→ 本次发现 2026-02-02T00:00:00Z（4 个候选）。",
+                     "- 新增 2（其中 1 个在基线之后上传）· 重新上传 1 · 移除 1", "### 新增（2）", "### 重新上传（1）", "### 移除（1）",
+                     "| 来源 | 文件 | 类型 | 尺寸 | 大小 | 上传时间 | 曲名 / 曲包 |",
+                     "| 来源 | 文件 | 尺寸 | 大小 | Wiki SHA-1 | 上传时间 | 本地文件 |", "| 来源 | 文件 | 本地文件 |",
+                     "180×180 ⚠小图", "2026-02-20（基线之后）", "`aaaaaaaaaa` → `bbbbbbbbbb`",
+                     "`assets/public/wikis/fandom/Kept--abc.png`（SHA-1 曾一致）",
+                     "| BWIKI | [Gone.png](https://example.test/wiki/File:Gone.png) | 无 |", "### 合并后的本地步骤",
+                     "合并此 PR 只更新发现快照，不包含任何图片。随后在本地执行："):
+            self.assertIn(text, chinese)
+        self.assertNotIn("<details>", chinese)
 
     def test_bwiki_titles_resolve_local_assets(self):
         baseline = snapshot(candidate("bwiki", "Gone.png"))
         baseline["candidates"][0]["file_title"] = "文件:Gone.png"
         report = check.compare(baseline, snapshot(), self.manifest)
         self.assertEqual(report["removed"][0]["local_path"], "assets/public/wikis/bwiki/Gone--def.png")
-        self.assertIn("SHA-1 曾不一致", check.render(report))
+        self.assertIn("| BWIKI | [Gone.png](https://example.test/wiki/File:Gone.png) | "
+                      "`assets/public/wikis/bwiki/Gone--def.png` (SHA-1 did not match at download) |", check.render(report))
+        self.assertIn("| BWIKI | [Gone.png](https://example.test/wiki/File:Gone.png) | "
+                      "`assets/public/wikis/bwiki/Gone--def.png`（SHA-1 曾不一致） |", check.render(report, "zh-CN"))
 
     def test_duplicate_candidates_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "Duplicate"):
@@ -88,12 +137,55 @@ class CompareTests(unittest.TestCase):
         current = snapshot(candidate("fandom", "A|B.png", song_titles=["Song|One"]), candidate("fandom", "C.png"))
         report = check.compare(snapshot(), current, {})
         with patch.object(check, "ROW_LIMIT", 1):
-            markdown = check.render(report)
-        self.assertIn("[A\\|B.png](https://example.test/wiki/File:A\\|B.png)", markdown)
-        self.assertIn("Song\\|One", markdown)
-        self.assertIn("另有 1 项未列出", markdown)
-        self.assertIn("fetch_wikis.py --resume", markdown)
-        self.assertNotIn("C.png", markdown.split("另有")[0])
+            english, chinese = split_languages(check.render_bilingual(report))
+        for markdown, more in ((english, "1 more entry is not listed"), (chinese, "另有 1 项未列出")):
+            self.assertIn("[A\\|B.png](https://example.test/wiki/File:A\\|B.png)", markdown)
+            self.assertIn("Song\\|One", markdown)
+            self.assertIn(more, markdown)
+            self.assertIn("fetch_wikis.py --resume", markdown)
+            self.assertNotIn("C.png", markdown.split(more)[0])
+        self.assertIn("\n\n1 more entry is not listed; see the diff of `data/sources/wiki-discovery.json`.\n", english)
+        self.assertIn("\n\n另有 1 项未列出，见 `data/sources/wiki-discovery.json` 的 diff。\n", chinese)
+        with patch.object(check, "ROW_LIMIT", 0):
+            self.assertIn("2 more entries are not listed;", check.render(report))
+
+    def test_bilingual_report_fits_a_pull_request_body(self):
+        names = [f"Fairly long song artwork file title number {number:03d}.png" for number in range(450)]
+        manifest = {"assets": [{"id": "wikis:fandom:" + hashlib.sha256(f"File:{name}".encode()).hexdigest()[:16],
+                                "path": f"assets/public/wikis/fandom/{name}--0123456789ab.png",
+                                "wiki_original_sha1_matches": True} for name in names]}
+        baseline = snapshot(*(candidate("fandom", name) for name in names[:300]))
+        current = snapshot(*(candidate("fandom", name, sha1="b" * 40) for name in names[150:300]),
+                           *(candidate("fandom", name) for name in names[300:]))
+        report = check.compare(baseline, current, manifest)
+        self.assertEqual((report["counts"]["added"], report["counts"]["reuploaded"], report["counts"]["removed"]), (150, 150, 150))
+        self.assertGreater(len(check.render(report)) + len(check.render(report, "zh-CN")), check.REPORT_LIMIT)
+        markdown = check.render_bilingual(report)
+        self.assertLessEqual(len(markdown), check.REPORT_LIMIT)
+        self.assertLess(check.REPORT_LIMIT, 65536)
+        english, chinese = split_languages(markdown)
+        hidden = [int(count) for count in re.findall(r"^(\d+) more entries are not listed;", english, re.M)]
+        self.assertEqual(hidden, [int(count) for count in re.findall(r"^另有 (\d+) 项未列出", chinese, re.M)])
+        self.assertEqual(len(hidden), 3)
+        self.assertEqual(len(set(hidden)), 1)
+        listed = 150 - hidden[0]
+        self.assertTrue(0 < listed < check.ROW_LIMIT, listed)
+        self.assertEqual((english, chinese), (check.render(report, "en", listed), check.render(report, "zh-CN", listed)))
+
+    def test_language_tables_match(self):
+        english, chinese = check.TEXT["en"], check.TEXT["zh-CN"]
+        self.assertEqual(english.keys(), chinese.keys())
+        fields = re.compile(r"\{(\w*)\}")
+
+        def forms(value):
+            return [value] if isinstance(value, str) else list(value.values() if isinstance(value, dict) else value)
+
+        for key in english:
+            if isinstance(english[key], dict):
+                self.assertEqual(english[key].keys(), chinese[key].keys(), key)
+            placeholders = {tuple(sorted(fields.findall(form))) for form in forms(english[key]) + forms(chinese[key])}
+            self.assertEqual(len(placeholders), 1, key)
+            self.assertNotRegex("".join(forms(english[key])), CHINESE, key)
 
     def test_cli_writes_report_and_summary(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -105,10 +197,23 @@ class CompareTests(unittest.TestCase):
             with patch.object(sys, "argv", argv), patch("builtins.print") as printed:
                 check.main()
             summary = json.loads((root / "summary.json").read_text(encoding="utf-8"))
+            self.assertEqual(list(summary), ["changed", "title", "counts", "baseline_fetched_at", "current_fetched_at",
+                                             "added", "reuploaded", "removed"])
             self.assertTrue(summary["changed"])
             self.assertEqual(summary["counts"]["added"], 1)
-            self.assertIn("### 新增（1）", (root / "report.md").read_text(encoding="utf-8"))
+            self.assertEqual(summary["title"], "Wiki source update: 1 added · 0 re-uploaded · 0 removed (2026-02-02)")
+            markdown = (root / "report.md").read_text(encoding="utf-8")
+            self.assertTrue(markdown.startswith("## Wiki source check\n"), markdown[:40])
+            english, chinese = split_languages(markdown)
+            self.assertIn("### Added (1)", english)
+            self.assertIn("| Fandom | [New.png](https://example.test/wiki/File:New.png) |", english)
+            self.assertNotRegex(english, CHINESE)
+            self.assertTrue(chinese.startswith("## Wiki 来源检查\n"), chinese[:40])
+            self.assertIn("### 新增（1）", chinese)
             self.assertIn('"changed": true', printed.call_args[0][0])
+            printed_summary = json.loads(printed.call_args[0][0])
+            self.assertEqual(list(printed_summary), ["changed", "title", "counts"])
+            self.assertEqual(printed_summary["title"], summary["title"])
 
 
 if __name__ == "__main__":
