@@ -93,6 +93,39 @@ with sync_playwright() as p:
         page.locator(".next").click()
         page.locator(".prev").click()
         assert page.locator("#asset-title").inner_text() == original_title
+    # Fresh context: English by default; the toggle switches to Simplified Chinese, keeps filters and persists.
+    lang_page = browser.new_page(viewport={"width": 1440, "height": 1000})
+    lang_page.on("pageerror", lambda error: errors.append(str(error)))
+    lang_page.on("request", lambda request: requests.append(request.url))
+    lang_page.on("response", lambda response: bad_responses.append((response.status, response.url)) if response.status >= 400 else None)
+    heading_has_han = "/[\\u3400-\\u9fff]/.test(document.querySelector('h1').textContent)"
+    lang_page.goto(mounted_url("archive.html"), wait_until="load")
+    lang_page.wait_for_selector(".card")
+    assert lang_page.evaluate("document.documentElement.lang") == "en"
+    assert not lang_page.evaluate(heading_has_han)
+    lang_page.locator("#family").select_option("legacy")
+    english_count = lang_page.locator("#count").inner_text()
+    lang_page.locator("[data-lang-toggle]").first.click()
+    assert lang_page.evaluate("document.documentElement.lang") == "zh-CN"
+    assert lang_page.evaluate(heading_has_han)
+    assert "lang=zh-CN" in lang_page.url and "family=legacy" in lang_page.url
+    assert lang_page.locator("#family").input_value() == "legacy"
+    assert lang_page.locator("#count").inner_text() != english_count
+    lang_page.locator(".card-image").first.click()
+    assert "原仓库 · 游戏纹理" in lang_page.locator("#provenance").inner_text()
+    lang_page.keyboard.press("Escape")
+    lang_page.goto(mounted_url("archive.html"), wait_until="load")
+    lang_page.wait_for_selector(".card")
+    assert lang_page.evaluate("document.documentElement.lang") == "zh-CN", "language choice should persist"
+    lang_page.goto(mounted_url("index.html?asset=" + quote("legacy:magnolia")), wait_until="load")
+    lang_page.wait_for_function("document.querySelector('.deemo-view').style.opacity === '1'")
+    assert lang_page.locator("#asset-source").inner_text() == "原仓库 · 游戏纹理"
+    assert "lang=zh-CN" in lang_page.locator(".archive-link a").get_attribute("href")
+    lang_page.locator("[data-lang-toggle]").first.click()
+    assert lang_page.evaluate("document.documentElement.lang") == "en"
+    assert lang_page.locator("#asset-source").inner_text() == "Original repository · game textures"
+    assert "lang=" not in lang_page.url and "lang=" not in lang_page.locator(".archive-link a").get_attribute("href")
+    lang_page.close()
     manifest_url = mounted_url("site.webmanifest")
     manifest_response = page.request.get(manifest_url)
     assert manifest_response.status == 200
@@ -114,5 +147,5 @@ with sync_playwright() as p:
     assert not outside_mount, outside_mount
     assert not bad_responses, bad_responses
     assert not errors, errors
-    print(json.dumps({"gallery_images": total, "base": base, "browser_errors": errors, "bad_responses": bad_responses, "external_requests": external, "checks": ["search", "empty state", "reset", "pagination", "artist/size filters", "legacy variant download/hash", "modal", "mobile layout", "artist/legacy slideshow deep links", "navigation", "manifest/browserconfig icons", "mount-relative assets", "local-only requests"]}, indent=2))
+    print(json.dumps({"gallery_images": total, "base": base, "browser_errors": errors, "bad_responses": bad_responses, "external_requests": external, "checks": ["search", "empty state", "reset", "pagination", "artist/size filters", "legacy variant download/hash", "modal", "mobile layout", "artist/legacy slideshow deep links", "navigation", "manifest/browserconfig icons", "mount-relative assets", "local-only requests", "language toggle, persistence and localized source names"]}, indent=2))
     browser.close()
