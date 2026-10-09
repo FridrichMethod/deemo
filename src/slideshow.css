@@ -612,6 +612,23 @@ canvas {
     outline-offset: 3px;
 }
 
+/* Draw the keyboard ring round the disc, like .lang-toggle, not round the link box inside it. */
+@supports selector(:has(a)) {
+    .bt > a:focus-visible {
+        outline: none;
+    }
+    .bt:has(> a:focus-visible) {
+        outline: 3px solid #9c8656;
+        outline-offset: 3px;
+    }
+}
+
+/* The inherited camera.svg draws its body 1/24 of the icon high; nudge it to the disc centre
+   (the asset itself stays byte-identical, see data/legacy-inventory.json). */
+.photo img {
+    transform: translateY(calc(100% / 24));
+}
+
 /* The screenshot overlay's close button sits in the same corner; screenshot() resets inline visibility, hence !important. */
 .overlay:target ~ .lang-toggle {
     visibility: hidden !important;
