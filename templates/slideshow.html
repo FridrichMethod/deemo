@@ -68,7 +68,7 @@ https://github.com/FridrichMethod/deemo
             <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
             <a class="next" onclick="plusSlides(1)">&#10095;</a>
         </div>
-        <!-- Liner notes: Alice's dedication opens the show (and returns when autoplay resumes), then each slide's own notes. -->
+        <!-- Liner notes: Alice's dedication opens the show (and returns as an autoplay interlude), then each slide's own notes. -->
         <section class="liner" aria-label="About this artwork" data-i18n-attr="aria-label:slideshow.notes.label">
             <div class="liner-text is-dedication" data-slide-text>
                 <blockquote class="dear-alice" lang="en">To the lovely, lonely stranger<br>And my dearest brother,<br>Hans.
@@ -77,7 +77,7 @@ https://github.com/FridrichMethod/deemo
                 <div class="slide-notes"></div>
             </div>
             <div class="asset-caption">
-                <span id="asset-title"></span> · <span id="asset-size"></span><br>
+                <span id="asset-title"></span><span class="asset-title-sep"> · </span><span id="asset-size"></span><br>
                 <a id="asset-source" target="_blank" rel="noopener noreferrer"><span data-i18n="slideshow.caption.source">Source</span></a>
                 · <a id="asset-original" download data-i18n="slideshow.caption.original">Original file</a> · <a href="archive.html" data-lang-link data-i18n="slideshow.caption.browse">Browse all / Search</a>
             </div>
@@ -150,6 +150,9 @@ https://github.com/FridrichMethod/deemo
         var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
         var dedicationShown = true;
         var notesTimer = 0;
+        // Alice's dedication returns over every fifth automatic turn, then hands over to that slide's notes.
+        var DEDICATION_EVERY = 5;
+        var autoTurns = 0;
         // Until the first slide is shown this page title is localized; showSlides() then owns document.title.
         var slideShown = false;
         document.title = DEEMO_I18N.t("slideshow.title");
@@ -182,10 +185,16 @@ https://github.com/FridrichMethod/deemo
         // Timeout
         var int = self.setInterval(autoplayTick, 6000);
 
-        // Each autoplay beat first hands Alice's dedication over to the current slide's notes, then moves on.
+        // Each autoplay beat first hands Alice's dedication over to the current slide's notes, then moves on;
+        // every fifth turn brings the dedication back over the new slide.
         function autoplayTick() {
-            if (dedicationShown) setDedication(false);
-            else randomSlide();
+            if (dedicationShown) {
+                setDedication(false);
+                return;
+            }
+            autoTurns = (autoTurns + 1) % DEDICATION_EVERY;
+            if (!autoTurns) setDedication(true);
+            randomSlide();
         }
 
         function plusSlides(n) {
@@ -244,8 +253,12 @@ https://github.com/FridrichMethod/deemo
             document.getElementById("asset-original").href = target.dataset.src;
         }
 
+        // While the notes are up the caption leaves out the title they already show (see src/slideshow.css).
         function setDedication(show) {
             dedicationShown = show;
+            if (show) autoTurns = 0;
+            // Notes still waiting to change under the dedication change now, before they fade back in.
+            else if (notesTimer && !slideNotes.classList.contains("is-turning")) renderNotes();
             linerText.classList.toggle("is-dedication", show);
         }
 
@@ -294,20 +307,24 @@ https://github.com/FridrichMethod/deemo
             return notes;
         }
 
-        // Visible notes dip out, change and fade back in with the artwork; hidden ones (under the dedication) just change.
+        function renderNotes() {
+            window.clearTimeout(notesTimer);
+            notesTimer = 0;
+            slideNotes.classList.remove("is-turning");
+            slideNotes.replaceChildren(notesFor(imgTargets[slideIndex - 1]));
+        }
+
+        // Visible notes dip out, change and fade back in with the artwork; notes giving way to the dedication
+        // change once they have faded out under it.
         function showNotes(animate) {
             if (!imgTargets[slideIndex - 1]) return;
             window.clearTimeout(notesTimer);
-            if (!animate || dedicationShown || reducedMotion.matches) {
-                slideNotes.classList.remove("is-turning");
-                slideNotes.replaceChildren(notesFor(imgTargets[slideIndex - 1]));
+            if (!animate || reducedMotion.matches) {
+                renderNotes();
                 return;
             }
-            slideNotes.classList.add("is-turning");
-            notesTimer = window.setTimeout(function() {
-                slideNotes.replaceChildren(notesFor(imgTargets[slideIndex - 1]));
-                slideNotes.classList.remove("is-turning");
-            }, 260);
+            if (!dedicationShown) slideNotes.classList.add("is-turning");
+            notesTimer = window.setTimeout(renderNotes, dedicationShown ? 420 : 260);
         }
 
         // check picture load condition

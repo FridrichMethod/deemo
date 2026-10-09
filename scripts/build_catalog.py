@@ -178,13 +178,21 @@ def combine(root: Path, verify: bool = False) -> dict:
 
 
 def slide_notes(asset: dict) -> dict:
-    """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated."""
+    """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated.
+    A collection or post name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out."""
     found = {"composer": [], "artist": [], "collection": [], "post": []}
     seen = {key: set() for key in found}
 
+    def fold(text: str) -> str:
+        return "".join(char for char in text.casefold() if char.isalnum())
+
+    title = fold(str(asset.get("title") or ""))
+
     def add(key: str, value: object) -> None:
         text = str(value or "").strip()
-        folded = "".join(char for char in text.casefold() if char.isalnum())
+        folded = fold(text)
+        if key in ("collection", "post") and folded and folded in title:
+            return
         if text and folded not in seen[key]:
             seen[key].add(folded)
             found[key].append(text)
