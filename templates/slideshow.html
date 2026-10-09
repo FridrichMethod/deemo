@@ -1,6 +1,9 @@
 ﻿<!--
 
 ##########################################
+             Deemo Recreation
+     "Deemo game interface recreation"
+
                Deemo 复刻
          「古树旋律游戏界面复刻」
 ##########################################
@@ -8,28 +11,30 @@
 Maintained by FridrichMethod (Zhaoyang Li).
 Original design by Mashiro; see NOTICE for attribution.
 
+Copyright of all assets belongs to Rayark Inc.
 所有素材版权为雷亞遊戲（Rayark Inc.）所有。
 
 https://github.com/FridrichMethod/deemo
 
 -->
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>DEEMO 1 曲绘集 · FridrichMethod</title>
+    <title>DEEMO 1 Artwork Collection · FridrichMethod</title>
     <meta charset="utf-8">
-    <meta name="description" content="FridrichMethod 的 DEEMO 1 曲绘收藏：公开原文件、画师发布与逐图来源记录。">
-    <meta name="keywords" content="DEEMO 1, FridrichMethod, 曲绘">
+    <meta name="description" content="FridrichMethod's DEEMO 1 song artwork collection: public original files, artist releases and per-image provenance records." data-i18n-attr="content:slideshow.meta.description">
+    <meta name="keywords" content="DEEMO 1, FridrichMethod, song artwork">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
     <meta property="og:image" content="assets/site/icons/apple-touch-icon.png">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="DEEMO 1 曲绘集 · FridrichMethod">
+    <meta property="og:title" content="DEEMO 1 Artwork Collection · FridrichMethod">
     <meta property="og:site_name" content="FridrichMethod / deemo">
-    <meta property="og:description" content="DEEMO 1 曲绘与公开来源档案">
-    <meta property="og:locale" content="zh_CN">
+    <meta property="og:description" content="DEEMO 1 song artwork and an archive of public sources">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="zh_CN">
 
     <link rel="apple-touch-icon" sizes="180x180" href="assets/site/icons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/site/icons/favicon-32x32.png">
@@ -69,8 +74,8 @@ https://github.com/FridrichMethod/deemo
         <div class="signature">DEEMO 1 · <a href="https://github.com/FridrichMethod" target="_blank" rel="noopener noreferrer">FridrichMethod</a></div>
         <div class="asset-caption">
             <span id="asset-title"></span><br>
-            <span id="asset-size"></span> · <a id="asset-source" target="_blank" rel="noopener noreferrer">来源</a>
-            · <a id="asset-original" download>原文件</a> · <a href="archive.html">浏览全部 / 搜索</a>
+            <span id="asset-size"></span> · <a id="asset-source" target="_blank" rel="noopener noreferrer"><span data-i18n="slideshow.caption.source">Source</span></a>
+            · <a id="asset-original" download data-i18n="slideshow.caption.original">Original file</a> · <a href="archive.html" data-lang-link data-i18n="slideshow.caption.browse">Browse all / Search</a>
         </div>
 
         <div class="photo bt">
@@ -91,12 +96,12 @@ https://github.com/FridrichMethod/deemo
         </div>
 
         <div class="github bt">
-            <a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer" aria-label="GitHub 仓库">
+            <a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository" data-i18n-attr="aria-label:slideshow.github.label">
                 <div class="pop"><img src="assets/site/icons/github.svg" class="css-1bgbwga" data-reactid="50"></div>
             </a>
         </div>
 
-        <div class="archive-link bt"><a href="archive.html" aria-label="浏览曲绘档案">图集</a></div>
+        <div class="archive-link bt"><a href="archive.html" data-lang-link aria-label="Browse the Artwork Archive" data-i18n="slideshow.archive.text" data-i18n-attr="aria-label:slideshow.archive.label">Gallery</a></div>
 
         <div id="screenshot" class="overlay">
             <div class="save bt">
@@ -109,13 +114,23 @@ https://github.com/FridrichMethod/deemo
                 <div id="scerrn-content"></div>
             </div>
         </div>
+
+        <!-- Kept after #screenshot so the open screenshot overlay can hide it (see src/slideshow.css). -->
+        <button type="button" class="lang-toggle bt" data-lang-toggle lang="zh-CN" title="Switch to Simplified Chinese">中文</button>
     </main>
 
     <audio loop="loop" id="player">
       <source src="assets/site/audio/Riin%20-%20Alice%20good%20night.mp3" type="audio/mpeg">
     </audio>
 
+    <script>
+        // The language toggle rewrites ?lang= with history.replaceState; keep Pace from treating that as a page load.
+        window.paceOptions = {restartOnPushState: false};
+    </script>
     <script src="src/vendor/legacy-ui.js"></script>
+    <script src="src/i18n.js"></script>
+    <script src="src/i18n/common.js"></script>
+    <script src="src/i18n/slideshow.js"></script>
 
     <script>
         "use strict";
@@ -124,6 +139,13 @@ https://github.com/FridrichMethod/deemo
         var imgTargets = document.getElementsByClassName("deemo-draw");
         var requestedAsset = new URLSearchParams(location.search).get("asset");
         var requestedIndex = Array.from(imgTargets).findIndex(function(img) { return img.dataset.id === requestedAsset; });
+        // Until the first slide is shown this page title is localized; showSlides() then owns document.title.
+        var slideShown = false;
+        document.title = DEEMO_I18N.t("slideshow.title");
+        DEEMO_I18N.onChange(function() {
+            if (slideShown) showCaption();
+            else document.title = DEEMO_I18N.t("slideshow.title");
+        });
 
         window.addEventListener('load', function() {
             document.querySelector(".deemo-view").style.opacity = "1";
@@ -162,12 +184,8 @@ https://github.com/FridrichMethod/deemo
             }
             // title
             document.title = slideIndex + '/' + slides.length + ' | DEEMO 1 · FridrichMethod';
-            var target = imgTargets[slideIndex - 1];
-            document.getElementById("asset-title").textContent = target.dataset.title;
-            document.getElementById("asset-size").textContent = target.dataset.size;
-            document.getElementById("asset-source").textContent = target.dataset.source;
-            document.getElementById("asset-source").href = target.dataset.page;
-            document.getElementById("asset-original").href = target.dataset.src;
+            slideShown = true;
+            showCaption();
             // load
             lazyload(slideIndex - 1);
             // hide
@@ -187,6 +205,17 @@ https://github.com/FridrichMethod/deemo
             //if (slideIndex > 1) {
             //    lazyload(slideIndex - 1 - 1);
             //}
+        }
+
+        // caption (re-run on language change; source names from the data stay verbatim except localized ones such as legacy)
+        function showCaption() {
+            var target = imgTargets[slideIndex - 1];
+            if (!target) return;
+            document.getElementById("asset-title").textContent = target.dataset.title;
+            document.getElementById("asset-size").textContent = target.dataset.size;
+            document.getElementById("asset-source").textContent = DEEMO_I18N.sourceName(target.dataset.sourceId, target.dataset.source);
+            document.getElementById("asset-source").href = target.dataset.page;
+            document.getElementById("asset-original").href = target.dataset.src;
         }
 
         // check picture load condition
@@ -252,7 +281,7 @@ https://github.com/FridrichMethod/deemo
         }
 
         function screenshot() {
-            var sholdHide = new Array("photo", "iplayer", "random", "github", "archive-link", "asset-caption", "signature", "prev", "next");
+            var sholdHide = new Array("photo", "iplayer", "random", "github", "archive-link", "lang-toggle", "asset-caption", "signature", "prev", "next");
             for (var i = 0; i < sholdHide.length; i++) document.getElementsByClassName(sholdHide[i])[0].style.visibility = 'hidden';
 
             let opt = {
