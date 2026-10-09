@@ -1,42 +1,44 @@
-# 画师公开来源
+# Public sources from the artists
 
-本批次保存 86 张图片，来自 18 个画师公开作品页面，另记录 1 个履历参考页面。采集时间、原始下载 URL、页面 URL、宽高、实际文件格式、SHA-256 和作者信息均在 [`data/sources/artists.json`](../data/sources/artists.json)。所有图片保留下载到的原始 bytes，没有 resize、裁切、调色、去水印或重新编码。
+**English** · [简体中文](sources-artists.zh-CN.md)
 
-| 画师 / 来源 | 文件数 | 实际下载尺寸与内容 |
+This batch holds 86 images from 18 public artwork pages posted by the artists, and also records 1 career-history page as a reference. The retrieval time, original download URL, page URL, width and height, actual file format, SHA-256 and author information are all in [`data/sources/artists.json`](../data/sources/artists.json). Every image keeps the original bytes as downloaded: nothing was resized, cropped, color-adjusted, watermark-stripped or re-encoded.
+
+| Artist / source | Files | Actual downloaded dimensions and contents |
 | --- | ---: | --- |
-| [ころころさん / 鳩紫ぽっぽ](https://kolokolsan.jimdofree.com/仕事の制作物/) | 5 | 3 张 3030×3030；Matricaria 3030×2200；in a cradle 2048×1662 |
-| [SnowEgg / 雪歌草](https://www.pixiv.net/en/users/1755315/illustrations/Deemo) | 39 | 32 张曲绘约 1236×1240–1241；7 张 928×928 曲包封面 |
-| [Ryori](https://www.pixiv.net/en/users/1400721/illustrations/Deemo) | 20 | 10 张曲绘约 1324–1332px 宽；2 张曲包封面；8 张设计/过程参考 |
-| [K@I](https://www.pixiv.net/en/users/93444/illustrations/Deemo) | 8 | 5 张 1500px 宽曲绘展示；3 张长拼图，最大 1417×6288 |
-| [Blaze Wu](https://wublaze.tumblr.com/tagged/deemo) | 8 | 5 张曲绘和 1 张曲包封面为 1280×960；2 张 512×1920 长拼图 |
-| [Siyouko / 硝子](https://www.pixiv.net/en/artworks/47910628) | 6 | 公开 DEEMO 插画合集，359–886px；并非高清曲绘包，未声称全部属于游戏委托曲绘 |
+| [ころころさん / 鳩紫ぽっぽ](https://kolokolsan.jimdofree.com/仕事の制作物/) | 5 | 3 at 3030×3030; Matricaria 3030×2200; in a cradle 2048×1662 |
+| [SnowEgg / 雪歌草](https://www.pixiv.net/en/users/1755315/illustrations/Deemo) | 39 | 32 song artworks at about 1236×1240–1241; 7 collection covers at 928×928 |
+| [Ryori](https://www.pixiv.net/en/users/1400721/illustrations/Deemo) | 20 | 10 song artworks about 1324–1332px wide; 2 collection covers; 8 design/process references |
+| [K@I](https://www.pixiv.net/en/users/93444/illustrations/Deemo) | 8 | 5 song-artwork presentations 1500px wide; 3 long contact sheets, the largest 1417×6288 |
+| [Blaze Wu](https://wublaze.tumblr.com/tagged/deemo) | 8 | 5 song artworks and 1 collection cover at 1280×960; 2 long contact sheets at 512×1920 |
+| [Siyouko / 硝子](https://www.pixiv.net/en/artworks/47910628) | 6 | A public compilation of DEEMO illustrations, 359–886px; not a high-resolution song-artwork pack, and not claimed to be entirely commissioned in-game song artwork |
 
-按用途分类：57 张单曲曲绘、10 张曲包封面、5 张长拼图、8 张设计/过程参考、6 张其他 DEEMO 插画。分类依据原帖上下文及视觉检查；原帖附带的装饰边框、版权字样、草稿和水印全部保留。
+By purpose: 57 song artworks, 10 collection covers, 5 long contact sheets, 8 design/process references and 6 other DEEMO illustrations. The classification is based on the context of the original posts and on visual inspection. Decorative frames, copyright text, drafts and watermarks that came with the original posts are all retained.
 
-## 原始上传与平台预览
+## Original uploads and platform previews
 
-Pixiv 图片通过无需登录的公开 `/ajax/illust/{id}` 和 `/pages` 元数据获取 `urls.original`，下载时使用普通页面 Referer。没有使用账号、cookie、登录凭证或付费内容。
+Pixiv images are fetched by reading `urls.original` from the public `/ajax/illust/{id}` and `/pages` metadata, which require no login, and downloads send an ordinary page Referer. No account, cookie, login credential or paid content was used.
 
-Jimdo 页面 lightbox 将部分 PNG 标成 2048px；使用该站公开的 `/transf/none/` 图片路径实际取得 3030px 原始文件。清单同时保存网页公布的 lightbox URL 和 metadata 尺寸，因此 `source_dimensions` 可能小于解码得到的 `width`/`height`。
+The Jimdo page's lightbox labels some PNGs as 2048px; the site's public `/transf/none/` image path actually returns the 3030px original files. The manifest also stores the lightbox URL and the metadata dimensions published on the page, so `source_dimensions` may be smaller than the decoded `width`/`height`.
 
-Tumblr 使用作者公开的 legacy API 所公布的最大图片 URL。这里的 `1280` 是平台规格名称，并不保证每张图片实际宽度为 1280，也不保证拿到画师工作母档；两张早期长拼图实际只有 512px 宽。
+Tumblr images come from the largest image URL published by the author's public legacy API. The `1280` here is the platform's size-tier name. It does not guarantee that every image is actually 1280 wide, nor that the artist's working master was obtained; the two early long contact sheets are actually only 512px wide.
 
-Siyouko 的[履历页面](https://princeofglass.blogspot.com/p/blog-page_1146.html)确认其 DEEMO 曲绘、过场动画与人物设计工作，但页面没有可以下载的 DEEMO 图片，因此记为 `reference_only`。已检查上述 Pixiv 作者的 DEEMO 标签列表；无关游戏联动画、周年纪念混合作品以及不在委托曲绘范围的其他帖子没有混入本批次。
+Siyouko's [career page](https://princeofglass.blogspot.com/p/blog-page_1146.html) confirms their DEEMO song artwork, cutscene and character-design work, but the page has no downloadable DEEMO images, so it is recorded as `reference_only`. The DEEMO tag lists of the Pixiv authors above were checked. Collaboration art for unrelated games, mixed anniversary pieces and other posts outside the scope of commissioned song artwork were kept out of this batch.
 
-## 文件与曲名
+## Files and song titles
 
-图片位于 `assets/public/artists/{artist}/`。Pixiv/Tumblr 文件名保留 post ID 与从零开始的页序号；Jimdo 使用作者明确标出的曲名。
+Images are in `assets/public/artists/{artist}/`. Pixiv/Tumblr file names keep the post ID and the zero-based page index; Jimdo files use the song titles the author explicitly labeled.
 
-不能从原帖直接确认曲名时，`song_titles` 保持空数组且 `mapping_status` 为 `unmapped`。`collection` 表示原帖的曲包分组，不表示每张附图都属于该曲包；尤其 Ryori 在同一帖子中附带多张曲包封面与过程图。长拼图保持一张文件，没有推测裁切范围。
+When a song title cannot be confirmed directly from the original post, `song_titles` stays an empty array and `mapping_status` is `unmapped`. `collection` is the original post's collection grouping; it does not mean that every attached image belongs to that collection. In particular, Ryori attaches several collection covers and process images to the same post. Each long contact sheet stays a single file, with no guessed crop boundaries.
 
-## 重现
+## Reproduction
 
-环境需要 Python 3、`requests`、`beautifulsoup4` 和 `Pillow`。从仓库根目录运行：
+Requires Python 3, `requests`, `beautifulsoup4` and `Pillow`. Run from the repository root:
 
 ```sh
 python scripts/fetch_artists.py --workers 4
 ```
 
-重新运行会检查公开页面元数据，并在本地文件 SHA-256 正确且下载 URL 不变时复用文件。显式增加 `--refresh` 才会重新下载已缓存图片。脚本验证每张图片能够完整解码，以实际格式确定扩展名，按 SHA-256 去重，所有失败写入 manifest 并返回非零退出状态。
+A rerun checks the public page metadata and reuses a local file when its SHA-256 is correct and its download URL is unchanged. Cached images are downloaded again only when `--refresh` is added explicitly. The script verifies that every image decodes completely, chooses the file extension from the actual format, deduplicates by SHA-256, writes every failure to the manifest and returns a non-zero exit status if there are any.
 
-本次下载和独立校验均为 86/86 成功，0 失败，原始图片总计 107,043,058 bytes。图片版权仍属于 Rayark 及相应创作者；本仓库的软件许可证不授予这些图片新的许可。
+The download and the independent verification for this batch both succeeded 86/86, with 0 failures; the original images total 107,043,058 bytes. Copyright in the images remains with Rayark and the respective creators; this repository's software license grants no new license to these images.

@@ -1,75 +1,81 @@
-# DEEMO 1 曲绘档案
+# DEEMO 1 Artwork Archive
 
-[FridrichMethod / deemo](https://github.com/FridrichMethod/deemo) 的个人曲绘收藏，由 FridrichMethod（Zhaoyang Li）维护。收集 DEEMO 原版及相关 Last Recital / Reborn 的公开曲绘；DEEMO II 不在收集范围内。
+**English** · [简体中文](README.zh-CN.md)
 
-原项目来自 [mashirozx/deemo](https://github.com/mashirozx/deemo)。上游历史已压缩为一个初始快照；游戏纹理、界面设计署名和 Apache-2.0 软件许可证保留。此版本已替换维护者链接、页面信息和 manifest，移除原站 CNAME、Google Analytics 和社交账号入口。仓库公开，网站通过 GitHub Pages 发布。
+[FridrichMethod / deemo](https://github.com/FridrichMethod/deemo) is a personal song artwork collection maintained by FridrichMethod (Zhaoyang Li). It collects public song artwork from the original DEEMO and the related Last Recital / Reborn releases; DEEMO II is out of scope.
 
-## 浏览
+The project originates from [mashirozx/deemo](https://github.com/mashirozx/deemo). The upstream history has been squashed into a single initial snapshot; the game textures, the UI design attribution and the Apache-2.0 software license are kept. This version replaces the maintainer links, page information and manifest, and removes the original site's CNAME, Google Analytics and social media links. The repository is public, and the website is published through GitHub Pages.
 
-在线访问：[可搜索图库](https://fridrichmethod.github.io/deemo/archive.html) · [幻灯片](https://fridrichmethod.github.io/deemo/)。仓库、网站和曲绘均公开，无需登录即可访问。
+## Browsing
 
-启动仅限本机的静态服务：
+Online: [searchable gallery](https://fridrichmethod.github.io/deemo/archive.html) · [slideshow](https://fridrichmethod.github.io/deemo/). The repository, website and artwork are all public; no login is required.
+
+Start a static server that only listens on this machine:
 
 ```sh
 python -I -m http.server 8765 --bind 127.0.0.1
 ```
 
-打开 [http://127.0.0.1:8765/archive.html](http://127.0.0.1:8765/archive.html)：可搜索曲名、画师与曲包，按来源、类型、尺寸筛选；点击图片查看原文件、SHA-256、来源页面和下载地址。[index.html](index.html) 保留原来的幻灯片风格，已经接入新增素材，也可从档案页跳到指定图片。两页均只加载本地素材，没有统计或远程字体请求。
+Open [http://127.0.0.1:8765/archive.html](http://127.0.0.1:8765/archive.html) to search song titles, artists and collections, and to filter by source, type and size. Click an image to see the original file, SHA-256, source page and download URL. [index.html](index.html) keeps the original slideshow style, now includes the newly added material, and can also be opened at a specific image from the archive page. Both pages load only local assets, with no analytics or remote font requests.
 
-目录也可直接双击 `archive.html` 离线浏览；HTTP 服务对下载、幻灯片截图等浏览器功能兼容性更好。
+You can also double-click `archive.html` in the folder to browse offline; the HTTP server is more compatible with browser features such as downloads and slideshow screenshots.
 
-## 网站部署
+Both pages are in English by default. Each page has a language button (labeled "中文" in the English interface and "English" in the Chinese one) that switches between English and Simplified Chinese. The choice is remembered in the browser (`localStorage`) and in the `?lang=zh-CN` URL parameter; opening an address with `?lang=zh-CN` (e.g. `archive.html?lang=zh-CN`) shows Chinese directly. Switching happens entirely within the page, makes no network requests, and works the same when the files are opened directly (`file://`). Song titles, artist names and metadata quoted from the sources are shown as-is in both languages; only the interface text is translated.
 
-推送到 `main` 后，[Pages 工作流](.github/workflows/pages.yml) 自动发布。`scripts/prepare_pages.py` 只复制 Git 跟踪的 `assets/`、`data/`、`src/`、`docs/`、`licenses/` 和明确列出的根目录网页、配置、署名文件；不会发布 `.git/`、工作流、抓取脚本、测试或未跟踪文件。上传目标仅为独立生成的站点目录，不是仓库根目录。白名单只限定网站发布范围，不是敏感内容检测器；仓库本身公开，提交任何文件前仍需检查内容。
+## Website deployment
 
-页面保留 `noindex,nofollow`，但这不是访问控制。发布包以 950 MB 为硬上限，给 GitHub Pages 的 1 GB 上限留出余量；新增素材超限时部署会停止，现有线上版本不变。保留全部原图字节，不在发布时重新压缩素材。
+After a push to `main`, the [Pages workflow](.github/workflows/pages.yml) publishes the site automatically. `scripts/prepare_pages.py` copies only Git-tracked files from `assets/`, `data/`, `src/`, `docs/`, `licenses/` plus an explicit list of root-level web pages, configuration and attribution files; it never publishes `.git/`, workflows, fetch scripts, tests or untracked files. Only a separately generated site directory is uploaded, not the repository root. The allowlist only limits what the website publishes; it is not a sensitive-content detector. The repository itself is public, so check the contents of any file before committing it.
 
-## 来源更新检查
+The pages keep `noindex,nofollow`, but that is not access control. The Pages payload has a hard cap of 950 MB, leaving headroom below GitHub Pages' 1 GB limit; if new material exceeds the cap, the deployment stops and the current live version stays unchanged. All original image bytes are kept; assets are not recompressed at publish time.
 
-[检查工作流](.github/workflows/check-sources.yml) 每周一 03:00 UTC 自动运行，也可在 Actions 页手动触发。它以 `--metadata-only` 重新枚举 Fandom 与 BWIKI 的曲绘候选，不下载任何图片，再用 `scripts/check_sources.py` 与 `main` 上的 `data/sources/wiki-discovery.json` 比较。候选集合没有变化时只在运行摘要里记录；出现新增、重新上传（SHA-1 或尺寸变化）或移除的文件时，工作流把新的发现快照和歌曲索引推到 `auto/wiki-source-check` 分支，并创建或更新一个标题形如"Wiki 来源更新：新增 N · 重新上传 M · 移除 K"的 PR，正文列出每个文件的来源页、尺寸、曲名和本地是否已有下载。
+## Source update check
 
-合并该 PR 只更新快照，不改变图库。随后在本地运行 `scripts/fetch_wikis.py --resume` 下载新增和重新上传的文件，再 build、verify、检查 `failures` 与 checksum 字段并提交图片与清单（命令见 PR 正文和下文"目录与复现"）。首次启用前需要在仓库 Settings → Actions → General → Workflow permissions 勾选 "Allow GitHub Actions to create and approve pull requests"，否则工作流能推分支但无法创建 PR。公开仓库 60 天没有提交时 GitHub 会暂停 `schedule` 触发，需在 Actions 页重新启用。
+The [check workflow](.github/workflows/check-sources.yml) runs automatically every Monday at 03:00 UTC and can also be triggered manually from the Actions page. It re-enumerates the Fandom and BWIKI artwork candidates with `--metadata-only`, without downloading any images, then uses `scripts/check_sources.py` to compare them with `data/sources/wiki-discovery.json` on `main`. If the candidate set has not changed, this is only recorded in the run summary. When files are added, re-uploaded (SHA-1 or dimensions changed) or removed, the workflow pushes the new discovery snapshot and song index to the `auto/wiki-source-check` branch and opens or updates a PR with an English title of the form "Wiki source update: N added · M re-uploaded · K removed (YYYY-MM-DD)". The PR body starts with the English report, which lists each file's source page, dimensions, song title and whether a local download already exists; the full Chinese report follows in a collapsible "简体中文" section.
 
-画师来源（`fetch_artists.py`）的 Pixiv 作品 ID 写在脚本里，公开档案来源基本是静态内容，二者都不在自动检查范围内；要补充新作品仍需手动编辑脚本并重新抓取。
+Merging that PR only updates the snapshot; it does not change the gallery. Afterwards, run `scripts/fetch_wikis.py --resume` locally to download the added and re-uploaded files, then build, verify, check the `failures` and checksum fields, and commit the images and the manifest (commands in the PR body and in "Directory layout and reproduction" below). Before first use, tick "Allow GitHub Actions to create and approve pull requests" under the repository's Settings → Actions → General → Workflow permissions; otherwise the workflow can push the branch but cannot create the PR. If a public repository has no commits for 60 days, GitHub suspends `schedule` triggers, and the workflow has to be re-enabled on the Actions page.
 
-## 已整理的来源
+The Pixiv artwork IDs for the artist source (`fetch_artists.py`) are written into the script, and the public archive sources are largely static content, so neither is covered by the automatic check; adding new works still requires editing the script by hand and fetching again.
 
-| 来源 | 内容与说明 |
+## Curated sources
+
+| Source | Contents and notes |
 | --- | --- |
-| [画师本人](docs/sources-artists.md) | 86 张公开上传：ころころさん、SnowEgg、Ryori、K@I、Blaze Wu、Siyouko。包括曲绘、曲包封面、长拼图和单独标记的过程参考。最高单张曲绘为 3030×3030。 |
-| [Wiki](docs/sources-wikis.md) | 814 张：Fandom 561、BWIKI 253。包括原版歌曲/曲包图片、不同版本及纹理 atlas，保留实际下载文件与原站 metadata 校验结果。另保存日本 Wiki 的画师目录。 |
-| [公开档案](docs/sources-archives.md) | 189 张历史 Tumblr 封面、19 张 OST 包装/内页扫描、4 张官网插画、2 份官方参考 PDF。低分辨率转载与扫描有单独分类。 |
-| 原仓库 | `assets/legacy/trans/` 的 320 张素材用于展示；`assets/legacy/tiny/` 的 320 个量化副本作为配对版本，在原图详情中提供下载入口。 |
+| [Artists (original posts)](docs/sources-artists.md) | 86 public uploads: ころころさん, SnowEgg, Ryori, K@I, Blaze Wu, Siyouko. Includes song artwork, collection covers, long contact sheets and separately labeled process references. The largest single song artwork is 3030×3030. |
+| [Wiki](docs/sources-wikis.md) | 814 images: Fandom 561, BWIKI 253. Includes original-game song/collection images, different versions and texture atlases; the actually downloaded files and the results of verification against the original sites' metadata are kept. The illustrator directory of a Japanese wiki is saved as well. |
+| [Public archives](docs/sources-archives.md) | 189 historical Tumblr covers, 19 OST packaging/booklet scans, 4 official website illustrations, 2 official reference PDFs. Low-resolution reposts and scans are categorized separately. |
+| Original repository | The 320 assets in `assets/legacy/trans/` are used for display; the 320 palette-quantized copies in `assets/legacy/tiny/` serve as paired versions, offered as downloads in the original image's details. |
 
-2026-09-05 共归档 1,057 个公开来源文件；2026-10-08 经来源检查补入 57 张 BWIKI 曲包封面缩略图，公开来源文件合计 1,114 个。另保留原仓库 320 张图片及其 320 个量化副本。量化副本记录在 `variants` 中，不重复计入图库张数。精确去重数量与获取状态以 [data/catalog.json](data/catalog.json) 为准。图片数包括同曲不同版本、曲包封面及参考资料，**不等于独立歌曲数，也不代表全曲母图已齐全**。字节完全相同的文件合并展示，同时保留所有来源；没有按尺寸或文件大小盲目覆盖其他版本。
+On 2026-09-05, 1,057 public source files were archived in total; on 2026-10-08, 57 BWIKI collection cover thumbnails found by the source check were added, for a total of 1,114 public source files. The original repository's 320 images and their 320 palette-quantized copies are kept as well. The quantized copies are recorded in `variants` and are not counted a second time in the gallery's image count. [data/catalog.json](data/catalog.json) is authoritative for the exact deduplicated counts and the retrieval status. Image counts include different versions of the same song, collection covers and reference material, **so they do not equal the number of distinct songs, nor do they mean that a master has been collected for every song**. Byte-identical files are shown once while all their sources are kept; no version was blindly overwritten based on dimensions or file size.
 
-所有下载均保留响应的原始 bytes，没有 AI 放大、裁切、去水印、去背景或格式转换。`original` 表示站点提供的原始下载规格，不自动等同于画师工作母档。Fandom 中部分下载的 checksum 与 Wiki 上传 metadata 不同，清单会明确记录。
+Every download keeps the original bytes of the response, with no AI upscaling, cropping, watermark removal, background removal or format conversion. `original` means the original download variant offered by the site; it is not automatically the same as the artist's working master. Some Fandom downloads have checksums that differ from the wiki upload metadata; the manifest records this explicitly.
 
-旧素材曲名使用公开映射的精确内部 key 补全。画师帖子中无法直接确认的单图曲名保留原帖与页序，并标记 `unmapped`；原帖分组不自动当作附图的曲包归属。作曲家和画师使用不同字段。
+Song titles for the legacy assets are filled in from exact internal keys in a public mapping. For single images in artist posts whose song title cannot be confirmed directly, the original post and page index are kept and the image is marked `unmapped`; a post's grouping is not automatically taken as the collection of the attached images. Composers and artists are kept in separate fields.
 
-付费画集与游戏只记录购买来源，未下载。失效分享、访问失败、音频波形/谱图、视频和无法确认归属的混合 fanart 站点记录在来源清单中，不作为成功下载的曲绘。
+For paid art books and games, only the purchase source is recorded; they were not downloaded. Dead share links, failed accesses, audio waveforms/spectrograms, videos and mixed fanart sites whose attribution cannot be confirmed are recorded in the source inventory and are not counted as successfully downloaded artwork.
 
-## 目录与复现
+## Directory layout and reproduction
 
 ```text
 assets/
-  public/{artists,wikis,archives}/  新增公开素材与参考资料
-  legacy/trans/                    原仓库未量化的透明 PNG
-  legacy/tiny/                     配对的历史量化副本
-  site/{icons,fonts,images,audio}/  图标、字体、背景/截图、音频
-src/                               页面 JS/CSS；vendor/ 为原第三方 bundle
-templates/slideshow.html           幻灯片模板（生成根 index.html）
-scripts/                           抓取、构建与校验；legacy/ 为历史实验脚本
-data/sources/                      各来源 manifest、候选与曲名映射
-data/catalog.{json,js}              完整来源记录及离线浏览目录
-data/legacy-inventory.json          670 个旧文件的迁移路径、Git blob 和 SHA-256
-licenses/                          第三方许可文本及素材归属索引
-LICENSE / NOTICE                   标准软件许可证与署名入口
-archive.html / index.html          两个静态网页入口
-site.webmanifest / browserconfig.xml  浏览器配置入口
+  public/{artists,wikis,archives}/  newly added public material and references
+  legacy/trans/                    original repository's unquantized transparent PNGs
+  legacy/tiny/                     paired historical palette-quantized copies
+  site/{icons,fonts,images,audio}/  icons, fonts, backgrounds/screenshots, audio
+src/                               page JS/CSS; vendor/ holds the original third-party bundle
+src/i18n.js / src/i18n/            language switch script and English/Chinese UI strings
+templates/slideshow.html           slideshow template (generates the root index.html)
+scripts/                           fetching, building and verification; legacy/ holds historical experiment scripts
+data/sources/                      per-source manifests, candidates and song-title mapping
+data/catalog.{json,js}              full provenance records and the offline browsing catalog
+data/legacy-inventory.json          migration paths, Git blobs and SHA-256 of 670 legacy files
+licenses/                          third-party license texts and asset attribution index
+*.zh-CN.md                         Simplified Chinese versions of README, docs/ and other documents; the same-name .md is the default English version
+LICENSE / NOTICE                   standard software license and attribution entry points
+archive.html / index.html          the two static web page entry points
+site.webmanifest / browserconfig.xml  browser configuration entry points
 ```
 
-建议 Python 3.10+。安装依赖并构建：
+Python 3.10+ is recommended. Install the dependencies and build:
 
 ```sh
 python -m venv .venv
@@ -77,7 +83,7 @@ python -m venv .venv
 .venv/bin/python scripts/build_catalog.py --verify
 ```
 
-按需刷新公开来源，或继续已保存的 Wiki 候选：
+Refresh the public sources as needed, or resume the saved wiki candidates:
 
 ```sh
 .venv/bin/python -I scripts/fetch_artists.py --workers 4
@@ -86,23 +92,25 @@ python -m venv .venv
 .venv/bin/python scripts/build_catalog.py --verify
 ```
 
-如需重新发现 Wiki 条目，去掉 `--resume`。网络来源可能限流或失效；检查各 manifest 中的 `failures`、`status`、`access_status` 和 Git diff 后再提交更新。每个来源脚本的具体限制见上表对应文档。构建统一使用 `scripts/build_catalog.py`；旧根目录 `html.py` 入口已移除。`scripts/legacy/` 中的上游实验脚本仅供历史追溯，不参与当前流程。
+To rediscover wiki entries, drop `--resume`. Network sources may be rate-limited or go offline; check `failures`, `status` and `access_status` in each manifest, and the Git diff, before committing an update. The specific limitations of each source script are described in the corresponding document in the table above. All builds go through `scripts/build_catalog.py`; the old root-level `html.py` entry point has been removed. The upstream experiment scripts in `scripts/legacy/` are kept only for historical reference and are not part of the current workflow.
 
-离线校验与浏览器验收：
+Offline verification and browser acceptance checks:
 
 ```sh
 .venv/bin/python -I tests/test_catalog.py
 .venv/bin/python -I tests/test_layout.py
 .venv/bin/python -I tests/test_pages.py
+.venv/bin/python -I tests/test_i18n.py
+.venv/bin/python -I tests/test_check_sources.py
 .venv/bin/python scripts/build_catalog.py --verify --check
 .venv/bin/python scripts/build_legacy_inventory.py
 .venv/bin/python -I scripts/fetch_archives.py --verify
 
-# 可选：本机 HTTP 服务运行时，使用已安装的 Chrome 做浏览器验收
+# Optional: with the local HTTP server running, run the browser acceptance check with an installed Chrome
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -I tests/browser_smoke.py --browser /usr/bin/google-chrome
 ```
 
-## 署名
+## Attribution
 
-原界面由 Mashiro 设计；本收藏及新增工具由 FridrichMethod 维护。曲绘及其他游戏素材的权利仍属于 Rayark 与对应创作者；仓库代码许可证不为这些媒体赋予新许可。参见 [NOTICE](NOTICE)、[LICENSE](LICENSE)、[第三方许可与素材归属索引](licenses/README.md) 和每张图片的来源记录。
+The original interface was designed by Mashiro; this collection and the new tooling are maintained by FridrichMethod. Rights to the song artwork and other game assets remain with Rayark and the respective creators; the repository's code license grants no new license for these media. See [NOTICE](NOTICE), [LICENSE](LICENSE), the [third-party license and asset attribution index](licenses/README.md) and each image's provenance record.

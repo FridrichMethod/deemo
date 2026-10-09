@@ -65,11 +65,11 @@ jobs:
           git add data/sources/wiki-discovery.json data/sources/wiki-song-index.json
           git commit -m "chore: refresh wiki discovery snapshot" -m "$TITLE" -m "Metadata only; no images downloaded. $RUN_URL"
           git push --force origin "$SNAPSHOT_BRANCH"
-          printf '\n---\n来源：%s\n' "$RUN_URL" >> "$RUNNER_TEMP/report.md"
+          printf '\n---\nSource · 来源: %s\n' "$RUN_URL" >> "$RUNNER_TEMP/report.md"
           number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open --json number --jq '.[0].number')"
           if [ "${number:-}" != "" ]; then
             gh pr edit "$number" --title "$TITLE" --body-file "$RUNNER_TEMP/report.md"
-            gh pr comment "$number" --body "快照已由新的检查运行刷新：$RUN_URL"
+            gh pr comment "$number" --body "Snapshot refreshed by a new check run · 快照已由新的检查运行刷新: $RUN_URL"
           else
             gh pr create --base main --head "$SNAPSHOT_BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/report.md"
           fi

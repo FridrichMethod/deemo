@@ -322,6 +322,37 @@ canvas {
 }
 
 .archive-link a { color: white; text-decoration: none; display: grid; place-items: center; height: 100%; font-family: sans-serif; }
+
+/* Language toggle: a round .bt control in the free top-right corner, clear of the bottom button row,
+   the caption, the side arrows and the loading spinner at every width. The 35px offsets mirror the
+   bottom-left camera button (.bt is translated by half its 70px size). */
+.lang-toggle {
+    top: 35px;
+    right: 35px;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    box-sizing: content-box;
+    margin: 0;
+    border: 0;
+    color: white;
+    font: 15px/1 sans-serif;
+    white-space: nowrap;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Chromium's default ring sits on the dark rim and vanishes; match the archive page's focus ring. */
+.lang-toggle:focus-visible {
+    outline: 3px solid #9c8656;
+    outline-offset: 3px;
+}
+
+/* The screenshot overlay's close button sits in the same corner; screenshot() resets inline visibility, hence !important. */
+.overlay:target ~ .lang-toggle {
+    visibility: hidden !important;
+}
+
 .asset-caption { position: fixed; left: 20px; bottom: 120px; max-width: min(650px, 90vw); padding: 10px 14px; border-radius: 6px; background: rgba(255,255,255,.88); font: 14px/1.6 system-ui, sans-serif; z-index: 1000; user-select: text; }
 .asset-caption a { color: #333; }
 .deemo-draw { max-width: 100vw; max-height: 100vh; object-fit: contain; }
@@ -438,4 +469,38 @@ canvas {
 @keyframes pace-spinner {
   0% { transform: rotate(0deg); transform: rotate(0deg); }
   100% { transform: rotate(360deg); transform: rotate(360deg); }
+}
+
+/* Phones: the five bottom controls are 70px wide on a 90px grid, so the last ones fell off narrow screens.
+   Shrink them to 56px and spread them evenly between 8px margins. .bt is shifted right by half its width
+   (28px), hence left = 8px - 28px + i * (100vw - 2 * 8px - 56px) / 4. The language toggle keeps its size. */
+@media screen and (max-width: 480px) {
+    .bt:not(.lang-toggle) {
+        width: 40px;
+        height: 40px;
+        padding: 8px;
+    }
+    .speaker {
+        width: 40px;
+        height: 40px;
+    }
+    .archive-link a {
+        font-size: 13px;
+    }
+    .photo,
+    .save {
+        left: -20px;
+    }
+    .github {
+        left: calc(-20px + (100vw - 72px) / 4);
+    }
+    .archive-link {
+        left: calc(-20px + (100vw - 72px) / 2);
+    }
+    .iplayer {
+        left: calc(-20px + (100vw - 72px) * 3 / 4);
+    }
+    .random {
+        left: calc(-20px + 100vw - 72px);
+    }
 }

@@ -116,7 +116,7 @@ def validate_asset(root: Path, asset: dict, verify: bool = False) -> None:
 
 def combine(root: Path, verify: bool = False) -> dict:
     sources = [{
-        "id": "legacy", "name": "原仓库 · 游戏纹理", "family": "legacy",
+        "id": "legacy", "name": "Original repository · game textures", "family": "legacy",
         "url": "https://github.com/mashirozx/deemo", "status": "inherited",
         "notes": "Original PNGs are in assets/legacy/trans/. Paired palette-quantized copies in assets/legacy/tiny/ are available as alternate downloads.",
     }]
@@ -186,7 +186,8 @@ def render_slideshow(root: Path, catalog: dict) -> str:
         fields = {
             "class": "deemo-draw", "data-src": asset["url"],
             "data-id": asset["id"], "data-title": asset["title"],
-            "data-source": asset["source_name"], "data-page": asset["page_url"],
+            "data-source": asset["source_name"], "data-source-id": asset["source_id"],
+            "data-page": asset["page_url"],
             "data-size": f"{asset['width']} × {asset['height']}", "alt": asset["title"],
         }
         attributes = " ".join(f'{key}="{attr(value)}"' for key, value in fields.items())
