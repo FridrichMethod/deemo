@@ -20,7 +20,7 @@ Incremental update on 2026-10-08: the source-check workflow found 57 BWIKI colle
 - `data/sources/wiki-illustrator-index.json`: 479 heading/table rows from the Japanese wiki's directory, saved in their original page order. The page contains composer and Vocalist sections as well as a separate `illustrator` section; the last of these lists 9 illustrators, and the other sections are not treated as illustrator attribution.
 - `data/sources/song-mapping.json`: legacy in-game internal keys and song information from [syuchan1005/DeemoSongs](https://github.com/syuchan1005/DeemoSongs); its [MIT license](../licenses/DeemoSongs-MIT.txt) is kept verbatim. The mapping is fairly old and cannot be taken as the current complete song set.
 
-The wiki song pages also include removed songs, port-exclusive songs, and images of different versions, so the number of song pages or images cannot be taken directly as the number of unique songs in the current mobile version. Images from different wikis, multiple versions of the same song, and duplicate provenance records with the same SHA-256 are all kept, so the gallery layer above can compare them by source.
+The wiki song pages also include removed songs, port-exclusive songs, and images of different versions, so the number of song pages or images cannot be taken directly as the number of unique songs in the current mobile version. Images from different wikis, multiple versions of the same song, and duplicate provenance records with the same SHA-256 are all kept, so the higher-level gallery can compare them by source.
 
 ## Image fidelity
 
@@ -40,7 +40,7 @@ Requirements: Python 3.10+, `requests`, and `Pillow`; fetching the optional Japa
 python -I scripts/fetch_wikis.py --workers 4
 ```
 
-To only resume the saved candidate snapshot (first verifying the SHA-256 of files that already exist, then retrying missing downloads):
+To resume from the saved candidate snapshot only (first verifying the SHA-256 of files that already exist, then retrying missing downloads):
 
 ```sh
 python -I scripts/fetch_wikis.py --resume --workers 4
@@ -50,6 +50,6 @@ The script allows at most 4 concurrent requests, sets timeouts and limited retri
 
 ## Access limits in this run
 
-The first pass fully read BWIKI's 480 `allimages` entries and 182 song pages; later API refreshes hit EdgeOne HTTP 567, so the continued downloads used the previously saved candidate snapshot. The final inventory does not claim to include every unverified image on that site. In the source list, `discovery.excluded_large_images` keeps the names and dimensions of large images that could not be clearly mapped.
+The first pass fully read BWIKI's 480 `allimages` entries and 182 song pages; later API refreshes hit EdgeOne HTTP 567, so the continued downloads used the previously saved candidate snapshot. The final inventory does not claim to include every unverified image on that site. In the source manifest (`wikis.json`), `discovery.excluded_large_images` keeps the names and dimensions of large images that could not be clearly mapped.
 
 [The Japanese DEEMO Wiki's illustrator directory](https://wikiwiki.jp/deemo/アーティスト別リスト2) initially returned Cloudflare 403; it was back to 200 on a normal index request after the downloads finished, and the index has been saved. No challenge was bypassed and no login credentials were used. `wikis.json` is authoritative for what actually succeeded or failed.
