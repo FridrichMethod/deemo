@@ -59,7 +59,7 @@ dialog::backdrop { background: #171918d9; }
   nav { margin-top: 15px; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
   .search { flex-basis: 100%; }
-  .filters label:not(.search) { flex: 1; min-width: 110px; }
+  .filters label:not(.search) { flex: 1; min-width: 130px; }
   .filters select { width: 100%; min-width: 0; }
   dialog[open] { grid-template-columns: 1fr; grid-template-rows: minmax(180px, 48vh) 1fr; }
   .viewer-info { padding: 20px; }

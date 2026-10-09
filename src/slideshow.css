@@ -342,6 +342,12 @@ canvas {
     appearance: none;
 }
 
+/* Chromium's default ring sits on the dark rim and vanishes; match the archive page's focus ring. */
+.lang-toggle:focus-visible {
+    outline: 3px solid #9c8656;
+    outline-offset: 3px;
+}
+
 /* The screenshot overlay's close button sits in the same corner; screenshot() resets inline visibility, hence !important. */
 .overlay:target ~ .lang-toggle {
     visibility: hidden !important;
