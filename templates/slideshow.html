@@ -148,6 +148,7 @@ https://github.com/FridrichMethod/deemo
         var requestedIndex = Array.from(imgTargets).findIndex(function(img) { return img.dataset.id === requestedAsset; });
         var linerText = document.querySelector("[data-slide-text]");
         var slideNotes = linerText.querySelector(".slide-notes");
+        var caption = document.querySelector(".asset-caption");
         var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
         var dedicationShown = true;
         var notesTimer = 0;
@@ -171,11 +172,14 @@ https://github.com/FridrichMethod/deemo
             if (requestedIndex >= 0) {
                 slideIndex = requestedIndex + 1;
                 showSlides();
-                randomClick();
-            } else {
+                if (randomFlag == 0) randomClick();
+            } else if (randomFlag == 0) {
                 // Restart the beat so the dedication gets a full one before the first hand-over.
                 window.clearInterval(int);
                 int = self.setInterval(autoplayTick, 6000);
+                randomSlide();
+            } else if (!slideShown) {
+                // Paused (sand clock or arrows) before the page loaded: show a slide, but leave autoplay off.
                 randomSlide();
             }
             for (var i = 0; i < document.getElementsByClassName("bt").length; i++) {
@@ -221,9 +225,11 @@ https://github.com/FridrichMethod/deemo
             }
             // title
             document.title = slideIndex + '/' + slides.length + ' | DEEMO 1 · FridrichMethod';
-            slideShown = true;
+            // The caption always describes the current slide; the first slide's notes are in place at once, later
+            // ones turn with the artwork.
             showCaption();
-            showNotes(true);
+            showNotes(slideShown);
+            slideShown = true;
             // load
             lazyload(slideIndex - 1);
             // hide
@@ -331,11 +337,13 @@ https://github.com/FridrichMethod/deemo
             window.clearTimeout(notesTimer);
             notesTimer = 0;
             slideNotes.classList.remove("is-turning");
+            caption.classList.remove("is-turning");
             slideNotes.replaceChildren(notesFor(imgTargets[slideIndex - 1]));
         }
 
         // Visible notes dip out, change and fade back in with the artwork; notes giving way to the dedication
-        // change once they have faded out under it.
+        // change once they have faded out under it. The caption already shows the new slide's fine print, so it
+        // stays hidden until the notes change and then fades back in with them, never ahead of the notes.
         function showNotes(animate) {
             if (!imgTargets[slideIndex - 1]) return;
             window.clearTimeout(notesTimer);
@@ -344,6 +352,7 @@ https://github.com/FridrichMethod/deemo
                 return;
             }
             if (!dedicationShown) slideNotes.classList.add("is-turning");
+            caption.classList.add("is-turning");
             notesTimer = window.setTimeout(renderNotes, dedicationShown ? 420 : 260);
         }
 
@@ -356,14 +365,24 @@ https://github.com/FridrichMethod/deemo
 
         function lazyload(n) {
             try {
-                // The stage fits every artwork to the same visual area (it needs the aspect ratio and its square root),
-                // but never beyond twice its natural width, so small icons stay crisp.
-                var size = imgTargets[n].dataset.size.match(/\d+/g);
-                var ratio = size[0] / size[1];
-                imgTargets[n].style.setProperty("--ratio", ratio);
-                imgTargets[n].style.setProperty("--root", Math.sqrt(ratio));
-                imgTargets[n].style.setProperty("--natural-width", size[0] + "px");
-                imgTargets[n].setAttribute("src", imgTargets[n].getAttribute("data-src"));
+                // The stage fits every artwork's visible part to the same visual area (it needs that part's aspect ratio
+                // and its square root), but never beyond twice its natural width, so small icons stay crisp. The visible
+                // part is the whole image, or for a padded game texture its opaque box (data-art-box: "x y w h" as
+                // fractions of the canvas); the image is then enlarged by 1 / w and shifted to centre that box.
+                var img = imgTargets[n];
+                var size = img.dataset.size.match(/\d+/g);
+                var box = (img.dataset.artBox || "0 0 1 1").split(" ").map(Number);
+                var width = size[0] * box[2];
+                var ratio = width / (size[1] * box[3]);
+                img.style.setProperty("--ratio", ratio);
+                img.style.setProperty("--root", Math.sqrt(ratio));
+                img.style.setProperty("--natural-width", width + "px");
+                img.style.setProperty("--canvas-ratio", size[0] / size[1]);
+                img.style.setProperty("--box-width", box[2]);
+                img.style.setProperty("--box-height", box[3]);
+                img.style.setProperty("--shift-x", .5 - box[0] - box[2] / 2);
+                img.style.setProperty("--shift-y", .5 - box[1] - box[3] / 2);
+                img.setAttribute("src", img.getAttribute("data-src"));
             } catch (err) {
                 console.log("error = " + n);
             }

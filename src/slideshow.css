@@ -266,12 +266,17 @@ body {
     container-type: size;
 }
 
+/* The stage clips the transparent margins of padded textures (see .deemo-draw). The soft shadow sits here rather
+   than on the image, so it follows the art's alpha after a softened edge (below) and is not clipped by the stage;
+   it sets opaque squares and strips and cut-out art alike on the paper as prints. */
 .mySlides {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    filter: drop-shadow(0 14px 22px rgba(52, 40, 28, .16));
     opacity: 1;
     -webkit-transition: opacity 1s; /* Safari */
     -webkit-transition-timing-function: linear; /* Safari */
@@ -288,16 +293,85 @@ img:not([src]) {
     visibility: hidden;
 }
 
-/* Contained in the stage and scaled to the shared visual area, at most twice the natural size and never
-   taller than 1.12 x --art-size (about the tallest portraits), so long strips stop short of the full height;
-   --ratio, --root and --natural-width are set by lazyload(). The tiniest sources (70 x 47 title tabs) may go
-   up to three times their size to reach 40% of the shared side, so they do not read as broken thumbnails.
-   A soft shadow (it follows the alpha) sets opaque squares and strips and cut-out art alike on the paper as prints. */
+/* The visible art is contained in the stage and scaled to the shared visual area, at most twice its natural size
+   and never taller than 1.12 x --art-size (about the tallest portraits), so long strips stop short of the full
+   height. The tiniest sources (70 x 47 title tabs) may go up to three times their size to reach 40% of the shared
+   side, so they do not read as broken thumbnails. For a padded game texture the visible art is its opaque box
+   (data-art-box), not the canvas: the image is enlarged by 1 / --box-width so that box gets the area, and shifted
+   so the box sits at the stage's centre; the stage clips the transparent overhang. --ratio, --root and
+   --natural-width describe the visible box; lazyload() sets them, the box size, the canvas's own ratio and the
+   shift (as fractions of the image's width and height). The shift is a relative offset, not a transform, which the
+   screenshot renderer would clip at the wrong place. */
 .deemo-draw {
     --natural: var(--natural-width, 100vw);
-    width: min(100cqw, 100cqh * var(--ratio, 1), var(--art-size) * var(--root, 1), var(--art-size) * 1.12 * var(--ratio, 1), max(2 * var(--natural), min(.4 * var(--art-size) * var(--root, 1), 3 * var(--natural))));
+    --width: calc(min(100cqw, 100cqh * var(--ratio, 1), var(--art-size) * var(--root, 1), var(--art-size) * 1.12 * var(--ratio, 1), max(2 * var(--natural), min(.4 * var(--art-size) * var(--root, 1), 3 * var(--natural)))) / var(--box-width, 1));
+    position: relative;
+    left: calc(var(--width) * var(--shift-x, 0));
+    top: calc(var(--width) / var(--canvas-ratio, 1) * var(--shift-y, 0));
+    flex: none;
+    width: var(--width);
     height: auto;
-    filter: drop-shadow(0 14px 22px rgba(52, 40, 28, .16));
+}
+
+/* Art cut hard at a canvas edge (data-bleed) fades out over the last 14% of the visible art towards that edge,
+   so the crop reads as a vignette rather than a broken edge in the middle of the paper. The fade is clear for the
+   last 2px, so the partly covered pixel column at the image's fractional edge stays clear too; on an uncut edge
+   the outer colour is opaque, so those 2px do nothing there. */
+.deemo-draw[data-bleed] {
+    --fade-x: calc(var(--box-width, 1) * 14%);
+    --fade-y: calc(var(--box-height, 1) * 14%);
+    --left: #000;
+    --left-fade: 0%;
+    --right: #000;
+    --right-fade: 0%;
+    --top: #000;
+    --top-fade: 0%;
+    --bottom: #000;
+    --bottom-fade: 0%;
+    --mask-x: linear-gradient(to right, var(--left) 2px, #000 calc(2px + var(--left-fade)), #000 calc(100% - 2px - var(--right-fade)), var(--right) calc(100% - 2px));
+    --mask-y: linear-gradient(to bottom, var(--top) 2px, #000 calc(2px + var(--top-fade)), #000 calc(100% - 2px - var(--bottom-fade)), var(--bottom) calc(100% - 2px));
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+}
+
+.deemo-draw:is([data-bleed~="left"], [data-bleed~="right"]) {
+    -webkit-mask-image: var(--mask-x);
+    mask-image: var(--mask-x);
+}
+
+.deemo-draw:is([data-bleed~="top"], [data-bleed~="bottom"]) {
+    -webkit-mask-image: var(--mask-y);
+    mask-image: var(--mask-y);
+}
+
+/* Cut on both axes (a few textures, at the top and the right): two masks, intersected, the vertical one on top.
+   Chromium lets the lower mask show through the last, partly covered pixel column at the far end of the upper
+   one, which would draw a faint line down a cut right edge if the horizontal mask were on top. */
+.deemo-draw:is([data-bleed~="top"], [data-bleed~="bottom"]):is([data-bleed~="left"], [data-bleed~="right"]) {
+    -webkit-mask-image: var(--mask-y), var(--mask-x);
+    mask-image: var(--mask-y), var(--mask-x);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+}
+
+.deemo-draw[data-bleed~="left"] {
+    --left: transparent;
+    --left-fade: var(--fade-x);
+}
+
+.deemo-draw[data-bleed~="right"] {
+    --right: transparent;
+    --right-fade: var(--fade-x);
+}
+
+.deemo-draw[data-bleed~="top"] {
+    --top: transparent;
+    --top-fade: var(--fade-y);
+}
+
+.deemo-draw[data-bleed~="bottom"] {
+    --bottom: transparent;
+    --bottom-fade: var(--fade-y);
 }
 
 @media screen and (max-width: 1100px) {
@@ -546,6 +620,10 @@ canvas {
    longer source name does not shift the notes or the stage between slides. */
 .asset-caption { flex: none; box-sizing: content-box; min-height: 4.8em; margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--rule); max-width: 36em; font: 13px/1.6 system-ui, sans-serif; color: #555; user-select: text; }
 .asset-caption a { color: #333; }
+/* On a turn it already holds the new slide's details, so it is hidden at once (not faded, which would show them
+   beside the previous notes) and fades back in with the new notes (see showNotes()). */
+.asset-caption { -webkit-transition: opacity .8s ease .2s; transition: opacity .8s ease .2s; }
+.asset-caption.is-turning { opacity: 0; -webkit-transition: none; transition: none; }
 /* Long source names wrap; the short links and the size stay whole. */
 #asset-source { overflow-wrap: anywhere; }
 #asset-original, .asset-caption [data-lang-link], #asset-size { white-space: nowrap; }
@@ -777,12 +855,14 @@ canvas {
 @media screen and (orientation: portrait) {
     .deemo-view {
         --art-size: 100cqmin;
-        /* The text column takes the square artwork's width while the notes keep their reserved height (116px +
-           120px padding, the stage's 20px margin, the notes' min-height and the caption's 87.4px), so the notes
-           hang under the artwork like a museum label without moving between slides; never under 300px.
-           --view-height follows mobile browser bars where dvh is supported (see below). */
+        /* The text column takes the square artwork's width while the notes keep their reserved height
+           (--notes-reserve; --chrome is the rest: 116px + 120px padding, the stage's 20px margin and the caption's
+           87.4px), so the notes hang under the artwork like a museum label without moving between slides; never
+           under 300px. --view-height follows mobile browser bars where dvh is supported (see below). */
         --view-height: 100vh;
-        --label-width: max(min(100vw - 96px, var(--view-height) - 344px - clamp(176px, 24vh, 240px)), min(100vw - 48px, 300px));
+        --notes-reserve: clamp(176px, 24vh, 240px);
+        --chrome: 344px;
+        --label-width: max(min(100vw - 96px, var(--view-height) - var(--chrome) - var(--notes-reserve)), min(100vw - 48px, 300px));
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr) auto;
         grid-template-areas: "stage" "liner";
@@ -804,7 +884,7 @@ canvas {
         display: none;
     }
     .liner-text {
-        min-height: clamp(176px, 24vh, 240px);
+        min-height: var(--notes-reserve);
         margin: 0;
     }
     .liner-text > * {
@@ -850,7 +930,9 @@ canvas {
 
 @media screen and (orientation: portrait) and (max-width: 480px) {
     .deemo-view {
-        --label-width: max(min(100vw - 80px, var(--view-height) - 311px - clamp(176px, 24vh, 240px)), min(100vw - 40px, 300px));
+        /* 116px + 96px padding, the stage's 16px margin and the caption's 83px. */
+        --chrome: 311px;
+        --label-width: max(min(100vw - 80px, var(--view-height) - var(--chrome) - var(--notes-reserve)), min(100vw - 40px, 300px));
         padding-bottom: 96px;
     }
     .slideshow-container {
@@ -871,11 +953,58 @@ canvas {
     }
 }
 
+/* Short portrait phones (360 x 640, 375 x 667): the reserve sized for tall phones left the artwork smaller than
+   the notes under it. Tighter type and a lower reserve, which still holds the tallest notes (about 121px: a title
+   over three lines of credits), give the artwork 218-240px; the caption keeps its three lines in smaller print.
+   --chrome: 116px + 96px padding, the stage's 12px margin and the caption's 69.5px. */
+@media screen and (orientation: portrait) and (max-width: 480px) and (max-height: 700px) {
+    .deemo-view {
+        --notes-reserve: clamp(124px, 20vh, 240px);
+        --chrome: 293.5px;
+    }
+    .slideshow-container {
+        margin-bottom: 12px;
+    }
+    .notes-eyebrow {
+        margin-bottom: .45em;
+        font-size: 11px;
+    }
+    .notes-title {
+        font-size: clamp(24px, 7vw, 30px);
+    }
+    .notes-title[data-length="long"] {
+        font-size: clamp(21px, 6vw, 26px);
+    }
+    .notes-title[data-length="longer"] {
+        font-size: clamp(19px, 5.2vw, 23px);
+    }
+    .notes-title[data-length="file"] {
+        font-size: 15px;
+    }
+    .notes-meta {
+        gap: .3em 1em;
+        margin-top: .75em;
+        font-size: 12.5px;
+    }
+    .notes-meta::before {
+        margin-bottom: .25em;
+    }
+    .asset-caption {
+        min-height: 4.5em;
+        margin-top: 10px;
+        padding-top: 9px;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .liner-text > *,
     .liner-text.is-dedication .slide-notes,
     .liner-text:not(.is-dedication) .dear-alice,
-    .slide-notes.is-turning {
+    .slide-notes.is-turning,
+    .asset-caption,
+    .asset-caption.is-turning {
         transform: none;
         -webkit-transition: none;
         transition: none;
