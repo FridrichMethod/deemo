@@ -179,8 +179,8 @@ def combine(root: Path, verify: bool = False) -> dict:
 
 def slide_notes(asset: dict) -> dict:
     """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated.
-    A collection or post name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out."""
-    found = {"composer": [], "artist": [], "collection": [], "post": []}
+    A collection name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out."""
+    found = {"composer": [], "artist": [], "collection": []}
     seen = {key: set() for key in found}
 
     def fold(text: str) -> str:
@@ -191,7 +191,7 @@ def slide_notes(asset: dict) -> dict:
     def add(key: str, value: object) -> None:
         text = str(value or "").strip()
         folded = fold(text)
-        if key in ("collection", "post") and folded and folded in title:
+        if key == "collection" and folded and folded in title:
             return
         if text and folded not in seen[key]:
             seen[key].add(folded)
@@ -200,7 +200,7 @@ def slide_notes(asset: dict) -> dict:
     for record in asset.get("provenance") or [asset]:
         add("composer", record.get("composer"))
         add("artist", record.get("artist"))
-        add("post" if record.get("collection_scope") == "source_post_grouping" else "collection", record.get("collection"))
+        add("collection", record.get("collection"))
         for value in record.get("collections") or []:
             add("collection", value)
     return {f"data-{key}": "\n".join(values) for key, values in found.items() if values}

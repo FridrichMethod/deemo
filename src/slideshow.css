@@ -84,21 +84,25 @@ body {
     padding: 64px 32px 120px var(--gutter);
 }
 
-/* Lowers the centred notes toward the artwork's centre; it gives way first when the column is short. */
+/* The text hangs from a fixed line so the eyebrow and the title stay put from slide to slide and longer
+   notes grow downward. The line sits half a typical notes block (it scales with the type, hence vw) above
+   the stage's centre, and on short screens high enough that a large block (about 233px: two title lines and
+   two credits) still clears the caption (103px with its margin) above the 120px padding; it rises only when
+   a longer block would otherwise run into the caption. */
 .liner::before {
     content: "";
-    flex: 0 1 10vh;
+    flex: 0 1 max(0px, min(50vh - 64px - 9vw, 100vh - 520px));
 }
 
 .liner-text {
     display: grid;
-    margin: auto 0;
+    margin: 0 0 auto;
 }
 
-/* The dedication and the notes share one cell and crossfade. */
+/* The dedication and the notes share one cell, start on the same line and crossfade. */
 .liner-text > * {
     grid-area: 1 / 1;
-    align-self: center;
+    align-self: start;
     -webkit-transition: opacity .8s ease .2s, transform .8s ease .2s, visibility 0s;
     transition: opacity .8s ease .2s, transform .8s ease .2s, visibility 0s;
 }
@@ -140,19 +144,27 @@ body {
     color: var(--ink);
 }
 
+/* The dot between kind and count sits in the gap before the count; when a narrow column wraps the count onto
+   its own line, the dot falls outside the eyebrow's left edge and is clipped, so no line ends or starts with it. */
 .notes-eyebrow {
     display: flex;
     flex-wrap: wrap;
-    gap: 0 .9em;
+    gap: 0 1.9em;
+    overflow: hidden;
     margin: 0 0 1em;
     font: clamp(12px, .9vw, 16px)/1.5 var(--small-caps);
     letter-spacing: .16em;
     color: var(--muted);
 }
 
-.notes-kind::after {
+/* 2.06em = the gap plus the kind's trailing letter-spacing, so the dot sits centred between the words. */
+.notes-count::before {
     content: "\00b7";
-    margin-left: .9em;
+    display: inline-block;
+    width: 2.06em;
+    margin-left: -2.06em;
+    letter-spacing: 0;
+    text-align: center;
 }
 
 .notes-title {
@@ -166,12 +178,24 @@ body {
     text-wrap: balance;
 }
 
+.notes-title-part {
+    display: inline-block;
+}
+
 .notes-title[data-length="long"] {
     font-size: clamp(32px, 3.4vw, 66px);
 }
 
 .notes-title[data-length="longer"] {
     font-size: clamp(28px, 2.8vw, 54px);
+}
+
+/* A title that is only a file name ("booksprites_10") reads as a catalogue reference in the small caps, not as
+   the headline; the eyebrow and the credits carry the block. */
+.notes-title[data-length="file"] {
+    font: clamp(17px, 1.4vw, 26px)/1.35 var(--small-caps);
+    letter-spacing: .08em;
+    text-wrap: wrap;
 }
 
 /* Album-sleeve credits: small-caps labels, verbatim names in true case. */
@@ -266,10 +290,12 @@ img:not([src]) {
 
 /* Contained in the stage and scaled to the shared visual area, at most twice the natural size and never
    taller than 1.12 x --art-size (about the tallest portraits), so long strips stop short of the full height;
-   --ratio, --root and --natural-width are set by lazyload(). A soft shadow (it follows the alpha) sets opaque
-   squares and strips and cut-out art alike on the paper as prints. */
+   --ratio, --root and --natural-width are set by lazyload(). The tiniest sources (70 x 47 title tabs) may go
+   up to three times their size to reach 40% of the shared side, so they do not read as broken thumbnails.
+   A soft shadow (it follows the alpha) sets opaque squares and strips and cut-out art alike on the paper as prints. */
 .deemo-draw {
-    width: min(100cqw, 100cqh * var(--ratio, 1), var(--art-size) * var(--root, 1), var(--art-size) * 1.12 * var(--ratio, 1), 2 * var(--natural-width, 100vw));
+    --natural: var(--natural-width, 100vw);
+    width: min(100cqw, 100cqh * var(--ratio, 1), var(--art-size) * var(--root, 1), var(--art-size) * 1.12 * var(--ratio, 1), max(2 * var(--natural), min(.4 * var(--art-size) * var(--root, 1), 3 * var(--natural))));
     height: auto;
     filter: drop-shadow(0 14px 22px rgba(52, 40, 28, .16));
 }
@@ -323,10 +349,18 @@ img:not([src]) {
     left: calc(100% + 38px);
 }
 
-.prev:hover,
-.next:hover {
-    background-color: rgba(51, 51, 51, .88);
-    color: #fff;
+/* Only where a pointer can hover: a tap would leave the fill stuck on touch screens. */
+@media (hover: hover) {
+    .prev:hover,
+    .next:hover {
+        background-color: rgba(51, 51, 51, .88);
+        color: #fff;
+        opacity: 1;
+    }
+}
+
+.prev:active,
+.next:active {
     opacity: 1;
 }
 
@@ -511,8 +545,15 @@ canvas {
 /* File details as the sleeve's fine print, at the foot of the text column. Three lines are reserved so a
    longer source name does not shift the notes or the stage between slides. */
 .asset-caption { flex: none; box-sizing: content-box; min-height: 4.8em; margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--rule); max-width: 36em; font: 13px/1.6 system-ui, sans-serif; color: #555; user-select: text; }
-.asset-caption a { color: #333; white-space: nowrap; }
-#asset-size { white-space: nowrap; }
+.asset-caption a { color: #333; }
+/* Long source names wrap; the short links and the size stay whole. */
+#asset-source { overflow-wrap: anywhere; }
+#asset-original, .asset-caption [data-lang-link], #asset-size { white-space: nowrap; }
+/* One line: a title too long for it is cut with an ellipsis (the notes show it in full), so the caption keeps its
+   height when the dedication hands over and the stage does not jump. */
+.asset-heading { display: flex; min-width: 0; white-space: nowrap; }
+#asset-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.asset-title-sep { flex: none; white-space: pre; }
 /* The title joins the fine print only while the dedication stands in for the notes. */
 .liner-text:not(.is-dedication) ~ .asset-caption :is(#asset-title, .asset-title-sep) { display: none; }
 
@@ -664,11 +705,11 @@ canvas {
     }
 }
 
-/* Below ~1040px the stage's left edge comes within reach of the bottom control row (it ends at 465px),
-   so the stage stops above that row. */
+/* Below ~1040px the stage's left edge comes within reach of the bottom control row (it ends at 465px and
+   its top is 105px above the bottom), so the stage stops 16px above that row. */
 @media screen and (max-width: 1039px) {
     .slideshow-container {
-        margin-bottom: max(8vh, 105px);
+        margin-bottom: max(8vh, 121px);
     }
 }
 
@@ -680,8 +721,9 @@ canvas {
     .liner {
         padding: 30px 24px 112px var(--gutter);
     }
+    /* The stage's centre is about 50vh - 48px here; the line sits a short notes block (about 70px) above it. */
     .liner::before {
-        display: none;
+        flex-basis: max(0px, 50vh - 118px);
     }
     .slideshow-container {
         margin-top: 24px;
@@ -813,6 +855,13 @@ canvas {
     }
     .slideshow-container {
         margin: 0 40px 16px;
+    }
+    /* 36px arrows fit the 40px side margins: 2px from the stage and from the screen edge. */
+    .prev,
+    .next {
+        width: 36px;
+        height: 36px;
+        margin-top: -18px;
     }
     .liner {
         padding: 0 calc((100vw - var(--label-width)) / 2);
