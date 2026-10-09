@@ -68,15 +68,21 @@ https://github.com/FridrichMethod/deemo
             <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
             <a class="next" onclick="plusSlides(1)">&#10095;</a>
         </div>
-        <div class="dear-alice">To the lovely, lonely stranger<br>And my dearest brother,<br>Hans.
-            <p>-Alice</p>
-        </div>
+        <!-- Liner notes: Alice's dedication opens the show (and returns when autoplay resumes), then each slide's own notes. -->
+        <section class="liner" aria-label="About this artwork" data-i18n-attr="aria-label:slideshow.notes.label">
+            <div class="liner-text is-dedication" data-slide-text>
+                <blockquote class="dear-alice" lang="en">To the lovely, lonely stranger<br>And my dearest brother,<br>Hans.
+                    <p>-Alice</p>
+                </blockquote>
+                <div class="slide-notes"></div>
+            </div>
+            <div class="asset-caption">
+                <span id="asset-title"></span> · <span id="asset-size"></span><br>
+                <a id="asset-source" target="_blank" rel="noopener noreferrer"><span data-i18n="slideshow.caption.source">Source</span></a>
+                · <a id="asset-original" download data-i18n="slideshow.caption.original">Original file</a> · <a href="archive.html" data-lang-link data-i18n="slideshow.caption.browse">Browse all / Search</a>
+            </div>
+        </section>
         <div class="signature">DEEMO 1 · <a href="https://github.com/FridrichMethod" target="_blank" rel="noopener noreferrer">FridrichMethod</a></div>
-        <div class="asset-caption">
-            <span id="asset-title"></span><br>
-            <span id="asset-size"></span> · <a id="asset-source" target="_blank" rel="noopener noreferrer"><span data-i18n="slideshow.caption.source">Source</span></a>
-            · <a id="asset-original" download data-i18n="slideshow.caption.original">Original file</a> · <a href="archive.html" data-lang-link data-i18n="slideshow.caption.browse">Browse all / Search</a>
-        </div>
 
         <div class="photo bt">
             <a href="javascript:screenshot();">
@@ -139,13 +145,22 @@ https://github.com/FridrichMethod/deemo
         var imgTargets = document.getElementsByClassName("deemo-draw");
         var requestedAsset = new URLSearchParams(location.search).get("asset");
         var requestedIndex = Array.from(imgTargets).findIndex(function(img) { return img.dataset.id === requestedAsset; });
+        var linerText = document.querySelector("[data-slide-text]");
+        var slideNotes = linerText.querySelector(".slide-notes");
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+        var dedicationShown = true;
+        var notesTimer = 0;
         // Until the first slide is shown this page title is localized; showSlides() then owns document.title.
         var slideShown = false;
         document.title = DEEMO_I18N.t("slideshow.title");
         DEEMO_I18N.onChange(function() {
-            if (slideShown) showCaption();
-            else document.title = DEEMO_I18N.t("slideshow.title");
+            if (slideShown) {
+                showCaption();
+                showNotes(false);
+            } else document.title = DEEMO_I18N.t("slideshow.title");
         });
+        // A deep link opens straight on that slide's notes; otherwise the page opens on Alice's dedication.
+        if (requestedIndex >= 0) setDedication(false);
 
         window.addEventListener('load', function() {
             document.querySelector(".deemo-view").style.opacity = "1";
@@ -154,6 +169,9 @@ https://github.com/FridrichMethod/deemo
                 showSlides();
                 randomClick();
             } else {
+                // Restart the beat so the dedication gets a full one before the first hand-over.
+                window.clearInterval(int);
+                int = self.setInterval(autoplayTick, 6000);
                 randomSlide();
             }
             for (var i = 0; i < document.getElementsByClassName("bt").length; i++) {
@@ -162,10 +180,17 @@ https://github.com/FridrichMethod/deemo
         });
 
         // Timeout
-        var int = self.setInterval("randomSlide()", 6000);
+        var int = self.setInterval(autoplayTick, 6000);
+
+        // Each autoplay beat first hands Alice's dedication over to the current slide's notes, then moves on.
+        function autoplayTick() {
+            if (dedicationShown) setDedication(false);
+            else randomSlide();
+        }
 
         function plusSlides(n) {
             showSlides(slideIndex += n);
+            setDedication(false);
             try {
                 int = window.clearInterval(int);
                 document.getElementsByClassName("sand-clock")[0].style.transform = "rotate(0deg)";
@@ -186,6 +211,7 @@ https://github.com/FridrichMethod/deemo
             document.title = slideIndex + '/' + slides.length + ' | DEEMO 1 · FridrichMethod';
             slideShown = true;
             showCaption();
+            showNotes(true);
             // load
             lazyload(slideIndex - 1);
             // hide
@@ -218,6 +244,72 @@ https://github.com/FridrichMethod/deemo
             document.getElementById("asset-original").href = target.dataset.src;
         }
 
+        function setDedication(show) {
+            dedicationShown = show;
+            linerText.classList.toggle("is-dedication", show);
+        }
+
+        function element(tag, className, text) {
+            var node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text != null) node.textContent = text;
+            return node;
+        }
+
+        function metaRow(list, label, value) {
+            if (!value) return;
+            var values = value.split("\n");
+            var dd = element("dd");
+            values.forEach(function(line, i) {
+                if (i) dd.append(document.createElement("br"));
+                dd.append(line);
+            });
+            list.append(element("dt", null, label), dd);
+        }
+
+        // Liner notes from the slide's data-* attributes: names stay verbatim, only labels are translated.
+        function notesFor(target) {
+            var data = target.dataset;
+            var notes = document.createDocumentFragment();
+            var eyebrow = element("p", "notes-eyebrow");
+            var kind = DEEMO_I18N.has("slideshow.kind." + data.kind) ? DEEMO_I18N.t("slideshow.kind." + data.kind) : "";
+            if (kind) eyebrow.append(element("span", "notes-kind", kind));
+            eyebrow.append(element("span", "notes-count", slideIndex + " / " + imgTargets.length));
+            // CJK characters count double, so long titles step down a size before they wrap into many lines.
+            var title = element("p", "notes-title", data.title);
+            var weight = Array.from(data.title).reduce(function(sum, char) {
+                return sum + (/[\u1100-\u11ff\u2e80-\ua4cf\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/.test(char) ? 2 : 1);
+            }, 0);
+            if (weight > 30) title.dataset.length = "longer";
+            else if (weight > 18) title.dataset.length = "long";
+            var meta = element("dl", "notes-meta");
+            metaRow(meta, DEEMO_I18N.t("slideshow.notes.music"), data.composer);
+            metaRow(meta, DEEMO_I18N.t("slideshow.notes.artist"), data.artist);
+            if (data.collection) {
+                metaRow(meta, data.collection.indexOf("\n") >= 0 ? DEEMO_I18N.t("slideshow.notes.collections") : DEEMO_I18N.t("slideshow.notes.collection"), data.collection);
+            }
+            metaRow(meta, DEEMO_I18N.t("slideshow.notes.post"), data.post);
+            notes.append(eyebrow, title);
+            if (meta.childElementCount) notes.append(meta);
+            return notes;
+        }
+
+        // Visible notes dip out, change and fade back in with the artwork; hidden ones (under the dedication) just change.
+        function showNotes(animate) {
+            if (!imgTargets[slideIndex - 1]) return;
+            window.clearTimeout(notesTimer);
+            if (!animate || dedicationShown || reducedMotion.matches) {
+                slideNotes.classList.remove("is-turning");
+                slideNotes.replaceChildren(notesFor(imgTargets[slideIndex - 1]));
+                return;
+            }
+            slideNotes.classList.add("is-turning");
+            notesTimer = window.setTimeout(function() {
+                slideNotes.replaceChildren(notesFor(imgTargets[slideIndex - 1]));
+                slideNotes.classList.remove("is-turning");
+            }, 260);
+        }
+
         // check picture load condition
         function imgLoad(n, callback) {
             var img = imgTargets[n];
@@ -227,6 +319,13 @@ https://github.com/FridrichMethod/deemo
 
         function lazyload(n) {
             try {
+                // The stage fits every artwork to the same visual area (it needs the aspect ratio and its square root),
+                // but never beyond twice its natural width, so small icons stay crisp.
+                var size = imgTargets[n].dataset.size.match(/\d+/g);
+                var ratio = size[0] / size[1];
+                imgTargets[n].style.setProperty("--ratio", ratio);
+                imgTargets[n].style.setProperty("--root", Math.sqrt(ratio));
+                imgTargets[n].style.setProperty("--natural-width", size[0] + "px");
                 imgTargets[n].setAttribute("src", imgTargets[n].getAttribute("data-src"));
             } catch (err) {
                 console.log("error = " + n);
@@ -243,13 +342,16 @@ https://github.com/FridrichMethod/deemo
 
         function randomClick() {
             if (randomFlag == 1) {
-                int = self.setInterval("randomSlide()", 6000);
+                int = self.setInterval(autoplayTick, 6000);
                 document.getElementsByClassName("sand-clock")[0].style.transform = "rotate(20deg)";
+                // Resuming autoplay replays the opening: the dedication first, the notes on the next beat.
+                setDedication(true);
                 randomSlide();
                 randomFlag = 0;
             } else {
                 int = window.clearInterval(int);
                 document.getElementsByClassName("sand-clock")[0].style.transform = "rotate(0deg)";
+                setDedication(false);
                 randomFlag = 1;
             }
         }

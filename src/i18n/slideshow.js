@@ -8,7 +8,17 @@ DEEMO_I18N.register({
     "slideshow.caption.browse": "Browse all / Search",
     "slideshow.github.label": "GitHub repository",
     "slideshow.archive.text": "Gallery",
-    "slideshow.archive.label": "Browse the Artwork Archive"
+    "slideshow.archive.label": "Browse the Artwork Archive",
+    "slideshow.notes.label": "About this artwork",
+    "slideshow.notes.music": "Music",
+    "slideshow.notes.artist": "Illustration",
+    "slideshow.notes.collection": "Collection",
+    "slideshow.notes.collections": "Collections",
+    "slideshow.notes.post": "Original post",
+    "slideshow.kind.song_art": "Song artwork",
+    "slideshow.kind.collection_cover": "Collection cover",
+    "slideshow.kind.contact_sheet": "Long image",
+    "slideshow.kind.illustration": "Illustration"
   },
   "zh-CN": {
     "slideshow.title": "DEEMO 1 曲绘集 · FridrichMethod",
@@ -18,6 +28,16 @@ DEEMO_I18N.register({
     "slideshow.caption.browse": "浏览全部 / 搜索",
     "slideshow.github.label": "GitHub 仓库",
     "slideshow.archive.text": "图集",
-    "slideshow.archive.label": "浏览曲绘档案"
+    "slideshow.archive.label": "浏览曲绘档案",
+    "slideshow.notes.label": "曲绘信息",
+    "slideshow.notes.music": "曲师",
+    "slideshow.notes.artist": "画师",
+    "slideshow.notes.collection": "曲包",
+    "slideshow.notes.collections": "曲包",
+    "slideshow.notes.post": "原帖",
+    "slideshow.kind.song_art": "单曲曲绘",
+    "slideshow.kind.collection_cover": "曲包封面",
+    "slideshow.kind.contact_sheet": "长图",
+    "slideshow.kind.illustration": "插画"
   }
 });
