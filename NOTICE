@@ -4,7 +4,8 @@ https://github.com/FridrichMethod/deemo
 
 Original gallery design and processing scripts by Mashiro:
 https://github.com/mashirozx/deemo
-The original Git history and Apache-2.0 license are retained.
+The upstream history (86 commits through c0f999a) was squashed into a single
+root snapshot; the Apache-2.0 license is retained.
 The gallery, metadata, fetching tools, and documentation were adapted in 2026.
 
 DEEMO artwork and game assets belong to Rayark Inc. and their respective
