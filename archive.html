@@ -1,14 +1,17 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <meta name="description" content="FridrichMethod 的 DEEMO 1 曲绘档案，保留公开下载原文件及逐图来源。">
-  <title>DEEMO 1 曲绘档案 · FridrichMethod</title>
+  <meta name="description" content="FridrichMethod's DEEMO 1 Artwork Archive, keeping the publicly downloadable original files and per-image provenance." data-i18n-attr="content:meta.description">
+  <title data-i18n="meta.title">DEEMO 1 Artwork Archive · FridrichMethod</title>
   <link rel="icon" href="assets/site/icons/favicon.ico">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="src/archive.css">
+  <script src="src/i18n.js" defer></script>
+  <script src="src/i18n/common.js" defer></script>
+  <script src="src/i18n/archive.js" defer></script>
   <script src="data/catalog.js" defer></script>
   <script src="src/archive.js" defer></script>
 </head>
@@ -16,37 +19,37 @@
   <header>
     <p class="eyebrow">FRIDRICHMETHOD / PERSONAL COLLECTION</p>
     <div class="heading-row">
-      <div><h1>DEEMO 1 曲绘档案</h1><p>画师发布、游戏纹理与社区版本。保留文件原貌，逐张追溯来源。</p></div>
-      <nav aria-label="导航"><a href="index.html">幻灯片</a><a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
+      <div><h1 data-i18n="header.title">DEEMO 1 Artwork Archive</h1><p data-i18n="header.tagline">Artist releases, game textures and community versions. Files are kept as they are, and every image is traced back to its source.</p></div>
+      <nav aria-label="Navigation" data-i18n-attr="aria-label:nav.label"><a href="index.html" data-lang-link data-i18n="nav.slideshow">Slideshow</a><a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer">GitHub ↗</a><button type="button" class="lang-toggle" data-lang-toggle lang="zh-CN" title="Switch to Simplified Chinese">中文</button></nav>
     </div>
   </header>
   <main>
     <form id="filters" class="filters" role="search">
-      <label class="search">搜索曲名、画师、曲包<input id="query" type="search" placeholder="Magnolia / SnowEgg / Sakuzyo …" autocomplete="off"></label>
-      <label>来源<select id="family">
-        <option value="">全部来源</option>
-        <option value="artists">画师本人</option>
-        <option value="wikis">Wiki</option>
-        <option value="archives">公开档案 / 转载</option>
-        <option value="legacy">原仓库</option>
+      <label class="search"><span data-i18n="filters.query">Search song titles, artists, collections</span><input id="query" type="search" placeholder="Magnolia / SnowEgg / Sakuzyo …" autocomplete="off"></label>
+      <label><span data-i18n="filters.family">Source</span><select id="family">
+        <option value="" data-i18n="filters.family.all">All sources</option>
+        <option value="artists" data-i18n="family.artists">Artists (original posts)</option>
+        <option value="wikis" data-i18n="family.wikis">Wiki</option>
+        <option value="archives" data-i18n="family.archives">Public archives / reposts</option>
+        <option value="legacy" data-i18n="family.legacy">Original repository</option>
       </select></label>
-      <label>类型<select id="kind"><option value="">全部图片</option><option value="song_art">单曲曲绘</option><option value="collection_cover">曲包封面</option><option value="contact_sheet">长图 / 拼图</option><option value="illustration">其他插画 / 未映射</option><option value="reference">扫描 / 参考</option></select></label>
-      <label>最小长边<select id="minimum"><option value="0">不限尺寸</option><option value="1024">1024 px</option><option value="1500">1500 px</option><option value="2048">2048 px</option><option value="3000">3000 px</option></select></label>
-      <label>排序<select id="sort"><option value="source">来源优先</option><option value="title">标题</option><option value="resolution">像素面积 ↓</option></select></label>
-      <button id="reset-filters" type="button">重置</button>
+      <label><span data-i18n="filters.kind">Type</span><select id="kind"><option value="" data-i18n="filters.kind.all">All images</option><option value="song_art" data-i18n="filters.kind.song_art">Song artwork</option><option value="collection_cover" data-i18n="filters.kind.collection_cover">Collection covers</option><option value="contact_sheet" data-i18n="filters.kind.contact_sheet">Long images / contact sheets</option><option value="illustration" data-i18n="filters.kind.illustration">Other illustrations / unmapped</option><option value="reference" data-i18n="filters.kind.reference">Scans / references</option></select></label>
+      <label><span data-i18n="filters.minimum">Minimum long edge</span><select id="minimum"><option value="0" data-i18n="filters.minimum.any">Any size</option><option value="1024">1024 px</option><option value="1500">1500 px</option><option value="2048">2048 px</option><option value="3000">3000 px</option></select></label>
+      <label><span data-i18n="filters.sort">Sort</span><select id="sort"><option value="source" data-i18n="filters.sort.source">Source first</option><option value="title" data-i18n="filters.sort.title">Title</option><option value="resolution" data-i18n="filters.sort.resolution">Pixel area ↓</option></select></label>
+      <button id="reset-filters" type="button" data-i18n="filters.reset">Reset</button>
     </form>
-    <div class="result-row"><p id="count" role="status" aria-live="polite">正在载入本地目录…</p><p>尺寸不等同于画质；不同裁切和版本均保留。</p></div>
+    <div class="result-row"><p id="count" role="status" aria-live="polite"><span data-i18n="results.loading">Loading local catalog…</span></p><p data-i18n="results.note">Size does not equal quality; different crops and versions are all kept.</p></div>
     <div id="grid" class="grid"></div>
-    <p id="empty" hidden>没有匹配的图片。可以缩短搜索词或放宽筛选条件。</p>
-    <button id="more" class="more" type="button" hidden>加载更多</button>
-    <details class="source-inventory"><summary>来源清单、参考文件与获取状态</summary><p id="inventory-summary"></p><div id="references"></div><div class="table-scroll"><table><thead><tr><th>来源</th><th>文件记录</th><th>状态 / 说明</th></tr></thead><tbody id="sources"></tbody></table></div><div id="failures"></div></details>
+    <p id="empty" hidden data-i18n="results.empty">No matching images. Try a shorter search term or looser filters.</p>
+    <button id="more" class="more" type="button" hidden data-i18n="results.more">Load more</button>
+    <details class="source-inventory"><summary data-i18n="inventory.title">Source inventory, reference files and retrieval status</summary><p id="inventory-summary"></p><div id="references"></div><div class="table-scroll"><table><thead><tr><th data-i18n="inventory.source">Source</th><th data-i18n="inventory.records">File records</th><th data-i18n="inventory.status">Status / notes</th></tr></thead><tbody id="sources"></tbody></table></div><div id="failures"></div></details>
   </main>
-  <footer>Maintained by <a href="https://github.com/FridrichMethod">FridrichMethod</a> · Original gallery by Mashiro · Artwork © Rayark Inc. / respective artists · <a href="NOTICE">Attribution</a> · <a href="data/catalog.json">完整来源清单 JSON</a></footer>
+  <footer><span data-i18n="footer.maintained">Maintained by </span><a href="https://github.com/FridrichMethod">FridrichMethod</a> · <span data-i18n="footer.original">Original gallery by Mashiro</span> · <span data-i18n="footer.rights">Artwork © Rayark Inc. / respective artists</span> · <a href="NOTICE" data-i18n="footer.attribution">Attribution</a> · <a href="data/catalog.json" data-i18n="footer.catalog">Full source manifest JSON</a></footer>
   <dialog id="viewer" aria-labelledby="viewer-title">
-    <button id="close" class="close" type="button" aria-label="关闭预览">×</button>
-    <div class="viewer-image"><img id="full-image" alt=""><p id="image-error" hidden>图片加载失败，请使用原文件链接检查。</p></div>
-    <div class="viewer-info"><div class="viewer-controls"><button id="previous" type="button" aria-label="上一张">←</button><span id="position"></span><button id="next" type="button" aria-label="下一张">→</button></div><h2 id="viewer-title"></h2><p id="viewer-meta"></p><p class="links"><a id="download" download>下载原文件</a><a id="slideshow">幻灯片查看</a><a id="original" target="_blank" rel="noopener noreferrer">浏览器打开原文件 ↗</a></p><div id="provenance"></div><details><summary>文件信息</summary><p id="file-info"></p></details></div>
+    <button id="close" class="close" type="button" aria-label="Close preview" data-i18n-attr="aria-label:viewer.close">×</button>
+    <div class="viewer-image"><img id="full-image" alt=""><p id="image-error" hidden data-i18n="viewer.image_error">The image failed to load. Use the original-file link to check it.</p></div>
+    <div class="viewer-info"><div class="viewer-controls"><button id="previous" type="button" aria-label="Previous image" data-i18n-attr="aria-label:viewer.previous">←</button><span id="position"></span><button id="next" type="button" aria-label="Next image" data-i18n-attr="aria-label:viewer.next">→</button></div><h2 id="viewer-title"></h2><p id="viewer-meta"></p><p class="links"><a id="download" download data-i18n="viewer.download">Download original file</a><a id="slideshow" data-i18n="viewer.slideshow">View in slideshow</a><a id="original" target="_blank" rel="noopener noreferrer" data-i18n="viewer.original">Open original file in browser ↗</a></p><div id="provenance"></div><details><summary data-i18n="viewer.file_info">File info</summary><p id="file-info"></p></details></div>
   </dialog>
-  <noscript>浏览图库需要 JavaScript。原始文件仍可从 assets/public/ 与 assets/legacy/ 目录查看。</noscript>
+  <noscript>Browsing the gallery requires JavaScript. The original files can still be viewed in the assets/public/ and assets/legacy/ directories. <span lang="zh-CN">浏览图库需要 JavaScript。原始文件仍可从 assets/public/ 与 assets/legacy/ 目录查看。</span></noscript>
 </body>
 </html>
