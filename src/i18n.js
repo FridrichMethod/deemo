@@ -41,9 +41,13 @@
     }
     for (const link of root.querySelectorAll("a[data-lang-link]")) link.setAttribute("href", localizeHref(link.getAttribute("href")));
     for (const button of root.querySelectorAll("[data-lang-toggle]")) {
-      // The label names the other language in that language, so it carries that language's tag.
-      button.textContent = t("lang.toggle");
-      button.lang = lang === DEFAULT ? ALTERNATE : DEFAULT;
+      // The label names the other language in that language, so only its span carries that language's tag;
+      // the button inherits the page language, which its title is written in.
+      const label = document.createElement("span");
+      label.lang = lang === DEFAULT ? ALTERNATE : DEFAULT;
+      label.textContent = t("lang.toggle");
+      button.replaceChildren(label);
+      button.removeAttribute("lang");
       button.title = t("lang.toggle.title");
     }
   }

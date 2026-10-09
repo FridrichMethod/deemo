@@ -206,12 +206,23 @@
   renderInventory();
   filter();
   // Static [data-i18n] text is handled by the runtime; this re-renders the script-built text in place.
-  // Filters, the number of cards shown and the open image stay as they are.
+  // Filters, the number of cards shown and the open image stay as they are. A search query is matched
+  // again, because the index holds localized source names and so can match differently per language.
   i18n.onChange(() => {
-    renderCount();
-    const cards = $("grid").children;
-    for (let index = 0; index < cards.length; index++) localizeCard(cards[index], filtered[index]);
-    if ($("viewer").open && filtered[current]) localizeViewer(filtered[current]);
+    if ($("query").value.trim()) {
+      const previous = shown, openId = $("viewer").open ? filtered[current]?.id : null;
+      filter();
+      while (shown < Math.min(previous, filtered.length)) more();
+      if (openId) {
+        const index = filtered.findIndex((asset) => asset.id === openId);
+        if (index >= 0) open(index); else $("viewer").close();
+      }
+    } else {
+      renderCount();
+      const cards = $("grid").children;
+      for (let index = 0; index < cards.length; index++) localizeCard(cards[index], filtered[index]);
+      if ($("viewer").open && filtered[current]) localizeViewer(filtered[current]);
+    }
     renderInventory();
   });
 })();
