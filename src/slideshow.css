@@ -160,6 +160,8 @@ body {
     font-family: var(--display);
     font-size: clamp(40px, 4.3vw, 84px);
     line-height: 1.06;
+    /* Break CJK titles at spaces ("Deemoまとめ — page 1"), never inside a word; an over-long run still wraps. */
+    word-break: keep-all;
     overflow-wrap: anywhere;
     text-wrap: balance;
 }
@@ -172,7 +174,7 @@ body {
     font-size: clamp(28px, 2.8vw, 54px);
 }
 
-/* Album-sleeve credits: small-caps labels, verbatim names. */
+/* Album-sleeve credits: small-caps labels, verbatim names in true case. */
 .notes-meta {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
@@ -210,6 +212,8 @@ body {
 
 .notes-meta dd {
     margin: 0;
+    font: .92em/1.5 system-ui, sans-serif;
+    word-break: keep-all;
     overflow-wrap: anywhere;
 }
 
@@ -260,11 +264,14 @@ img:not([src]) {
     visibility: hidden;
 }
 
-/* Contained in the stage and scaled to the shared visual area, at most twice the natural size;
-   --ratio, --root and --natural-width are set by lazyload(). */
+/* Contained in the stage and scaled to the shared visual area, at most twice the natural size and never
+   taller than 1.12 x --art-size (about the tallest portraits), so long strips stop short of the full height;
+   --ratio, --root and --natural-width are set by lazyload(). A soft shadow (it follows the alpha) sets opaque
+   squares and strips and cut-out art alike on the paper as prints. */
 .deemo-draw {
-    width: min(100cqw, 100cqh * var(--ratio, 1), var(--art-size) * var(--root, 1), 2 * var(--natural-width, 100vw));
+    width: min(100cqw, 100cqh * var(--ratio, 1), var(--art-size) * var(--root, 1), var(--art-size) * 1.12 * var(--ratio, 1), 2 * var(--natural-width, 100vw));
     height: auto;
+    filter: drop-shadow(0 14px 22px rgba(52, 40, 28, .16));
 }
 
 @media screen and (max-width: 1100px) {
@@ -506,6 +513,8 @@ canvas {
 .asset-caption { flex: none; box-sizing: content-box; min-height: 4.8em; margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--rule); max-width: 36em; font: 13px/1.6 system-ui, sans-serif; color: #555; user-select: text; }
 .asset-caption a { color: #333; white-space: nowrap; }
 #asset-size { white-space: nowrap; }
+/* The title joins the fine print only while the dedication stands in for the notes. */
+.liner-text:not(.is-dedication) ~ .asset-caption :is(#asset-title, .asset-title-sep) { display: none; }
 
 .iplayer {
     left: 270px;
@@ -726,6 +735,12 @@ canvas {
 @media screen and (orientation: portrait) {
     .deemo-view {
         --art-size: 100cqmin;
+        /* The text column takes the square artwork's width while the notes keep their reserved height (116px +
+           120px padding, the stage's 20px margin, the notes' min-height and the caption's 87.4px), so the notes
+           hang under the artwork like a museum label without moving between slides; never under 300px.
+           --view-height follows mobile browser bars where dvh is supported (see below). */
+        --view-height: 100vh;
+        --label-width: max(min(100vw - 96px, var(--view-height) - 344px - clamp(176px, 24vh, 240px)), min(100vw - 48px, 300px));
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr) auto;
         grid-template-areas: "stage" "liner";
@@ -741,7 +756,7 @@ canvas {
         left: calc(100% + 2px);
     }
     .liner {
-        padding: 0 24px;
+        padding: 0 calc((100vw - var(--label-width)) / 2);
     }
     .liner::before {
         display: none;
@@ -755,7 +770,7 @@ canvas {
     }
     .dear-alice {
         justify-self: center;
-        font-size: clamp(22px, 5.8vw, 36px);
+        font-size: clamp(18px, min(5.8vw, var(--label-width) / 12.4), 36px);
     }
     .notes-title {
         font-size: clamp(30px, 8vw, 48px);
@@ -783,15 +798,24 @@ canvas {
     }
 }
 
+@supports (height: 100dvh) {
+    @media screen and (orientation: portrait) {
+        .deemo-view {
+            --view-height: 100dvh;
+        }
+    }
+}
+
 @media screen and (orientation: portrait) and (max-width: 480px) {
     .deemo-view {
+        --label-width: max(min(100vw - 80px, var(--view-height) - 311px - clamp(176px, 24vh, 240px)), min(100vw - 40px, 300px));
         padding-bottom: 96px;
     }
     .slideshow-container {
         margin: 0 40px 16px;
     }
     .liner {
-        padding: 0 20px;
+        padding: 0 calc((100vw - var(--label-width)) / 2);
     }
     .asset-caption {
         font-size: 12px;
