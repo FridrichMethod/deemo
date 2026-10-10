@@ -41,6 +41,6 @@ python scripts/fetch_artists.py --workers 4
 
 重新运行会检查公开页面元数据，并在本地文件 SHA-256 正确且下载 URL 不变时复用文件。显式增加 `--refresh` 才会重新下载已缓存图片。脚本验证每张图片能够完整解码，以实际格式确定扩展名，按 SHA-256 去重（资源 ID 最小的记录保留文件），所有失败写入 manifest 并返回非零退出状态。图片只从对应平台的图片主机（`i.pximg.net`、`image.jimcdn.com`、`*.media.tumblr.com`）下载，每次重定向都按同一列表检查。
 
-重新运行不会丢弃已校验的记录，也不会删除文件。某张图片的上游字节变化时，已归档文件保留，新版本以 SHA-256 后缀另存；新版本沿用原资源 ID，旧记录保留为 `<ID>@<SHA-256 前 12 位十六进制>`，标记 `upstream_status: superseded` 并以 `superseded_by` 指向新版本。本次运行未能重现的记录也会保留，标记为 `upstream_status: fetch_failed`（该记录或其来源本次失败）或 `removed`（来源读取无误但已不再列出）。
+重新运行不会丢弃已校验的记录，也不会删除文件。某张图片的上游字节变化时，已归档文件保留，新版本以 SHA-256 后缀另存；新版本沿用原资源 ID，旧记录保留为 `<ID>:<SHA-256 前 12 位十六进制>`，标记 `upstream_status: superseded` 并以 `superseded_by` 指向新版本。本次运行未能重现的记录也会保留，标记为 `upstream_status: fetch_failed`（该记录或其来源本次失败）或 `removed`（来源读取无误但已不再列出）。
 
 本次下载和独立校验均为 86/86 成功，0 失败，原始图片总计 107,043,058 bytes。图片版权仍属于 Rayark 及相应创作者；本仓库的软件许可证不授予这些图片新的许可。

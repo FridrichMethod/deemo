@@ -169,7 +169,7 @@ class ArtistsTests(TempRoot):
         self.assertEqual(canonical["sha256"], sha(new))
         self.assertEqual(canonical["path"], f"assets/public/artists/snowegg/pixiv-1-p00-{sha(new)[:12]}.png")
         self.assertEqual((self.root / canonical["path"]).read_bytes(), new)
-        superseded = assets[f"artists:pixiv:1:p0@{sha(self.old[0])[:12]}"]
+        superseded = assets[f"artists:pixiv:1:p0:{sha(self.old[0])[:12]}"]
         self.assertEqual(superseded["upstream_status"], "superseded")
         self.assertEqual(superseded["superseded_by"], "artists:pixiv:1:p0")
         self.assertEqual(superseded["path"], "assets/public/artists/snowegg/pixiv-1-p00.png")
@@ -401,7 +401,7 @@ class ArchivesTests(TempRoot):
         assets = {a["id"]: a for a in self.read_manifest("archives")["assets"]}
         canonical = assets["archives:cover-art-archive:11"]
         self.assertEqual(canonical["path"], f"assets/public/archives/cover-art-archive/11-{sha(new)[:12]}.png")
-        superseded = assets[f"archives:cover-art-archive:11@{sha(old)[:12]}"]
+        superseded = assets[f"archives:cover-art-archive:11:{sha(old)[:12]}"]
         self.assertEqual((superseded["upstream_status"], superseded["superseded_by"], superseded["path"]),
                          ("superseded", "archives:cover-art-archive:11", "assets/public/archives/cover-art-archive/11.png"))
         self.assertEqual((self.root / superseded["path"]).read_bytes(), old)
