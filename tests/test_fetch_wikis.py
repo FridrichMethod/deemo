@@ -271,6 +271,43 @@ class RetryTests(FetcherRun):
         self.assertEqual((len(self.web.calls), self.sleeps), (1, []))
 
 
+class DeliveryNoteTests(FetcherRun):
+    OLD_NOTE = ("Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. "
+                "Downloaded bytes preserved unchanged; see original checksum/size comparison fields.")
+
+    def fandom(self, name, upload, served):
+        """A Fandom candidate for upload whose original endpoints are down and whose format=png fallback serves served."""
+        url = f"https://static.example.test/deemo/images/a/ab/{name}/revision/latest?cb=1"
+        self.web.routes[url + "&format=png"] = served
+        with Image.open(io.BytesIO(upload)) as image:
+            width, height = image.size
+        info = {**image_info(width, height, name), "url": url, "size": len(upload), "sha1": hashlib.sha1(upload).hexdigest()}
+        return {"source": "fandom", "file_title": "File:" + name, "info": info, "kind": "song_art",
+                "song_titles": [], "collections": [], "related_pages": []}
+
+    def test_png_fallback_identical_to_the_upload_is_not_called_reencoded(self):
+        record = fetch.download(self.fandom("Longinus.png", png("red"), png("red")), {})
+        self.assertTrue(record["download_url"].endswith("&format=png"))
+        self.assertTrue(record["wiki_original_sha1_matches"] and record["wiki_original_size_matches"])
+        self.assertNotIn("reencoded", record["delivery_note"])
+        self.assertIn("SHA-1 and size match the wiki original upload", record["delivery_note"])
+
+    def test_png_fallback_that_differs_from_the_upload_keeps_the_caveat(self):
+        record = fetch.download(self.fandom("Longinus.png", png("red"), png("green")), {})
+        self.assertFalse(record["wiki_original_sha1_matches"])
+        self.assertIn("may be CDN-reencoded", record["delivery_note"])
+
+    def test_verified_record_gets_the_note_its_checksums_support(self):
+        candidate = self.fandom("Longinus.png", png("red"), png("red"))
+        record = fetch.download(candidate, {})
+        calls = len(self.web.calls)
+        again = fetch.download(candidate, {record["id"]: {**record, "delivery_note": self.OLD_NOTE}})
+        self.assertEqual(len(self.web.calls), calls)  # verified from the file on disk, not downloaded again
+        self.assertNotEqual(again["delivery_note"], self.OLD_NOTE)
+        self.assertEqual(again, record)
+        self.assertEqual(list(again)[-1], "delivery_note")
+
+
 class DiscoveryFilterTests(unittest.TestCase):
     def test_bwiki_skips_ui_sprites_like_the_fandom_path(self):
         inventory = [allimage("Exotic_Collections_Titletab.png", 70, 47),  # imported as a "cover" on 2026-10-08

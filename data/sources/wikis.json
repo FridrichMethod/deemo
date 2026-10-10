@@ -15675,7 +15675,7 @@
           "source": "mediawiki-metadata"
         }
       },
-      "delivery_note": "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. Downloaded bytes preserved unchanged; see original checksum/size comparison fields."
+      "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
       "id": "wikis:fandom:2f637e4f36a99b53",
@@ -19074,7 +19074,7 @@
           "source": "mediawiki-metadata"
         }
       },
-      "delivery_note": "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. Downloaded bytes preserved unchanged; see original checksum/size comparison fields."
+      "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
       "id": "wikis:fandom:4ab13899c3314ea8",
@@ -19645,7 +19645,7 @@
           "source": "mediawiki-metadata"
         }
       },
-      "delivery_note": "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. Downloaded bytes preserved unchanged; see original checksum/size comparison fields."
+      "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
       "id": "wikis:fandom:50ff7b74e669c7d5",
@@ -21281,7 +21281,7 @@
           "source": "mediawiki-metadata"
         }
       },
-      "delivery_note": "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. Downloaded bytes preserved unchanged; see original checksum/size comparison fields."
+      "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
       "id": "wikis:fandom:60e1646636560e30",
@@ -22500,7 +22500,7 @@
           "source": "mediawiki-metadata"
         }
       },
-      "delivery_note": "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. Downloaded bytes preserved unchanged; see original checksum/size comparison fields."
+      "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
       "id": "wikis:fandom:6a5b0b3088bf6d77",
@@ -26610,7 +26610,7 @@
           "source": "mediawiki-metadata"
         }
       },
-      "delivery_note": "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. Downloaded bytes preserved unchanged; see original checksum/size comparison fields."
+      "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
       "id": "wikis:fandom:864974ccba7bd69d",
@@ -28495,7 +28495,7 @@
           "source": "mediawiki-metadata"
         }
       },
-      "delivery_note": "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. Downloaded bytes preserved unchanged; see original checksum/size comparison fields."
+      "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
       "id": "wikis:fandom:9482905503c34224",

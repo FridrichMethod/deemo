@@ -293,6 +293,20 @@ def asset_filename(title, digest, image_format):
     return f"{stem}--{digest[:12]}.{extension}"
 
 
+def delivery_note(url, size_matches, sha1_matches):
+    """The caveat shown with a download, or None when the bytes are the plain original upload."""
+    if "format=png" in url:
+        if size_matches and sha1_matches:
+            return ("Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki "
+                    "original upload. Downloaded bytes preserved unchanged.")
+        return ("Retrieved through the public full-size CDN PNG fallback (format=png); may be CDN-reencoded, since the "
+                "checksum/size differ from the wiki original upload. Downloaded bytes preserved unchanged.")
+    if not size_matches or not sha1_matches:
+        return ("Full-size public CDN file matches published dimensions but differs from the wiki original upload "
+                "checksum/size; downloaded bytes preserved unchanged.")
+    return None
+
+
 def candidate_id(candidate):
     return "wikis:" + candidate["source"] + ":" + hashlib.sha256(candidate["file_title"].encode()).hexdigest()[:16]
 
@@ -306,11 +320,15 @@ def download(candidate, existing):
         path = ROOT / previous["path"]
         if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == previous["sha256"] and previous.get("wiki_sha1") == info.get("sha1"):
             download_sha1 = hashlib.sha1(path.read_bytes()).hexdigest()
-            current = {key: value for key, value in previous.items() if key not in UPSTREAM_FIELDS}
-            return {**current, "kind": candidate["kind"], "song_titles": candidate["song_titles"],
-                    "collections": candidate["collections"], "related_pages": candidate["related_pages"],
-                    "download_sha1": download_sha1, "wiki_original_size_matches": path.stat().st_size == info["size"],
-                    "wiki_original_sha1_matches": download_sha1 == info.get("sha1")}
+            current = {key: value for key, value in previous.items() if key not in UPSTREAM_FIELDS + ("delivery_note",)}
+            record = {**current, "kind": candidate["kind"], "song_titles": candidate["song_titles"],
+                      "collections": candidate["collections"], "related_pages": candidate["related_pages"],
+                      "download_sha1": download_sha1, "wiki_original_size_matches": path.stat().st_size == info["size"],
+                      "wiki_original_sha1_matches": download_sha1 == info.get("sha1")}
+            note = delivery_note(previous.get("download_url", ""), record["wiki_original_size_matches"], record["wiki_original_sha1_matches"])
+            if note:
+                record["delivery_note"] = note
+            return record
     url = info["url"]
     # Public Fandom CDN supports format=original, disabling implicit WebP negotiation.
     if source == "fandom":
@@ -372,10 +390,9 @@ def download(candidate, existing):
         record["wiki_extmetadata"] = info["extmetadata"]
     if attempted_failures:
         record["download_attempt_failures"] = attempted_failures
-    if not record["wiki_original_size_matches"] or not record["wiki_original_sha1_matches"]:
-        record["delivery_note"] = "Full-size public CDN file matches published dimensions but differs from the wiki original upload checksum/size; downloaded bytes preserved unchanged."
-    if "format=png" in url:
-        record["delivery_note"] = "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. Downloaded bytes preserved unchanged; see original checksum/size comparison fields."
+    note = delivery_note(url, record["wiki_original_size_matches"], record["wiki_original_sha1_matches"])
+    if note:
+        record["delivery_note"] = note
     return record
 
 

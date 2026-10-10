@@ -26,7 +26,7 @@ Wiki 歌页还包含已移除歌曲、端口独占曲与不同版本图片，因
 
 脚本保存 HTTP 响应的原始 bytes，不重新编码、放大、裁切、调色或去背景。每张图片均用 Pillow 验证实际格式与尺寸，并记录 SHA-256、下载时间、真实 Content-Type、来源页、请求 URL、最终响应 URL 和 Wiki 元数据。
 
-Fandom CDN 请求使用公开的 `format=original`，避免默认协商成 WebP；先请求直接文件 URL，遇到 CDN 后端错误再尝试 API 提供的完整 revision URL。两个 original 端点都失败时，最后尝试公开的全尺寸 `format=png`，明确标记可能经过 CDN 重编码，仍逐项比较原上传 checksum/size。保存文件扩展名来自解码验证的实际格式，不盲信 URL 扩展名。
+Fandom CDN 请求使用公开的 `format=original`，避免默认协商成 WebP；先请求直接文件 URL，遇到 CDN 后端错误再尝试 API 提供的完整 revision URL。两个 original 端点都失败时，最后尝试公开的全尺寸 `format=png`，仍逐项比较原上传 checksum/size；只有两者不一致时，`delivery_note` 才标记可能经过 CDN 重编码（一致时注明相符）。保存文件扩展名来自解码验证的实际格式，不盲信 URL 扩展名。
 
 `wiki_original_size_matches` 与 `wiki_original_sha1_matches` 表示所下载文件是否和 Wiki 发布的原上传元数据一致。少数 CDN 文件可能尺寸相同但 checksum/size 不同；这些记录不宣称与上传母文件相同。1024×2048 或 2048×1024 文件可能是 atlas 或拼图，原样保留并标记，不自动裁开。
 
