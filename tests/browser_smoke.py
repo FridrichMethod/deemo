@@ -349,21 +349,22 @@ def check_language_before_catalog(browser):
     page.wait_for_selector(".card")
     assert page.evaluate(f"!({HAS_HAN})(document.querySelector('h1').textContent)")
     finish(page)
-    # Until src/i18n/common.js registers, the toggle keeps the English page's static label, which names zh-CN.
+    # Without src/i18n/common.js (it fails to load here), the toggle still names the other language and goes there.
     page = new_page(browser)
-    held = []
-    page.route("**/src/i18n/common.js", lambda route: held.append(route))
-    page.goto(mounted_url("archive.html?lang=zh-CN"), wait_until="commit")
-    page.wait_for_function("window.DEEMO_I18N && document.readyState !== 'loading'", timeout=5000)
-    assert page.locator("[data-lang-toggle]").inner_text() == "中文"
-    page.locator("[data-lang-toggle]").click()
-    assert page.evaluate("DEEMO_I18N.lang") == "zh-CN", "A click on the static 中文 label keeps Chinese"
-    for route in held:
-        route.continue_()
+    common = mounted_url("src/i18n/common.js")
+    monitor.expect(common)
+    page.route(common, lambda route: route.abort())
+    navigate(page, "archive.html?lang=zh-CN")
     page.wait_for_selector(".card")
-    assert page.locator("[data-lang-toggle]").inner_text() == "English"
+    toggle = page.locator("[data-lang-toggle]")
+    for lang, label, title in (("zh-CN", "English", "Switch to English"), ("en", "中文", "Switch to Simplified Chinese"),
+                               ("zh-CN", "English", "Switch to English")):
+        assert page.evaluate("DEEMO_I18N.lang") == lang, lang
+        assert [toggle.inner_text(), toggle.get_attribute("title"), toggle.locator("span").get_attribute("lang")] == \
+            [label, title, "en" if lang == "zh-CN" else "zh-CN"], (lang, toggle.inner_text())
+        toggle.click()
     finish(page)
-    checks.append("translations before the catalog loads; toggle follows its label")
+    checks.append("translations before the catalog loads; toggle follows its label, also without common.js")
 
 
 def check_explicit_language_persists(browser):
