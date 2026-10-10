@@ -76,6 +76,13 @@ class Fixture(unittest.TestCase):
         self.base = Path(self.temporary.name)
         self.root = self.base / "checkout"
         (self.root / "data/sources").mkdir(parents=True)
+        # Every input scripts/build_catalog.py requires: the other source manifests, the song mapping and both
+        # legacy directories, all empty, so combine() sees only the artist records below.
+        for family in ("wikis", "archives"):
+            (self.root / f"data/sources/{family}.json").write_text(json.dumps({"sources": [], "assets": []}), encoding="utf-8")
+        (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {"songs": {}, "books": []}}), encoding="utf-8")
+        for directory in ("assets/legacy/trans", "assets/legacy/tiny"):
+            (self.root / directory).mkdir(parents=True)
         self.records = []
         self.add_image("wide.png", (1000, 600), "RGB", "PNG")
         self.add_image("cutout.png", (700, 900), "RGBA", "PNG")
