@@ -24,7 +24,11 @@ from PIL import Image, ImageOps, features
 ROOT = Path(__file__).resolve().parents[1]
 THUMB_DIR = "assets/thumbs"
 MANIFEST = "data/thumbs.json"
-# A grid tile is at most about 255 CSS px wide (165 px on phones), so 480 px stays sharp at 2x (3x on phones).
+# Grid tiles are about 165-358 CSS px wide (src/archive.css: minmax(230px, 1fr) columns, two of them at 760 px and
+# narrower): about 235-290 px in desktop windows, 165-195 px on phones and up to 358 px on tablets and narrow windows.
+# A 480 px long edge is close to 1:1 for typical desktop tiles at 2x; the widest tiles at 2x and large phones at 3x
+# are upscaled by up to about 1.5x and 1.2x. That is a deliberate size trade-off: larger previews would take a bigger
+# share of the 950 MB Pages budget.
 LONG_EDGE = 480
 QUALITY = 75
 METHOD = 6  # libwebp's slowest, smallest setting; deterministic like the others
