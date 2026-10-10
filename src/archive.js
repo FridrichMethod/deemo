@@ -120,7 +120,10 @@
       const button = element("button", null, "card-image");
       button.type = "button";
       const image = element("img");
-      image.src = asset.url;
+      // Cards show the derived preview (assets/thumbs/) when there is one and fall back to the original if it fails;
+      // the viewer, download and original links always use the original.
+      if (asset.thumb) image.addEventListener("error", () => { image.src = asset.url; }, {once: true});
+      image.src = asset.thumb || asset.url;
       image.alt = asset.title;
       image.loading = "lazy";
       image.decoding = "async";
