@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "templates/slideshow.html"
 STYLESHEET = ROOT / "src/slideshow.css"
 MESSAGES = ROOT / "src/i18n/slideshow.js"
+NOTICE_URL = "https://github.com/FridrichMethod/deemo/blob/main/NOTICE"
 REGISTER = re.compile(r"DEEMO_I18N\.register\((\{.*\})\);\s*$", re.DOTALL)
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 # The round controls of the bottom row, left to right on screen.
@@ -186,6 +187,15 @@ class SlideshowTemplateTests(unittest.TestCase):
         self.assertNotIn(":target", self.css, "The overlay must not depend on the URL fragment")
         self.assertNotRegex(self.html, r"location\.(?:href|hash)\s*=")
         self.assertNotIn('href="#"', self.html)
+
+    def test_visible_attribution_link(self):
+        links = [node for node in self.nodes if node.tag == "a" and node.attrs.get("href") == NOTICE_URL]
+        self.assertEqual(len(links), 1, "The slideshow shows one Attribution link to the rendered NOTICE")
+        self.assertIn("signature", links[0].parent.classes, "It sits in the always-visible signature")
+        key = links[0].attrs.get("data-i18n")
+        self.assertTrue(key)
+        self.assert_translated(key)
+        self.assertEqual(links[0].text.strip(), self.messages["en"][key])
 
 
 if __name__ == "__main__":
