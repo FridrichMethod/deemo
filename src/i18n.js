@@ -71,7 +71,10 @@
     const toggle = event.target instanceof Element && event.target.closest("[data-lang-toggle]");
     if (!toggle) return;
     event.preventDefault();
-    setLang(lang === DEFAULT ? ALTERNATE : DEFAULT);
+    // Go to the language the label names (its lang tag). Until src/i18n/common.js registers, the label is still the
+    // static one of the English page, which names zh-CN, so a zh-CN page stays put instead of doing the opposite.
+    const named = normalize(toggle.querySelector("[lang]")?.getAttribute("lang"));
+    setLang(named || (lang === DEFAULT ? ALTERNATE : DEFAULT));
   });
   function markReady() { ready = true; apply(); }
   // Deferred scripts run once the DOM is parsed ("interactive"), before DOMContentLoaded, which waits for every deferred
