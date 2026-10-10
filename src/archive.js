@@ -137,7 +137,8 @@
     for (const variant of p.variants || []) {
       const link = element("a", t("provenance.tiny", {width: variant.width, height: variant.height, size: size(variant.bytes)}), "legacy-variant-link");
       link.href = variant.url;
-      link.download = variant.path.split("/").pop();
+      // The copy shares its basename with the original, so its role goes into the saved name (magnolia-palette-quantized.png).
+      link.download = variant.path.split("/").pop().replace(/(\.[^.]+)?$/, (extension) => `-${(variant.role || "variant").replaceAll("_", "-")}${extension}`);
       const paragraph = element("p");
       paragraph.append(link);
       block.append(paragraph);
