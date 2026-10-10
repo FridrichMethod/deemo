@@ -55,6 +55,8 @@ RASTER = re.compile(r"\.(png|jpe?g|webp|gif)$", re.I)
 UI = re.compile(r"^(arrow|bbook|ac-icon|fc-icon|logo|wikilogo)(\.|$)|titletab|screenshot|^\d{8} |DEEMO[ _]II", re.I)
 # Shortest edge of a collection cover; anything smaller is a UI tab or icon (the smallest real cover is 142 px).
 MIN_COVER_EDGE = 100
+# Characters MediaWiki forbids in page titles, so a link built from a name containing one cannot resolve.
+ILLEGAL_TITLE = re.compile(r"[#<>\[\]{}|]")
 # Optional record fields describing how a carried-forward record relates to the current upstream file.
 UPSTREAM_FIELDS = ("upstream_status", "superseded_by")
 
@@ -291,9 +293,11 @@ def discover_bwiki(fandom_songs):
         elif (normalized(stem) in collection_lookup or re.search(r"collection|selection|^Book of |^Epilogue$|^Shattered Memories", stem, re.I)) \
                 and min(info["width"], info["height"]) >= MIN_COVER_EDGE:
             collection = collection_lookup.get(normalized(stem), stem)
+            # A spelling that cannot be a title ("RAC collection #4") links to the file's own stem, which always can.
+            page = stem if ILLEGAL_TITLE.search(collection) else collection
             selected.append({"source": "bwiki", "file_title": info["title"], "info": info,
                              "kind": "collection_cover", "song_titles": [], "collections": [collection],
-                             "related_pages": [SOURCES["bwiki"]["page_base"] + quote(collection)]})
+                             "related_pages": [SOURCES["bwiki"]["page_base"] + quote(page)]})
         elif min(info["width"], info["height"]) >= 500:
             excluded_large.append({"title": info["title"], "width": info["width"], "height": info["height"],
                                    "reason": "No exact song/collection title mapping; not automatically identified as song artwork"})

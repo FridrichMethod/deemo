@@ -382,6 +382,15 @@ class CollectionNameTests(unittest.TestCase):
                              {name: ("collection_cover", [collection], ["https://wiki.biligame.com/deemo/" + page])
                               for name, (collection, page) in expected.items()})
 
+    def test_bwiki_cover_never_links_to_a_title_mediawiki_forbids(self):
+        # "#" cannot appear in a title, so a collection spelled with it (BWIKI's own "RAC collection #4", or the
+        # Fandom-only "RAC Collection #5") keeps its name but links to the cover file's stem.
+        selected, _, _ = discover_bwiki([allimage("RAC_collection_-4.png", 180, 180), allimage("RAC_collection_-5.png", 180, 180)],
+                                        [song("Song C", ["RAC Collection #5"])], [bwiki_song_page("Song D", "RAC collection #4")])
+        self.assertEqual({row["info"]["name"]: (row["collections"], row["related_pages"]) for row in selected},
+                         {"RAC_collection_-4.png": (["RAC collection #4"], ["https://wiki.biligame.com/deemo/RAC%20collection%20-4"]),
+                          "RAC_collection_-5.png": (["RAC Collection #5"], ["https://wiki.biligame.com/deemo/RAC%20collection%20-5"])})
+
     def test_fandom_merges_spellings_across_song_pages(self):
         selected, _, _ = discover_fandom([fandom_page("Song A", "{{Return|Etude collection}}", "File:Shared.png"),
                                           fandom_page("Song B", "{{Return|Etude Collection}}", "File:Shared.png")],
