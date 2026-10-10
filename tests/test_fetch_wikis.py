@@ -6,6 +6,7 @@ temporary directory, so the repository's own manifests are never read or written
 
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import subprocess
@@ -15,11 +16,16 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import requests
+from PIL import Image
+
 REPO = Path(__file__).resolve().parents[1]
 SCRIPT = REPO / "scripts/fetch_wikis.py"
 SPEC = importlib.util.spec_from_file_location("fetch_wikis", SCRIPT)
 fetch = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(fetch)
+MANIFEST = "data/sources/wikis.json"
+DISCOVERY = "data/sources/wiki-discovery.json"
 
 
 def dump(path, data):
@@ -52,6 +58,131 @@ def discover_bwiki(inventory, fandom_songs=(), bwiki_pages=()):
     with patch.object(fetch, "category", return_value=[]), patch.object(fetch, "pages", return_value=list(bwiki_pages)), \
             patch.object(fetch, "allimages", return_value=list(inventory)):
         return fetch.discover_bwiki(list(fandom_songs))
+
+
+def png(color, width=64, height=48):
+    buffer = io.BytesIO()
+    Image.new("RGB", (width, height), color).save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+class FakeResponse:
+    def __init__(self, url, status=200, content=b"", headers=None):
+        self.url, self.status_code, self.content, self.headers = url, status, content, dict(headers or {})
+
+    def json(self):
+        return json.loads(self.content)
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(f"{self.status_code} Error for url: {self.url}", response=self)
+
+
+class FakeWeb:
+    """Stands in for requests.get. A route is bytes (200), a (status, body, headers) tuple, or a list of these served
+    in turn (the last one repeats); any other URL behaves as if the network were down. Every request is recorded."""
+
+    def __init__(self):
+        self.routes, self.calls = {}, []
+
+    def __call__(self, url, params=None, headers=None, timeout=None):
+        self.calls.append(url)
+        route = self.routes.get(url)
+        if isinstance(route, list):
+            route = route.pop(0) if len(route) > 1 else route[0]
+        if route is None:
+            raise requests.ConnectionError(f"offline: {url}")
+        status, body, headers = route if isinstance(route, tuple) else (200, route, {"Content-Type": "image/png"})
+        return FakeResponse(url, status, body, headers)
+
+
+class FetcherRun(unittest.TestCase):
+    """Runs fetch_wikis.main() against a temporary repository root and the fake web."""
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        self.web, self.sleeps = FakeWeb(), []
+        for patcher in (patch.object(fetch, "ROOT", self.root), patch.object(fetch.requests, "get", self.web),
+                        patch.object(fetch.time, "sleep", self.sleeps.append),
+                        patch.object(fetch, "fetch_illustrator_index", lambda manifest: None)):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        dump(self.root / MANIFEST, {"schema_version": 1, "fetched_at": "2026-01-01T00:00:00Z", "failures": [], "assets": [],
+                                    "sources": [{**fetch.SOURCES[key], "status": "complete"} for key in ("fandom", "bwiki")]})
+
+    def offer(self, name, payload, **extra):
+        """A BWIKI candidate for the file name whose download URL serves payload."""
+        url = f"https://images.example.test/{hashlib.sha1(payload).hexdigest()}/{name}"
+        self.web.routes[url] = payload
+        with Image.open(io.BytesIO(payload)) as image:
+            width, height = image.size
+        info = {**image_info(width, height, name), "url": url, "size": len(payload), "sha1": hashlib.sha1(payload).hexdigest()}
+        return {"source": "bwiki", "file_title": "文件:" + name, "info": info, "kind": "song_art",
+                "song_titles": [name.rsplit(".", 1)[0]], "collections": [], "related_pages": [], **extra}
+
+    def read(self, relative):
+        return json.loads((self.root / relative).read_text(encoding="utf-8"))
+
+    def run_main(self, *args):
+        with patch.object(sys, "argv", ["fetch_wikis.py", *args]), patch("builtins.print"):
+            fetch.main()
+
+    def resume(self, *candidates, workers=1):
+        dump(self.root / DISCOVERY, {"schema_version": 1, "fetched_at": "2026-02-02T00:00:00Z", "candidates": list(candidates)})
+        self.run_main("--resume", "--workers", str(workers))
+        return self.read(MANIFEST)
+
+
+class CarryForwardTests(FetcherRun):
+    def by_title(self, manifest):
+        return {record["title"]: record for record in manifest["assets"]}
+
+    def test_removed_candidate_keeps_its_record_and_file(self):
+        kept, gone = self.offer("Kept.png", png("red")), self.offer("Gone.png", png("blue"))
+        before = self.by_title(self.resume(kept, gone))["Gone"]
+        manifest = self.resume(kept)
+        records = self.by_title(manifest)
+        self.assertEqual(records["Gone"], {**before, "upstream_status": "removed"})
+        self.assertNotIn("upstream_status", records["Kept"])
+        self.assertTrue((self.root / before["path"]).is_file())
+        self.assertEqual(manifest["failures"], [])
+        # When the candidate comes back, so does a plain record.
+        self.assertEqual(self.by_title(self.resume(kept, gone))["Gone"], before)
+
+    def test_reupload_keeps_the_previous_version_as_superseded(self):
+        old = self.offer("Art.png", png("red"))
+        first = self.resume(old)["assets"][0]
+        new = self.offer("Art.png", png("green"))
+        manifest = self.resume(new)
+        records = {record["id"]: record for record in manifest["assets"]}
+        previous_id = first["id"] + ":" + first["sha256"][:12]
+        self.assertEqual(sorted(records), [first["id"], previous_id])
+        self.assertEqual(records[first["id"]]["wiki_sha1"], new["info"]["sha1"])
+        self.assertNotIn("upstream_status", records[first["id"]])
+        self.assertEqual(records[previous_id], {**first, "id": previous_id, "upstream_status": "superseded",
+                                                "superseded_by": first["id"]})
+        self.assertTrue(all((self.root / record["path"]).is_file() for record in records.values()))
+        self.assertNotEqual(records[first["id"]]["path"], first["path"])
+        # Resuming the same snapshot again changes nothing.
+        self.assertEqual(self.resume(new)["assets"], manifest["assets"])
+
+    def test_failed_redownload_keeps_the_verified_record(self):
+        old = self.offer("Art.png", png("red"))
+        first = self.resume(old)["assets"][0]
+        new = self.offer("Art.png", png("green"))
+        routes = dict(self.web.routes)
+        self.web.routes.clear()  # the CDN is unreachable
+        manifest = self.resume(new)
+        self.assertEqual(manifest["assets"], [{**first, "upstream_status": "fetch_failed"}])
+        self.assertEqual([failure["title"] for failure in manifest["failures"]], ["文件:Art.png"])
+        self.assertEqual({source["id"]: source["status"] for source in manifest["sources"]}["wikis:bwiki"], "partial")
+        # A later successful retry supersedes the old version instead of dropping it.
+        self.web.routes.update(routes)
+        records = {record["id"]: record for record in self.resume(new)["assets"]}
+        self.assertEqual(records[first["id"] + ":" + first["sha256"][:12]]["upstream_status"], "superseded")
+        self.assertEqual(records[first["id"]]["wiki_sha1"], new["info"]["sha1"])
 
 
 class DiscoveryFilterTests(unittest.TestCase):

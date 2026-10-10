@@ -46,6 +46,8 @@ python -I scripts/fetch_wikis.py --workers 4
 python -I scripts/fetch_wikis.py --resume --workers 4
 ```
 
+`--resume` 不会从 `wikis.json` 删去任何记录，也不会删除文件。候选已不在快照中的记录会保留，并标记 `"upstream_status": "removed"`。重新上传的文件下载成功后，新版本沿用原资产 ID，深链接保持不变；旧版本连同文件与记录改用 `<资产 ID>:<其 SHA-256 前 12 位十六进制>` 作为 ID，标记 `"upstream_status": "superseded"`，并以 `"superseded_by"` 指向当前 ID。重新下载失败时保留旧记录并标记 `"upstream_status": "fetch_failed"`，同时在 `failures` 中记录；下次 `--resume` 会重试。
+
 脚本限制最多 4 个并发请求，设置超时和有限重试，逐 25 个结果保存 manifest。`--metadata-only` 只更新候选元数据；已经存在的最终图片 manifest 会保留。
 
 ## 本次访问限制

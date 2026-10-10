@@ -48,6 +48,8 @@ RASTER = re.compile(r"\.(png|jpe?g|webp|gif)$", re.I)
 UI = re.compile(r"^(arrow|bbook|ac-icon|fc-icon|logo|wikilogo)(\.|$)|titletab|screenshot|^\d{8} |DEEMO[ _]II", re.I)
 # Shortest edge of a collection cover; anything smaller is a UI tab or icon (the smallest real cover is 142 px).
 MIN_COVER_EDGE = 100
+# Optional record fields describing how a carried-forward record relates to the current upstream file.
+UPSTREAM_FIELDS = ("upstream_status", "superseded_by")
 
 
 def now():
@@ -266,16 +268,21 @@ def asset_filename(title, digest, image_format):
     return f"{stem}--{digest[:12]}.{extension}"
 
 
+def candidate_id(candidate):
+    return "wikis:" + candidate["source"] + ":" + hashlib.sha256(candidate["file_title"].encode()).hexdigest()[:16]
+
+
 def download(candidate, existing):
     source = candidate["source"]
     info = candidate["info"]
-    asset_id = "wikis:" + source + ":" + hashlib.sha256(candidate["file_title"].encode()).hexdigest()[:16]
+    asset_id = candidate_id(candidate)
     if asset_id in existing:
         previous = existing[asset_id]
         path = ROOT / previous["path"]
         if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == previous["sha256"] and previous.get("wiki_sha1") == info.get("sha1"):
             download_sha1 = hashlib.sha1(path.read_bytes()).hexdigest()
-            return {**previous, "kind": candidate["kind"], "song_titles": candidate["song_titles"],
+            current = {key: value for key, value in previous.items() if key not in UPSTREAM_FIELDS}
+            return {**current, "kind": candidate["kind"], "song_titles": candidate["song_titles"],
                     "collections": candidate["collections"], "related_pages": candidate["related_pages"],
                     "download_sha1": download_sha1, "wiki_original_size_matches": path.stat().st_size == info["size"],
                     "wiki_original_sha1_matches": download_sha1 == info.get("sha1")}
@@ -345,6 +352,33 @@ def download(candidate, existing):
     if "format=png" in url:
         record["delivery_note"] = "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. Downloaded bytes preserved unchanged; see original checksum/size comparison fields."
     return record
+
+
+def merge_assets(existing, candidate_ids, results, failed_ids):
+    """The manifest's records: this run's results merged over the previous records, so none is silently dropped.
+
+    existing maps ids to the previous records, candidate_ids are the ids in the discovery snapshot, results maps ids to
+    records verified or downloaded in this run, and failed_ids are candidates whose download failed. A previous record
+    whose candidate left the snapshot stays as upstream_status "removed"; one whose re-download failed stays as
+    "fetch_failed". When a re-uploaded file was downloaded, the new bytes keep the canonical id (deep links stay stable)
+    and the previous version keeps its file and record under "<id>:<sha256[:12]>" as "superseded". Files are never
+    deleted. Candidates without an outcome yet keep their previous record unchanged.
+    """
+    merged = {}
+    for asset_id, previous in existing.items():
+        record = results.get(asset_id)
+        if record is not None:
+            if record["sha256"] != previous["sha256"]:
+                previous_id = f"{asset_id}:{previous['sha256'][:12]}"
+                merged[previous_id] = {**previous, "id": previous_id, "upstream_status": "superseded", "superseded_by": asset_id}
+        elif asset_id in failed_ids:
+            merged[asset_id] = {**previous, "upstream_status": "fetch_failed"}
+        elif asset_id in candidate_ids or previous.get("upstream_status") == "superseded":
+            merged[asset_id] = previous
+        else:
+            merged[asset_id] = {**previous, "upstream_status": "removed"}
+    merged.update(results)
+    return [merged[asset_id] for asset_id in sorted(merged)]
 
 
 def write_json(relative, data):
@@ -428,19 +462,24 @@ def main():
             candidate["try_canonical_first"] = True
             if str(previous_failures[candidate["file_title"]].get("error", "")).startswith("[{"):
                 candidate["try_png_first"] = True
+    candidate_ids = {candidate_id(item) for item in candidates}
+    results, failed_ids = {}, set()
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
         jobs = {executor.submit(download, item, existing): item for item in candidates}
         for index, future in enumerate(as_completed(jobs), 1):
             item = jobs[future]
             try:
-                manifest["assets"].append(future.result())
+                record = future.result()
+                results[record["id"]] = record
             except Exception as error:
+                failed_ids.add(candidate_id(item))
                 manifest["failures"].append({"source_id": SOURCES[item["source"]]["id"], "url": item["info"]["url"],
                                              "title": item["file_title"], "error": str(error)})
             if index % 25 == 0 or index == len(candidates):
                 print(f"Downloaded/verified {index}/{len(candidates)}; failures={len(manifest['failures'])}", flush=True)
-                manifest["assets"].sort(key=lambda row: row["id"])
+                manifest["assets"] = sorted(results.values(), key=lambda row: row["id"])
                 write_json("data/sources/wikis.json", manifest)
+    manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
     for source in manifest["sources"]:
         source["asset_count"] = sum(asset["source_id"] == source["id"] for asset in manifest["assets"])
         source["failure_count"] = sum(failure["source_id"] == source["id"] for failure in manifest["failures"])
