@@ -326,7 +326,7 @@ def main():
     if not 1 <= args.workers <= 8:
         parser.error("--workers must be between 1 and 8")
     manifest_path = ROOT / MANIFEST
-    previous = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"assets": []}
+    previous = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {"assets": []}
     cache = {asset["download_url"]: asset for asset in previous["assets"]}
     manifest = {"schema_version": 1, "fetched_at": now(), "sources": [], "assets": [], "failures": [],
                 "scope": "DEEMO 1 artist-published illustrations, original public uploads and public platform images",
