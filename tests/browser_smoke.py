@@ -23,6 +23,9 @@ assert urlparse(args.base).hostname in {"127.0.0.1", "localhost"}, "Use a local 
 base = args.base.rstrip("/") + "/"
 mount_path = urlparse(base).path
 checks = []
+NOTICE_URL = "https://github.com/FridrichMethod/deemo/blob/main/NOTICE"
+# Withdrawn for licensing reasons: their @font-face rules name only local() fonts, so nothing may request the files.
+REMOVED_FONTS = ("assets/site/fonts/COPRGTL.ttf", "assets/site/fonts/RocknRoll_Typo_bold.ttf")
 HAS_HAN = "(text) => /[\\u3400-\\u9fff]/.test(text)"
 IMAGE_SHOWN = "(() => { const img = document.getElementById('full-image'); return img.complete && img.naturalWidth > 0; })()"
 PARAGRAPHS = "[...document.querySelectorAll('#provenance p')].map((p) => p.textContent)"
@@ -91,15 +94,19 @@ class Monitor:
         """The smoke is about to make this URL fail: its failure signals are not problems, but one must occur."""
         self.expected.setdefault(url, 0)
 
-    def leave(self, page, timeout=15):
-        """Let the page's pending loads (other than media streams) finish, then release what is left: the smoke is
-        about to navigate away from or close the page, which cuts those requests short."""
+    def settle(self, page, timeout=15):
+        """Wait until the page has no pending loads other than media streams."""
         pending = self.pending.setdefault(page, set())
         deadline = time.monotonic() + timeout
         while any(request.resource_type != "media" for request in pending) and time.monotonic() < deadline:
             page.wait_for_timeout(50)
-        self.released |= pending
-        pending.clear()
+
+    def leave(self, page):
+        """Let the page's loads finish, then release what is left: the smoke is about to navigate away from or close
+        the page, which cuts those requests short."""
+        self.settle(page)
+        self.released |= self.pending[page]
+        self.pending[page].clear()
 
     def verdict(self):
         external = [url for url in self.urls if urlparse(url).scheme in {"http", "https"} and urlparse(url).hostname not in {"127.0.0.1", "localhost"}]
@@ -481,6 +488,79 @@ def check_viewer_provenance(browser):
     checks.append("viewer composer, provenance class and upstream status, in both languages")
 
 
+def check_previews(browser):
+    """Grid cards show the derived previews and request no original; the viewer, its download link and its link
+    to the original serve the original file; a card whose preview fails falls back to the original."""
+    page = new_page(browser, 1440, 900)
+    requested = []
+    page.on("request", lambda request: requested.append(urlparse(request.url).path))
+    navigate(page, "archive.html")
+    page.wait_for_selector(".card")
+    monitor.settle(page)
+    cards = page.evaluate("""() => { const assets = window.DEEMO_CATALOG.assets.filter((a) => a.gallery);
+        return [...document.querySelectorAll('.card-image img')].map((img, index) => [img.getAttribute('src'), assets[index].thumb || null, assets[index].url]); }""")
+    assert len(cards) == 60 and all(thumb for _, thumb, _ in cards), "The first cards all have previews"
+    assert all(src == thumb for src, thumb, _ in cards), cards[:3]
+    originals = {urlparse(mounted_url(url)).path for _, _, url in cards}
+    assert not originals & set(requested), sorted(originals & set(requested))[:3]
+    image_bytes = page.evaluate("performance.getEntriesByType('resource').filter((e) => e.initiatorType === 'img').reduce((sum, e) => sum + e.encodedBodySize, 0)")
+    assert 0 < image_bytes < 2_000_000, f"The first screen of the grid loaded {image_bytes} bytes of images"
+    page.locator(".card-image").first.click()
+    page.wait_for_function(IMAGE_SHOWN)
+    url = cards[0][2]
+    assert urlparse(page.evaluate("document.getElementById('full-image').currentSrc")).path == urlparse(mounted_url(url)).path
+    assert page.locator("#download").get_attribute("href") == url == page.locator("#original").get_attribute("href")
+    assert urlparse(mounted_url(url)).path in requested
+    finish(page)
+    # The first card's preview fails on purpose.
+    page = new_page(browser, 1440, 900)
+    preview = mounted_url(cards[0][1])
+    monitor.expect(preview)
+    page.route(preview, lambda route: route.abort())
+    navigate(page, "archive.html")
+    page.wait_for_function("(() => { const img = document.querySelector('.card-image img'); return img.complete && img.naturalWidth > 0; })()", timeout=10_000)
+    assert page.locator(".card-image img").first.get_attribute("src") == cards[0][2]
+    finish(page)
+    checks.append(f"grid previews ({image_bytes} bytes of images on the first screen), originals in the viewer, fallback")
+
+
+def check_attribution(browser):
+    """Both pages link "Attribution" to the rendered NOTICE, in both languages."""
+    for lang in ("en", "zh-CN"):
+        page = new_page(browser)
+        for relative, link in (("archive.html", "footer a[data-i18n='footer.attribution']"), ("index.html?asset=legacy%3Amagnolia", ".signature a[data-i18n='slideshow.attribution']")):
+            navigate(page, f"{relative}{'&' if '?' in relative else '?'}lang={lang}")
+            assert page.locator(link).count() == 1, (relative, link)
+            label = page.evaluate("(key) => DEEMO_I18N.t(key)", page.locator(link).get_attribute("data-i18n"))
+            assert page.locator(link).get_attribute("href") == NOTICE_URL, relative
+            assert page.locator(link).is_visible() and page.locator(link).inner_text() == label, (relative, label)
+            assert (lang == "zh-CN") == page.evaluate(HAS_HAN, label), label
+            # Every font the page uses has been looked up, so a font file it still referenced would have been requested.
+            page.evaluate("document.fonts.ready.then(() => document.fonts.size)")
+        finish(page)
+    checks.append("Attribution links to NOTICE on both pages")
+
+
+def check_removed_files(page):
+    """No request for the withdrawn fonts, which are not served either, and no BWIKI title-tab sprite in the data."""
+    fonts = [url for url in monitor.urls if urlparse(url).path.endswith(REMOVED_FONTS)]
+    assert not fonts, fonts
+    for path in REMOVED_FONTS:
+        assert page.request.get(mounted_url(path)).status == 404, path
+    navigate(page, "index.html")
+    page.wait_for_function("window.DEEMO_I18N && imgTargets.length > 0")
+    slides = page.evaluate("[...imgTargets].filter((img) => /titletab/i.test(`${img.dataset.src} ${img.dataset.title} ${img.dataset.id}`)).map((img) => img.dataset.id)")
+    assert not slides, slides
+    navigate(page, "archive.html")
+    page.wait_for_selector(".card")
+    sprites = page.evaluate("window.DEEMO_CATALOG.assets.filter((a) => /titletab/i.test(JSON.stringify(a))).map((a) => a.id)")
+    assert not sprites, sprites
+    # They were 70 x 47 UI tabs imported as collection covers.
+    icons = catalog_count(page, "(a) => a.provenance.some((p) => p.kind === 'collection_cover') && Math.max(a.width, a.height) < 100")
+    assert icons == 0, icons
+    checks.append("no removed fonts requested or served; no title-tab sprites")
+
+
 def check_site_icons(page):
     manifest_url = mounted_url("site.webmanifest")
     manifest_response = page.request.get(manifest_url)
@@ -513,7 +593,10 @@ with sync_playwright() as p:
     check_viewer_scroll_and_focus(browser)
     check_deep_link_filters(browser)
     check_viewer_provenance(browser)
+    check_previews(browser)
+    check_attribution(browser)
     check_site_icons(page)
+    check_removed_files(page)
     finish(page)
     external = monitor.verdict()
     browser.close()
