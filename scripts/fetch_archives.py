@@ -12,6 +12,7 @@ import concurrent.futures
 import hashlib
 import io
 import json
+import os
 import re
 import sys
 import threading
@@ -27,10 +28,16 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 ROOT = Path(__file__).resolve().parents[1]
+MANIFEST_PATH = "data/sources/archives.json"
 STAMP = datetime.now(timezone.utc).isoformat()
 LOCAL = threading.local()
 MANIFEST = {"schema_version": 1, "fetched_at": STAMP, "sources": [], "assets": [], "failures": []}
 LOCK = threading.Lock()
+CAA_MBID = "fb7dec3c-01cd-4659-a398-e4494b824db4"
+
+
+def reset():
+    MANIFEST.update(fetched_at=STAMP, sources=[], assets=[], failures=[])
 
 
 def session():
@@ -57,9 +64,9 @@ def source(sid, name, url, status, notes, **extra):
     return row
 
 
-def failure(sid, url, exc):
+def failure(sid, url, exc, **extra):
     with LOCK:
-        MANIFEST["failures"].append({"source_id": "archives:" + sid, "url": url, "error": str(exc), "checked_at": STAMP})
+        MANIFEST["failures"].append({"source_id": "archives:" + sid, "url": url, "error": str(exc), "checked_at": STAMP, **extra})
 
 
 def download(sid, key, title, page, url, kind, **extra):
@@ -94,7 +101,7 @@ def download(sid, key, title, page, url, kind, **extra):
             MANIFEST["assets"].append(row)
         return row
     except Exception as exc:
-        failure(sid, url, exc)
+        failure(sid, url, exc, asset_id=f"archives:{sid}:{key}")
         return None
 
 
@@ -105,11 +112,15 @@ def pool(fn, items, workers=5):
 
 def cover_art_archive():
     sid = "cover-art-archive"
-    mbid = "fb7dec3c-01cd-4659-a398-e4494b824db4"
-    page = f"https://musicbrainz.org/release/{mbid}/cover-art"
+    page = f"https://musicbrainz.org/release/{CAA_MBID}/cover-art"
     record = source(sid, "DEEMO Song Collection — Cover Art Archive", page, "fetched",
                     "Community scans of official soundtrack packaging. Original API image files, not thumbnails; booklet spreads are references, not independent song masters.")
-    data = get(f"https://coverartarchive.org/release/{mbid}").json()
+    api = f"https://coverartarchive.org/release/{CAA_MBID}"
+    try:
+        data = get(api).json()
+    except Exception as exc:
+        failure(sid, api, exc)
+        return
     record["images_listed"] = len(data["images"])
     pool(lambda img: download(sid, img["id"], "DEEMO Song Collection — " + ", ".join(img["types"] or ["scan"]), page,
                               img["image"].replace("http://", "https://"), "reference",
@@ -140,7 +151,11 @@ def tumblr_mirror():
     record = source(sid, "Tunes of Rayark — DEEMO", page, "fetched",
                     "Unofficial repost blog. Only image covers of DEEMO posts are fetched; no audio. FAQ describes cleaned artwork edits; these are not author masters.",
                     faq_url=f"https://{blog}.tumblr.com/faq", provenance="community_repost")
-    doc = BeautifulSoup(get(page).text, "html.parser")
+    try:
+        doc = BeautifulSoup(get(page).text, "html.parser")
+    except Exception as exc:
+        failure(sid, page, exc)
+        return
     tags = [unquote(a["href"].split("/tagged/", 1)[1]) for a in doc.find_all("a", href=True)
             if "/tagged/" in a["href"] and "Miscellaneous" not in a["href"]]
     def collect(tag):
@@ -183,7 +198,11 @@ def tumblr_cleaned():
     page = f"https://{blog}.tumblr.com/tagged/my%20edit"
     record = source(sid, "Kitsunefreak cleaned DEEMO artwork", page, "fetched",
                     "Fan edits linked by the Tunes of Rayark FAQ. Public largest-size Tumblr images retained unchanged; source image was edited by uploader, not a production master.", provenance="community_edit")
-    posts = tumblr_tag(blog, "my edit")
+    try:
+        posts = tumblr_tag(blog, "my edit")
+    except Exception as exc:
+        failure(sid, page, exc)
+        return
     posts = [p for p in posts if "deemo" in json.dumps(p.get("tags", [])).lower() or "deemo" in p.get("photo-caption", "").lower()]
     record["posts_listed"] = len(posts)
     for post in posts:
@@ -200,11 +219,15 @@ def official():
     sid, page = "official-deemo", "https://deemo.com/"
     source(sid, "DEEMO official website", page, "fetched", "Official website key art. Decorative illustrations; not a complete song-art library.",
            mirror_url="https://rayark.com/g/deemo/")
-    soup = BeautifulSoup(get(page).text, "html.parser")
-    names = {"index_pic.png", "about_pic.png", "screen_pic.png", "contact_pic.png"}
-    images = {urljoin(page, img["src"]) for img in soup.find_all("img", src=True) if Path(urlparse(img["src"]).path).name in names}
-    pool(lambda url: download(sid, Path(urlparse(url).path).stem, "DEEMO official website — " + Path(urlparse(url).path).stem,
-                              page, url, "illustration", rights_holder="Rayark / credited original artists", provenance="official_website"), images, 3)
+    try:
+        soup = BeautifulSoup(get(page).text, "html.parser")
+        names = {"index_pic.png", "about_pic.png", "screen_pic.png", "contact_pic.png"}
+        images = {urljoin(page, img["src"]) for img in soup.find_all("img", src=True) if Path(urlparse(img["src"]).path).name in names}
+        pool(lambda url: download(sid, Path(urlparse(url).path).stem, "DEEMO official website — " + Path(urlparse(url).path).stem,
+                                  page, url, "illustration", rights_holder="Rayark / credited original artists", provenance="official_website"), images, 3)
+    except Exception as exc:
+        failure(sid, page, exc)
+    # The reference PDFs do not depend on the website page, so they are fetched even when it fails.
     for key, title, url in [
         ("deemo-exhibition", "DEEMO Exhibition — official English guide", "https://rayark.promo/deemo_exhibition_en.pdf"),
         ("rayark-brand-assets", "Rayark Game Brand Assets", "https://rayark.promo/rayark_site/RAYARK_GameBrandAssets.pdf"),
@@ -256,43 +279,75 @@ def catalog():
     sid = "internet-archive-202606"
     row = source(sid, "Internet Archive DEEMO OST 202606", "https://archive.org/details/deemo_ost-_202606", "excluded_audio_derivatives",
                  "Metadata examined without downloading audio. PNG files derived from FLAC and spectrograms are audio visualizations, not original loose cover art. Audio metadata itself attributes embedded pictures to DEEMO Wiki.")
-    data = get("https://archive.org/metadata/deemo_ost-_202606").json()
-    row["file_formats"] = dict(Counter(f.get("format", "unknown") for f in data.get("files", [])))
+    metadata = "https://archive.org/metadata/deemo_ost-_202606"
+    try:
+        data = get(metadata).json()
+        row["file_formats"] = dict(Counter(f.get("format", "unknown") for f in data.get("files", [])))
+    except Exception as exc:
+        failure(sid, metadata, exc)
     row["checked_at"] = STAMP
 
 
+# Each step records its own network failures against the real source; the source id and URL here
+# only label an unexpected error that escapes a step.
+STEPS = (
+    (cover_art_archive, "cover-art-archive", f"https://musicbrainz.org/release/{CAA_MBID}/cover-art"),
+    (tumblr_mirror, "rayarkmusic-tumblr", "https://rayarkmusic.tumblr.com/deemo"),
+    (tumblr_cleaned, "kitsunefreak-cleaned", "https://kitsunefreak.tumblr.com/tagged/my%20edit"),
+    (official, "official-deemo", "https://deemo.com/"),
+    (catalog, "internet-archive-202606", "https://archive.org/details/deemo_ost-_202606"),
+)
+
+
 def main():
-    for fn in [cover_art_archive, tumblr_mirror, tumblr_cleaned, official, catalog]:
+    reset()
+    for fn, sid, url in STEPS:
         print(f"Fetching {fn.__name__}", flush=True)
         try:
             fn()
         except Exception as exc:
-            failure(fn.__name__, "", exc)
+            failure(sid, url, exc)
             print(f"FAILED {fn.__name__}: {exc}", flush=True)
-        save()
     counts = Counter(a["source_id"] for a in MANIFEST["assets"])
+    failed = Counter(f["source_id"] for f in MANIFEST["failures"])
     for row in MANIFEST["sources"]:
         row["assets_downloaded"] = counts[row["id"]]
-        if row["status"] == "fetched" and not row["assets_downloaded"]:
-            row["status"] = "no_assets_fetched"
+        if row["status"] == "fetched":
+            if failed[row["id"]]:
+                row["status"] = "partial" if row["assets_downloaded"] else "failed"
+            elif not row["assets_downloaded"]:
+                row["status"] = "no_assets_fetched"
+    # Written once, at the end: an interrupted run leaves the previous manifest untouched.
     save()
     print(json.dumps({"sources": len(MANIFEST["sources"]), "assets": len(MANIFEST["assets"]), "failures": len(MANIFEST["failures"]), "counts": counts}, indent=2), flush=True)
+    return 1 if MANIFEST["failures"] else 0
+
+
+def write_json(path, data):
+    """Replace path through a temporary sibling, so a killed run never leaves truncated JSON."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    try:
+        temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def save():
-    path = ROOT / "data/sources/archives.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
     MANIFEST["sources"].sort(key=lambda row: row["id"])
     MANIFEST["assets"].sort(key=lambda row: row["id"])
-    path.write_text(json.dumps(MANIFEST, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    write_json(ROOT / MANIFEST_PATH, MANIFEST)
 
 
 def verify():
     """Validate all recorded files without making network requests."""
-    manifest = json.loads((ROOT / "data/sources/archives.json").read_text(encoding="utf-8"))
+    manifest = json.loads((ROOT / MANIFEST_PATH).read_text(encoding="utf-8"))
     assert manifest["schema_version"] == 1
     sources = {row["id"] for row in manifest["sources"]}
     assert len(sources) == len(manifest["sources"]), "Duplicate source ID"
+    for row in manifest.get("failures", []):
+        assert row["source_id"] in sources and row["url"], row
     ids = set()
     for asset in manifest["assets"]:
         assert asset["id"] not in ids, asset["id"]
@@ -318,4 +373,4 @@ if __name__ == "__main__":
     elif sys.argv[1:]:
         raise SystemExit("Usage: python -I scripts/fetch_archives.py [--verify]")
     else:
-        main()
+        raise SystemExit(main())
