@@ -27,18 +27,20 @@ Siyouko 的[履历页面](https://princeofglass.blogspot.com/p/blog-page_1146.ht
 
 ## 文件与曲名
 
-图片位于 `assets/public/artists/{artist}/`。Pixiv/Tumblr 文件名保留 post ID 与从零开始的页序号；Jimdo 使用作者明确标出的曲名。
+图片位于 `assets/public/artists/{artist}/`。Pixiv/Tumblr 文件名保留 post ID 与从零开始的页序号；Jimdo 使用作者明确标出的曲名。之后新增的 Jimdo 图片以曲名 slug 加 Jimdo 图片 ID 命名（曲名不含拉丁字母或数字时为 `jimdo-<图片 ID>`），因此文件名不会为空或重复；已有文件名不变。
 
 不能从原帖直接确认曲名时，`song_titles` 保持空数组且 `mapping_status` 为 `unmapped`。`collection` 表示原帖的曲包分组，不表示每张附图都属于该曲包；尤其 Ryori 在同一帖子中附带多张曲包封面与过程图。长拼图保持一张文件，没有推测裁切范围。
 
 ## 重现
 
-环境需要 Python 3、`requests`、`beautifulsoup4` 和 `Pillow`。从仓库根目录运行：
+环境需要 Python 3.10 或更高版本、`requests`、`beautifulsoup4` 和 `Pillow`。从仓库根目录运行：
 
 ```sh
 python scripts/fetch_artists.py --workers 4
 ```
 
-重新运行会检查公开页面元数据，并在本地文件 SHA-256 正确且下载 URL 不变时复用文件。显式增加 `--refresh` 才会重新下载已缓存图片。脚本验证每张图片能够完整解码，以实际格式确定扩展名，按 SHA-256 去重，所有失败写入 manifest 并返回非零退出状态。
+重新运行会检查公开页面元数据，并在本地文件 SHA-256 正确且下载 URL 不变时复用文件。显式增加 `--refresh` 才会重新下载已缓存图片。脚本验证每张图片能够完整解码，以实际格式确定扩展名，按 SHA-256 去重（资源 ID 最小的记录保留文件），所有失败写入 manifest 并返回非零退出状态。图片只从对应平台的图片主机（`i.pximg.net`、`image.jimcdn.com`、`*.media.tumblr.com`）下载，每次重定向都按同一列表检查。
+
+重新运行不会丢弃已校验的记录，也不会删除文件。某张图片的上游字节变化时，已归档文件保留，新版本以 SHA-256 后缀另存；新版本沿用原资源 ID，旧记录保留为 `<ID>:<SHA-256 前 12 位十六进制>`，标记 `upstream_status: superseded` 并以 `superseded_by` 指向新版本。上游之后改回较早版本时，该版本重新成为当前记录，不会重复列出。本次运行未能重现的记录也会保留，标记为 `upstream_status: fetch_failed`（该记录或其来源本次失败）或 `removed`（来源读取无误但已不再列出）。唯一的例外是检出中已缺失的归档文件：重新运行会把当前上游字节保存到该路径，旧记录的字节已不存在，因此不再保留。若这些字节已以 SHA-256 后缀另存在旁边，则沿用该副本，旧记录保留；此时 `scripts/build_catalog.py` 会报告缺失的文件，直到它被恢复（例如从 git 恢复）。
 
 本次下载和独立校验均为 86/86 成功，0 失败，原始图片总计 107,043,058 bytes。图片版权仍属于 Rayark 及相应创作者；本仓库的软件许可证不授予这些图片新的许可。

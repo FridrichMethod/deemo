@@ -27,18 +27,20 @@ Siyouko's [career page](https://princeofglass.blogspot.com/p/blog-page_1146.html
 
 ## Files and song titles
 
-Images are in `assets/public/artists/{artist}/`. Pixiv/Tumblr file names keep the post ID and the zero-based page index; Jimdo files use the song titles the author explicitly labeled.
+Images are in `assets/public/artists/{artist}/`. Pixiv/Tumblr file names keep the post ID and the zero-based page index; Jimdo files use the song titles the author explicitly labeled. A Jimdo image added later is named by its title slug plus Jimdo's image ID (`jimdo-<image ID>` when the title has no Latin letters or digits), so names are never empty or shared; existing file names do not change.
 
 When a song title cannot be confirmed directly from the original post, `song_titles` stays an empty array and `mapping_status` is `unmapped`. `collection` is the original post's collection grouping; it does not mean that every attached image belongs to that collection. In particular, Ryori attaches several collection covers and process images to the same post. Each long contact sheet stays a single file, with no guessed crop boundaries.
 
 ## Reproduction
 
-Requires Python 3, `requests`, `beautifulsoup4` and `Pillow`. Run from the repository root:
+Requires Python 3.10 or newer, `requests`, `beautifulsoup4` and `Pillow`. Run from the repository root:
 
 ```sh
 python scripts/fetch_artists.py --workers 4
 ```
 
-A rerun checks the public page metadata and reuses a local file when its SHA-256 is correct and its download URL is unchanged. Cached images are downloaded again only when `--refresh` is added explicitly. The script verifies that every image decodes completely, chooses the file extension from the actual format, deduplicates by SHA-256, writes every failure to the manifest and returns a non-zero exit status if there are any.
+A rerun checks the public page metadata and reuses a local file when its SHA-256 is correct and its download URL is unchanged. Cached images are downloaded again only when `--refresh` is added explicitly. The script verifies that every image decodes completely, chooses the file extension from the actual format, deduplicates by SHA-256 (the record with the smallest asset ID keeps the file), writes every failure to the manifest and returns a non-zero exit status if there are any. Images are downloaded only from the platform's image host (`i.pximg.net`, `image.jimcdn.com`, `*.media.tumblr.com`), and every redirect is checked against it.
+
+A rerun never drops a verified record or deletes a file. If the upstream bytes of an image change, the archived file stays and the new version is saved beside it with a SHA-256 suffix; the new version keeps the asset ID, and the old record stays as `<ID>:<first 12 hex digits of its SHA-256>` with `upstream_status: superseded` and `superseded_by`. If upstream later reverts to an earlier version, that version is the current record again and is not listed twice. A record that the rerun does not reproduce is kept with `upstream_status: fetch_failed` (it or its source failed) or `removed` (its source was read without error and no longer lists it). The one exception is an archived file that is missing from the checkout: the rerun saves the current upstream bytes at its path, and the old record, whose bytes are gone, is dropped. If those bytes are already archived beside it with a SHA-256 suffix, that copy is reused instead and the old record stays; `scripts/build_catalog.py` then reports the missing file until it is restored, for example from git.
 
 The download and the independent verification for this batch both succeeded 86/86, with 0 failures; the original images total 107,043,058 bytes. Copyright in the images remains with Rayark and the respective creators; this repository's software license grants no new license to these images.

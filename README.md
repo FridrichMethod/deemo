@@ -79,7 +79,7 @@ archive.html / index.html          the two static web page entry points
 site.webmanifest / browserconfig.xml  browser configuration entry points
 ```
 
-Python 3.10+ is recommended. Install the dependencies and build:
+Python 3.10 or newer is required (the pinned Pillow and requests need it). Install the dependencies and build:
 
 ```sh
 python -m venv .venv
