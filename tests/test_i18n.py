@@ -249,6 +249,25 @@ class PageTests(unittest.TestCase):
     def test_archive_page(self):
         self.check_page("archive.html")
 
+    def test_archive_brand_line_stays_english_on_purpose(self):
+        # The eyebrow above the title is the maintainer's brand line, deliberately not translated: it says so to
+        # browsers, screen readers and page translators (lang="en" translate="no") on the Chinese page too.
+        class Eyebrows(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.found = []
+
+            def handle_starttag(self, tag, attrs):
+                attributes = dict(attrs)
+                if "eyebrow" in (attributes.get("class") or "").split():
+                    self.found.append(attributes)
+
+        parser = Eyebrows()
+        parser.feed((ROOT / "archive.html").read_text(encoding="utf-8-sig"))
+        self.assertEqual(len(parser.found), 1)
+        self.assertEqual((parser.found[0].get("lang"), parser.found[0].get("translate")), ("en", "no"))
+        self.assertNotIn("data-i18n", parser.found[0])
+
     def test_slideshow_template(self):
         self.check_page("templates/slideshow.html")
 
