@@ -185,6 +185,30 @@ class CarryForwardTests(FetcherRun):
         self.assertEqual(records[first["id"]]["wiki_sha1"], new["info"]["sha1"])
 
 
+class CheckpointTests(FetcherRun):
+    def test_interrupted_run_leaves_every_previous_record(self):
+        candidates = [self.offer(f"Art {index:02}.png", png((index * 4, 0, 0))) for index in range(60)]
+        self.assertEqual(len(self.resume(*candidates)["assets"]), 60)
+        original, calls = fetch.download, []
+
+        def interrupted(candidate, existing):
+            calls.append(candidate)
+            if len(calls) == 40:
+                raise KeyboardInterrupt  # Ctrl-C after the checkpoint written at 25 results
+            return original(candidate, existing)
+
+        with patch.object(fetch, "download", interrupted), self.assertRaises(KeyboardInterrupt):
+            self.resume(*candidates)
+        self.assertEqual(len(self.read(MANIFEST)["assets"]), 60)
+
+    def test_manifest_write_is_atomic(self):
+        fetch.write_json(MANIFEST, {"assets": ["kept"]})
+        with patch.object(fetch.os, "replace", side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+            fetch.write_json(MANIFEST, {"assets": []})
+        self.assertEqual(self.read(MANIFEST), {"assets": ["kept"]})
+        self.assertEqual([path.name for path in (self.root / MANIFEST).parent.iterdir()], ["wikis.json"])
+
+
 class DiscoveryFilterTests(unittest.TestCase):
     def test_bwiki_skips_ui_sprites_like_the_fandom_path(self):
         inventory = [allimage("Exotic_Collections_Titletab.png", 70, 47),  # imported as a "cover" on 2026-10-08

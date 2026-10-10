@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 import hashlib
 from io import BytesIO
 import json
+import os
 from pathlib import Path
 import re
 import time
@@ -384,7 +385,18 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
 def write_json(relative, data):
     path = ROOT / relative
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    payload = (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    # Write next to the target, then rename over it: an interrupted run never leaves a truncated file behind.
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        with open(temporary, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
 
 
 def fetch_song_keys():
@@ -477,7 +489,8 @@ def main():
                                              "title": item["file_title"], "error": str(error)})
             if index % 25 == 0 or index == len(candidates):
                 print(f"Downloaded/verified {index}/{len(candidates)}; failures={len(manifest['failures'])}", flush=True)
-                manifest["assets"] = sorted(results.values(), key=lambda row: row["id"])
+                # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest.
+                manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
                 write_json("data/sources/wikis.json", manifest)
     manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
     for source in manifest["sources"]:
