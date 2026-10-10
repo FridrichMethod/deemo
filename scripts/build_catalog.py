@@ -321,6 +321,19 @@ def slide_kind(asset: dict) -> str:
     return asset["kind"]
 
 
+def slide_provenance(asset: dict) -> dict:
+    """data-provenance: the provenance class of the record the slide's caption credits (the entry's first record, from
+    the highest-priority family), which the slideshow names next to the kind. A wiki upload, whose manifest states its
+    lineage caveat as prose, is "wiki"; an archives record carries a class token (community_repost, community_scan,
+    official_website, ...). Artist uploads and legacy textures carry none."""
+    records = asset.get("provenance")
+    record = records[0] if isinstance(records, list) and records else asset
+    if record.get("family") == "wikis":
+        return {"data-provenance": "wiki"}
+    token = record.get("provenance")
+    return {"data-provenance": token} if isinstance(token, str) and re.fullmatch(r"[a-z][a-z_]*", token) else {}
+
+
 def render_slideshow(root: Path, catalog: dict) -> str:
     template = (root / "templates/slideshow.html").read_text(encoding="utf-8-sig")
     assets = [asset for asset in catalog["assets"] if asset["gallery"] and asset["kind"] != "reference"]
@@ -335,7 +348,7 @@ def render_slideshow(root: Path, catalog: dict) -> str:
             "data-source": asset["source_name"], "data-source-id": asset["source_id"],
             "data-page": asset["page_url"],
             "data-size": f"{asset['width']} × {asset['height']}", "data-kind": slide_kind(asset),
-            **layout, **slide_notes(asset), "alt": asset["title"],
+            **slide_provenance(asset), **layout, **slide_notes(asset), "alt": asset["title"],
         }
         attributes = " ".join(f'{key}="{attr(value)}"' for key, value in fields.items())
         slides.append(f'        <div class="mySlides fade"><img {attributes}></div>')

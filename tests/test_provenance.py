@@ -1,5 +1,6 @@
 """Offline checks that provenance reaches the pages: wiki art carries the composer of its mapped songs, copied from
-the song index by scripts/fetch_wikis.py and kept in the committed snapshot and manifest.
+the song index by scripts/fetch_wikis.py and kept in the committed snapshot and manifest, and each slide carries the
+provenance class of the copy its caption credits.
 
 Nothing touches the network: the fetcher runs against a temporary root and a fake web that serves canned bytes.
 """
@@ -11,6 +12,7 @@ import json
 import sys
 import tempfile
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 from unittest.mock import patch
 
@@ -31,6 +33,7 @@ def load(name, relative):
 
 
 fetch = load("fetch_wikis", "scripts/fetch_wikis.py")
+build = load("build_catalog", "scripts/build_catalog.py")
 
 
 def read_json(relative, root=ROOT):
@@ -51,6 +54,26 @@ def song(title, composer=None, source="fandom"):
 def candidate(titles, source="bwiki", kind="song_art", **extra):
     return {"source": source, "file_title": "File:" + "+".join(titles or ["cover"]), "kind": kind,
             "song_titles": list(titles), "collections": [], "related_pages": [], **extra}
+
+
+class Slides(HTMLParser):
+    """The attributes of every slide <img> (class deemo-draw) in a rendered slideshow, in order."""
+
+    def __init__(self, markup):
+        super().__init__()
+        self.slides = []
+        self.feed(markup)
+        self.close()
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        if tag == "img" and "deemo-draw" in (attributes.get("class") or "").split():
+            self.slides.append(attributes)
+
+
+def entry(*records, **fields):
+    """A gallery entry as build_catalog.combine() makes it: the first record's fields plus the list of all records."""
+    return {**records[0], "provenance": list(records), "gallery": True, **fields}
 
 
 def png(color, width=64, height=48):
@@ -201,6 +224,42 @@ class CommittedWikiDataTests(unittest.TestCase):
         altale = {record["source_id"]: record.get("composer") for record in self.assets
                   if record["title"] == "Altale" and record["kind"] == "song_art"}
         self.assertEqual(altale, {"wikis:fandom": "Sakuzyo", "wikis:bwiki": "Sakuzyo"})
+
+
+class SlideProvenanceTests(unittest.TestCase):
+    WIKI = {"id": "wikis:bwiki:1", "source_id": "wikis:bwiki", "family": "wikis", "kind": "song_art",
+            "provenance": "Public community wiki upload; original creator/upload lineage not independently established."}
+    REPOST = {"id": "archives:tumblr:1", "source_id": "archives:tumblr", "family": "archives", "kind": "song_art",
+              "provenance": "community_repost"}
+    ARTIST = {"id": "artists:a:1", "source_id": "artists:a", "family": "artists", "kind": "song_art", "rights": "Artist's own."}
+    LEGACY = {"id": "legacy:magnolia", "source_id": "legacy", "family": "legacy", "kind": "song_art"}
+
+    def test_the_credited_record_names_the_class(self):
+        cases = {
+            "wiki upload": (entry(self.WIKI), "wiki"),
+            "archives class token": (entry(self.REPOST), "community_repost"),
+            "artist upload": (entry(self.ARTIST), None),
+            "legacy texture": (entry(self.LEGACY), None),
+            "artist file also reposted": (entry(self.ARTIST, self.REPOST), None),
+            "wiki file also reposted": (entry(self.WIKI, self.REPOST), "wiki"),
+            "prose instead of a token": (entry({**self.REPOST, "provenance": "Reposted somewhere."}), None),
+            "a bare record": (self.REPOST, "community_repost"),
+        }
+        for name, (asset, expected) in cases.items():
+            with self.subTest(name):
+                self.assertEqual(build.slide_provenance(asset).get("data-provenance"), expected)
+
+    def test_rendered_slides_carry_the_class_next_to_the_kind(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "templates").mkdir()
+            (root / "templates/slideshow.html").write_text("<main>\n@python-work-area\n</main>\n", encoding="utf-8")
+            assets = [entry(record, url=f"assets/{index}.png", title=f"Art {index}", source_name="Source",
+                            page_url="https://example.test/", width=8, height=8)
+                      for index, record in enumerate((self.REPOST, self.ARTIST))]
+            slides = Slides(build.render_slideshow(root, {"assets": assets})).slides
+        self.assertEqual([slide.get("data-provenance") for slide in slides], ["community_repost", None])
+        self.assertEqual(list(slides[0])[list(slides[0]).index("data-kind") + 1], "data-provenance")
 
 
 if __name__ == "__main__":
