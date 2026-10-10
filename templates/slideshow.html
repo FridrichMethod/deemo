@@ -373,6 +373,12 @@ https://github.com/FridrichMethod/deemo
             else if (weight > 18) title.dataset.length = "long";
             var meta = element("dl", "notes-meta");
             metaRow(meta, DEEMO_I18N.t("slideshow.notes.music"), data.composer);
+            // A credit given by another source's page than the caption's (data-composer-source: BWIKI's song page for
+            // a Fandom upload whose own page names no composer) names that source under it.
+            if (data.composer && data.composerSource) {
+                meta.lastElementChild.append(document.createElement("br"), element("span", "notes-composer-source",
+                    DEEMO_I18N.t("slideshow.notes.composer_source", {source: data.composerSource.split("\n").join(" / ")})));
+            }
             metaRow(meta, DEEMO_I18N.t("slideshow.notes.artist"), data.artist);
             if (data.collection) {
                 metaRow(meta, data.collection.indexOf("\n") >= 0 ? DEEMO_I18N.t("slideshow.notes.collections") : DEEMO_I18N.t("slideshow.notes.collection"), data.collection);

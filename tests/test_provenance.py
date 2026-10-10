@@ -385,6 +385,25 @@ class SlideProvenanceTests(unittest.TestCase):
             with self.subTest(name):
                 self.assertEqual(build.slide_provenance(asset).get("data-provenance"), expected)
 
+    def test_a_composer_from_another_source_names_it(self):
+        names = {"wikis:fandom": "DEEMO Fandom Wiki", "wikis:bwiki": "Bilibili DEEMO Wiki"}
+        fandom = {**self.WIKI, "id": "wikis:fandom:1", "source_id": "wikis:fandom", "composer": "Sakuzyo",
+                  "composer_source": "wikis:bwiki"}
+        bwiki = {**self.WIKI, "composer": "Sakuzyo"}
+        cases = {
+            "borrowed by the credited record": (entry(fandom), "Bilibili DEEMO Wiki"),
+            "the credited record gives its own": (entry(bwiki, fandom), None),
+            "the supplier's own record follows": (entry(fandom, bwiki), "Bilibili DEEMO Wiki"),
+            "only another record gives one": (entry(self.REPOST, bwiki), "Bilibili DEEMO Wiki"),
+            "several suppliers, one per line": (entry(self.ARTIST, fandom, {**bwiki, "source_id": "wikis:other"}),
+                                                "Bilibili DEEMO Wiki\nwikis:other"),
+            "no composer": (entry(self.WIKI), None),
+            "a bare record": (fandom, "Bilibili DEEMO Wiki"),
+        }
+        for name, (asset, expected) in cases.items():
+            with self.subTest(name):
+                self.assertEqual(build.slide_composer_source(asset, names).get("data-composer-source"), expected)
+
     def test_rendered_slides_carry_the_class_next_to_the_kind(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -451,6 +470,38 @@ class CommittedSlideshowTests(unittest.TestCase):
         self.assertRegex(caption, r'origin\.append\("\\u00a0· ", label\);')
         self.assertTrue({"community_repost", "community_edit", "community_scan"} <= {
             key.split(".", 2)[2] for key in self.messages["en"] if key.startswith("slideshow.provenance.")})
+
+    def test_a_borrowed_composer_credit_names_its_source(self):
+        # The caption credits the entry's first record, so where that record's composer comes from another wiki's song
+        # page (composer_source) the notes name that wiki under the credit. Checked against the catalog the slides are
+        # built from, not pinned to today's records: which wiki supplies a credit is upstream data.
+        names = {source["id"]: source["name"] for source in self.catalog["sources"]}
+        entries = {asset["id"]: asset for asset in self.catalog["assets"]}
+        borrowed = 0
+        for slide in self.slides:
+            records = [record for record in entries[slide["data-id"]]["provenance"] if record.get("composer")]
+            shown = slide.get("data-composer-source")
+            with self.subTest(slide=slide["data-id"]):
+                if shown:
+                    self.assertTrue(slide.get("data-composer"))
+                    self.assertNotIn(slide["data-source"], shown.split("\n"))
+                if len(records) == 1 and records[0] is entries[slide["data-id"]]["provenance"][0]:
+                    source = records[0].get("composer_source")
+                    expected = "\n".join(names[key] for key in source.split(" / ")) if source else None
+                    self.assertEqual(shown, expected, "Rebuild the catalog")
+                    borrowed += bool(source)
+        if any(record.get("composer_source") for record in read_json(MANIFEST)["assets"]):
+            self.assertGreater(borrowed, 0)
+        for language, table in self.messages.items():
+            with self.subTest(language=language):
+                self.assertEqual(re.findall(r"\{(\w+)\}", table["slideshow.notes.composer_source"]), ["source"])
+        notes = function_body((ROOT / "templates/slideshow.html").read_text(encoding="utf-8-sig"), "notesFor")
+        self.assertRegex(notes, r'metaRow\(meta, DEEMO_I18N\.t\("slideshow\.notes\.music"\), data\.composer\);'
+                                r'(\s*//[^\n]*)*\s*if \(data\.composer && data\.composerSource\) \{\s*'
+                                r'meta\.lastElementChild\.append\(document\.createElement\("br"\), element\("span", '
+                                r'"notes-composer-source",\s*DEEMO_I18N\.t\("slideshow\.notes\.composer_source", '
+                                r'\{source: data\.composerSource\.split\("\\n"\)\.join\(" / "\)\}\)\)\);\s*\}\s*'
+                                r'metaRow\(meta, DEEMO_I18N\.t\("slideshow\.notes\.artist"\), data\.artist\);')
 
     def test_wiki_art_is_credited_and_found_by_its_composer(self):
         records = [record for asset in self.catalog["assets"] for record in asset["provenance"]]
