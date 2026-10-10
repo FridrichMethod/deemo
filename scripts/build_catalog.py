@@ -8,7 +8,8 @@ import json
 import re
 import subprocess
 import sys
-from collections import Counter
+import unicodedata
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import quote, urlsplit
@@ -171,6 +172,51 @@ def legacy_assets(root: Path, wiki_records: list[dict] | None = None) -> list[di
     return assets
 
 
+def collection_key(name: str) -> str:
+    """A collection name with width, case, spacing and punctuation dropped, as scripts/fetch_wikis.py folds it."""
+    return fold(unicodedata.normalize("NFKC", name)) or name
+
+
+def shared_collection_spellings(assets: list[dict]) -> list[dict]:
+    """The records with one spelling of each collection across the families, so the archive and the slideshow never
+    show two ("Etude collection" from the legacy song mapping's books next to the wikis' "Etude Collection").
+
+    Spellings that differ only in width, case, spacing or punctuation name one collection. The current wiki records
+    already show one spelling of each (fetch_wikis.with_collection_aliases()), and every other record takes it; a
+    collection that no current wiki record names shows the first of its spellings in code-point order, as the wikis
+    pick theirs. A record whose own spelling is replaced keeps it in collection_aliases, which the archive searches
+    but does not show. An artist post's grouping (collection_scope "source_post_grouping") is quoted as the post
+    spells it and is left out. Records with nothing to change are returned as they are."""
+    def names(asset: dict) -> list[str]:
+        if asset.get("collection_scope") == "source_post_grouping":
+            return []
+        return [name for name in [asset.get("collection"), *(asset.get("collections") or [])] if isinstance(name, str) and name]
+
+    wiki, every = defaultdict(set), defaultdict(set)
+    for asset in assets:
+        for name in names(asset):
+            every[collection_key(name)].add(name)
+            if asset["family"] == "wikis" and not asset.get("upstream_status"):
+                wiki[collection_key(name)].add(name)
+    shown = {key: min(wiki.get(key) or spellings) for key, spellings in every.items()}
+    result = []
+    for asset in assets:
+        own = names(asset)
+        changes = {}
+        if asset.get("collection") in own:
+            changes["collection"] = shown[collection_key(asset["collection"])]
+        if set(asset.get("collections") or []) & set(own):
+            changes["collections"] = list(dict.fromkeys(shown[collection_key(name)] for name in asset["collections"]))
+        displayed = {changes.get("collection"), *changes.get("collections", [])}
+        replaced = set(own) - displayed
+        if not replaced and all(asset.get(key) == value for key, value in changes.items()):
+            result.append(asset)
+            continue
+        aliases = sorted((set(asset.get("collection_aliases") or []) | replaced) - displayed)
+        result.append({**asset, **changes, **({"collection_aliases": aliases} if aliases else {})})
+    return result
+
+
 def validate_asset(root: Path, asset: dict, verify: bool = False) -> None:
     for key in ("id", "source_id", "title", "kind", "page_url", "path", "bytes", "sha256"):
         if key not in asset:
@@ -220,6 +266,7 @@ def combine(root: Path, verify: bool = False) -> dict:
         assets.extend({**asset, "family": family} for asset in manifest["assets"])
         failures.extend(manifest.get("failures", []))
     assets.extend({**asset, "family": "legacy"} for asset in legacy_assets(root, [asset for asset in assets if asset["family"] == "wikis"]))
+    assets = shared_collection_spellings(assets)
     priority = {"artists": 0, "wikis": 1, "legacy": 2, "archives": 3}
     assets.sort(key=lambda asset: priority[asset["family"]])
     source_map = {source["id"]: source for source in sources}
