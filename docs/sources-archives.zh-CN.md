@@ -37,4 +37,4 @@ python -I scripts/fetch_archives.py
 python -I scripts/fetch_archives.py --verify
 ```
 
-需要 Python 3.10 或更高版本；依赖为 `requests`、`beautifulsoup4`、`Pillow`；`-I` 使用 Python 隔离模式。抓取器按 3–5 个线程并行请求，遇到失败会以真实来源 ID 与 URL 写入 `failures`；有失败的来源标记为 `partial` 或 `failed`，命令以非零状态退出。Tumblr 每个标签按 API `posts-total` 分页，不设置静默截断上限。请求只发往预期主机（Cover Art Archive/archive.org、Tumblr、deemo.com、rayark.promo），每次重定向都按同一列表检查。文件按内容校验后写入；远端内容如变化，旧文件保留并以 hash 后缀保存新版本。manifest 在运行结束时一次性原子写入。重新运行不会丢弃已校验的记录，也不会删除文件：变化文件的新版本沿用资源 ID，旧记录保留为 `<ID>:<SHA-256 前 12 位十六进制>` 并标记 `upstream_status: superseded`；未能重现的记录保留为 `fetch_failed` 或 `removed`。
+需要 Python 3.10 或更高版本；依赖为 `requests`、`beautifulsoup4`、`Pillow`；`-I` 使用 Python 隔离模式。抓取器按 3–5 个线程并行请求，遇到失败会以真实来源 ID 与 URL 写入 `failures`；有失败的来源标记为 `partial` 或 `failed`，命令以非零状态退出。Tumblr 每个标签按 API `posts-total` 分页，不设置静默截断上限。下载和页面读取只发往预期主机（Cover Art Archive/archive.org、Tumblr、deemo.com、rayark.promo），每次重定向都按同一列表检查；对其余目录页面的可达性检查只记录 HTTP 状态和最终 URL，不保存任何内容。文件按内容校验后写入；远端内容如变化，旧文件保留并以 hash 后缀保存新版本。manifest 在运行结束时一次性原子写入。重新运行不会丢弃已校验的记录，也不会删除文件：变化文件的新版本沿用资源 ID，旧记录保留为 `<ID>:<SHA-256 前 12 位十六进制>` 并标记 `upstream_status: superseded`；未能重现的记录保留为 `fetch_failed` 或 `removed`。
