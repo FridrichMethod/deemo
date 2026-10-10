@@ -202,8 +202,9 @@ class ArtistsTests(TempRoot):
         for asset in assets:
             self.assertEqual(sha((self.root / asset["path"]).read_bytes()), asset["sha256"], asset["id"])
 
-        # Green replaces blue, so blue is kept as superseded at p00.png. When p00.png is then lost and
-        # upstream serves white, white takes that path and the blue record, whose bytes are gone, is dropped.
+        # Green replaces blue, so blue is kept as superseded at p00.png; green is p1's archived bytes, so p0 shares
+        # p01.png instead of storing a second copy. When p00.png is then lost and upstream serves white, white takes
+        # that path and the blue record, whose bytes are gone, is dropped.
         p1_url, green_url, white_url = OLD_P0.replace("_p0", "_p1"), NEW_P0, NEW_P0.replace("/2022/", "/2023/")
         web.routes.update({**pixiv_routes([green_url, p1_url]), green_url: png("green")})
         self.assertEqual(self.run_main(web), 0)
@@ -211,7 +212,8 @@ class ArtistsTests(TempRoot):
         web.routes.update({**pixiv_routes([white_url, p1_url]), white_url: png("white")})
         self.assertEqual(self.run_main(web), 0)
         assets = self.read_manifest("artists")["assets"]
-        green = f"assets/public/artists/snowegg/pixiv-1-p00-{sha(png('green'))[:12]}.png"
+        green = "assets/public/artists/snowegg/pixiv-1-p01.png"
+        self.assertEqual(self.archived_files(), {"assets/public/artists/snowegg/pixiv-1-p00.png", green})
         self.assertEqual([(a["id"], a["path"], a["sha256"]) for a in assets],
                          [("artists:pixiv:1:p0", "assets/public/artists/snowegg/pixiv-1-p00.png", sha(png("white"))),
                           (f"artists:pixiv:1:p0:{sha(png('green'))[:12]}", green, sha(png("green"))),
@@ -348,6 +350,58 @@ class ArtistsTests(TempRoot):
             self.assertEqual(by_id["artists:pixiv:9:p0"]["path"], "assets/public/artists/x/pixiv-9-p00.png")
             self.assertNotIn("duplicate_of", by_id["artists:pixiv:9:p0"])
             self.assertEqual(by_id["artists:pixiv:9:p1"]["duplicate_of"], "artists:pixiv:9:p0")
+
+    def pixiv_job(self, post):
+        return {"id": f"artists:pixiv:{post}:p0", "source_id": f"artists:pixiv:{post}", "directory": "x",
+                "stem": f"pixiv-{post}-p00", "download_url": f"https://i.pximg.net/{post}.png", "page_url": PAGE_URL}
+
+    def run_jobs(self, previous, served, *posts):
+        """fetch_all() then carry_forward() as main() runs them, each post's job served the given bytes."""
+        manifest = {"sources": [], "assets": [], "failures": []}
+
+        def fake_download(job, cache, refresh):
+            return job, served[job["id"]], "2026-02-02T00:00:00+00:00"
+
+        with patch.object(artists, "download", fake_download), contextlib.redirect_stdout(io.StringIO()):
+            artists.fetch_all(manifest, [self.pixiv_job(post) for post in posts], {}, False, 2, previous)
+            artists.carry_forward({"assets": previous, "sources": []}, manifest)
+        return {asset["id"]: asset for asset in manifest["assets"]}
+
+    def archived(self, post, data):
+        path = self.put(f"assets/public/artists/x/pixiv-{post}-p00.png", data)
+        return {**self.pixiv_job(post), "path": path, "bytes": len(data), "sha256": sha(data),
+                "fetched_at": "2026-01-01T00:00:00+00:00"}
+
+    def test_new_upload_with_archived_bytes_reuses_the_archived_record_and_file(self):
+        red = png("red")
+        archived = {key: value for key, value in self.archived(2, red).items() if key not in ("directory", "stem")}
+        # A new upload whose id sorts first has the archived bytes: it becomes a duplicate of the archived record,
+        # whose file it shares, rather than a second copy that would leave the archived file unreferenced.
+        records = self.run_jobs([archived], {"artists:pixiv:1:p0": red, "artists:pixiv:2:p0": red}, 2, 1)
+        self.assertEqual({key: (row["path"], row.get("duplicate_of")) for key, row in records.items()},
+                         {"artists:pixiv:1:p0": (archived["path"], "artists:pixiv:2:p0"), "artists:pixiv:2:p0": (archived["path"], None)})
+        self.assertEqual(self.archived_files(), {archived["path"]})
+        # Upstream then drops the archived upload: its record stays, removed, and still owns the file.
+        records = self.run_jobs(list(records.values()), {"artists:pixiv:1:p0": red}, 1)
+        self.assertEqual({key: (row["path"], row.get("duplicate_of"), row.get("upstream_status")) for key, row in records.items()},
+                         {"artists:pixiv:1:p0": (archived["path"], "artists:pixiv:2:p0", None),
+                          "artists:pixiv:2:p0": (archived["path"], None, "removed")})
+        self.assertEqual(self.archived_files(), {archived["path"]})
+
+    def test_archived_bytes_whose_record_moved_on_keep_their_file(self):
+        red, blue = png("red"), png("blue")
+        archived = {key: value for key, value in self.archived(2, red).items() if key not in ("directory", "stem")}
+        # The archived upload is re-uploaded as blue while two other posts serve its red bytes: the first of them stands
+        # in as the primary of red, on the archived file, so duplicate_of never names a record with other bytes.
+        records = self.run_jobs([archived], {"artists:pixiv:1:p0": red, "artists:pixiv:2:p0": blue, "artists:pixiv:3:p0": red}, 1, 2, 3)
+        blue_path = f"assets/public/artists/x/pixiv-2-p00-{sha(blue)[:12]}.png"
+        superseded = f"artists:pixiv:2:p0:{sha(red)[:12]}"
+        self.assertEqual({key: (row["path"], row["sha256"], row.get("duplicate_of"), row.get("superseded_by")) for key, row in records.items()},
+                         {"artists:pixiv:1:p0": (archived["path"], sha(red), None, None),
+                          "artists:pixiv:2:p0": (blue_path, sha(blue), None, None),
+                          "artists:pixiv:3:p0": (archived["path"], sha(red), "artists:pixiv:1:p0", None),
+                          superseded: (archived["path"], sha(red), None, "artists:pixiv:2:p0")})
+        self.assertEqual(self.archived_files(), {archived["path"], blue_path})
 
     def test_download_refuses_other_hosts_and_redirects(self):
         job = {"id": "artists:pixiv:1:p0", "source_id": "artists:pixiv:1", "page_url": PAGE_URL}
