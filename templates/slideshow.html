@@ -319,7 +319,15 @@ https://github.com/FridrichMethod/deemo
             var notes = document.createDocumentFragment();
             var eyebrow = element("p", "notes-eyebrow");
             var kind = DEEMO_I18N.has("slideshow.kind." + data.kind) ? DEEMO_I18N.t("slideshow.kind." + data.kind) : "";
-            if (kind) eyebrow.append(element("span", "notes-kind", kind));
+            // The kind is qualified by where the credited copy comes from (data-provenance: a repost, a scan, a wiki
+            // upload, ...), so a repost never reads as plain "Song artwork"; a class without a label adds nothing.
+            var origin = data.provenance && DEEMO_I18N.has("slideshow.provenance." + data.provenance)
+                ? DEEMO_I18N.t("slideshow.provenance." + data.provenance) : "";
+            if (kind || origin) {
+                var label = element("span", "notes-kind", kind);
+                if (origin) label.append(element("span", "notes-provenance", (kind ? "\u00a0· " : "") + origin));
+                eyebrow.append(label);
+            }
             eyebrow.append(element("span", "notes-count", slideIndex + " / " + imgTargets.length));
             // A wiki title that names none of the slide's mapped songs (data-songs) is only the file's key
             // ("Classic01" for "Tristesse"): the songs are the headline and the key follows as a quiet file

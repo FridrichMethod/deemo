@@ -1,6 +1,6 @@
 """Offline checks that provenance reaches the pages: wiki art carries the composer of its mapped songs, copied from
 the song index by scripts/fetch_wikis.py and kept in the committed snapshot and manifest, and each slide carries the
-provenance class of the copy its caption credits.
+provenance class of the copy its caption credits, which the slideshow names next to the kind in both languages.
 
 Nothing touches the network: the fetcher runs against a temporary root and a fake web that serves canned bytes.
 """
@@ -9,6 +9,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -34,6 +35,7 @@ def load(name, relative):
 
 fetch = load("fetch_wikis", "scripts/fetch_wikis.py")
 build = load("build_catalog", "scripts/build_catalog.py")
+REGISTER = re.compile(r"DEEMO_I18N\.register\((\{.*\})\);\s*$", re.DOTALL)
 
 
 def read_json(relative, root=ROOT):
@@ -54,6 +56,11 @@ def song(title, composer=None, source="fandom"):
 def candidate(titles, source="bwiki", kind="song_art", **extra):
     return {"source": source, "file_title": "File:" + "+".join(titles or ["cover"]), "kind": kind,
             "song_titles": list(titles), "collections": [], "related_pages": [], **extra}
+
+
+def messages(relative):
+    """The en and zh-CN tables a src/i18n/ file registers."""
+    return json.loads(REGISTER.search((ROOT / relative).read_text(encoding="utf-8")).group(1))
 
 
 class Slides(HTMLParser):
@@ -260,6 +267,54 @@ class SlideProvenanceTests(unittest.TestCase):
             slides = Slides(build.render_slideshow(root, {"assets": assets})).slides
         self.assertEqual([slide.get("data-provenance") for slide in slides], ["community_repost", None])
         self.assertEqual(list(slides[0])[list(slides[0]).index("data-kind") + 1], "data-provenance")
+
+
+class CommittedSlideshowTests(unittest.TestCase):
+    """The generated slideshow (index.html) qualifies reposts and wiki uploads, and credits wiki art's composer."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.slides = Slides((ROOT / "index.html").read_text(encoding="utf-8")).slides
+        cls.messages = messages("src/i18n/slideshow.js")
+        cls.catalog = read_json("data/catalog.json")
+
+    def test_every_slide_class_has_a_label_in_both_languages(self):
+        tokens = {slide["data-provenance"] for slide in self.slides if slide.get("data-provenance")}
+        self.assertIn("community_repost", tokens)
+        # The slideshow names every class the archive viewer labels, so a new class is labelled on both pages.
+        archive = {key.split(".", 2)[2] for key in messages("src/i18n/archive.js")["en"] if key.startswith("provenance.class.")}
+        for language, table in self.messages.items():
+            with self.subTest(language=language):
+                self.assertEqual(sorted(token for token in tokens | archive if f"slideshow.provenance.{token}" not in table), [])
+
+    def test_reposts_and_wiki_uploads_are_qualified(self):
+        by_source = {}
+        for slide in self.slides:
+            by_source.setdefault(slide["data-source-id"].split(":")[0], []).append(slide.get("data-provenance"))
+        tumblr = [slide.get("data-provenance") for slide in self.slides if slide["data-source-id"] == "archives:rayarkmusic-tumblr"]
+        self.assertEqual(len(tumblr), 189)
+        self.assertEqual(set(tumblr), {"community_repost"})
+        self.assertEqual(set(by_source["wikis"]), {"wiki"})
+        self.assertEqual(set(by_source["legacy"]) | set(by_source["artists"]), {None})
+
+    def test_the_template_qualifies_the_kind(self):
+        template = (ROOT / "templates/slideshow.html").read_text(encoding="utf-8-sig")
+        self.assertIn('DEEMO_I18N.t("slideshow.provenance." + data.provenance)', template)
+
+    def test_wiki_art_is_credited_and_found_by_its_composer(self):
+        records = [record for asset in self.catalog["assets"] for record in asset["provenance"]]
+        manifest = {record["id"]: record.get("composer") for record in read_json(MANIFEST)["assets"]}
+        wiki = {record["id"]: record.get("composer") for record in records if record["family"] == "wikis"}
+        self.assertEqual(sorted(wiki), sorted(manifest))
+        self.assertEqual([key for key in sorted(wiki) if wiki[key] != manifest[key]], [], "Rebuild the catalog")
+        # The archive search indexes every record's composer: "Sakuzyo" finds the Fandom and BWIKI Altale too.
+        found = {record["source_id"] for asset in self.catalog["assets"] if asset["gallery"]
+                 if any("Sakuzyo" in (record.get("composer") or "") for record in asset["provenance"])
+                 for record in asset["provenance"] if record["title"] == "Altale"}
+        self.assertTrue({"legacy", "wikis:fandom", "wikis:bwiki"} <= found, found)
+        credited = [slide for slide in self.slides if slide["data-source-id"].startswith("wikis:") and slide.get("data-composer")]
+        self.assertGreater(len(credited), 400)
+        self.assertIn("Sakuzyo", {slide["data-composer"] for slide in credited if slide["data-title"] == "Altale"})
 
 
 if __name__ == "__main__":

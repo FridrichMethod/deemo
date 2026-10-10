@@ -26,7 +26,13 @@ DEEMO_I18N.register({
     "slideshow.kind.song_art": "Song artwork",
     "slideshow.kind.collection_cover": "Collection cover",
     "slideshow.kind.contact_sheet": "Long image",
-    "slideshow.kind.illustration": "Illustration"
+    "slideshow.kind.illustration": "Illustration",
+    "slideshow.provenance.community_repost": "unofficial repost",
+    "slideshow.provenance.community_edit": "community edit",
+    "slideshow.provenance.community_scan": "community scan",
+    "slideshow.provenance.official_website": "official website",
+    "slideshow.provenance.official_reference": "official reference",
+    "slideshow.provenance.wiki": "wiki upload"
   },
   "zh-CN": {
     "slideshow.title": "DEEMO 1 曲绘集 · FridrichMethod",
@@ -54,6 +60,12 @@ DEEMO_I18N.register({
     "slideshow.kind.song_art": "单曲曲绘",
     "slideshow.kind.collection_cover": "曲包封面",
     "slideshow.kind.contact_sheet": "长图",
-    "slideshow.kind.illustration": "插画"
+    "slideshow.kind.illustration": "插画",
+    "slideshow.provenance.community_repost": "非官方转载",
+    "slideshow.provenance.community_edit": "社区修图",
+    "slideshow.provenance.community_scan": "社区扫描",
+    "slideshow.provenance.official_website": "官网图片",
+    "slideshow.provenance.official_reference": "官方参考资料",
+    "slideshow.provenance.wiki": "Wiki 上传"
   }
 });
