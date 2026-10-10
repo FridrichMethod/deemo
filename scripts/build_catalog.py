@@ -41,6 +41,12 @@ def required_input(root: Path, relative: str, directory: bool = False) -> Path:
     return path
 
 
+def legacy_pngs(directory: Path) -> list[Path]:
+    """A legacy directory's PNGs in file-name order. The explicit key and the exact suffix test give the same list
+    on every platform (WindowsPath sorts case-folded, and glob matches case-insensitively on Windows)."""
+    return sorted((path for path in directory.iterdir() if path.suffix == ".png"), key=lambda path: path.name)
+
+
 def legacy_assets(root: Path) -> list[dict]:
     assets = []
     mapping_path = required_input(root, "data/sources/song-mapping.json")
@@ -51,8 +57,8 @@ def legacy_assets(root: Path) -> list[dict]:
         raise ValueError(f"Song mapping has no data.songs object and data.books list: {mapping_path.relative_to(root)}")
     original_dir = required_input(root, "assets/legacy/trans", directory=True)
     quantized_dir = required_input(root, "assets/legacy/tiny", directory=True)
-    originals = sorted(original_dir.glob("*.png"))
-    if {path.name for path in originals} != {path.name for path in quantized_dir.glob("*.png")}:
+    originals = legacy_pngs(original_dir)
+    if {path.name for path in originals} != {path.name for path in legacy_pngs(quantized_dir)}:
         raise ValueError("Legacy trans/tiny filenames must be paired exactly")
     for path in originals:
         raw = path.read_bytes()

@@ -145,6 +145,18 @@ class CatalogTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Song mapping"):
             build.legacy_assets(self.root)
 
+    def test_legacy_order_is_by_file_name_on_every_platform(self):
+        # WindowsPath compares case-folded parts; a path type that does the same here makes the order come
+        # from an explicit file-name key rather than from how the platform's paths happen to compare.
+        class CaseFoldedPath(type(self.root)):
+            def __lt__(self, other):
+                return str(self).casefold() < str(other).casefold()
+
+        for key in ("beta", "Zeta", "alpha"):
+            self.legacy_pair(key)
+        keys = [asset["internal_key"] for asset in build.legacy_assets(CaseFoldedPath(self.root))]
+        self.assertEqual(keys, ["Zeta", "alpha", "beta"])
+
     def test_missing_quantized_legacy_pair_is_rejected(self):
         self.legacy_pair()
         (self.root / "assets/legacy/tiny/magnolia.png").unlink()
