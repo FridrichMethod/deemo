@@ -33,6 +33,15 @@ class CatalogTests(unittest.TestCase):
             "sha256": hashlib.sha256(raw).hexdigest(), "width": 8, "height": 12,
             "format": "PNG", "game": "DEEMO",
         }
+        self.required_inputs()
+
+    def required_inputs(self):
+        """Empty versions of every input a build requires; each test then adds only what it exercises."""
+        for family in build.SOURCE_MANIFESTS:
+            (self.root / f"data/sources/{family}.json").write_text(json.dumps({"sources": [], "assets": []}), encoding="utf-8")
+        (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {"songs": {}, "books": []}}), encoding="utf-8")
+        for variant in ("trans", "tiny"):
+            (self.root / f"assets/legacy/{variant}").mkdir(parents=True, exist_ok=True)
 
     def manifest(self, family, asset):
         content = {"sources": [{"id": asset["source_id"], "name": family, "url": asset["page_url"]}], "assets": [asset]}
@@ -118,6 +127,23 @@ class CatalogTests(unittest.TestCase):
         with patch.object(build, "legacy_assets", return_value=recorded):
             with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
                 build.combine(self.root, verify=True)
+
+    def test_missing_required_inputs_are_rejected(self):
+        # A lost manifest, mapping or legacy directory must not quietly build a smaller site.
+        self.assertEqual(build.combine(self.root, verify=True)["summary"]["unique_files"], 0)
+        for relative in [f"data/sources/{family}.json" for family in build.SOURCE_MANIFESTS] + [
+                "data/sources/song-mapping.json", "assets/legacy/trans", "assets/legacy/tiny"]:
+            with self.subTest(missing=relative):
+                path = self.root / relative
+                path.rmdir() if path.is_dir() else path.unlink()
+                with self.assertRaisesRegex(FileNotFoundError, f"Missing required input: {relative}"):
+                    build.combine(self.root, verify=True)
+                self.required_inputs()
+
+    def test_song_mapping_without_songs_is_rejected(self):
+        (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {}}), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Song mapping"):
+            build.legacy_assets(self.root)
 
     def test_missing_quantized_legacy_pair_is_rejected(self):
         self.legacy_pair()

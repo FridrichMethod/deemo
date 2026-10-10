@@ -33,14 +33,24 @@ def safe_path(root: Path, value: str) -> Path:
     return path
 
 
+def required_input(root: Path, relative: str, directory: bool = False) -> Path:
+    """An input every build needs: a missing one fails loudly rather than quietly building a smaller site."""
+    path = root / relative
+    if not (path.is_dir() if directory else path.is_file()):
+        raise FileNotFoundError(f"Missing required input: {relative}")
+    return path
+
+
 def legacy_assets(root: Path) -> list[dict]:
     assets = []
-    mapping_path = root / "data/sources/song-mapping.json"
-    mapping = json.loads(mapping_path.read_text(encoding="utf-8")) if mapping_path.exists() else {}
-    song_data = mapping.get("data", {})
-    songs, books = song_data.get("songs", {}), song_data.get("books", [])
-    original_dir = root / "assets/legacy/trans"
-    quantized_dir = root / "assets/legacy/tiny"
+    mapping_path = required_input(root, "data/sources/song-mapping.json")
+    mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+    song_data = mapping.get("data") or {}
+    songs, books = song_data.get("songs"), song_data.get("books")
+    if not isinstance(songs, dict) or not isinstance(books, list):
+        raise ValueError(f"Song mapping has no data.songs object and data.books list: {mapping_path.relative_to(root)}")
+    original_dir = required_input(root, "assets/legacy/trans", directory=True)
+    quantized_dir = required_input(root, "assets/legacy/tiny", directory=True)
     originals = sorted(original_dir.glob("*.png"))
     if {path.name for path in originals} != {path.name for path in quantized_dir.glob("*.png")}:
         raise ValueError("Legacy trans/tiny filenames must be paired exactly")
@@ -123,9 +133,7 @@ def combine(root: Path, verify: bool = False) -> dict:
     }]
     assets, failures, snapshots = [], [], {}
     for family in SOURCE_MANIFESTS:
-        path = root / "data" / "sources" / f"{family}.json"
-        if not path.exists():
-            continue
+        path = required_input(root, f"data/sources/{family}.json")
         manifest = json.loads(path.read_text(encoding="utf-8"))
         snapshots[family] = manifest.get("fetched_at")
         sources.extend({**source, "family": family} for source in manifest["sources"])
