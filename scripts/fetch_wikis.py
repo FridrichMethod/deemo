@@ -46,6 +46,8 @@ SOURCES = {
 HEADERS = {"User-Agent": "DEEMO-Public-Art-Archive/1.0 (personal research; 4 workers max)"}
 RASTER = re.compile(r"\.(png|jpe?g|webp|gif)$", re.I)
 UI = re.compile(r"^(arrow|bbook|ac-icon|fc-icon|logo|wikilogo)(\.|$)|titletab|screenshot|^\d{8} |DEEMO[ _]II", re.I)
+# Shortest edge of a collection cover; anything smaller is a UI tab or icon (the smallest real cover is 142 px).
+MIN_COVER_EDGE = 100
 
 
 def now():
@@ -213,6 +215,9 @@ def discover_fandom():
         if candidate["kind"] == "song_art" and min(info["width"], info["height"]) < 300:
             excluded.append({"title": title, "reason": "Small UI/icon-sized image on song page", "width": info["width"], "height": info["height"]})
             continue
+        if candidate["kind"] == "collection_cover" and min(info["width"], info["height"]) < MIN_COVER_EDGE:
+            excluded.append({"title": title, "reason": "Icon-sized collection image", "width": info["width"], "height": info["height"]})
+            continue
         selected.append({"source": "fandom", "file_title": title, "info": info, **candidate})
     return selected, songs, {"song_pages": len(songs), "collection_pages": len(collection_pages), "excluded": excluded}
 
@@ -231,6 +236,9 @@ def discover_bwiki(fandom_songs):
     for info in inventory:
         if not info.get("mime", "").startswith("image/") or not RASTER.search(info["name"]):
             continue
+        # The same UI exclusion as the Fandom path, applied to the page-title form (spaces, not underscores).
+        if UI.search(info["name"].replace("_", " ")):
+            continue
         stem = info["name"].rsplit(".", 1)[0].replace("_", " ")
         related = lookup.get(normalized(stem), [])
         if related and min(info["width"], info["height"]) >= 300:
@@ -239,7 +247,8 @@ def discover_bwiki(fandom_songs):
                              "related_pages": sorted({s["page_url"] for s in related}),
                              "collections": sorted({c for s in related for c in s["collections"]}),
                              "mapping_method": "Exact normalized song title / image filename match"})
-        elif normalized(stem) in collection_lookup or re.search(r"collection|selection|^Book of |^Epilogue$|^Shattered Memories", stem, re.I):
+        elif (normalized(stem) in collection_lookup or re.search(r"collection|selection|^Book of |^Epilogue$|^Shattered Memories", stem, re.I)) \
+                and min(info["width"], info["height"]) >= MIN_COVER_EDGE:
             collection = collection_lookup.get(normalized(stem), stem)
             selected.append({"source": "bwiki", "file_title": info["title"], "info": info,
                              "kind": "collection_cover", "song_titles": [], "collections": [collection],
