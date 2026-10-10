@@ -42,7 +42,7 @@
   // Search covers the verbatim source name and its localized display name, so the index is built per language.
   function searchable(asset) {
     return [asset.title, asset.artist, asset.internal_key, ...asset.provenance.flatMap((p) =>
-      [p.title, p.artist, p.composer, p.collection, p.collections, p.song_titles, p.source_name, sourceName(p), p.page_url, p.internal_key])]
+      [p.title, p.artist, p.composer, p.collection, p.collections, p.collection_aliases, p.song_titles, p.source_name, sourceName(p), p.page_url, p.internal_key])]
       .map(textValue).join(" ").toLocaleLowerCase();
   }
   const searchIndexes = new Map();
