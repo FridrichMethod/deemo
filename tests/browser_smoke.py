@@ -634,10 +634,16 @@ def open_slideshow(browser, query, width=1440, height=1000):
     return page
 
 
+# Whether a tap at the centre of an element reaches it, and what takes the tap instead.
+HITS = """(node) => { const box = node.getBoundingClientRect();
+    return node.contains(document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2)); }"""
+OBSTACLE = """((node) => { const box = node.getBoundingClientRect(), at = document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2);
+    return at && `${at.tagName}.${at.className}`; })"""
+
+
 def hit(page, selector):
     """Whether a tap at the centre of the first element matching the selector reaches it."""
-    return page.locator(selector).first.evaluate("""(node) => { const box = node.getBoundingClientRect();
-        return node.contains(document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2)); }""")
+    return page.locator(selector).first.evaluate(HITS)
 
 
 def check_slideshow_controls(browser):
@@ -709,8 +715,23 @@ def check_screenshot_overlay(browser):
     assert page.evaluate("document.getElementById('scerrn-content').childElementCount") == 0
     assert page.evaluate("document.activeElement === document.querySelector('.photo button')")
     assert page.evaluate("[history.length, location.href]") == history
+    # On short landscape phones the preview canvas spans most of the screen; Save and close stay on top of it.
+    for width, height in ((568, 320), (667, 375), (844, 390)):
+        page.set_viewport_size({"width": width, "height": height})
+        page.locator(".photo button").click()
+        page.wait_for_function(overlay_open, timeout=20_000)
+        # The popup's visibility follows a transition, so the preview and the close button take taps only once it
+        # has settled; Save, outside the popup, is checked then.
+        for control in ("#scerrn-content canvas", "#screenshot .close"):
+            try:
+                page.wait_for_function(f"({HITS})(document.querySelector({json.dumps(control)}))", timeout=5000)
+            except PlaywrightTimeoutError:
+                raise AssertionError((width, height, control, page.locator(control).evaluate(OBSTACLE))) from None
+        assert hit(page, "#screenshot .save button"), (width, height, page.locator("#screenshot .save button").evaluate(OBSTACLE))
+        page.keyboard.press("Escape")
+        assert not page.evaluate(overlay_open)
     finish(page)
-    checks.append("screenshot overlay: no URL state, Escape, focus return")
+    checks.append("screenshot overlay: no URL state, Escape, focus return; Save and close clear of the preview at 568x320, 667x375, 844x390")
 
 
 def check_slide_hit_testing(browser):

@@ -509,6 +509,13 @@ img:not([src]) {
     display: block !important;
 }
 
+/* The preview canvas is fixed and drawn after the overlay's buttons, so on short landscape screens it covered the
+   Save button in the bottom-left corner; both buttons stay above it. */
+.overlay.is-open .save,
+.popup .close {
+    z-index: 1;
+}
+
 .popup {
     margin: 0;
     padding: 20px;
