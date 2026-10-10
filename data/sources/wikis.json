@@ -655,7 +655,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
-      "composer": "Jerry Barnes  Quiana"
+      "composer": "Jerry Barnes / Quiana"
     },
     {
       "id": "wikis:bwiki:0b836cbe6d902157",
@@ -1443,7 +1443,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
-      "composer": "Jerry Barnes  Katreese Barnes  Rodger Green",
+      "composer": "Jerry Barnes / Katreese Barnes / Rodger Green",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -5208,7 +5208,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
-      "composer": "Yuk-cheung Chun  Trevor Lin feat. Silvia Su",
+      "composer": "Yuk-cheung Chun / Trevor Lin feat. Silvia Su",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -14875,7 +14875,7 @@
       "download_sha1": "6812d15fb0c111fe55265b7be52059572bdc77f3",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Jerry Barnes  Katreese Barnes  Rodger Green",
+      "composer": "Jerry Barnes / Katreese Barnes / Rodger Green",
       "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.1"
@@ -16246,7 +16246,7 @@
       "download_sha1": "fa484845e94f43a09ff1b501c9aa9545fe028b94",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "M2U  Vocal by Guriri",
+      "composer": "M2U / Vocal by Guriri",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -21724,7 +21724,7 @@
       "download_sha1": "a82a405136fb2d40304c7ff1aa7d31144b76e1ff",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Jerry Barnes  Quiana",
+      "composer": "Jerry Barnes / Quiana",
       "composer_source": "wikis:bwiki"
     },
     {
@@ -22539,7 +22539,7 @@
       "download_sha1": "2364697baa49286dc0c491c5194b43eff0f7266a",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "M2U  Vocal by Guriri",
+      "composer": "M2U / Vocal by Guriri",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -39006,7 +39006,7 @@
       "download_sha1": "ee14edefaf7e8f8f15365dee04a2b887e60d6705",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Yuk-cheung Chun  Trevor Lin feat. Silvia Su",
+      "composer": "Yuk-cheung Chun / Trevor Lin feat. Silvia Su",
       "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.1"
