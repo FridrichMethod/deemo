@@ -78,10 +78,26 @@ class FontTests(unittest.TestCase):
     def test_pages_and_stylesheets_reference_only_shipped_font_files(self):
         sources = [*sorted((ROOT / "src").rglob("*.css")), ROOT / "templates/slideshow.html", ROOT / "archive.html"]
         for source in sources:
+            # The template is served from the repository root as index.html.
+            base = ROOT if source.parent.name == "templates" else source.parent
             for url in FONT_URL.findall(source.read_text(encoding="utf-8-sig")):
                 with self.subTest(source=source.relative_to(ROOT).as_posix(), url=url):
                     self.assertNotIn(Path(url).name, REMOVED_FONTS)
-                    self.assertTrue((source.parent / url).resolve().is_file())
+                    self.assertTrue((base / url).resolve().is_file())
+
+
+class ProvenanceTests(unittest.TestCase):
+    def test_every_inherited_site_file_has_a_provenance_row(self):
+        inherited = {record["path"]: record["original_path"] for record in inventory_records()}
+        files = sorted(path.relative_to(ROOT).as_posix() for path in (ROOT / "assets/site").rglob("*") if path.is_file())
+        self.assertTrue(files)
+        for document in LICENSE_INDEXES:
+            rows = [line for line in (ROOT / document).read_text(encoding="utf-8").splitlines() if line.startswith("|")]
+            for relative in files:
+                with self.subTest(document=document, file=relative):
+                    matching = [row for row in rows if row.startswith(f"| `{relative.removeprefix('assets/site/')}` |")]
+                    self.assertEqual(len(matching), 1, "Each file under assets/site/ needs exactly one provenance row")
+                    self.assertIn(f"`{inherited.get(relative, '(not in the legacy inventory)')}`", matching[0], "Name the inherited upstream path")
 
     def test_readmes_state_the_inventory_size(self):
         count = len(inventory_records())
