@@ -385,11 +385,11 @@ def main():
     parser.add_argument("--workers", type=int, default=4, choices=range(1, 5))
     args = parser.parse_args()
     manifest_path = ROOT / "data/sources/wikis.json"
-    previous = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    previous = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
     existing = {asset["id"]: asset for asset in previous.get("assets", [])}
     manifest = {"schema_version": 1, "fetched_at": now(), "sources": [], "assets": [], "failures": []}
     if args.resume:
-        candidates = json.loads((ROOT / "data/sources/wiki-discovery.json").read_text())["candidates"]
+        candidates = json.loads((ROOT / "data/sources/wiki-discovery.json").read_text(encoding="utf-8"))["candidates"]
         for candidate in candidates:
             if "booksprite" in candidate["file_title"].lower():
                 candidate["kind"] = "collection_cover"
