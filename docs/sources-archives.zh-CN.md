@@ -25,6 +25,7 @@
 - [Internet Archive 202606 项目](https://archive.org/details/deemo_ost-_202606)列出 443 个 FLAC、443 个 MP3、443 个 PNG、443 个 spectrogram。普通 PNG 抽样实际是 800×200 的音频波形；音频描述也把嵌入封面归源至 DEEMO Wiki。因此不下载音频或波形/频谱图。
 - Zerochan/Safebooru 是混合 fanart、官方图、裁切和再上传的索引，没有核实独立新增的官方曲绘，未把整站图片当母图批量导入。
 - Tumgik 第三方镜像与 SteamDB 当前 HTTP 403；前者所指的 Blaze Wu 作品由画师来源 importer 抓取原始 Tumblr 页面。
+- 日文 DEEMO Wiki 画师目录归 Wiki importer 管理（`wikis:wikiwiki-illustrators`），此处条目标记为 `delegated`。
 - Bilibili 视频检索保留为线索，视频帧经过视频编码，不作为原始散图来源。
 
 这些来源的可访问性和著作权是两件事。这里保留原作者与 Rayark 归属，仅记录公开来源，不把维护者身份或仓库代码许可证套用于曲绘。
@@ -36,4 +37,4 @@ python -I scripts/fetch_archives.py
 python -I scripts/fetch_archives.py --verify
 ```
 
-依赖为 `requests`、`beautifulsoup4`、`Pillow`；`-I` 使用 Python 隔离模式。抓取器按 3–5 个线程并行请求，遇到失败会写入 `failures`；Tumblr 每个标签按 API `posts-total` 分页，不设置静默截断上限。文件按内容校验后写入；远端内容如变化，旧文件保留并以 hash 后缀保存新版本。
+需要 Python 3.10 或更高版本；依赖为 `requests`、`beautifulsoup4`、`Pillow`；`-I` 使用 Python 隔离模式。抓取器按 3–5 个线程并行请求，遇到失败会以真实来源 ID 与 URL 写入 `failures`；有失败的来源标记为 `partial` 或 `failed`，命令以非零状态退出。Tumblr 每个标签按 API `posts-total` 分页，不设置静默截断上限。请求只发往预期主机（Cover Art Archive/archive.org、Tumblr、deemo.com、rayark.promo），每次重定向都按同一列表检查。文件按内容校验后写入；远端内容如变化，旧文件保留并以 hash 后缀保存新版本。manifest 在运行结束时一次性原子写入。重新运行不会丢弃已校验的记录，也不会删除文件：变化文件的新版本沿用资源 ID，旧记录保留为 `<ID>@<SHA-256 前 12 位十六进制>` 并标记 `upstream_status: superseded`；未能重现的记录保留为 `fetch_failed` 或 `removed`。

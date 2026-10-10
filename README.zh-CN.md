@@ -79,7 +79,7 @@ archive.html / index.html          两个静态网页入口
 site.webmanifest / browserconfig.xml  浏览器配置入口
 ```
 
-建议 Python 3.10+。安装依赖并构建：
+需要 Python 3.10 或更高版本（锁定版本的 Pillow 与 requests 要求如此）。安装依赖并构建：
 
 ```sh
 python -m venv .venv
