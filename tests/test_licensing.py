@@ -108,5 +108,17 @@ class ProvenanceTests(unittest.TestCase):
                 self.assertEqual(int(match.group(1)), count)
 
 
+class AttributionTests(unittest.TestCase):
+    def test_slideshow_header_matches_the_notice_rights_statement(self):
+        template = (ROOT / "templates/slideshow.html").read_text(encoding="utf-8-sig")
+        self.assertTrue(template.startswith("<!--"))
+        header = words(template[: template.index("-->")])
+        self.assertNotIn("all assets belongs to Rayark", header)
+        self.assertNotIn("所有素材版权为雷亞遊戲（Rayark Inc.）所有", header)
+        self.assertIn("Rayark Inc. and the respective creators", header)
+        self.assertIn("雷亞遊戲（Rayark Inc.）与各自的创作者", header)
+        self.assertIn("NOTICE", header)
+
+
 if __name__ == "__main__":
     unittest.main()
