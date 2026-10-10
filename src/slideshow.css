@@ -247,17 +247,21 @@ body {
     overflow-wrap: anywhere;
 }
 
+/* When the signature wraps on a narrow phone, its box reaches the right edge of the screen, over the top of the
+   language toggle; only its links take pointer events, so taps there still reach the toggle. */
 .signature {
     font-family: COPRGTL, sans-serif;
     font-size: 20px;
     position: fixed;
     left: 15px;
     top: 5px;
-    z-index: 9999
+    z-index: 9999;
+    pointer-events: none
 }
 
 .signature a {
-    color: #333
+    color: #333;
+    pointer-events: auto
 }
 
 .signature a:hover {
