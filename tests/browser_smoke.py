@@ -128,14 +128,29 @@ def finish(page):
     page.context.close()
 
 
+def shown_count(page):
+    """The number of matching images the archive reports ("{count} / {total} …" in either language)."""
+    return page.evaluate("parseInt(document.getElementById('count').textContent, 10)")
+
+
+def catalog_count(page, predicate):
+    """The number of gallery images in the page's catalog for which the JavaScript predicate holds."""
+    return page.evaluate(f"window.DEEMO_CATALOG.assets.filter((a) => a.gallery && ({predicate})(a)).length")
+
+
+def card_sizes(page):
+    return page.evaluate("[...document.querySelectorAll('.card-image img')].map((img) => [+img.getAttribute('width'), +img.getAttribute('height')])")
+
+
 def check_archive(page):
     navigate(page, "archive.html")
     page.wait_for_selector(".card-image img")
     total = page.evaluate("window.DEEMO_CATALOG.summary.gallery_images")
     assert total >= 320
+    assert total == catalog_count(page, "() => true") == shown_count(page)
     page.wait_for_function("document.querySelector('.card-image img').naturalWidth > 0")
     page.locator("#query").fill("Magnolia")
-    assert page.locator(".card").count() >= 1
+    assert 1 <= page.locator(".card").count() == shown_count(page) < total
     page.locator(".card-image").first.click()
     assert page.locator("#viewer").evaluate("el => el.open")
     page.wait_for_function("document.getElementById('full-image').naturalWidth > 0")
@@ -149,12 +164,28 @@ def check_archive(page):
         page.locator("#more").click()
         assert page.locator(".card").count() == min(120, total)
     checks.extend(["search", "empty state", "reset", "pagination"])
-    if page.evaluate("window.DEEMO_CATALOG.summary.by_family.artists || 0"):
-        page.locator("#family").select_option("artists")
-        assert page.locator(".card").count() > 0
-        page.locator("#minimum").select_option("3000")
-        assert page.locator(".card").count() > 0
-        checks.append("artist/size filters")
+    # Each filter and sort is checked against the catalog: the count it reports and the cards it draws.
+    artists = "(a) => a.provenance.some((p) => p.family === 'artists')"
+    artist_count = catalog_count(page, artists)
+    assert artist_count, "The catalog has artist images"
+    page.locator("#family").select_option("artists")
+    assert shown_count(page) == artist_count
+    page.locator("#minimum").select_option("3000")
+    large = catalog_count(page, f"(a) => ({artists})(a) && Math.max(a.width, a.height) >= 3000")
+    assert 0 < large < artist_count, "The 3000 px filter keeps some artist images and drops others"
+    assert shown_count(page) == large
+    sizes = card_sizes(page)
+    assert len(sizes) == min(60, large) and all(max(size) >= 3000 for size in sizes), sizes
+    page.locator("#reset-filters").click()
+    page.locator("#kind").select_option("collection_cover")
+    covers = catalog_count(page, "(a) => a.provenance.some((p) => p.kind === 'collection_cover')")
+    assert 0 < covers < total and shown_count(page) == covers
+    page.locator("#reset-filters").click()
+    page.locator("#sort").select_option("resolution")
+    areas = [width * height for width, height in card_sizes(page)]
+    assert areas == sorted(areas, reverse=True) and len(areas) == min(60, total)
+    assert areas[0] == page.evaluate("Math.max(...window.DEEMO_CATALOG.assets.filter((a) => a.gallery).map((a) => a.width * a.height))")
+    checks.extend(["source/kind/size filters match the catalog", "pixel-area sort"])
     page.locator("#reset-filters").click()
     page.locator("#family").select_option("legacy")
     page.locator("#query").fill("Magnolia")
@@ -198,7 +229,11 @@ def check_slideshow_deep_links(page):
             assert "assets/legacy/trans/" in page.evaluate("imgTargets[slideIndex - 1].src")
         original_title = page.locator("#asset-title").inner_text()
         page.locator(".next").click()
+        assert page.evaluate("imgTargets[slideIndex - 1].dataset.id") != requested_id, "Next shows another artwork"
+        assert page.locator("#asset-title").inner_text() == page.evaluate("imgTargets[slideIndex - 1].dataset.title")
+        page.wait_for_function("imgTargets[slideIndex - 1].naturalWidth > 0")
         page.locator(".prev").click()
+        assert page.evaluate("imgTargets[slideIndex - 1].dataset.id") == requested_id, "Previous returns to it"
         assert page.locator("#asset-title").inner_text() == original_title
     checks.extend(["artist/legacy slideshow deep links", "navigation"])
 
