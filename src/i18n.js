@@ -16,6 +16,7 @@
     try { return normalize(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
   }
   let lang = normalize(new URLSearchParams(location.search).get("lang")) || storedLang() || DEFAULT;
+  document.documentElement.lang = lang;
   const has = (key) => Object.hasOwn(messages[lang], key) || Object.hasOwn(messages[DEFAULT], key);
   function t(key, vars) {
     const text = messages[lang][key] ?? messages[DEFAULT][key] ?? key;
@@ -30,16 +31,18 @@
     const query = params.toString();
     return match[1] + (query ? `?${query}` : "") + (match[3] || "");
   }
+  // Runs again after each register(); keys whose table has not registered yet keep the page's static English text.
   function apply(root = document) {
     document.documentElement.lang = lang;
-    for (const node of root.querySelectorAll("[data-i18n]")) node.textContent = t(node.dataset.i18n);
+    for (const node of root.querySelectorAll("[data-i18n]")) if (has(node.dataset.i18n)) node.textContent = t(node.dataset.i18n);
     for (const node of root.querySelectorAll("[data-i18n-attr]")) {
       for (const pair of node.dataset.i18nAttr.split(";")) {
         const [attribute, key] = pair.split(":").map((part) => part.trim());
-        if (attribute && key) node.setAttribute(attribute, t(key));
+        if (attribute && key && has(key)) node.setAttribute(attribute, t(key));
       }
     }
     for (const link of root.querySelectorAll("a[data-lang-link]")) link.setAttribute("href", localizeHref(link.getAttribute("href")));
+    if (!has("lang.toggle")) return;
     for (const button of root.querySelectorAll("[data-lang-toggle]")) {
       // The label names the other language in that language, so only its span carries that language's tag;
       // the button inherits the page language, which its title is written in.
@@ -67,7 +70,9 @@
     setLang(lang === DEFAULT ? ALTERNATE : DEFAULT);
   });
   function markReady() { ready = true; apply(); }
-  if (document.readyState === "complete") markReady(); else document.addEventListener("DOMContentLoaded", markReady);
+  // Deferred scripts run once the DOM is parsed ("interactive"), before DOMContentLoaded, which waits for every deferred
+  // script, including the archive's multi-megabyte catalog; each table then applies as soon as it registers.
+  if (document.readyState !== "loading") markReady(); else document.addEventListener("DOMContentLoaded", markReady);
   window.DEEMO_I18N = Object.freeze({
     defaultLang: DEFAULT,
     languages: [DEFAULT, ALTERNATE],
