@@ -8,6 +8,12 @@ or removed since the baseline, whether each was uploaded after the baseline snap
 and whether a local download already exists for it. The report is written in English,
 followed by the same report in Simplified Chinese inside a collapsed <details> block;
 if both together would exceed REPORT_LIMIT characters, each table lists fewer rows.
+
+Wiki editors control file titles, song titles and collection names, and the report becomes
+the body of a bot pull request and a run summary. Every value taken from a snapshot is
+therefore shown as an inline code span (see code()), so it cannot add mentions, issue
+references, links, images, HTML or table cells; the only links are to file pages on the
+candidate's own wiki.
 """
 
 from __future__ import annotations
@@ -15,10 +21,22 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
+from urllib.parse import quote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_LABELS = {"fandom": "Fandom", "bwiki": "BWIKI"}
+# The report links a candidate's file page only when it is an https URL on that source's wiki.
+SOURCE_HOSTS = {"fandom": "deemo.fandom.com", "bwiki": "wiki.biligame.com"}
+# Characters kept as-is in a linked URL; anything else (spaces, < > | ` \ " and non-ASCII) is percent-encoded.
+URL_SAFE = ":/?#[]@!$&'()*+,;=%"
+# Control characters and line or paragraph separators would end a table row; bidirectional controls could
+# reorder the visible text.
+CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f\u2028\u2029]")
+BIDI_CONTROL = re.compile(r"[\u202a-\u202e\u2066-\u2069]")
+DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?(?:Z|[+-]\d{2}:?\d{2})?")
 FINGERPRINT_FIELDS = ("sha1", "size", "width", "height")
 SMALL_IMAGE_EDGE = 300
 ROW_LIMIT = 100
@@ -59,7 +77,7 @@ Merging this PR only updates the discovery snapshot; it includes no images. Afte
 .venv/bin/python -I tests/test_layout.py
 ```
 
-`--resume` verifies the SHA-256 and Wiki SHA-1 of existing files against the snapshot and downloads only added and re-uploaded files; re-uploaded files are saved under a new file name, and old files are not deleted automatically. "Added" entries uploaded before the baseline snapshot are usually changes in the wiki enumeration or the song-title mapping, not newly published artwork. Check the `failures` and checksum comparison fields in `data/sources/wikis.json` before committing the images and the manifest.
+`--resume` verifies the SHA-256 and Wiki SHA-1 of existing files against the snapshot and downloads only added and re-uploaded files. It never deletes files and keeps every previously verified record, marked with `upstream_status`: a re-uploaded file is saved under a new file name and keeps the asset id, while the previous version keeps its file and record as `"upstream_status": "superseded"`; a removed file keeps its record as `"upstream_status": "removed"`; a failed re-download keeps the old record as `"upstream_status": "fetch_failed"`. "Added" entries uploaded before the baseline snapshot are usually changes in the wiki enumeration or the song-title mapping, not newly published artwork. Check the `failures`, `upstream_status` and checksum comparison fields in `data/sources/wikis.json` before committing the images and the manifest.
 """,
     },
     "zh-CN": {
@@ -89,7 +107,7 @@ Merging this PR only updates the discovery snapshot; it includes no images. Afte
 .venv/bin/python -I tests/test_layout.py
 ```
 
-`--resume` 按快照校验已有文件的 SHA-256 与 Wiki SHA-1，只下载新增和重新上传的文件；重新上传的文件会以新文件名保存，旧文件不会自动删除。上传时间早于基线快照的"新增"条目通常是 Wiki 枚举或曲名映射的变化，而不是新发布的曲绘。检查 `data/sources/wikis.json` 中的 `failures` 与 checksum 比较字段，再提交图片与清单。
+`--resume` 按快照校验已有文件的 SHA-256 与 Wiki SHA-1，只下载新增和重新上传的文件。它不会删除任何文件，并保留所有已校验的记录，以 `upstream_status` 标记：重新上传的文件以新文件名保存并沿用原资产 ID，旧版本保留文件和记录，标记为 `"upstream_status": "superseded"`；已移除的文件保留记录，标记为 `"upstream_status": "removed"`；重新下载失败时保留旧记录，标记为 `"upstream_status": "fetch_failed"`。上传时间早于基线快照的"新增"条目通常是 Wiki 枚举或曲名映射的变化，而不是新发布的曲绘。检查 `data/sources/wikis.json` 中的 `failures`、`upstream_status` 与 checksum 比较字段，再提交图片与清单。
 """,
     },
 }
@@ -157,7 +175,8 @@ def compare(baseline: dict, current: dict, manifest: dict) -> dict:
     counts = {"added": len(added), "reuploaded": len(reuploaded), "removed": len(removed),
               "added_after_baseline": sum(row["uploaded_after_baseline"] for row in added),
               "baseline": len(old), "current": len(new)}
-    date = str(current.get("fetched_at") or "")[:10] or "unknown-date"
+    date = str(current.get("fetched_at") or "")[:10]
+    date = date if DATE.fullmatch(date) else "unknown-date"
     return {
         "changed": bool(added or removed or reuploaded),
         "title": (f"Wiki source update: {counts['added']} added · {counts['reuploaded']} re-uploaded · "
@@ -171,8 +190,25 @@ def compare(baseline: dict, current: dict, manifest: dict) -> dict:
     }
 
 
-def escape(value) -> str:
-    return str(value).replace("|", "\\|").replace("\n", " ")
+def code(value) -> str:
+    """Show untrusted text as one inline code span that stays inside its table cell.
+
+    GitHub renders nothing inside a code span: no mentions, references, links, images or HTML.
+    The fence is one backtick longer than any backtick run in the text, and a pipe is escaped
+    as \\| because GitHub splits table cells before it parses code spans.
+    """
+    text = BIDI_CONTROL.sub("", CONTROL.sub(" ", str(value))).replace("|", "\\|")
+    if not text.strip():
+        return "?"
+    fence = "`" * (max(map(len, re.findall("`+", text)), default=0) + 1)
+    pad = " " if text[0] == "`" or text[-1] == "`" else ""
+    return f"{fence}{pad}{text}{pad}{fence}"
+
+
+def timestamp(value) -> str:
+    if not value:
+        return "?"
+    return value if isinstance(value, str) and TIMESTAMP.fullmatch(value) else code(value)
 
 
 def plural(forms, count: int) -> str:
@@ -184,13 +220,31 @@ def short_title(file_title: str) -> str:
     return file_title.split(":", 1)[-1]
 
 
+def page_url(row: dict) -> str | None:
+    """The file page URL, percent-encoded for a Markdown link, if it is https on the row's own wiki."""
+    url = row.get("page_url")
+    if not isinstance(url, str):
+        return None
+    try:
+        parts = urlsplit(url)
+        trusted = (parts.scheme == "https" and parts.hostname == SOURCE_HOSTS.get(row["source"])
+                   and parts.port is None and not parts.username and not parts.password)
+    except ValueError:
+        return None
+    return quote(url, safe=URL_SAFE) if trusted else None
+
+
 def link(row: dict) -> str:
-    text = escape(short_title(row["file_title"]))
-    return f"[{text}]({escape(row['page_url'])})" if row.get("page_url") else text
+    text, url = code(short_title(str(row["file_title"]))), page_url(row)
+    return f"[{text}](<{url}>)" if url else text
+
+
+def source(row: dict) -> str:
+    return SOURCE_LABELS.get(row["source"]) or code(row["source"])
 
 
 def dims(width, height, lang: str = "en") -> str:
-    if not (width and height):
+    if not all(isinstance(edge, int) and edge > 0 for edge in (width, height)):
         return "?"
     flag = TEXT[lang]["small"] if min(width, height) < SMALL_IMAGE_EDGE else ""
     return f"{width}×{height}{flag}"
@@ -201,11 +255,13 @@ def mib(size) -> str:
 
 
 def short_sha(sha1) -> str:
-    return str(sha1)[:10] if sha1 else "?"
+    return code(str(sha1)[:10] if sha1 else "?")
 
 
 def uploaded(row: dict, lang: str = "en") -> str:
-    stamp = str(row.get("timestamp") or "?")[:10]
+    stamp = str(row.get("timestamp") or "")[:10]
+    if not DATE.fullmatch(stamp):
+        return "?"
     return TEXT[lang]["after_baseline"].format(stamp) if row.get("uploaded_after_baseline") else stamp
 
 
@@ -214,25 +270,25 @@ def local(row: dict, lang: str = "en") -> str:
     if not row.get("local_path"):
         return text["no_local"]
     verdict = text["sha1_verdict"][row.get("local_sha1_matched_wiki")]
-    return f"`{escape(row['local_path'])}`" + (text["verdict"].format(verdict) if verdict else "")
+    return code(row["local_path"]) + (text["verdict"].format(verdict) if verdict else "")
 
 
 def added_row(row: dict, lang: str = "en") -> list[str]:
-    names = " / ".join(row["song_titles"] + row["collections"]) or "—"
-    return [SOURCE_LABELS.get(row["source"], row["source"]), link(row), escape(row["kind"] or "?"),
-            dims(row["width"], row["height"], lang), mib(row["size"]), uploaded(row, lang), escape(names)]
+    names = " / ".join(code(name) for name in row["song_titles"] + row["collections"]) or "—"
+    return [source(row), link(row), code(row["kind"]) if row["kind"] else "?",
+            dims(row["width"], row["height"], lang), mib(row["size"]), uploaded(row, lang), names]
 
 
 def reuploaded_row(row: dict, lang: str = "en") -> list[str]:
     old = row["previous"]
-    return [SOURCE_LABELS.get(row["source"], row["source"]), link(row),
+    return [source(row), link(row),
             f"{dims(old['width'], old['height'], lang)} → {dims(row['width'], row['height'], lang)}",
             f"{mib(old['size'])} → {mib(row['size'])}",
-            f"`{short_sha(old['sha1'])}` → `{short_sha(row['sha1'])}`", uploaded(row, lang), local(row, lang)]
+            f"{short_sha(old['sha1'])} → {short_sha(row['sha1'])}", uploaded(row, lang), local(row, lang)]
 
 
 def removed_row(row: dict, lang: str = "en") -> list[str]:
-    return [SOURCE_LABELS.get(row["source"], row["source"]), link(row), local(row, lang)]
+    return [source(row), link(row), local(row, lang)]
 
 
 def table(section: str, rows: list[dict], columns: tuple[str, ...], render_row, lang: str, limit: int) -> list[str]:
@@ -254,9 +310,9 @@ def render(report: dict, lang: str = "en", limit: int | None = None) -> str:
     limit = ROW_LIMIT if limit is None else limit
     lines = [
         text["heading"], "",
-        text["snapshots"].format(baseline_at=report["baseline_fetched_at"] or "?",
+        text["snapshots"].format(baseline_at=timestamp(report["baseline_fetched_at"]),
                                  baseline=plural(text["candidates"], counts["baseline"]),
-                                 current_at=report["current_fetched_at"] or "?",
+                                 current_at=timestamp(report["current_fetched_at"]),
                                  current=plural(text["candidates"], counts["current"])), "",
         text["counts"].format(**counts), "",
     ]

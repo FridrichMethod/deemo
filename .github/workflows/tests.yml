@@ -1,0 +1,79 @@
+name: Tests
+
+# Every push and every pull request, whatever its base branch (stacked pull requests are checked too).
+# pages.yml calls this workflow as well and deploys only after it passes.
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  checks:
+    name: Offline checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        id: install
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet -r requirements.txt
+      # The remaining checks run even when an earlier one fails, so one run reports every failure.
+      - name: Unit tests (every tests/test_*.py)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          failed=()
+          for test in tests/test_*.py; do
+            echo "::group::$test"
+            "$RUNNER_TEMP/venv/bin/python" -I "$test" || failed+=("$test")
+            echo "::endgroup::"
+          done
+          for test in "${failed[@]}"; do
+            echo "::error file=$test::$test failed"
+          done
+          [ "${#failed[@]}" -eq 0 ]
+      - name: Generated files match their sources
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" scripts/build_catalog.py --verify --check'
+      - name: Inherited files keep their bytes
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" scripts/build_legacy_inventory.py'
+      - name: Archive manifest matches its files
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/fetch_archives.py --verify'
+
+  browser:
+    name: Browser smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        # Playwright drives the runner's preinstalled Google Chrome; no browser is downloaded.
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet -r requirements-dev.txt
+      - name: Smoke-test both pages in headless Chrome
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -I -m http.server 8765 --bind 127.0.0.1 > "$RUNNER_TEMP/http-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server"' EXIT
+          for _ in $(seq 50); do
+            curl --silent --fail --output /dev/null http://127.0.0.1:8765/archive.html && break
+            sleep 0.2
+          done
+          "$RUNNER_TEMP/venv/bin/python" -I tests/browser_smoke.py --base http://127.0.0.1:8765 --browser "$(command -v google-chrome)"

@@ -9,3 +9,15 @@
 *.webp binary
 *.gif binary
 *.pdf binary
+*.ttf binary
+*.ico binary
+*.mp3 binary
+
+# Never convert line endings of files whose exact bytes are pinned, whatever core.autocrlf or
+# core.eol say: inherited files in data/legacy-inventory.json and every asset (manifests record
+# their SHA-256). Checked by tests/test_line_endings.py.
+/LICENSE -text
+/licenses/*.txt -text
+/src/vendor/** -text
+/scripts/legacy/*.py -text
+/assets/** -text
