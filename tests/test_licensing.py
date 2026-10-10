@@ -27,6 +27,7 @@ FONT_URL = re.compile(r"""url\(\s*["']?([^"')]+\.(?:ttf|otf|woff2?))["']?\s*\)""
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 # GitHub renders NOTICE; Pages would serve the extensionless file as a download.
 NOTICE_URL = "https://github.com/FridrichMethod/deemo/blob/main/NOTICE"
+REPOSITORY_TREE = "https://github.com/FridrichMethod/deemo/tree/main/assets"
 # Upstream (mashirozx/deemo) files changed here, Apache-2.0 section 4(b): current path -> upstream name.
 MODIFIED_UPSTREAM = {
     "templates/slideshow.html": "test.html",
@@ -182,6 +183,18 @@ class AttributionTests(unittest.TestCase):
         footer = links_in("archive.html", "footer")
         targets = [href for href, key, _ in footer.links if key == "footer.attribution"]
         self.assertEqual(targets, [NOTICE_URL])
+
+    def test_noscript_points_to_resources_that_work_on_github_pages(self):
+        noscript = links_in("archive.html", "noscript")
+        text = words(" ".join(noscript.text))
+        # GitHub Pages lists no directories, so bare directory hints return 404 there.
+        self.assertNotRegex(text, r"assets/(public|legacy)/(\s|$|\W)")
+        for language in ("en", "zh-CN"):
+            with self.subTest(language=language):
+                hrefs = {href for href, _, lang in noscript.links if lang == language}
+                self.assertIn("data/catalog.json", hrefs)
+                self.assertIn(REPOSITORY_TREE, hrefs)
+                self.assertTrue((ROOT / "data/catalog.json").is_file())
 
 
 if __name__ == "__main__":
