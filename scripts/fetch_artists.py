@@ -17,6 +17,7 @@ import json
 from pathlib import Path
 import re
 import time
+from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 from PIL import Image
@@ -65,19 +66,50 @@ TUMBLR_POSTS = {
     "85916735720": "Mili Collection",
 }
 REFERENCE_URL = "https://princeofglass.blogspot.com/p/blog-page_1146.html"
+# Image hosts per platform (an entry also admits its subdomains), checked by hostname on every
+# download request and redirect hop.
+DOWNLOAD_HOSTS = {"pixiv": ("i.pximg.net",), "jimdo": ("image.jimcdn.com",), "tumblr": ("media.tumblr.com",)}
+MAX_REDIRECTS = 5
 
 
 def now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def request(url, referer=None):
+def host_allowed(url, hosts):
+    """True for an https URL whose hostname is one of hosts or a subdomain of one."""
+    try:
+        parts = urlsplit(url)
+        port = parts.port
+    except ValueError:
+        return False
+    host = (parts.hostname or "").rstrip(".")
+    return (parts.scheme == "https" and port in (None, 443)
+            and any(host == allowed or host.endswith("." + allowed) for allowed in hosts))
+
+
+def get_within(url, headers, hosts):
+    """GET url, following redirects only while every hop stays on https within hosts."""
+    for _ in range(MAX_REDIRECTS + 1):
+        if not host_allowed(url, hosts):
+            raise ValueError(f"Refusing URL outside the expected hosts ({', '.join(hosts)}): {url}")
+        response = requests.get(url, headers=headers, timeout=(15, 60), allow_redirects=False)
+        if not response.is_redirect:
+            return response
+        url = urljoin(response.url, response.headers["location"])
+    raise ValueError(f"Too many redirects: {url}")
+
+
+def request(url, referer=None, hosts=None):
     headers = dict(HEADERS)
     if referer:
         headers["Referer"] = requests.utils.requote_uri(referer)
     for attempt in range(3):
         try:
-            response = requests.get(url, headers=headers, timeout=(15, 60))
+            if hosts:
+                response = get_within(url, headers, hosts)
+            else:
+                response = requests.get(url, headers=headers, timeout=(15, 60))
             response.raise_for_status()
             return response
         except requests.RequestException as error:
@@ -284,7 +316,8 @@ def download(job, cache, refresh):
             data = path.read_bytes()
             if sha256(data).hexdigest() == previous["sha256"]:
                 return job, data, previous["fetched_at"]
-    response = request(job["download_url"], job["page_url"])
+    platform = job["source_id"].split(":")[1]
+    response = request(job["download_url"], job["page_url"], DOWNLOAD_HOSTS[platform])
     return job, response.content, now()
 
 

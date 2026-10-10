@@ -19,7 +19,7 @@ import threading
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import quote, unquote, urljoin, urlparse
+from urllib.parse import quote, unquote, urljoin, urlparse, urlsplit
 
 import requests
 from bs4 import BeautifulSoup
@@ -34,6 +34,15 @@ LOCAL = threading.local()
 MANIFEST = {"schema_version": 1, "fetched_at": STAMP, "sources": [], "assets": [], "failures": []}
 LOCK = threading.Lock()
 CAA_MBID = "fb7dec3c-01cd-4659-a398-e4494b824db4"
+MAX_REDIRECTS = 5
+# Hosts each fetch may reach; an entry also admits its subdomains. Checked on the hostname of every
+# request and redirect hop, never by substring.
+CAA_HOSTS = ("coverartarchive.org", "archive.org")
+TUMBLR_HOSTS = ("tumblr.com",)
+TUMBLR_MEDIA_HOSTS = ("media.tumblr.com",)
+OFFICIAL_HOSTS = ("deemo.com",)
+PROMO_HOSTS = ("rayark.promo",)
+ARCHIVE_ORG_HOSTS = ("archive.org",)
 
 
 def reset():
@@ -52,10 +61,35 @@ def session():
     return LOCAL.session
 
 
-def get(url):
-    r = session().get(url.replace("http://", "https://", 1), timeout=(15, 60))
-    r.raise_for_status()
-    return r
+def https(url):
+    """Upgrade an http:// scheme to https:// (only the scheme, never text later in the URL)."""
+    return "https://" + url[len("http://"):] if url.startswith("http://") else url
+
+
+def host_allowed(url, hosts):
+    """True for an https URL whose hostname is one of hosts or a subdomain of one."""
+    try:
+        parts = urlsplit(url)
+        port = parts.port
+    except ValueError:
+        return False
+    host = (parts.hostname or "").rstrip(".")
+    return (parts.scheme == "https" and port in (None, 443)
+            and any(host == allowed or host.endswith("." + allowed) for allowed in hosts))
+
+
+def get(url, hosts):
+    """GET url over https, following redirects only while every hop stays within hosts."""
+    url = https(url)
+    for _ in range(MAX_REDIRECTS + 1):
+        if not host_allowed(url, hosts):
+            raise ValueError(f"Refusing URL outside the expected hosts ({', '.join(hosts)}): {url}")
+        r = session().get(url, timeout=(15, 60), allow_redirects=False)
+        if not r.is_redirect:
+            r.raise_for_status()
+            return r
+        url = urljoin(r.url, r.headers["location"])
+    raise ValueError(f"Too many redirects: {url}")
 
 
 def source(sid, name, url, status, notes, **extra):
@@ -69,9 +103,9 @@ def failure(sid, url, exc, **extra):
         MANIFEST["failures"].append({"source_id": "archives:" + sid, "url": url, "error": str(exc), "checked_at": STAMP, **extra})
 
 
-def download(sid, key, title, page, url, kind, **extra):
+def download(sid, key, title, page, url, kind, hosts, **extra):
     try:
-        r = get(url)
+        r = get(url, hosts)
         blob = r.content
         if blob.startswith(b"%PDF-"):
             fmt, width, height, ext = "PDF", None, None, ".pdf"
@@ -117,19 +151,19 @@ def cover_art_archive():
                     "Community scans of official soundtrack packaging. Original API image files, not thumbnails; booklet spreads are references, not independent song masters.")
     api = f"https://coverartarchive.org/release/{CAA_MBID}"
     try:
-        data = get(api).json()
+        data = get(api, CAA_HOSTS).json()
     except Exception as exc:
         failure(sid, api, exc)
         return
     record["images_listed"] = len(data["images"])
     pool(lambda img: download(sid, img["id"], "DEEMO Song Collection — " + ", ".join(img["types"] or ["scan"]), page,
-                              img["image"].replace("http://", "https://"), "reference",
+                              https(img["image"]), "reference", hosts=CAA_HOSTS,
                               provenance="community_scan", scan_types=img["types"], api_approved=img["approved"]), data["images"], 3)
 
 
 def tumblr_api(blog, tag, start=0):
     url = f"https://{blog}.tumblr.com/api/read/json?tagged={quote(tag)}&num=50&start={start}"
-    text = get(url).text
+    text = get(url, TUMBLR_HOSTS).text
     if not text.startswith("var tumblr_api_read = "):
         raise ValueError(f"Tumblr public API unavailable at {url}")
     return json.loads(text.split(" = ", 1)[1].strip().rstrip(";"))
@@ -145,6 +179,21 @@ def tumblr_tag(blog, tag):
             return posts
 
 
+def post_covers(html, post):
+    """Cover URLs of one repost: `_cover.` images on Tumblr media hosts, then the API photo URLs.
+
+    Duplicates are dropped but empty API entries are kept, so the 1-based position (part of the
+    asset id) of every cover stays as before; callers skip the empty entries.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    covers = [img["src"] for img in soup.find_all("img", src=True)
+              if host_allowed(https(img["src"]), TUMBLR_MEDIA_HOSTS) and "_cover." in urlsplit(img["src"]).path]
+    # Some posts are standalone photos, already exposing largest API images.
+    photos = post.get("photos", []) or ([post] if post.get("photo-url-1280") else [])
+    covers += [p.get("photo-url-1280") or p.get("photo-url-500") for p in photos]
+    return list(dict.fromkeys(covers))
+
+
 def tumblr_mirror():
     sid, blog = "rayarkmusic-tumblr", "rayarkmusic"
     page = f"https://{blog}.tumblr.com/deemo"
@@ -152,7 +201,7 @@ def tumblr_mirror():
                     "Unofficial repost blog. Only image covers of DEEMO posts are fetched; no audio. FAQ describes cleaned artwork edits; these are not author masters.",
                     faq_url=f"https://{blog}.tumblr.com/faq", provenance="community_repost")
     try:
-        doc = BeautifulSoup(get(page).text, "html.parser")
+        doc = BeautifulSoup(get(page, TUMBLR_HOSTS).text, "html.parser")
     except Exception as exc:
         failure(sid, page, exc)
         return
@@ -173,19 +222,13 @@ def tumblr_mirror():
     def fetch_post(post):
         post_url = post["url-with-slug"]
         try:
-            soup = BeautifulSoup(get(post_url).text, "html.parser")
-            covers = list(dict.fromkeys(img["src"] for img in soup.find_all("img", src=True)
-                                        if "media.tumblr.com/" in img["src"] and "_cover." in img["src"]))
-            # Some posts are standalone photos, already exposing largest API images.
-            photos = post.get("photos", [])
-            photos = photos or ([post] if post.get("photo-url-1280") else [])
-            covers += [p.get("photo-url-1280") or p.get("photo-url-500") for p in photos]
+            covers = post_covers(get(post_url, TUMBLR_HOSTS).text, post)
             title = post.get("id3-title") or post.get("slug", post["id"])
-            if not covers:
+            if not any(covers):
                 failure(sid, post_url, "No public image cover found in post HTML/API")
-            for n, url in enumerate(dict.fromkeys(covers), 1):
+            for n, url in enumerate(covers, 1):
                 if url:
-                    download(sid, f"{post['id']}-{n}", title, post_url, url, "song_art",
+                    download(sid, f"{post['id']}-{n}", title, post_url, url, "song_art", hosts=TUMBLR_MEDIA_HOSTS,
                              provenance="community_repost", tags=post.get("tags", []),
                              quality_notes="May include typography, cleaned background, or reduced Tumblr audio-cover resolution.")
         except Exception as exc:
@@ -211,7 +254,7 @@ def tumblr_cleaned():
         for n, photo in enumerate(photos, 1):
             url = photo.get("photo-url-1280") or photo.get("photo-url-500")
             if url:
-                download(sid, f"{post['id']}-{n}", title, post["url"], url, "illustration",
+                download(sid, f"{post['id']}-{n}", title, post["url"], url, "illustration", hosts=TUMBLR_MEDIA_HOSTS,
                          provenance="community_edit", tags=post.get("tags", []))
 
 
@@ -220,11 +263,12 @@ def official():
     source(sid, "DEEMO official website", page, "fetched", "Official website key art. Decorative illustrations; not a complete song-art library.",
            mirror_url="https://rayark.com/g/deemo/")
     try:
-        soup = BeautifulSoup(get(page).text, "html.parser")
+        soup = BeautifulSoup(get(page, OFFICIAL_HOSTS).text, "html.parser")
         names = {"index_pic.png", "about_pic.png", "screen_pic.png", "contact_pic.png"}
         images = {urljoin(page, img["src"]) for img in soup.find_all("img", src=True) if Path(urlparse(img["src"]).path).name in names}
         pool(lambda url: download(sid, Path(urlparse(url).path).stem, "DEEMO official website — " + Path(urlparse(url).path).stem,
-                                  page, url, "illustration", rights_holder="Rayark / credited original artists", provenance="official_website"), images, 3)
+                                  page, url, "illustration", hosts=OFFICIAL_HOSTS, rights_holder="Rayark / credited original artists",
+                                  provenance="official_website"), images, 3)
     except Exception as exc:
         failure(sid, page, exc)
     # The reference PDFs do not depend on the website page, so they are fetched even when it fails.
@@ -233,7 +277,7 @@ def official():
         ("rayark-brand-assets", "Rayark Game Brand Assets", "https://rayark.promo/rayark_site/RAYARK_GameBrandAssets.pdf"),
     ]:
         source(key, title, url, "fetched", "Official reference PDF. Retained as reference; excluded from song-art gallery.")
-        download(key, key, title, url, url, "reference", provenance="official_reference")
+        download(key, key, title, url, url, "reference", hosts=PROMO_HOSTS, provenance="official_reference")
 
 
 CATALOG_ENTRIES = [
@@ -281,7 +325,7 @@ def catalog():
                  "Metadata examined without downloading audio. PNG files derived from FLAC and spectrograms are audio visualizations, not original loose cover art. Audio metadata itself attributes embedded pictures to DEEMO Wiki.")
     metadata = "https://archive.org/metadata/deemo_ost-_202606"
     try:
-        data = get(metadata).json()
+        data = get(metadata, ARCHIVE_ORG_HOSTS).json()
         row["file_formats"] = dict(Counter(f.get("format", "unknown") for f in data.get("files", [])))
     except Exception as exc:
         failure(sid, metadata, exc)
