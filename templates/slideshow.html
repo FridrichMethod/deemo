@@ -69,8 +69,8 @@ https://github.com/FridrichMethod/deemo
         <div class="slideshow-container">
             @python-work-area
 
-            <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-            <a class="next" onclick="plusSlides(1)">&#10095;</a>
+            <button type="button" class="prev" aria-label="Previous artwork" data-i18n-attr="aria-label:slideshow.nav.prev" onclick="plusSlides(-1)"></button>
+            <button type="button" class="next" aria-label="Next artwork" data-i18n-attr="aria-label:slideshow.nav.next" onclick="plusSlides(1)"></button>
         </div>
         <!-- Liner notes: Alice's dedication opens the show (and returns as an autoplay interlude), then each slide's own notes. -->
         <section class="liner" aria-label="About this artwork" data-i18n-attr="aria-label:slideshow.notes.label">
@@ -481,8 +481,19 @@ https://github.com/FridrichMethod/deemo
             }, "image/png");
         }
 
+        // Keyboard: Escape closes the screenshot overlay; the arrow keys turn the slides, but not while the overlay
+        // is open or a form field has focus, and a held key does not race through the collection.
         document.addEventListener("keydown", function(event) {
-            if (event.key === "Escape" && isScreenshotOpen()) closeScreenshot();
+            if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+            if (isScreenshotOpen()) {
+                if (event.key === "Escape") closeScreenshot();
+                return;
+            }
+            var step = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0;
+            if (!step || event.shiftKey || event.repeat) return;
+            if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) return;
+            event.preventDefault();
+            plusSlides(step);
         });
 
         function screenshot() {

@@ -394,12 +394,25 @@ img:not([src]) {
     top: 50%;
     width: 44px;
     height: 44px;
-    margin-top: -22px;
+    margin: -22px 0 0;
+    padding: 0;
+    border: 0;
     border-radius: 50%;
+    background-color: transparent;
     color: var(--ink);
     font-size: 0;
     opacity: .6;
     transition: background-color .3s ease, color .3s ease, opacity .3s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Inset, so the ring is not cut off where a phone puts the arrow 2px from the screen edge. */
+.prev:focus-visible,
+.next:focus-visible {
+    outline: 3px solid #9c8656;
+    outline-offset: -3px;
+    opacity: 1;
 }
 
 .prev::before,
