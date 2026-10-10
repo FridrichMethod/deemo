@@ -251,9 +251,12 @@ def collect_tumblr(manifest, jobs):
         response = request(TUMBLR_API).text
         data = json.loads(response.split("=", 1)[1].strip().rstrip(";"))
     except Exception as error:
-        manifest["sources"].append({"id": "artists:tumblr:blazewu", "name": "Blaze Wu DEEMO archive",
-                                    "url": TUMBLR_API, "status": "failed"})
-        record_failure(manifest, "artists:tumblr:blazewu", TUMBLR_API, error)
+        # Attribute the failure to every known post, so their archived records are kept as fetch_failed.
+        for post_id, collection in sorted(TUMBLR_POSTS.items()):
+            source_id = f"artists:tumblr:{post_id}"
+            manifest["sources"].append({"id": source_id, "name": collection,
+                                        "url": f"https://wublaze.tumblr.com/post/{post_id}", "status": "failed"})
+            record_failure(manifest, source_id, TUMBLR_API, error)
         return
     seen = set()
     for post in data["posts"]:
@@ -379,6 +382,45 @@ def save_asset(job, data, fetched_at, hashes):
     return asset
 
 
+def carry_forward(previous, manifest):
+    """Merge the previous manifest into this run's result so no verified record is dropped.
+
+    A previous record this run did not reproduce stays, with upstream_status "removed" when its
+    source was read without error and no longer lists it, or "fetch_failed" when the record or its
+    source failed this run. When upstream bytes changed, the new version keeps the canonical id and
+    the old one stays as "<id>@<old sha256[:12]>" with upstream_status "superseded" and superseded_by
+    naming the canonical id. Files are never deleted; sources of kept records are kept too.
+    """
+    records = {row["id"]: row for row in manifest["assets"]}
+    failed_assets = {row["asset_id"] for row in manifest["failures"] if row.get("asset_id")}
+    failed_sources = {row["source_id"] for row in manifest["failures"]}
+    for old in previous.get("assets", []):
+        new = records.get(old["id"])
+        if new is not None:
+            if new["sha256"] != old["sha256"]:
+                version = {**old, "id": f"{old['id']}@{old['sha256'][:12]}",
+                           "upstream_status": "superseded", "superseded_by": old["id"]}
+                records.setdefault(version["id"], version)
+        elif old.get("upstream_status") == "superseded":
+            records.setdefault(old["id"], old)
+        elif old["id"] in failed_assets or old["source_id"] in failed_sources:
+            status = "removed" if old.get("upstream_status") == "removed" else "fetch_failed"
+            records[old["id"]] = {**old, "upstream_status": status}
+        else:
+            records[old["id"]] = {**old, "upstream_status": "removed"}
+    manifest["assets"] = list(records.values())
+    missing = {row["source_id"] for row in manifest["assets"]} - {row["id"] for row in manifest["sources"]}
+    manifest["sources"].extend(row for row in previous.get("sources", []) if row["id"] in missing)
+
+
+def keep_source_details(previous, manifest):
+    """A source whose discovery failed keeps the metadata of its previous successful read."""
+    old = {row["id"]: row for row in previous.get("sources", [])}
+    manifest["sources"] = [{**row, **old[row["id"]], "status": "failed"}
+                           if row["status"] == "failed" and row["id"] in old else row
+                           for row in manifest["sources"]]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--refresh", action="store_true", help="Redownload even when cached file hashes match")
@@ -387,8 +429,10 @@ def main():
     if not 1 <= args.workers <= 8:
         parser.error("--workers must be between 1 and 8")
     manifest_path = ROOT / MANIFEST
-    previous = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {"assets": []}
-    cache = {asset["download_url"]: asset for asset in previous["assets"]}
+    previous = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
+    # Superseded versions stay in the manifest but are no longer the cached copy of their URL.
+    current = [asset for asset in previous.get("assets", []) if asset.get("upstream_status") != "superseded"]
+    cache = {asset["download_url"]: asset for asset in current}
     manifest = {"schema_version": 1, "fetched_at": now(), "sources": [], "assets": [], "failures": [],
                 "scope": "DEEMO 1 artist-published illustrations, original public uploads and public platform images",
                 "excluded": "Paid artbooks; DEEMO II; unrelated games, unrelated fanart and cross-game anniversary posts; credentials and login walls"}
@@ -397,6 +441,7 @@ def main():
     collect_jimdo(manifest, jobs)
     collect_tumblr(manifest, jobs)
     collect_reference(manifest)
+    keep_source_details(previous, manifest)
     hashes = {}
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {pool.submit(download, job, cache, args.refresh): job for job in jobs}
@@ -412,11 +457,14 @@ def main():
     successes = Counter(asset["source_id"] for asset in manifest["assets"])
     failures = Counter(failure["source_id"] for failure in manifest["failures"])
     for source in manifest["sources"]:
-        source["asset_count"] = successes[source["id"]]
         if source["status"] == "discovered":
             source["status"] = "partial" if failures[source["id"]] else "complete"
-            if source["asset_count"] == 0:
+            if successes[source["id"]] == 0:
                 source["status"] = "failed"
+    carry_forward(previous, manifest)
+    records = Counter(asset["source_id"] for asset in manifest["assets"])
+    for source in manifest["sources"]:
+        source["asset_count"] = records[source["id"]]
     manifest["assets"].sort(key=lambda asset: asset["id"])
     manifest["sources"].sort(key=lambda source: source["id"])
     write_json(manifest_path, manifest)

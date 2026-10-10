@@ -342,8 +342,41 @@ STEPS = (
 )
 
 
+def carry_forward(previous, manifest):
+    """Merge the previous manifest into this run's result so no verified record is dropped.
+
+    A previous record this run did not reproduce stays, with upstream_status "removed" when its
+    source was read without error and no longer lists it, or "fetch_failed" when the record or its
+    source failed this run. When upstream bytes changed, the new version keeps the canonical id and
+    the old one stays as "<id>@<old sha256[:12]>" with upstream_status "superseded" and superseded_by
+    naming the canonical id. Files are never deleted; sources of kept records are kept too.
+    """
+    records = {row["id"]: row for row in manifest["assets"]}
+    failed_assets = {row["asset_id"] for row in manifest["failures"] if row.get("asset_id")}
+    failed_sources = {row["source_id"] for row in manifest["failures"]}
+    for old in previous.get("assets", []):
+        new = records.get(old["id"])
+        if new is not None:
+            if new["sha256"] != old["sha256"]:
+                version = {**old, "id": f"{old['id']}@{old['sha256'][:12]}",
+                           "upstream_status": "superseded", "superseded_by": old["id"]}
+                records.setdefault(version["id"], version)
+        elif old.get("upstream_status") == "superseded":
+            records.setdefault(old["id"], old)
+        elif old["id"] in failed_assets or old["source_id"] in failed_sources:
+            status = "removed" if old.get("upstream_status") == "removed" else "fetch_failed"
+            records[old["id"]] = {**old, "upstream_status": status}
+        else:
+            records[old["id"]] = {**old, "upstream_status": "removed"}
+    manifest["assets"] = list(records.values())
+    missing = {row["source_id"] for row in manifest["assets"]} - {row["id"] for row in manifest["sources"]}
+    manifest["sources"].extend(row for row in previous.get("sources", []) if row["id"] in missing)
+
+
 def main():
     reset()
+    path = ROOT / MANIFEST_PATH
+    previous = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
     for fn, sid, url in STEPS:
         print(f"Fetching {fn.__name__}", flush=True)
         try:
@@ -360,6 +393,7 @@ def main():
                 row["status"] = "partial" if row["assets_downloaded"] else "failed"
             elif not row["assets_downloaded"]:
                 row["status"] = "no_assets_fetched"
+    carry_forward(previous, MANIFEST)
     # Written once, at the end: an interrupted run leaves the previous manifest untouched.
     save()
     print(json.dumps({"sources": len(MANIFEST["sources"]), "assets": len(MANIFEST["assets"]), "failures": len(MANIFEST["failures"]), "counts": counts}, indent=2), flush=True)
@@ -421,6 +455,8 @@ def verify():
             with Image.open(io.BytesIO(blob)) as image:
                 assert (image.width, image.height, image.format) == (asset["width"], asset["height"], asset["format"]), asset["path"]
                 image.verify()
+    for asset in manifest["assets"]:
+        assert asset.get("superseded_by", asset["id"]) in ids, asset["id"]
     print(f"Verified {len(ids)} assets; checksums, bytes, dimensions, formats, IDs and source references valid.")
 
 
