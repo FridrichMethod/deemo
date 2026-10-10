@@ -198,6 +198,13 @@ class ArtistsTests(TempRoot):
                          ("failed", "Archived title", "kept", 2))
         self.assertEqual([(f["source_id"], f["url"]) for f in manifest["failures"]], [("artists:pixiv:1", PAGE_URL)])
 
+    def test_failures_are_written_in_a_stable_order(self):
+        posts = {"snowegg": {**PIXIV["snowegg"], "posts": {"3": "C", "2": "B", "1": "A"}}}
+        with patch.object(artists, "PIXIV_POSTS", posts):
+            self.assertEqual(self.run_main(FakeWeb()), 1)
+        self.assertEqual([f["source_id"] for f in self.read_manifest("artists")["failures"]],
+                         ["artists:pixiv:1", "artists:pixiv:2", "artists:pixiv:3"])
+
     def test_download_failure_marks_record_fetch_failed(self):
         self.seed()
         web = FakeWeb({**pixiv_routes([NEW_P0, OLD_P0.replace("_p0", "_p1")]), NEW_P0: (503, b"", {})})
@@ -242,8 +249,16 @@ class ArtistsTests(TempRoot):
 
 
 class TumblrArtistTests(unittest.TestCase):
+    # Many posts inserted out of order, so neither dict nor set iteration order is sorted by chance.
+    POSTS = {post: f"Collection {post}" for post in ("907", "15", "311", "42", "7", "128", "64", "999", "3", "250", "76", "501")}
+
+    def setUp(self):
+        patcher = patch.object(artists, "TUMBLR_POSTS", self.POSTS)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_failures_use_real_sources_in_stable_order(self):
-        expected = [f"artists:tumblr:{post}" for post in sorted(artists.TUMBLR_POSTS)]
+        expected = [f"artists:tumblr:{post}" for post in sorted(self.POSTS)]
         manifest = {"sources": [], "failures": []}
         with patch.object(artists.time, "sleep", lambda seconds: None), patch.object(artists.requests, "get", FakeWeb()):
             artists.collect_tumblr(manifest, [])
@@ -420,6 +435,7 @@ class ArchivesTests(TempRoot):
         for failure in manifest["failures"]:
             self.assertIn(failure["source_id"], sources)
             self.assertTrue(failure["url"].startswith("https://"), failure)
+        self.assertIn(("archives:cover-art-archive", CAA_API), [(f["source_id"], f["url"]) for f in manifest["failures"]])
         for sid in ("cover-art-archive", "rayarkmusic-tumblr", "kitsunefreak-cleaned", "official-deemo",
                     "deemo-exhibition", "rayark-brand-assets"):
             self.assertEqual(sources[f"archives:{sid}"]["status"], "failed", sid)
@@ -491,21 +507,53 @@ class ArchivesTests(TempRoot):
     def test_manifest_is_written_once_and_never_on_interrupt(self):
         path = self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [], "failures": []})
         before = path.read_bytes()
+        image = "https://deemo.com/a.png"
+        web = FakeWeb({image: png("red")})
+
+        def first():
+            archives.source("x", "X", "https://deemo.com/", "fetched", "")
+            archives.download("x", "a", "A", "https://deemo.com/", image, "illustration", hosts=archives.OFFICIAL_HOSTS)
+
+        def second():
+            archives.source("y", "Y", "https://deemo.com/", "fetched", "")
 
         def interrupted():
-            archives.source("x", "X", "https://deemo.com/", "fetched", "")
             raise KeyboardInterrupt
 
+        # The first step completes and adds a source and an asset; the interrupt in the second leaves the manifest as it was.
         with self.assertRaises(KeyboardInterrupt):
-            self.run_main(FakeWeb(), [(interrupted, "x", "https://deemo.com/")])
+            self.run_main(web, [(first, "x", "https://deemo.com/"), (interrupted, "y", "https://deemo.com/")])
         self.assertEqual(path.read_bytes(), before)
         archives.reset()
         writes = []
         original = archives.write_json
         with patch.object(archives, "write_json", lambda *args: (writes.append(args[0]), original(*args))):
-            self.run_main(FakeWeb(), [])
-        self.assertEqual(writes, [self.root / "data/sources/archives.json"])
+            self.assertEqual(self.run_main(web, [(first, "x", "https://deemo.com/"), (second, "y", "https://deemo.com/")]), 0)
+        self.assertEqual(writes, [path])
+        self.assertEqual([asset["id"] for asset in self.read_manifest("archives")["assets"]], ["archives:x:a"])
+
+        # A run killed before the rename leaves the complete previous manifest and no temporary file.
+        current = path.read_bytes()
+        with patch.object(archives.os, "replace", side_effect=OSError("killed")), self.assertRaises(OSError):
+            archives.write_json(path, {"partial": True})
+        self.assertEqual(path.read_bytes(), current)
         self.assertEqual(list(self.root.glob("data/sources/.*")), [])
+
+    def test_verify_checks_failure_sources_and_superseded_by(self):
+        record = self.caa_record(11, png("red"))
+        source = {"id": "archives:cover-art-archive", "name": "CAA", "url": "https://musicbrainz.org/x", "status": "partial", "notes": ""}
+        version = {**record, "id": record["id"] + ":0123456789ab", "upstream_status": "superseded", "superseded_by": record["id"]}
+        good = {"schema_version": 1, "sources": [source], "assets": [record, version],
+                "failures": [{"source_id": source["id"], "url": CAA_API, "error": "offline"}]}
+        self.write_manifest("archives", good)
+        with contextlib.redirect_stdout(io.StringIO()):
+            archives.verify()
+        for bad in ({**good, "failures": [{"source_id": "archives:catalog", "url": CAA_API, "error": "offline"}]},
+                    {**good, "failures": [{"source_id": source["id"], "url": "", "error": "offline"}]},
+                    {**good, "assets": [record, {**version, "superseded_by": "archives:cover-art-archive:12"}]}):
+            self.write_manifest("archives", bad)
+            with self.assertRaises(AssertionError), contextlib.redirect_stdout(io.StringIO()):
+                archives.verify()
 
     def test_cover_filter_checks_hostnames(self):
         html = "".join(f'<img src="{src}">' for src in (
@@ -593,6 +641,21 @@ class ConnectionHostTests(unittest.TestCase):
             for url in self.ACCEPTED:
                 hosts = self.connection_hosts(lambda: fetch(url))
                 self.assertEqual([host.rstrip(".") for host in hosts], ["64.media.tumblr.com"], (name, url))
+
+
+class KeepFileTests(TempRoot):
+    def test_different_bytes_are_never_written_over_an_archived_file(self):
+        old, new = png("red"), png("blue")
+        for module in (artists, archives):
+            path = self.root / f"{module.__name__}.png"
+            path.write_bytes(old)
+            module.keep_file(path, old, sha(old))
+            with self.assertRaisesRegex(ValueError, "Refusing to overwrite"):
+                module.keep_file(path, new, sha(new))
+            self.assertEqual(path.read_bytes(), old)
+            fresh = self.root / f"{module.__name__}-new.png"
+            module.keep_file(fresh, new, sha(new))
+            self.assertEqual(fresh.read_bytes(), new)
 
 
 class RetryStatusTests(unittest.TestCase):
