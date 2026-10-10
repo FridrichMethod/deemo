@@ -419,14 +419,19 @@ class PruneTests(Fixture):
 
 
 class CatalogHookTests(Fixture):
-    def catalog(self, verify=False):
+    def catalog(self, verify=False, required=True):
         result = catalog_builder.combine(self.root, verify=True)
-        catalog_builder.attach_thumbnails(self.root, result, verify)
+        catalog_builder.attach_thumbnails(self.root, result, verify, required)
         return {Path(entry["path"]).name: entry for entry in result["assets"]}
 
     def test_without_thumbnails_the_catalog_is_unchanged(self):
-        for entry in self.catalog(verify=True).values():
+        for entry in self.catalog(verify=True, required=False).values():
             self.assertNotIn("thumb", entry)
+
+    def test_the_repository_build_requires_the_thumbnail_manifest(self):
+        # The default is the repository's build: a missing data/thumbs.json fails instead of dropping every preview.
+        with self.assertRaisesRegex(FileNotFoundError, "Missing required input: data/thumbs.json"):
+            self.catalog()
 
     def test_gallery_entries_point_at_their_preview_and_keep_the_original(self):
         thumbs.build(self.root)

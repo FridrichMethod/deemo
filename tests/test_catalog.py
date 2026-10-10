@@ -85,6 +85,7 @@ class CatalogTests(unittest.TestCase):
         for family in build.SOURCE_MANIFESTS:
             (self.root / f"data/sources/{family}.json").write_text(json.dumps({"sources": [], "assets": []}), encoding="utf-8")
         (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {"songs": {}, "books": []}}), encoding="utf-8")
+        (self.root / "data/thumbs.json").write_text(json.dumps({"thumbnails": {}}), encoding="utf-8")
         for variant in ("trans", "tiny"):
             (self.root / f"assets/legacy/{variant}").mkdir(parents=True, exist_ok=True)
 
@@ -433,6 +434,17 @@ class CatalogTests(unittest.TestCase):
                 with self.assertRaisesRegex(FileNotFoundError, f"Missing required input: {relative}"):
                     build.combine(self.root, verify=True)
                 self.required_inputs()
+
+    def test_missing_thumbnail_manifest_fails_the_build(self):
+        # Without data/thumbs.json the catalog would lose every grid preview; the build stops instead, before it
+        # writes any generated file.
+        self.assertIsNone(self.run_main("--verify"))
+        written = {name: (self.root / name).read_bytes() for name in ("data/catalog.json", "data/catalog.js", "index.html")}
+        (self.root / "data/thumbs.json").unlink()
+        for args in (("--verify",), ("--verify", "--check"), ()):
+            with self.subTest(args=args), self.assertRaisesRegex(FileNotFoundError, "Missing required input: data/thumbs.json"):
+                self.run_main(*args)
+        self.assertEqual({name: (self.root / name).read_bytes() for name in written}, written)
 
     def test_song_mapping_without_songs_is_rejected(self):
         (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {}}), encoding="utf-8")

@@ -375,12 +375,14 @@ def render_slideshow(root: Path, catalog: dict) -> str:
     return template.replace("@python-work-area", "\n".join(slides))
 
 
-def attach_thumbnails(root: Path, catalog: dict, verify: bool = False) -> None:
+def attach_thumbnails(root: Path, catalog: dict, verify: bool = False, required: bool = True) -> None:
     """Add `thumb`, the derived grid preview listed in data/thumbs.json (scripts/build_thumbnails.py), to gallery
-    entries. Previews are not archive files: `url` stays the original, and entries without a preview get no field."""
-    manifest = root / "data" / "thumbs.json"
-    if not manifest.exists():
+    entries. Previews are not archive files: `url` stays the original, and entries without a preview get no field.
+    The repository's build requires the manifest, so a missing one fails rather than quietly dropping every preview;
+    only a caller that builds without previews (a test fixture) passes required=False."""
+    if not required and not (root / "data" / "thumbs.json").exists():
         return
+    manifest = required_input(root, "data/thumbs.json")
     thumbnails = json.loads(manifest.read_text(encoding="utf-8"))["thumbnails"]
     for entry in catalog["assets"]:
         thumb = thumbnails.get(entry["sha256"]) if entry["gallery"] else None
