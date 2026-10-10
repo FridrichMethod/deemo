@@ -15,7 +15,11 @@
   function storedLang() {
     try { return normalize(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
   }
-  let lang = normalize(new URLSearchParams(location.search).get("lang")) || storedLang() || DEFAULT;
+  // An explicit ?lang= also becomes the stored choice: links and URL rewrites drop the parameter for English, so a
+  // stale stored zh-CN would otherwise win again on reload or on the other page.
+  const requested = normalize(new URLSearchParams(location.search).get("lang"));
+  if (requested) try { localStorage.setItem(STORAGE_KEY, requested); } catch { /* ?lang= still carries the choice */ }
+  let lang = requested || storedLang() || DEFAULT;
   document.documentElement.lang = lang;
   const has = (key) => Object.hasOwn(messages[lang], key) || Object.hasOwn(messages[DEFAULT], key);
   function t(key, vars) {
