@@ -109,10 +109,16 @@ class ComposerJoinTests(unittest.TestCase):
 
     def test_the_own_wiki_answers_first_and_the_other_wiki_fills_in(self):
         songs = [song("Empedrado", "Keikaku Tsuukou feat. Parorto"), song("Empedrado", "Yuma.Mizo", "bwiki"),
-                 song("Altale", None), song("Altale", "Sakuzyo", "bwiki")]
-        self.assertEqual(self.composers([candidate(["Empedrado"], "fandom"), candidate(["Empedrado"], "bwiki"),
-                                         candidate(["Altale"], "fandom"), candidate(["Altale"], "bwiki")], songs),
-                         ["Keikaku Tsuukou feat. Parorto", "Yuma.Mizo", "Sakuzyo", "Sakuzyo"])
+                 song("Altale", None), song("Altale", "Sakuzyo", "bwiki"), song("Magnolia", "M2U"),
+                 song("Magnolia", None, "bwiki")]
+        rows = fetch.with_composers([candidate(["Empedrado"], "fandom"), candidate(["Empedrado"], "bwiki"),
+                                     candidate(["Altale"], "fandom"), candidate(["Altale"], "bwiki"),
+                                     candidate(["Magnolia"], "bwiki")], songs)
+        self.assertEqual([row.get("composer") for row in rows],
+                         ["Keikaku Tsuukou feat. Parorto", "Yuma.Mizo", "Sakuzyo", "Sakuzyo", "M2U"])
+        # A credit from the other wiki names that wiki, right after the composer.
+        self.assertEqual([row.get("composer_source") for row in rows], [None, None, "wikis:bwiki", None, "wikis:fandom"])
+        self.assertEqual(list(rows[2])[-2:], ["composer", "composer_source"])
 
     def test_the_join_is_on_the_exact_song_title(self):
         songs = [song("Witch Hunting", "Lime", "bwiki"), song("Re: the Full moon World.", "M2U", "bwiki")]
@@ -130,11 +136,15 @@ class ComposerJoinTests(unittest.TestCase):
     def test_covers_and_unmatched_art_get_none_and_a_stale_composer_goes(self):
         songs = [song("AM 05:25", "Ice"), song("Daylife", "Ice")]
         rows = [candidate(["AM 05:25", "Daylife"], "fandom", kind="collection_cover"),
-                candidate(["Unknown"], composer="Old credit"), candidate([], composer="Old credit")]
+                candidate(["Unknown"], composer="Old credit", composer_source="wikis:fandom"), candidate([], composer="Old credit")]
         result = fetch.with_composers(rows, songs)
         self.assertEqual([row.get("composer") for row in result], [None, None, None])
-        self.assertEqual([list(row) for row in result], [[key for key in row if key != "composer"] for row in rows])
+        self.assertEqual([list(row) for row in result],
+                         [[key for key in row if key not in ("composer", "composer_source")] for row in rows])
         self.assertEqual(rows[1]["composer"], "Old credit")  # the input is left as it was
+        # A credit that moves to the own wiki's page drops the other wiki's name.
+        own = fetch.with_composers([{**rows[1], "song_titles": ["Daylife"]}], [song("Daylife", "Ice", "bwiki")])
+        self.assertEqual((own[0]["composer"], own[0].get("composer_source")), ("Ice", None))
 
 
 class FakeWeb:
@@ -199,19 +209,23 @@ class ComposerRecordTests(unittest.TestCase):
         self.assertEqual(self.web.calls, [])
 
     def test_records_keep_the_composer_in_a_stable_place(self):
-        offered = self.offer("Altale.png", png("red"), collection_aliases=["Etude collection"], composer="Sakuzyo")
+        offered = self.offer("Altale.png", png("red"), collection_aliases=["Etude collection"], composer="Sakuzyo",
+                             composer_source="wikis:fandom")
         art = {**offered, "info": {**offered["info"], "sha1": "f" * 40}}  # a checksum caveat adds a delivery_note
         first = self.resume(art)["assets"][0]
-        self.assertEqual(list(first)[-3:], ["composer", "collection_aliases", "delivery_note"])
-        self.assertEqual(first["composer"], "Sakuzyo")
+        self.assertEqual(list(first)[-4:], ["composer", "composer_source", "collection_aliases", "delivery_note"])
+        self.assertEqual((first["composer"], first["composer_source"]), ("Sakuzyo", "wikis:fandom"))
         calls = len(self.web.calls)
         again = self.resume(art)["assets"][0]
         self.assertEqual(len(self.web.calls), calls)  # verified from the file on disk, not downloaded again
         self.assertEqual(list(again.items()), list(first.items()))
         renamed = self.resume({**art, "composer": "削除"})["assets"][0]
         self.assertEqual(list(renamed.items()), list({**first, "composer": "削除"}.items()))
-        dropped = self.resume({key: value for key, value in art.items() if key != "composer"})["assets"][0]
-        self.assertEqual(dropped, {key: value for key, value in first.items() if key != "composer"})
+        own = {key: value for key, value in art.items() if key != "composer_source"}
+        self.assertEqual(self.resume(own)["assets"][0], {key: value for key, value in first.items() if key != "composer_source"})
+        dropped = {key: value for key, value in art.items() if key not in ("composer", "composer_source")}
+        self.assertEqual(self.resume(dropped)["assets"][0],
+                         {key: value for key, value in first.items() if key not in ("composer", "composer_source")})
 
 
 def instant(stamp):
@@ -220,7 +234,8 @@ def instant(stamp):
 
 
 def composer_drift(manifest, snapshot):
-    """Ids of the manifest's records whose composer differs from their candidate's in the snapshot, in manifest order.
+    """Ids of the manifest's records whose composer or composer_source differs from their candidate's in the snapshot,
+    in manifest order.
 
     Only a manifest resumed from this snapshot answers to it. The source-check workflow commits a newer snapshot and
     song index on their own (fetch_wikis.py --metadata-only), and the manifest takes their composers at the --resume
@@ -233,7 +248,7 @@ def composer_drift(manifest, snapshot):
     # A carried-forward record (upstream_status) keeps what it had.
     return [record["id"] for record in manifest["assets"]
             if record["id"] in by_id and record["source_id"] not in earlier and not record.get("upstream_status")
-            and record.get("composer") != by_id[record["id"]].get("composer")]
+            and any(record.get(key) != by_id[record["id"]].get(key) for key in ("composer", "composer_source"))]
 
 
 class CommittedWikiDataTests(unittest.TestCase):
@@ -257,12 +272,17 @@ class CommittedWikiDataTests(unittest.TestCase):
         self.assertEqual(composer_drift(self.manifest, self.snapshot), [], "Run fetch_wikis.py --resume")
 
     def test_composers_sit_on_song_art_where_a_verified_rerun_puts_them(self):
+        wikis = {row["source_id"] for row in self.songs}
         for row in self.candidates + self.assets:
-            if "composer" in row:
+            if "composer" in row or "composer_source" in row:
                 with self.subTest(row=row.get("id") or row["file_title"]):
                     self.assertEqual(row["kind"], "song_art")
+                    self.assertIn("composer", row)
+                    if "composer_source" in row:  # the other wiki, whose song page gave the credit
+                        own = row.get("source_id") or fetch.SOURCES[row["source"]]["id"]
+                        self.assertLessEqual(set(row["composer_source"].split(" / ")), wikis - {own})
                     if "id" in row:
-                        tail = [key for key in row if key in ("composer", "collection_aliases", "delivery_note")]
+                        tail = [key for key in row if key in ("composer", "composer_source", "collection_aliases", "delivery_note")]
                         self.assertEqual(list(row)[-len(tail):], tail, "composer sits where a verified re-run puts it")
 
     def test_a_newer_snapshot_does_not_hold_back_the_manifest(self):
@@ -284,9 +304,10 @@ class CommittedWikiDataTests(unittest.TestCase):
         self.assertEqual(composer_drift(named, resumed), [record["id"]])
 
     def test_altale_carries_its_composer_on_both_wikis(self):
-        altale = {record["source_id"]: record.get("composer") for record in self.assets
+        altale = {record["source_id"]: (record.get("composer"), record.get("composer_source")) for record in self.assets
                   if record["title"] == "Altale" and record["kind"] == "song_art"}
-        self.assertEqual(altale, {"wikis:fandom": "Sakuzyo", "wikis:bwiki": "Sakuzyo"})
+        # Fandom's Altale page names no composer; the credit comes from BWIKI's, and the record says so.
+        self.assertEqual(altale, {"wikis:fandom": ("Sakuzyo", "wikis:bwiki"), "wikis:bwiki": ("Sakuzyo", None)})
 
 
 class SlideProvenanceTests(unittest.TestCase):

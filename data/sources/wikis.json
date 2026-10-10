@@ -10050,6 +10050,7 @@
         }
       },
       "composer": "V.K",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -10100,7 +10101,8 @@
       "download_sha1": "60f10b3216c7d45d4e7d28b7bc1a6797abf16fdc",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Stone"
+      "composer": "Stone",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:033c8a79f7020acd",
@@ -10242,7 +10244,8 @@
       "download_sha1": "886fda5d4a39f7e1f1383f054ceec394b1c84ba0",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "TERU FOX"
+      "composer": "TERU FOX",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:04a474fc0ec4fb0d",
@@ -10653,6 +10656,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Kakumi Nishigomi",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -11598,7 +11602,8 @@
       "download_sha1": "b1956c20ccd88ee04f4c3c200ecbc4ed81228583",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "RICHIE EAO"
+      "composer": "RICHIE EAO",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:0da581d8432fcafe",
@@ -11865,7 +11870,8 @@
       "download_sha1": "95594cf1bbbbe46485167954712faa9357985621",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Kevin Penkin feat. Michiyo Honda"
+      "composer": "Kevin Penkin feat. Michiyo Honda",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:10bc655127dd58a4",
@@ -12052,6 +12058,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Feryquitous",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Feryquitous collection"
       ]
@@ -12101,7 +12108,8 @@
       "download_sha1": "d21de5a2eb03f82142937404b4e93548514de4a9",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "SLS"
+      "composer": "SLS",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:12f6c727b3bfa481",
@@ -12411,7 +12419,8 @@
       "download_sha1": "9d038872fdc92b809f2e91ec423877ee1a9bf812",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "V.K"
+      "composer": "V.K",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:13b2edf0abcb8f5a",
@@ -12599,6 +12608,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "xi",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -13120,6 +13130,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Rabpit",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -13583,6 +13594,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Rayark Sound Team \"Ice & SIHanatsuka\"",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -14006,6 +14018,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Shi Kuang Lee",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -14229,7 +14242,8 @@
       "download_sha1": "a9917341b5cae9eed9650f910cd0c4e555612093",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Sound Souler"
+      "composer": "Sound Souler",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:25143071f6ab0b99",
@@ -14372,7 +14386,8 @@
       "download_sha1": "27790d0b63557751347fad42ade9ff87cf9d2d34",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "orangentle"
+      "composer": "orangentle",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:269f26e54f3e7b2c",
@@ -14570,7 +14585,8 @@
       "download_sha1": "12150d39c826505ef0a28e7dba9e1d3f6967f4cf",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "WhiteCapella"
+      "composer": "WhiteCapella",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:2700a92e1abe4ea7",
@@ -14763,7 +14779,8 @@
       "download_sha1": "8414f06db8bf08beceacbee928a1c12b266af8e2",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "TQ"
+      "composer": "TQ",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:281e74de623d5007",
@@ -14859,6 +14876,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Jerry Barnes  Katreese Barnes  Rodger Green",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -14909,6 +14927,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "KIVA",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -15129,6 +15148,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Sdorica (作曲・編曲:Hoskey) (歌:劉軒蓁)",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Collaboration Collection"
       ]
@@ -15302,6 +15322,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "ZENTA",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -15409,6 +15430,7 @@
         }
       ],
       "composer": "Rigel theatre",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -15648,6 +15670,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "V.K",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -16945,6 +16968,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "KillerBlood",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -17489,7 +17513,8 @@
       "download_sha1": "33e27e509e926b89e34ba0006a947af6b0d29cfd",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Rabpit"
+      "composer": "Rabpit",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:369a974709b6d2a6",
@@ -18586,7 +18611,8 @@
       "download_sha1": "9c219c82d2b52312db157962f8fea1ba05a0a9e0",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "naoto"
+      "composer": "naoto",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:41c77cc1e62f683a",
@@ -19716,6 +19742,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Beethoven",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -19862,6 +19889,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "V.K",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -20132,6 +20160,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Nikolai Rimsky-Korsakov",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -20398,6 +20427,7 @@
         }
       },
       "composer": "Michiru Oshima",
+      "composer_source": "wikis:bwiki",
       "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
@@ -20744,6 +20774,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Kaname Shigeyoshi",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -21118,6 +21149,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Schubert",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -21449,7 +21481,8 @@
       "download_sha1": "dcbcb9d0dd282c3e570ab576332b3a2cb28be954",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Sing Sing Rabbit"
+      "composer": "Sing Sing Rabbit",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:586458f109b78321",
@@ -21691,7 +21724,8 @@
       "download_sha1": "a82a405136fb2d40304c7ff1aa7d31144b76e1ff",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Jerry Barnes  Quiana"
+      "composer": "Jerry Barnes  Quiana",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:5a514176bee0db29",
@@ -22121,6 +22155,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Pianoboy",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -22407,7 +22442,8 @@
       "download_sha1": "490c28407c7ff09b09d63b3edf761935fe8f662f",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Abia Ng"
+      "composer": "Abia Ng",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:63d0af65b2d30f8a",
@@ -22921,7 +22957,8 @@
       "download_sha1": "cfdb7b967b1b15ab34fe9aa96a420b8682a30005",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "ginkiha"
+      "composer": "ginkiha",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:6778199558b172dc",
@@ -22969,6 +23006,7 @@
         }
       },
       "composer": "I.O",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -23019,6 +23057,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Morimori Atsushi",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -23377,7 +23416,8 @@
       "download_sha1": "b185730b9e74f91c50e66d0bbfe84c6fff25d53e",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Sherwin"
+      "composer": "Sherwin",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:6a64f712d703f2aa",
@@ -23564,7 +23604,8 @@
       "download_sha1": "4b40f244609ca6aad0cdbadb1c834ccb9d46b7a2",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "gondayu"
+      "composer": "gondayu",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:6c93cdd4ad1f1b57",
@@ -23796,7 +23837,8 @@
       "download_sha1": "0c2f00b92335db48ce0c19b725fad7cd9639ae82",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Ayatsugu_Otowa"
+      "composer": "Ayatsugu_Otowa",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:6dff16ea37ca986e",
@@ -24952,6 +24994,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Ujico*",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -25671,6 +25714,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "vospi",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -25844,6 +25888,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Mozart",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -26063,6 +26108,7 @@
         }
       },
       "composer": "HALLPBESTUDIO",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -26165,6 +26211,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Baba Band",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol.2"
@@ -26365,7 +26412,8 @@
       "download_sha1": "14eb932e91549582195983e5738ab14f1dd288cc",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "KillerBlood"
+      "composer": "KillerBlood",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:8002b21c3943753f",
@@ -26412,7 +26460,8 @@
       "download_sha1": "7b9f6f0a98fd0c7a5bc1ad043123e8ab56e91226",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Zris"
+      "composer": "Zris",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:80c1758deed551cd",
@@ -26776,7 +26825,8 @@
       "download_sha1": "d941ac0c2496d40ca3f928fa5c4fb5c134d52896",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "yourmythos"
+      "composer": "yourmythos",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:8389e09a734dd56f",
@@ -27797,7 +27847,8 @@
       "download_sha1": "9d9f5037a8381fa92585e7c4ed89ac6eab86fe6f",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "HAMO from Mili"
+      "composer": "HAMO from Mili",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:877acaeeb9c76633",
@@ -27845,6 +27896,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Pianoboy",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -27947,6 +27999,7 @@
         }
       },
       "composer": "Sakuzyo",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol. 2"
@@ -27997,7 +28050,8 @@
       "download_sha1": "21da1d3a813c5ec629cb52c2b997bd283768342c",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Ramenbot Jr."
+      "composer": "Ramenbot Jr.",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:88ca2939acf0e495",
@@ -28434,6 +28488,7 @@
         }
       },
       "composer": "Presti",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -29077,6 +29132,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Kaneko Chiharu",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -29468,6 +29524,7 @@
         }
       },
       "composer": "Sta",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ],
@@ -29520,6 +29577,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Pianoboy",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -29853,7 +29911,8 @@
       "download_sha1": "3616c414d250180c46fcf9bbeaef1eddff19898d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "The SxPlay"
+      "composer": "The SxPlay",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:97b36b4e154ddc1d",
@@ -30119,7 +30178,8 @@
       "download_sha1": "9cc955332ca6e7b5a52b93d441c4166d85356394",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Edmund Fu"
+      "composer": "Edmund Fu",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:9a0595738b5489cd",
@@ -30167,6 +30227,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Feryquitous feat. Sennzai",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -30310,6 +30371,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Hikoshi Hashimoto",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -31100,6 +31162,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Feryquitous",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Feryquitous collection"
       ]
@@ -31442,6 +31505,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Ice",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -31592,6 +31656,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "soyomogi",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -31784,6 +31849,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "FIG",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -33376,6 +33442,7 @@
         }
       },
       "composer": "Kitkit Lu",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -33426,6 +33493,7 @@
         }
       },
       "composer": "Go raibh maith agat Orchestra",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -34267,7 +34335,8 @@
       "download_sha1": "ecd180eb5e6e0f7686b17a81321380952b21bbcc",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "SIHanatsuka & Yukino"
+      "composer": "SIHanatsuka & Yukino",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:b86b129b4f97e168",
@@ -34314,7 +34383,8 @@
       "download_sha1": "7c84bf101c6bce9f130d15971dc22ed72dfe74c2",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "HyuN & Ritoru"
+      "composer": "HyuN & Ritoru",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:b8c556a709d1eec7",
@@ -35075,7 +35145,8 @@
       "download_sha1": "464572853ed6ecb4e308a282589e7e77c09be24d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Michiru Oshima"
+      "composer": "Michiru Oshima",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:be7f5108323f5779",
@@ -35294,6 +35365,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Baba Band",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol.2"
@@ -35758,6 +35830,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "EARTHBOUND PAPAS",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -35854,6 +35927,7 @@
         }
       },
       "composer": "V.K",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -36491,6 +36565,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Kiva",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -37059,7 +37134,8 @@
       "download_sha1": "ecca97361d4c1fbe50ed1d15b644a71d43d4a5fd",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Morrigan & Cranky"
+      "composer": "Morrigan & Cranky",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:cc7a57223e011f68",
@@ -37391,6 +37467,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Feryquitous,feat.Sennzai",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Feryquitous collection"
       ]
@@ -37733,6 +37810,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Rabpit",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -38246,6 +38324,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "V.K",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -38342,6 +38421,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Feryquitous",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Feryquitous collection"
       ]
@@ -38661,6 +38741,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Sdorica (Chamber Chu)",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -38926,6 +39007,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Yuk-cheung Chun  Trevor Lin feat. Silvia Su",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -38975,7 +39057,8 @@
       "download_sha1": "9e42ec5fc5241a100a9b1a89f9cf97208a1aeea2",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "The Hoshizora Project"
+      "composer": "The Hoshizora Project",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:dc1f69810c8a3c10",
@@ -39505,7 +39588,8 @@
       "download_sha1": "b0000e0e9e89d1f79373aa83f93d5135de151cb9",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Cashew"
+      "composer": "Cashew",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:e0311d9dd97addd1",
@@ -39702,6 +39786,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Hikoshi Hashimoto",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -40205,7 +40290,8 @@
       "download_sha1": "0468fafd9bbf63cd227a89c0c7c63983d3085677",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "PTB10"
+      "composer": "PTB10",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:e843e4d6702cd971",
@@ -40717,7 +40803,8 @@
       "download_sha1": "ce5d138c0be1daee6883ff924f0abb440ae92eb5",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "The SxPlay"
+      "composer": "The SxPlay",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:e9f4a51f390bc4c4",
@@ -40765,6 +40852,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Kamome sano",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -41578,6 +41666,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Hikoshi Hashimoto",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -41675,6 +41764,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "KIVA",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -41770,7 +41860,8 @@
       "download_sha1": "18f16d8d8d34f2806cc592b982ca153f9b9c1a9f",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
-      "composer": "Alice Schach and the magic orchestra"
+      "composer": "Alice Schach and the magic orchestra",
+      "composer_source": "wikis:bwiki"
     },
     {
       "id": "wikis:fandom:fcee0d4244c9a240",
@@ -42110,6 +42201,7 @@
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
       "composer": "Feryquitous",
+      "composer_source": "wikis:bwiki",
       "collection_aliases": [
         "Feryquitous collection"
       ]

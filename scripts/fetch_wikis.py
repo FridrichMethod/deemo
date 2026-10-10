@@ -59,6 +59,8 @@ MIN_COVER_EDGE = 100
 ILLEGAL_TITLE = re.compile(r"[#<>\[\]{}|]")
 # Optional record fields describing how a carried-forward record relates to the current upstream file.
 UPSTREAM_FIELDS = ("upstream_status", "superseded_by")
+# Optional candidate fields a record copies at its end, in this order (then delivery_note), on download and re-run.
+SONG_INDEX_FIELDS = ("composer", "composer_source", "collection_aliases")
 
 
 def now():
@@ -197,24 +199,26 @@ def with_composers(candidates, songs):
     candidate's own wiki answers first, since its titles come from that wiki's pages; the other wiki's page of the same
     title answers only when none of the own wiki's pages names a composer (the wikis credit some songs differently).
     Several composers are joined with " / " in song-title order, and spellings that differ only in case, spacing or
-    punctuation count once. Collection covers get none: a cover is not one song's artwork."""
+    punctuation count once. A composer taken from the other wiki also gets composer_source, that wiki's source id:
+    otherwise the credit would read as the candidate's own wiki's. Collection covers get none: a cover is not one
+    song's artwork."""
     by_title = defaultdict(list)
     for song in songs:
         if song.get("composer"):
             by_title[song["title"]].append(song)
     result = []
     for candidate in candidates:
-        rest = {key: value for key, value in candidate.items() if key != "composer"}
-        found = []
+        rest = {key: value for key, value in candidate.items() if key not in ("composer", "composer_source")}
+        credits, own = [], SOURCES[candidate["source"]]["id"]
         if candidate.get("kind") == "song_art":
-            own = SOURCES[candidate["source"]]["id"]
             matched = [song for title in candidate.get("song_titles", []) for song in by_title.get(title, ())]
-            found = [song["composer"] for song in matched if song["source_id"] == own] \
-                or [song["composer"] for song in matched if song["source_id"] != own]
+            credits = [song for song in matched if song["source_id"] == own] or matched
         composers = {}
-        for name in found:
-            composers.setdefault(normalized(name) or name, name)
-        result.append({**rest, "composer": " / ".join(composers.values())} if composers else rest)
+        for song in credits:
+            composers.setdefault(normalized(song["composer"]) or song["composer"], song["composer"])
+        other = " / ".join(dict.fromkeys(song["source_id"] for song in credits if song["source_id"] != own))
+        credit = {"composer": " / ".join(composers.values())} if composers else {}
+        result.append({**rest, **credit, **({"composer_source": other} if other else {})})
     return result
 
 
@@ -386,15 +390,12 @@ def download(candidate, existing):
         if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == previous["sha256"] and previous.get("wiki_sha1") == info.get("sha1"):
             download_sha1 = hashlib.sha1(path.read_bytes()).hexdigest()
             current = {key: value for key, value in previous.items()
-                       if key not in UPSTREAM_FIELDS + ("composer", "collection_aliases", "delivery_note")}
+                       if key not in UPSTREAM_FIELDS + SONG_INDEX_FIELDS + ("delivery_note",)}
             record = {**current, "kind": candidate["kind"], "song_titles": candidate["song_titles"],
                       "collections": candidate["collections"], "related_pages": candidate["related_pages"],
                       "download_sha1": download_sha1, "wiki_original_size_matches": path.stat().st_size == info["size"],
                       "wiki_original_sha1_matches": download_sha1 == info.get("sha1")}
-            if candidate.get("composer"):
-                record["composer"] = candidate["composer"]
-            if candidate.get("collection_aliases"):
-                record["collection_aliases"] = candidate["collection_aliases"]
+            record.update({field: candidate[field] for field in SONG_INDEX_FIELDS if candidate.get(field)})
             note = delivery_note(previous.get("download_url", ""), record["wiki_original_size_matches"], record["wiki_original_sha1_matches"])
             if note:
                 record["delivery_note"] = note
@@ -461,10 +462,7 @@ def download(candidate, existing):
     if attempted_failures:
         record["download_attempt_failures"] = attempted_failures
     # Placed as a verified re-run places them, so a later --resume keeps the key order.
-    if candidate.get("composer"):
-        record["composer"] = candidate["composer"]
-    if candidate.get("collection_aliases"):
-        record["collection_aliases"] = candidate["collection_aliases"]
+    record.update({field: candidate[field] for field in SONG_INDEX_FIELDS if candidate.get(field)})
     note = delivery_note(url, record["wiki_original_size_matches"], record["wiki_original_sha1_matches"])
     if note:
         record["delivery_note"] = note
