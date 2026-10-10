@@ -39,7 +39,8 @@
       ],
       "collection_aliases": [
         "Ice collection"
-      ]
+      ],
+      "composer": "Amber Wishes"
     },
     {
       "source": "fandom",
@@ -188,7 +189,8 @@
       ],
       "collections": [
         "Rayark 12th collection"
-      ]
+      ],
+      "composer": "Silaver"
     },
     {
       "source": "fandom",
@@ -224,7 +226,8 @@
       ],
       "collections": [
         "Rayark 12th collection"
-      ]
+      ],
+      "composer": "Hundotte"
     },
     {
       "source": "fandom",
@@ -263,7 +266,8 @@
       ],
       "collection_aliases": [
         "Collaboration Collection"
-      ]
+      ],
+      "composer": "Rayark Sound Team"
     },
     {
       "source": "fandom",
@@ -299,7 +303,8 @@
       ],
       "collections": [
         "Rayark 12th collection"
-      ]
+      ],
+      "composer": "CLoTiVE (Feat. Lielle)"
     },
     {
       "source": "fandom",
@@ -335,7 +340,8 @@
       ],
       "collections": [
         "Rayark 12th collection"
-      ]
+      ],
+      "composer": "Chroma"
     },
     {
       "source": "fandom",
@@ -371,7 +377,8 @@
       ],
       "collections": [
         "Rayark 12th collection"
-      ]
+      ],
+      "composer": "Ice vs Yuma.Mizo vs Ai Ohsera with YumaelServer"
     },
     {
       "source": "fandom",
@@ -407,7 +414,8 @@
       ],
       "collections": [
         "Taiko no Tatsujin Collection"
-      ]
+      ],
+      "composer": "Mihile"
     },
     {
       "source": "fandom",
@@ -446,7 +454,8 @@
       ],
       "collection_aliases": [
         "Hundotte Collection"
-      ]
+      ],
+      "composer": "Hundotte"
     },
     {
       "source": "fandom",
@@ -482,7 +491,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Alice Schach and the magic orchestra"
     },
     {
       "source": "fandom",
@@ -518,7 +528,8 @@
       ],
       "collections": [
         "Timeline Collection"
-      ]
+      ],
+      "composer": "Video Game Orchestra"
     },
     {
       "source": "fandom",
@@ -888,7 +899,8 @@
       ],
       "collections": [
         "Reborn Collection"
-      ]
+      ],
+      "composer": "計畫通行"
     },
     {
       "source": "fandom",
@@ -927,7 +939,8 @@
       ],
       "collection_aliases": [
         "Feryquitous collection"
-      ]
+      ],
+      "composer": "Feryquitous"
     },
     {
       "source": "fandom",
@@ -1302,7 +1315,8 @@
       ],
       "collections": [
         "Golden Sheets Collection"
-      ]
+      ],
+      "composer": "onoken feat. Rin"
     },
     {
       "source": "fandom",
@@ -1374,7 +1388,8 @@
       ],
       "collections": [
         "Epilogue"
-      ]
+      ],
+      "composer": "Sleepy WiFi"
     },
     {
       "source": "fandom",
@@ -1411,7 +1426,8 @@
       "collections": [
         "Epilogue"
       ],
-      "variant_note": "Additional raster image referenced by the song page; may be alternate artwork or a composite."
+      "variant_note": "Additional raster image referenced by the song page; may be alternate artwork or a composite.",
+      "composer": "Sleepy WiFi"
     },
     {
       "source": "fandom",
@@ -1450,7 +1466,8 @@
       ],
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "Kaname Shigeyoshi"
     },
     {
       "source": "fandom",
@@ -1486,7 +1503,8 @@
       ],
       "collections": [
         "EGOIST Special Collection"
-      ]
+      ],
+      "composer": "EGOIST"
     },
     {
       "source": "fandom",
@@ -1562,7 +1580,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol. 2"
-      ]
+      ],
+      "composer": "Sakuzyo"
     },
     {
       "source": "fandom",
@@ -1598,7 +1617,8 @@
       ],
       "collections": [
         "Taishi collection"
-      ]
+      ],
+      "composer": "Taishi"
     },
     {
       "source": "fandom",
@@ -1670,7 +1690,8 @@
       ],
       "collections": [
         "Adventure selection"
-      ]
+      ],
+      "composer": "Uemura Kanae"
     },
     {
       "source": "fandom",
@@ -1821,7 +1842,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "3R2"
     },
     {
       "source": "fandom",
@@ -1896,7 +1918,8 @@
       ],
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "Shi Kuang Lee"
     },
     {
       "source": "fandom",
@@ -1932,7 +1955,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Cashew"
     },
     {
       "source": "fandom",
@@ -2004,7 +2028,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Yuma.Mizo feat. Ai Ohsera"
     },
     {
       "source": "fandom",
@@ -2045,7 +2070,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Edmund Fu"
     },
     {
       "source": "fandom",
@@ -2153,7 +2179,8 @@
       ],
       "collections": [
         "Autumn selection"
-      ]
+      ],
+      "composer": "Chroma"
     },
     {
       "source": "fandom",
@@ -2190,7 +2217,8 @@
       "collections": [
         "Vocal Collection",
         "Vocal Selection"
-      ]
+      ],
+      "composer": "onoken feat.Rin"
     },
     {
       "source": "fandom",
@@ -2339,7 +2367,8 @@
       ],
       "collections": [
         "Cytus II collection Vol.2"
-      ]
+      ],
+      "composer": "MisoilePunch"
     },
     {
       "source": "fandom",
@@ -2488,7 +2517,8 @@
       ],
       "collections": [
         "xi collection"
-      ]
+      ],
+      "composer": "xi"
     },
     {
       "source": "fandom",
@@ -2563,7 +2593,8 @@
       ],
       "collections": [
         "Sherwin collection"
-      ]
+      ],
+      "composer": "Sherwin"
     },
     {
       "source": "fandom",
@@ -2675,7 +2706,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Ice"
     },
     {
       "source": "fandom",
@@ -2748,7 +2780,8 @@
       "collections": [
         "DEEMO -Reborn- collection",
         "Reborn Collection"
-      ]
+      ],
+      "composer": "Freeleaves"
     },
     {
       "source": "fandom",
@@ -5121,7 +5154,8 @@
       ],
       "collection_aliases": [
         "RAC collection #4"
-      ]
+      ],
+      "composer": "Shi Kuang Lee & Pico"
     },
     {
       "source": "fandom",
@@ -5489,7 +5523,8 @@
       ],
       "collections": [
         "Vocal Collection"
-      ]
+      ],
+      "composer": "Silaver"
     },
     {
       "source": "fandom",
@@ -5525,7 +5560,8 @@
       ],
       "collections": [
         "Ayatsugu_Otowa collection"
-      ]
+      ],
+      "composer": "Ayatsugu_Revolved"
     },
     {
       "source": "fandom",
@@ -5821,7 +5857,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Chopin"
     },
     {
       "source": "fandom",
@@ -5860,7 +5897,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Brahms"
     },
     {
       "source": "fandom",
@@ -5899,7 +5937,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Brahms"
     },
     {
       "source": "fandom",
@@ -5938,7 +5977,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Beethoven"
     },
     {
       "source": "fandom",
@@ -5977,7 +6017,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Chopin"
     },
     {
       "source": "fandom",
@@ -6016,7 +6057,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "J.S. Bach"
     },
     {
       "source": "fandom",
@@ -6055,7 +6097,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Schumann"
     },
     {
       "source": "fandom",
@@ -6094,7 +6137,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Mozart"
     },
     {
       "source": "fandom",
@@ -6133,7 +6177,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Beethoven"
     },
     {
       "source": "fandom",
@@ -6172,7 +6217,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Nikolai Rimsky-Korsakov"
     },
     {
       "source": "fandom",
@@ -6211,7 +6257,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Schubert"
     },
     {
       "source": "fandom",
@@ -6250,7 +6297,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Mendelssohn"
     },
     {
       "source": "fandom",
@@ -6289,7 +6337,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Chopin"
     },
     {
       "source": "fandom",
@@ -6328,7 +6377,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Chopin"
     },
     {
       "source": "fandom",
@@ -6364,7 +6414,8 @@
       ],
       "collections": [
         "Taishi collection"
-      ]
+      ],
+      "composer": "Taishi"
     },
     {
       "source": "fandom",
@@ -6400,7 +6451,8 @@
       ],
       "collections": [
         "Sakuzyo collection Vol.2"
-      ]
+      ],
+      "composer": "Sakuzyo"
     },
     {
       "source": "fandom",
@@ -6436,7 +6488,8 @@
       ],
       "collections": [
         "xi collection"
-      ]
+      ],
+      "composer": "xi"
     },
     {
       "source": "fandom",
@@ -6472,7 +6525,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "RICHIE EAO"
     },
     {
       "source": "fandom",
@@ -6508,7 +6562,8 @@
       ],
       "collections": [
         "Reborn Collection"
-      ]
+      ],
+      "composer": "KIVΛ"
     },
     {
       "source": "fandom",
@@ -7030,7 +7085,8 @@
       ],
       "collections": [
         "Stone Monument Collection"
-      ]
+      ],
+      "composer": "Art of Fighters vs. Apo11o program + DD\"ナカタ\"Metal"
     },
     {
       "source": "fandom",
@@ -7066,7 +7122,8 @@
       ],
       "collections": [
         "Cytus II collection Vol.2"
-      ]
+      ],
+      "composer": "onoken"
     },
     {
       "source": "fandom",
@@ -7218,7 +7275,8 @@
       ],
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "NICODE. feat Romelon"
     },
     {
       "source": "fandom",
@@ -7257,7 +7315,8 @@
       ],
       "collection_aliases": [
         "Feryquitous collection"
-      ]
+      ],
+      "composer": "Feryquitous"
     },
     {
       "source": "fandom",
@@ -7519,7 +7578,8 @@
       ],
       "collections": [
         "EGOIST Special Collection"
-      ]
+      ],
+      "composer": "EGOIST"
     },
     {
       "source": "fandom",
@@ -7558,7 +7618,8 @@
       ],
       "collection_aliases": [
         "RAC collection #4"
-      ]
+      ],
+      "composer": "Xiaoming"
     },
     {
       "source": "fandom",
@@ -7895,7 +7956,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Manhattan Midnight"
     },
     {
       "source": "fandom",
@@ -7931,7 +7993,8 @@
       ],
       "collections": [
         "Reborn Collection"
-      ]
+      ],
+      "composer": "Freeleaves"
     },
     {
       "source": "fandom",
@@ -8039,7 +8102,8 @@
       ],
       "collections": [
         "Epilogue"
-      ]
+      ],
+      "composer": "Chamber Chu"
     },
     {
       "source": "fandom",
@@ -8599,7 +8663,8 @@
       ],
       "collections": [
         "Reborn Collection"
-      ]
+      ],
+      "composer": "SIHanatsuka"
     },
     {
       "source": "fandom",
@@ -8671,7 +8736,8 @@
       ],
       "collections": [
         "Capchii collection"
-      ]
+      ],
+      "composer": "Crawk × Capchii"
     },
     {
       "source": "fandom",
@@ -8785,7 +8851,8 @@
       ],
       "collection_aliases": [
         "Mirai's Selection"
-      ]
+      ],
+      "composer": "yourmythos"
     },
     {
       "source": "fandom",
@@ -8898,7 +8965,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Rabpit"
     },
     {
       "source": "fandom",
@@ -9159,7 +9227,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun feat. Misi Ke"
     },
     {
       "source": "fandom",
@@ -9380,7 +9449,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Keikaku Tsuukou feat. Parorto"
     },
     {
       "source": "fandom",
@@ -9488,7 +9558,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "source": "fandom",
@@ -9529,7 +9600,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol. 1B"
-      ]
+      ],
+      "composer": "Ice"
     },
     {
       "source": "fandom",
@@ -9720,7 +9792,8 @@
       ],
       "collection_aliases": [
         "Feryquitous collection"
-      ]
+      ],
+      "composer": "Feryquitous"
     },
     {
       "source": "fandom",
@@ -9793,7 +9866,8 @@
       "collections": [
         "DEEMO -Reborn- collection",
         "Reborn Collection"
-      ]
+      ],
+      "composer": "Takashi OKAMOTO(12sound) feat.Tsukasa Shiraki"
     },
     {
       "source": "fandom",
@@ -9829,7 +9903,8 @@
       ],
       "collections": [
         "Stone Monument Collection"
-      ]
+      ],
+      "composer": "MIDInco"
     },
     {
       "source": "fandom",
@@ -9978,7 +10053,8 @@
       ],
       "collections": [
         "Capchii collection"
-      ]
+      ],
+      "composer": "Capchii"
     },
     {
       "source": "fandom",
@@ -10053,7 +10129,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "fandom",
@@ -10090,7 +10167,8 @@
       "collections": [
         "DEEMO -Reborn- collection",
         "Reborn Collection"
-      ]
+      ],
+      "composer": "Iris"
     },
     {
       "source": "fandom",
@@ -10238,7 +10316,8 @@
       ],
       "collections": [
         "Vocal Collection"
-      ]
+      ],
+      "composer": "Iris feat. Victor Kong & LynH"
     },
     {
       "source": "fandom",
@@ -10382,7 +10461,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Stone"
     },
     {
       "source": "fandom",
@@ -10716,7 +10796,8 @@
       ],
       "collections": [
         "RAC Collection #5"
-      ]
+      ],
+      "composer": "ReZister"
     },
     {
       "source": "fandom",
@@ -10791,7 +10872,8 @@
       ],
       "collection_aliases": [
         "RAC collection #4"
-      ]
+      ],
+      "composer": "Triodust"
     },
     {
       "source": "fandom",
@@ -10935,7 +11017,8 @@
       ],
       "collections": [
         "Sakuzyo collection Vol.2"
-      ]
+      ],
+      "composer": "Sakuzyo"
     },
     {
       "source": "fandom",
@@ -10972,7 +11055,8 @@
       "collections": [
         "Duet collection Vol.1",
         "Rayark selection Vol.2"
-      ]
+      ],
+      "composer": "HAMO from Mili"
     },
     {
       "source": "fandom",
@@ -11080,7 +11164,8 @@
       ],
       "collections": [
         "Autumn selection"
-      ]
+      ],
+      "composer": "void (Mournfinale)"
     },
     {
       "source": "fandom",
@@ -11265,7 +11350,8 @@
       ],
       "collections": [
         "Golden Sheets Collection"
-      ]
+      ],
+      "composer": "onoken"
     },
     {
       "source": "fandom",
@@ -11337,7 +11423,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Morrigan & Cranky"
     },
     {
       "source": "fandom",
@@ -11448,7 +11535,8 @@
       ],
       "collections": [
         "EGOIST Special Collection"
-      ]
+      ],
+      "composer": "EGOIST"
     },
     {
       "source": "fandom",
@@ -11487,7 +11575,8 @@
       ],
       "collection_aliases": [
         "Mirai's Selection"
-      ]
+      ],
+      "composer": "H△G"
     },
     {
       "source": "fandom",
@@ -11523,7 +11612,8 @@
       ],
       "collections": [
         "Sherwin collection"
-      ]
+      ],
+      "composer": "Sherwin"
     },
     {
       "source": "fandom",
@@ -11631,7 +11721,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Zris"
     },
     {
       "source": "fandom",
@@ -11670,7 +11761,8 @@
       ],
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "Kitkit Lu"
     },
     {
       "source": "fandom",
@@ -11742,7 +11834,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "The SxPlay"
     },
     {
       "source": "fandom",
@@ -11778,7 +11871,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "orangentle"
     },
     {
       "source": "fandom",
@@ -11817,7 +11911,8 @@
       ],
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Kakumi Nishigomi"
     },
     {
       "source": "fandom",
@@ -11889,7 +11984,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Shina Kami & Silaver"
     },
     {
       "source": "fandom",
@@ -11997,7 +12093,8 @@
       ],
       "collections": [
         "Capchii collection"
-      ]
+      ],
+      "composer": "Capchii"
     },
     {
       "source": "fandom",
@@ -12072,7 +12169,8 @@
       ],
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Sdorica (Chamber Chu)"
     },
     {
       "source": "fandom",
@@ -12111,7 +12209,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Jerry Barnes  Katreese Barnes  Rodger Green"
     },
     {
       "source": "fandom",
@@ -12183,7 +12282,8 @@
       ],
       "collections": [
         "Rayark selection Vol.2"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "fandom",
@@ -12332,7 +12432,8 @@
       ],
       "collections": [
         "xi collection"
-      ]
+      ],
+      "composer": "xi"
     },
     {
       "source": "fandom",
@@ -12415,7 +12516,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Alex Vourtsanis"
     },
     {
       "source": "fandom",
@@ -12451,7 +12553,8 @@
       ],
       "collections": [
         "Rayark selection Vol.2"
-      ]
+      ],
+      "composer": "Kevin Penkin feat. Michiyo Honda"
     },
     {
       "source": "fandom",
@@ -12487,7 +12590,8 @@
       ],
       "collections": [
         "Sakuzyo collection Vol.2"
-      ]
+      ],
+      "composer": "Sakuzyo"
     },
     {
       "source": "fandom",
@@ -12672,7 +12776,8 @@
       ],
       "collections": [
         "Sherwin collection"
-      ]
+      ],
+      "composer": "Sherwin"
     },
     {
       "source": "fandom",
@@ -12708,7 +12813,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Sing Sing Rabbit"
     },
     {
       "source": "fandom",
@@ -12749,7 +12855,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun"
     },
     {
       "source": "fandom",
@@ -12935,7 +13042,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "yourmythos"
     },
     {
       "source": "fandom",
@@ -12971,7 +13079,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Y-SHIN"
     },
     {
       "source": "fandom",
@@ -13043,7 +13152,8 @@
       ],
       "collections": [
         "Cytus II collection Vol.2"
-      ]
+      ],
+      "composer": "Sakuzyo"
     },
     {
       "source": "fandom",
@@ -13079,7 +13189,8 @@
       ],
       "collections": [
         "Stone Monument Collection"
-      ]
+      ],
+      "composer": "Spacebot (floating)"
     },
     {
       "source": "fandom",
@@ -13119,7 +13230,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Sun Chen feat. Bibi Chao"
     },
     {
       "source": "fandom",
@@ -13196,7 +13308,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun, Jeff Li, Justine Lu"
     },
     {
       "source": "fandom",
@@ -13268,7 +13381,8 @@
       ],
       "collections": [
         "Taiko no Tatsujin Collection"
-      ]
+      ],
+      "composer": "Harunaba feat. Chihiro Ishigro"
     },
     {
       "source": "fandom",
@@ -13304,7 +13418,8 @@
       ],
       "collections": [
         "EGOIST Special Collection"
-      ]
+      ],
+      "composer": "EGOIST"
     },
     {
       "source": "fandom",
@@ -13376,7 +13491,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "The SxPlay"
     },
     {
       "source": "fandom",
@@ -13415,7 +13531,8 @@
       ],
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "ZENTA"
     },
     {
       "source": "fandom",
@@ -13642,7 +13759,8 @@
       ],
       "collection_aliases": [
         "Feryquitous collection"
-      ]
+      ],
+      "composer": "Feryquitous"
     },
     {
       "source": "fandom",
@@ -13753,7 +13871,8 @@
       ],
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "Rigel theatre"
     },
     {
       "source": "fandom",
@@ -13792,7 +13911,8 @@
       ],
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Liszt"
     },
     {
       "source": "fandom",
@@ -13832,7 +13952,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Cranky"
     },
     {
       "source": "fandom",
@@ -13871,7 +13992,8 @@
       ],
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Hikoshi Hashimoto"
     },
     {
       "source": "fandom",
@@ -13907,7 +14029,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Keikaku Tsuukou feat. Parorto"
     },
     {
       "source": "fandom",
@@ -13979,7 +14102,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "HyuN & Ritoru"
     },
     {
       "source": "fandom",
@@ -14015,7 +14139,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Narsil (from Ring) Feat. Himeko Nemuri (Luna Crescete)"
     },
     {
       "source": "fandom",
@@ -14055,7 +14180,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "switchworks"
     },
     {
       "source": "fandom",
@@ -14091,7 +14217,8 @@
       ],
       "collections": [
         "Sakuzyo collection Vol.2"
-      ]
+      ],
+      "composer": "Sakuzyo"
     },
     {
       "source": "fandom",
@@ -14130,7 +14257,8 @@
       ],
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "I.O"
     },
     {
       "source": "fandom",
@@ -14170,7 +14298,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "NeLiME"
     },
     {
       "source": "fandom",
@@ -14207,7 +14336,8 @@
       "collections": [
         "DEEMO -Reborn- collection",
         "Reborn Collection"
-      ]
+      ],
+      "composer": "Takashi OKAMOTO(12sound)"
     },
     {
       "source": "fandom",
@@ -14320,7 +14450,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun feat. Europa Huang"
     },
     {
       "source": "fandom",
@@ -14392,7 +14523,8 @@
       ],
       "collections": [
         "RAC Collection #5"
-      ]
+      ],
+      "composer": "Valunava"
     },
     {
       "source": "fandom",
@@ -14428,7 +14560,8 @@
       ],
       "collections": [
         "Autumn selection"
-      ]
+      ],
+      "composer": "Jerico"
     },
     {
       "source": "fandom",
@@ -14467,7 +14600,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "KillerBlood"
     },
     {
       "source": "fandom",
@@ -14503,7 +14637,8 @@
       ],
       "collections": [
         "Taishi collection"
-      ]
+      ],
+      "composer": "Taishi"
     },
     {
       "source": "fandom",
@@ -14539,7 +14674,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Michiru Oshima"
     },
     {
       "source": "fandom",
@@ -14579,7 +14715,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Edmund Fu"
     },
     {
       "source": "fandom",
@@ -14870,7 +15007,8 @@
       ],
       "collection_aliases": [
         "Hundotte Collection"
-      ]
+      ],
+      "composer": "Hundotte"
     },
     {
       "source": "fandom",
@@ -14906,7 +15044,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Michiru Oshima"
     },
     {
       "source": "fandom",
@@ -15053,7 +15192,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "brz1128 vs. M-UE"
     },
     {
       "source": "fandom",
@@ -15536,7 +15676,8 @@
       "variant_note": "Additional raster image referenced by the song page; may be alternate artwork or a composite.",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "M2U  Vocal by Guriri"
     },
     {
       "source": "fandom",
@@ -15576,7 +15717,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "M2U  Vocal by Guriri"
     },
     {
       "source": "fandom",
@@ -15615,7 +15757,8 @@
       ],
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "M2U"
     },
     {
       "source": "fandom",
@@ -15651,7 +15794,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "NOMA & Apo11o”1.62”program ft. Yuki Shizaki"
     },
     {
       "source": "fandom",
@@ -15687,7 +15831,8 @@
       ],
       "collections": [
         "Golden Sheets Collection"
-      ]
+      ],
+      "composer": "onoken feat. 実咲"
     },
     {
       "source": "fandom",
@@ -15723,7 +15868,8 @@
       ],
       "collections": [
         "Reborn Collection"
-      ]
+      ],
+      "composer": "Laur"
     },
     {
       "source": "fandom",
@@ -15834,7 +15980,8 @@
       ],
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "Ujico*"
     },
     {
       "source": "fandom",
@@ -15909,7 +16056,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "EARTHBOUND PAPAS"
     },
     {
       "source": "fandom",
@@ -16179,7 +16327,8 @@
       ],
       "collection_aliases": [
         "Mili Collection Vol. 3"
-      ]
+      ],
+      "composer": "Mili"
     },
     {
       "source": "fandom",
@@ -16215,7 +16364,8 @@
       ],
       "collections": [
         "Autumn selection"
-      ]
+      ],
+      "composer": "HAGANE"
     },
     {
       "source": "fandom",
@@ -16251,7 +16401,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "WhiteCapella"
     },
     {
       "source": "fandom",
@@ -16359,7 +16510,8 @@
       ],
       "collections": [
         "Golden Sheets Collection"
-      ]
+      ],
+      "composer": "onoken feat. b"
     },
     {
       "source": "fandom",
@@ -16513,7 +16665,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "fandom",
@@ -16549,7 +16702,8 @@
       ],
       "collections": [
         "xi collection"
-      ]
+      ],
+      "composer": "xi"
     },
     {
       "source": "fandom",
@@ -16585,7 +16739,8 @@
       ],
       "collections": [
         "Timeline Collection"
-      ]
+      ],
+      "composer": "Video Game Orchestra"
     },
     {
       "source": "fandom",
@@ -16729,7 +16884,8 @@
       ],
       "collections": [
         "Rayark selection Vol.2"
-      ]
+      ],
+      "composer": "Jerry Barnes  Quiana"
     },
     {
       "source": "fandom",
@@ -16768,7 +16924,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "KIVA"
     },
     {
       "source": "fandom",
@@ -16804,7 +16961,8 @@
       ],
       "collections": [
         "Ayatsugu_Otowa collection"
-      ]
+      ],
+      "composer": "Ayatsugu_Revolved"
     },
     {
       "source": "fandom",
@@ -16879,7 +17037,8 @@
       ],
       "collections": [
         "Vocal Collection"
-      ]
+      ],
+      "composer": "Iris feat. LynH"
     },
     {
       "source": "fandom",
@@ -16919,7 +17078,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "M2U / Arranger : M2U & NICODE / Vocal : Guriri & Lucy"
     },
     {
       "source": "fandom",
@@ -17071,7 +17231,8 @@
       ],
       "collection_aliases": [
         "Mirai's Selection"
-      ]
+      ],
+      "composer": "Alice Lee & Michael Wyckoff"
     },
     {
       "source": "fandom",
@@ -17218,7 +17379,8 @@
       ],
       "collections": [
         "Cytus II collection Vol.2"
-      ]
+      ],
+      "composer": "Yuma.Mizo feat. Ai Ohsera"
     },
     {
       "source": "fandom",
@@ -17254,7 +17416,8 @@
       ],
       "collections": [
         "Golden Sheets Collection"
-      ]
+      ],
+      "composer": "onoken"
     },
     {
       "source": "fandom",
@@ -17326,7 +17489,8 @@
       ],
       "collections": [
         "Capchii collection"
-      ]
+      ],
+      "composer": "Capchii feat. Yuzuha"
     },
     {
       "source": "fandom",
@@ -17362,7 +17526,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "ginkiha"
     },
     {
       "source": "fandom",
@@ -17440,7 +17605,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "Mili"
     },
     {
       "source": "fandom",
@@ -17589,7 +17755,8 @@
       ],
       "collections": [
         "Taiko no Tatsujin Collection"
-      ]
+      ],
+      "composer": "Lyo"
     },
     {
       "source": "fandom",
@@ -17625,7 +17792,8 @@
       ],
       "collections": [
         "Sherwin collection"
-      ]
+      ],
+      "composer": "Sherwin"
     },
     {
       "source": "fandom",
@@ -17877,7 +18045,8 @@
       ],
       "collections": [
         "Adventure selection"
-      ]
+      ],
+      "composer": "Sound Souler"
     },
     {
       "source": "fandom",
@@ -17913,7 +18082,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Sound Souler"
     },
     {
       "source": "fandom",
@@ -17949,7 +18119,8 @@
       ],
       "collections": [
         "Adventure selection"
-      ]
+      ],
+      "composer": "Sound Souler"
     },
     {
       "source": "fandom",
@@ -17985,7 +18156,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "PTB10"
     },
     {
       "source": "fandom",
@@ -18060,7 +18232,8 @@
       ],
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "Morimori Atsushi"
     },
     {
       "source": "fandom",
@@ -18171,7 +18344,8 @@
       ],
       "collections": [
         "RAC Collection #5"
-      ]
+      ],
+      "composer": "Yuta Murase"
     },
     {
       "source": "fandom",
@@ -18210,7 +18384,8 @@
       ],
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Ice"
     },
     {
       "source": "fandom",
@@ -18321,7 +18496,8 @@
       ],
       "collections": [
         "Epilogue"
-      ]
+      ],
+      "composer": "Jun Kuroda"
     },
     {
       "source": "fandom",
@@ -18360,7 +18536,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun  Trevor Lin feat. Silvia Su"
     },
     {
       "source": "fandom",
@@ -18396,7 +18573,8 @@
       ],
       "collections": [
         "Timeline Collection"
-      ]
+      ],
+      "composer": "Video Game Orchestra"
     },
     {
       "source": "fandom",
@@ -18433,7 +18611,8 @@
       "collections": [
         "Vocal Collection",
         "Vocal Selection"
-      ]
+      ],
+      "composer": "white tail box ft.riri"
     },
     {
       "source": "fandom",
@@ -18469,7 +18648,8 @@
       ],
       "collections": [
         "Timeline Collection"
-      ]
+      ],
+      "composer": "Video Game Orchestra"
     },
     {
       "source": "fandom",
@@ -18508,7 +18688,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Rabpit"
     },
     {
       "source": "fandom",
@@ -18544,7 +18725,8 @@
       ],
       "collections": [
         "Reborn Collection"
-      ]
+      ],
+      "composer": "3R2"
     },
     {
       "source": "fandom",
@@ -18580,7 +18762,8 @@
       ],
       "collections": [
         "EGOIST Special Collection"
-      ]
+      ],
+      "composer": "EGOIST"
     },
     {
       "source": "fandom",
@@ -18621,7 +18804,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Sta"
     },
     {
       "source": "fandom",
@@ -18729,7 +18913,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "The Hoshizora Project"
     },
     {
       "source": "fandom",
@@ -18840,7 +19025,8 @@
       ],
       "collections": [
         "Golden Sheets Collection"
-      ]
+      ],
+      "composer": "onoken"
     },
     {
       "source": "fandom",
@@ -18876,7 +19062,8 @@
       ],
       "collections": [
         "Timeline Collection"
-      ]
+      ],
+      "composer": "Video Game Orchestra"
     },
     {
       "source": "fandom",
@@ -18916,7 +19103,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Sta feat. A"
     },
     {
       "source": "fandom",
@@ -18988,7 +19176,8 @@
       ],
       "collections": [
         "Capchii collection"
-      ]
+      ],
+      "composer": "Capchii feat. Uzumaki"
     },
     {
       "source": "fandom",
@@ -19024,7 +19213,8 @@
       ],
       "collections": [
         "Ayatsugu_Otowa collection"
-      ]
+      ],
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "source": "fandom",
@@ -19587,7 +19777,8 @@
       ],
       "collections": [
         "Taiko no Tatsujin Collection"
-      ]
+      ],
+      "composer": "a_hisa"
     },
     {
       "source": "fandom",
@@ -19626,7 +19817,8 @@
       ],
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "Kaneko Chiharu"
     },
     {
       "source": "fandom",
@@ -19665,7 +19857,8 @@
       ],
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "Go raibh maith agat Orchestra"
     },
     {
       "source": "fandom",
@@ -19704,7 +19897,8 @@
       ],
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "Feryquitous feat. Sennzai"
     },
     {
       "source": "fandom",
@@ -19782,7 +19976,8 @@
       ],
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "soyomogi"
     },
     {
       "source": "fandom",
@@ -19821,7 +20016,8 @@
       ],
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "FIG"
     },
     {
       "source": "fandom",
@@ -19893,7 +20089,8 @@
       ],
       "collections": [
         "Sakuzyo collection Vol.2"
-      ]
+      ],
+      "composer": "Sakuzyo"
     },
     {
       "source": "fandom",
@@ -19929,7 +20126,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Edmund Fu"
     },
     {
       "source": "fandom",
@@ -19968,7 +20166,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Rabpit"
     },
     {
       "source": "fandom",
@@ -20007,7 +20206,8 @@
       ],
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Hikoshi Hashimoto"
     },
     {
       "source": "fandom",
@@ -20043,7 +20243,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Sherwin"
     },
     {
       "source": "fandom",
@@ -20082,7 +20283,8 @@
       ],
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Rayark Sound Team \"Ice & SIHanatsuka\""
     },
     {
       "source": "fandom",
@@ -20118,7 +20320,8 @@
       ],
       "collections": [
         "Vocal Collection"
-      ]
+      ],
+      "composer": "Apo11o program&ゆゆうたft.OFFICE萬田㈱"
     },
     {
       "source": "fandom",
@@ -20227,7 +20430,8 @@
       "collections": [
         "Vocal Collection",
         "Vocal Selection"
-      ]
+      ],
+      "composer": "Tsukasa feat. kalon"
     },
     {
       "source": "fandom",
@@ -20263,7 +20467,8 @@
       ],
       "collections": [
         "Autumn selection"
-      ]
+      ],
+      "composer": "EmoCosine"
     },
     {
       "source": "fandom",
@@ -20340,7 +20545,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "fandom",
@@ -20376,7 +20582,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "TQ"
     },
     {
       "source": "fandom",
@@ -20415,7 +20622,8 @@
       ],
       "collection_aliases": [
         "Hundotte Collection"
-      ]
+      ],
+      "composer": "Hundotte"
     },
     {
       "source": "fandom",
@@ -20454,7 +20662,8 @@
       ],
       "collection_aliases": [
         "Feryquitous collection"
-      ]
+      ],
+      "composer": "Feryquitous,feat.Sennzai"
     },
     {
       "source": "fandom",
@@ -20490,7 +20699,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "naoto"
     },
     {
       "source": "fandom",
@@ -20637,7 +20847,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "SIHanatsuka & Yukino"
     },
     {
       "source": "fandom",
@@ -20713,7 +20924,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Kaeru Underground"
     },
     {
       "source": "fandom",
@@ -20749,7 +20961,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "KillerBlood"
     },
     {
       "source": "fandom",
@@ -20821,7 +21034,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "yourmythos"
     },
     {
       "source": "fandom",
@@ -20893,7 +21107,8 @@
       ],
       "collections": [
         "Stone Monument Collection"
-      ]
+      ],
+      "composer": "Apo11o\"QUASAR\"program ft.遠藤駿"
     },
     {
       "source": "fandom",
@@ -20934,7 +21149,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Rabpit"
     },
     {
       "source": "fandom",
@@ -20974,7 +21190,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Shinichi Kobayashi"
     },
     {
       "source": "fandom",
@@ -21014,7 +21231,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Baba Band"
     },
     {
       "source": "fandom",
@@ -21203,7 +21421,8 @@
       "variant_note": "Additional raster image referenced by the song page; may be alternate artwork or a composite.",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Pianoboy"
     },
     {
       "source": "fandom",
@@ -21242,7 +21461,8 @@
       ],
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Pianoboy"
     },
     {
       "source": "fandom",
@@ -21281,7 +21501,8 @@
       ],
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "xi"
     },
     {
       "source": "fandom",
@@ -21433,7 +21654,8 @@
       ],
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Rave Cyanide"
     },
     {
       "source": "fandom",
@@ -21472,7 +21694,8 @@
       ],
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "vospi"
     },
     {
       "source": "fandom",
@@ -21511,7 +21734,8 @@
       ],
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Kiva"
     },
     {
       "source": "fandom",
@@ -21550,7 +21774,8 @@
       ],
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Triodust"
     },
     {
       "source": "fandom",
@@ -21589,7 +21814,8 @@
       ],
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Michiru Oshima"
     },
     {
       "source": "fandom",
@@ -21625,7 +21851,8 @@
       ],
       "collections": [
         "Rayark selection Vol.2"
-      ]
+      ],
+      "composer": "Rabpit"
     },
     {
       "source": "fandom",
@@ -21808,7 +22035,8 @@
       ],
       "collections": [
         "RAC Collection #5"
-      ]
+      ],
+      "composer": "gondayu"
     },
     {
       "source": "fandom",
@@ -21993,7 +22221,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Abia Ng"
     },
     {
       "source": "fandom",
@@ -22255,7 +22484,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "TERU FOX"
     },
     {
       "source": "fandom",
@@ -22404,7 +22634,8 @@
       ],
       "collections": [
         "Ayatsugu_Otowa collection"
-      ]
+      ],
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "source": "fandom",
@@ -22476,7 +22707,8 @@
       ],
       "collections": [
         "Sherwin collection"
-      ]
+      ],
+      "composer": "Sherwin"
     },
     {
       "source": "fandom",
@@ -22695,7 +22927,8 @@
       ],
       "collection_aliases": [
         "Hundotte Collection"
-      ]
+      ],
+      "composer": "Hundotte"
     },
     {
       "source": "fandom",
@@ -22803,7 +23036,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "masaki kawasaki"
     },
     {
       "source": "fandom",
@@ -22955,7 +23189,8 @@
       ],
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "HALLPBESTUDIO"
     },
     {
       "source": "fandom",
@@ -22992,7 +23227,8 @@
       "collections": [
         "DEEMO -Reborn- collection",
         "Reborn Collection"
-      ]
+      ],
+      "composer": "t+pazolite"
     },
     {
       "source": "fandom",
@@ -23028,7 +23264,8 @@
       ],
       "collections": [
         "Taishi collection"
-      ]
+      ],
+      "composer": "Taishi"
     },
     {
       "source": "fandom",
@@ -23067,7 +23304,8 @@
       ],
       "collection_aliases": [
         "Mirai's Selection"
-      ]
+      ],
+      "composer": "H△G"
     },
     {
       "source": "fandom",
@@ -23103,7 +23341,8 @@
       ],
       "collections": [
         "Adventure selection"
-      ]
+      ],
+      "composer": "muyu+Yu-dachi"
     },
     {
       "source": "fandom",
@@ -23144,7 +23383,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Edmund Fu"
     },
     {
       "source": "fandom",
@@ -23256,7 +23496,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Alex Vourtsanis"
     },
     {
       "source": "fandom",
@@ -23297,7 +23538,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Kaeru Underground"
     },
     {
       "source": "fandom",
@@ -23337,7 +23579,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Kaeru Underground"
     },
     {
       "source": "fandom",
@@ -23712,7 +23955,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "Freeleaves"
     },
     {
       "source": "fandom",
@@ -23748,7 +23992,8 @@
       ],
       "collections": [
         "Reborn Collection"
-      ]
+      ],
+      "composer": "計畫通行"
     },
     {
       "source": "fandom",
@@ -23788,7 +24033,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Mai Aoyagi"
     },
     {
       "source": "fandom",
@@ -23896,7 +24142,8 @@
       ],
       "collections": [
         "Taishi collection"
-      ]
+      ],
+      "composer": "Taishi"
     },
     {
       "source": "fandom",
@@ -24007,7 +24254,8 @@
       ],
       "collections": [
         "Reborn Collection"
-      ]
+      ],
+      "composer": "3R2"
     },
     {
       "source": "fandom",
@@ -24082,7 +24330,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "KIVA"
     },
     {
       "source": "fandom",
@@ -24193,7 +24442,8 @@
       ],
       "collection_aliases": [
         "Collaboration Collection"
-      ]
+      ],
+      "composer": "Sdorica (作曲・編曲:Hoskey) (歌:劉軒蓁)"
     },
     {
       "source": "fandom",
@@ -24232,7 +24482,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "Pianoboy"
     },
     {
       "source": "fandom",
@@ -24340,7 +24591,8 @@
       ],
       "collections": [
         "Adventure selection"
-      ]
+      ],
+      "composer": "studio neo"
     },
     {
       "source": "fandom",
@@ -24379,7 +24631,8 @@
       ],
       "collection_aliases": [
         "RAC collection #4"
-      ]
+      ],
+      "composer": "The AirCarrier"
     },
     {
       "source": "fandom",
@@ -24454,7 +24707,8 @@
       ],
       "collection_aliases": [
         "Mirai's Selection"
-      ]
+      ],
+      "composer": "H△G"
     },
     {
       "source": "fandom",
@@ -24639,7 +24893,8 @@
       ],
       "collections": [
         "xi collection"
-      ]
+      ],
+      "composer": "xi"
     },
     {
       "source": "fandom",
@@ -24678,7 +24933,8 @@
       ],
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "Kamome sano"
     },
     {
       "source": "fandom",
@@ -24714,7 +24970,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "yourmythos"
     },
     {
       "source": "fandom",
@@ -24750,7 +25007,8 @@
       ],
       "collections": [
         "Taiko no Tatsujin Collection"
-      ]
+      ],
+      "composer": "Azu"
     },
     {
       "source": "fandom",
@@ -24786,7 +25044,8 @@
       ],
       "collections": [
         "Epilogue"
-      ]
+      ],
+      "composer": "technoplanet feat. Satoshi Oka"
     },
     {
       "source": "fandom",
@@ -24861,7 +25120,8 @@
       ],
       "collection_aliases": [
         "Hundotte Collection"
-      ]
+      ],
+      "composer": "H Undo OTT e"
     },
     {
       "source": "fandom",
@@ -24898,7 +25158,8 @@
       "collections": [
         "Vocal Collection",
         "Vocal Selection"
-      ]
+      ],
+      "composer": "t+pazolite feat. Nanahira"
     },
     {
       "source": "fandom",
@@ -24939,7 +25200,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun feat. Misi Ke"
     },
     {
       "source": "fandom",
@@ -24979,7 +25241,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "FabricFactory"
     },
     {
       "source": "fandom",
@@ -25021,7 +25284,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "Mili"
     },
     {
       "source": "fandom",
@@ -25061,7 +25325,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "xi"
     },
     {
       "source": "fandom",
@@ -25102,7 +25367,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "onoken / Vocal: Rin"
     },
     {
       "source": "fandom",
@@ -25142,7 +25408,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "onoken / Vocal: Rin"
     },
     {
       "source": "fandom",
@@ -25183,7 +25450,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Baba Band"
     },
     {
       "source": "fandom",
@@ -25219,7 +25487,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Michiru Oshima"
     },
     {
       "source": "fandom",
@@ -25255,7 +25524,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Michiru Oshima"
     },
     {
       "source": "fandom",
@@ -25328,7 +25598,8 @@
       "collections": [
         "Vocal Collection",
         "Vocal Selection"
-      ]
+      ],
+      "composer": "Apo11o program ft.Ritsuka"
     },
     {
       "source": "fandom",
@@ -25367,7 +25638,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "Presti"
     },
     {
       "source": "fandom",
@@ -25406,7 +25678,8 @@
       ],
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Sta"
     },
     {
       "source": "fandom",
@@ -25559,7 +25832,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Edmund Fu"
     },
     {
       "source": "fandom",
@@ -25595,7 +25869,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "Ramenbot Jr."
     },
     {
       "source": "fandom",
@@ -25670,7 +25945,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "SLS"
     },
     {
       "source": "fandom",
@@ -25781,7 +26057,8 @@
       ],
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Hikoshi Hashimoto"
     },
     {
       "source": "fandom",
@@ -25821,7 +26098,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "fandom",
@@ -25896,7 +26174,8 @@
       ],
       "collection_aliases": [
         "RAC collection #4"
-      ]
+      ],
+      "composer": "SUi"
     },
     {
       "source": "fandom",
@@ -25968,7 +26247,8 @@
       ],
       "collections": [
         "Shattered Memories 2"
-      ]
+      ],
+      "composer": "John Towse, LunaSafari feat. SAYA"
     },
     {
       "source": "fandom",
@@ -26043,7 +26323,8 @@
       ],
       "collections": [
         "Ayatsugu_Otowa collection"
-      ]
+      ],
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "source": "fandom",
@@ -26079,7 +26360,8 @@
       ],
       "collections": [
         "Cytus II collection Vol.2"
-      ]
+      ],
+      "composer": "technoplanet"
     },
     {
       "source": "fandom",
@@ -26228,7 +26510,8 @@
       ],
       "collections": [
         "Stone Monument Collection"
-      ]
+      ],
+      "composer": "柳田Ethnica"
     },
     {
       "source": "fandom",
@@ -26300,7 +26583,8 @@
       ],
       "collections": [
         "Shattered Memories"
-      ]
+      ],
+      "composer": "gondayu"
     },
     {
       "source": "fandom",
@@ -26339,7 +26623,8 @@
       ],
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "fandom",
@@ -26411,7 +26696,8 @@
       ],
       "collections": [
         "RAC Collection #5"
-      ]
+      ],
+      "composer": "TAKU1175"
     },
     {
       "source": "fandom",
@@ -26453,7 +26739,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "Mili"
     },
     {
       "source": "bwiki",
@@ -26565,7 +26852,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "xi"
     },
     {
       "source": "bwiki",
@@ -26598,7 +26886,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Hundotte collection"
-      ]
+      ],
+      "composer": "Hundotte"
     },
     {
       "source": "bwiki",
@@ -26628,7 +26917,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Alice Schach and the magic orchestra"
     },
     {
       "source": "bwiki",
@@ -26661,7 +26951,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "Kaneko Chiharu"
     },
     {
       "source": "bwiki",
@@ -26772,7 +27063,8 @@
       "collections": [
         "Epilogue"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sleepy WiFi"
     },
     {
       "source": "bwiki",
@@ -26805,7 +27097,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "Kaname Shigeyoshi"
     },
     {
       "source": "bwiki",
@@ -26839,7 +27132,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol. 2"
-      ]
+      ],
+      "composer": "Sakuzyo"
     },
     {
       "source": "bwiki",
@@ -26869,7 +27163,8 @@
       "collections": [
         "Adventure selection"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Uemura Kanae"
     },
     {
       "source": "bwiki",
@@ -26903,7 +27198,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Ice"
     },
     {
       "source": "bwiki",
@@ -26937,7 +27233,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "3R2"
     },
     {
       "source": "bwiki",
@@ -26970,7 +27267,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "Shi Kuang Lee"
     },
     {
       "source": "bwiki",
@@ -27000,7 +27298,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Cashew"
     },
     {
       "source": "bwiki",
@@ -27032,7 +27331,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ruibass"
     },
     {
       "source": "bwiki",
@@ -27064,7 +27364,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ruibass"
     },
     {
       "source": "bwiki",
@@ -27097,7 +27398,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "xi"
     },
     {
       "source": "bwiki",
@@ -27127,7 +27429,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuma.mizo Feat. Ai Ohsera"
     },
     {
       "source": "bwiki",
@@ -27162,7 +27465,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Edmund Fu"
     },
     {
       "source": "bwiki",
@@ -27195,7 +27499,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Schumann"
     },
     {
       "source": "bwiki",
@@ -27280,7 +27585,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Chopin"
     },
     {
       "source": "bwiki",
@@ -27314,7 +27620,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Ice"
     },
     {
       "source": "bwiki",
@@ -27347,7 +27654,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "Go raibh maith agat Orchestra"
     },
     {
       "source": "bwiki",
@@ -27481,7 +27789,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "RICHIE EAO"
     },
     {
       "source": "bwiki",
@@ -27748,7 +28057,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Manhattan Midnight"
     },
     {
       "source": "bwiki",
@@ -27867,7 +28177,8 @@
       "collections": [
         "Epilogue"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Chamber Chu"
     },
     {
       "source": "bwiki",
@@ -27900,7 +28211,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Mirai's selection"
-      ]
+      ],
+      "composer": "yourmythos"
     },
     {
       "source": "bwiki",
@@ -27935,7 +28247,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Rabpit"
     },
     {
       "source": "bwiki",
@@ -27969,7 +28282,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun feat. Misi Ke"
     },
     {
       "source": "bwiki",
@@ -28025,7 +28339,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuma.Mizo"
     },
     {
       "source": "bwiki",
@@ -28055,7 +28370,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "source": "bwiki",
@@ -28090,7 +28406,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol. 1B"
-      ]
+      ],
+      "composer": "Ice"
     },
     {
       "source": "bwiki",
@@ -28204,7 +28521,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "bwiki",
@@ -28234,7 +28552,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Stone"
     },
     {
       "source": "bwiki",
@@ -28322,7 +28641,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Nikolai Rimsky-Korsakov"
     },
     {
       "source": "bwiki",
@@ -28356,7 +28676,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "onoken / Vocal: Rin"
     },
     {
       "source": "bwiki",
@@ -28387,7 +28708,8 @@
         "Duet collection Vol.1",
         "Rayark selection Vol.2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "HAMO from Mili"
     },
     {
       "source": "bwiki",
@@ -28443,7 +28765,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Morrigan & Cranky"
     },
     {
       "source": "bwiki",
@@ -28476,7 +28799,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Mirai's selection"
-      ]
+      ],
+      "composer": "H△G"
     },
     {
       "source": "bwiki",
@@ -28508,7 +28832,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration Collection"
-      ]
+      ],
+      "composer": "Rayark Sound Team (Freeleaves)"
     },
     {
       "source": "bwiki",
@@ -28538,7 +28863,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Zris"
     },
     {
       "source": "bwiki",
@@ -28571,7 +28897,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "Kitkit Lu"
     },
     {
       "source": "bwiki",
@@ -28601,7 +28928,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "The SxPlay"
     },
     {
       "source": "bwiki",
@@ -28631,7 +28959,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "orangentle"
     },
     {
       "source": "bwiki",
@@ -28664,7 +28993,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Kakumi Nishigomi"
     },
     {
       "source": "bwiki",
@@ -28694,7 +29024,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Shina Kami & Silaver"
     },
     {
       "source": "bwiki",
@@ -28727,7 +29058,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Sdorica (Chamber Chu)"
     },
     {
       "source": "bwiki",
@@ -28760,7 +29092,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Jerry Barnes  Katreese Barnes  Rodger Green"
     },
     {
       "source": "bwiki",
@@ -28790,7 +29123,8 @@
       "collections": [
         "Rayark selection Vol.2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "V.K"
     },
     {
       "source": "bwiki",
@@ -28854,7 +29188,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun"
     },
     {
       "source": "bwiki",
@@ -28884,7 +29219,8 @@
       "collections": [
         "Rayark selection Vol.2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kevin Penkin feat. Michiyo Honda"
     },
     {
       "source": "bwiki",
@@ -28943,7 +29279,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sing Sing Rabbit"
     },
     {
       "source": "bwiki",
@@ -28976,7 +29313,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Schubert"
     },
     {
       "source": "bwiki",
@@ -29006,7 +29344,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "yourmythos"
     },
     {
       "source": "bwiki",
@@ -29036,7 +29375,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Y-SHIN"
     },
     {
       "source": "bwiki",
@@ -29069,7 +29409,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Brahms"
     },
     {
       "source": "bwiki",
@@ -29102,7 +29443,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "J.S.Bach"
     },
     {
       "source": "bwiki",
@@ -29136,7 +29478,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Sun Chen feat. Bibi Chao"
     },
     {
       "source": "bwiki",
@@ -29171,7 +29514,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun, Jeff Li, Justine Lu"
     },
     {
       "source": "bwiki",
@@ -29201,7 +29545,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "The SxPlay"
     },
     {
       "source": "bwiki",
@@ -29234,7 +29579,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "ZENTA"
     },
     {
       "source": "bwiki",
@@ -29322,7 +29668,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "NICODE feat. Romelon"
     },
     {
       "source": "bwiki",
@@ -29381,7 +29728,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "Rigel theatre"
     },
     {
       "source": "bwiki",
@@ -29414,7 +29762,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Liszt"
     },
     {
       "source": "bwiki",
@@ -29448,7 +29797,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Cranky"
     },
     {
       "source": "bwiki",
@@ -29478,7 +29828,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Keikaku Tsuukou"
     },
     {
       "source": "bwiki",
@@ -29511,7 +29862,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Hikoshi Hashimoto"
     },
     {
       "source": "bwiki",
@@ -29541,7 +29893,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "HyuN & Ritoru"
     },
     {
       "source": "bwiki",
@@ -29571,7 +29924,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "NNarsil (from Ring) feat. Himeko Nemuri (Luna-Crescente)"
     },
     {
       "source": "bwiki",
@@ -29605,7 +29959,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "switchworks"
     },
     {
       "source": "bwiki",
@@ -29638,7 +29993,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "I.O"
     },
     {
       "source": "bwiki",
@@ -29672,7 +30028,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "NeLiME"
     },
     {
       "source": "bwiki",
@@ -29705,7 +30062,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "Feryquitous feat. Sennzai"
     },
     {
       "source": "bwiki",
@@ -29740,7 +30098,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun, feat. Europa Huang"
     },
     {
       "source": "bwiki",
@@ -29773,7 +30132,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "KillerBlood"
     },
     {
       "source": "bwiki",
@@ -29803,7 +30163,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Michiru Oshima"
     },
     {
       "source": "bwiki",
@@ -29837,7 +30198,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Edmund Fu"
     },
     {
       "source": "bwiki",
@@ -29870,7 +30232,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Hundotte collection"
-      ]
+      ],
+      "composer": "Hundotte"
     },
     {
       "source": "bwiki",
@@ -29900,7 +30263,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Michiru Oshima"
     },
     {
       "source": "bwiki",
@@ -29930,7 +30294,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "M-UE"
     },
     {
       "source": "bwiki",
@@ -29963,7 +30328,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Rave Cyanide & Lunatic Sounds"
     },
     {
       "source": "bwiki",
@@ -30188,7 +30554,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "M2U feat. Guriri"
     },
     {
       "source": "bwiki",
@@ -30221,7 +30588,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "M2U / Arranger: M2U. NICODE / Vocal: Guriri. M2U"
     },
     {
       "source": "bwiki",
@@ -30252,7 +30620,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "NOMA & Apo11o\"1.62\"program ft.Yuki Shizaki"
     },
     {
       "source": "bwiki",
@@ -30285,7 +30654,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "Ujico*"
     },
     {
       "source": "bwiki",
@@ -30318,7 +30688,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "EARTHBOUND PAPAS"
     },
     {
       "source": "bwiki",
@@ -30348,7 +30719,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "WhiteCapella"
     },
     {
       "source": "bwiki",
@@ -30407,7 +30779,8 @@
       "collections": [
         "Rayark selection Vol.2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Jerry Barnes  Quiana"
     },
     {
       "source": "bwiki",
@@ -30440,7 +30813,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Beethoven"
     },
     {
       "source": "bwiki",
@@ -30473,7 +30847,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "KIVA"
     },
     {
       "source": "bwiki",
@@ -30507,7 +30882,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "M2U feat. Guriri & Lucy"
     },
     {
       "source": "bwiki",
@@ -30592,7 +30968,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Mirai's selection"
-      ]
+      ],
+      "composer": "Alice Lee & Michael Wyckoff"
     },
     {
       "source": "bwiki",
@@ -30622,7 +30999,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "ginkiha"
     },
     {
       "source": "bwiki",
@@ -30658,7 +31036,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "Mili"
     },
     {
       "source": "bwiki",
@@ -30688,7 +31067,8 @@
       "collections": [
         "Adventure selection"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sound Souler"
     },
     {
       "source": "bwiki",
@@ -30718,7 +31098,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sound Souler"
     },
     {
       "source": "bwiki",
@@ -30748,7 +31129,8 @@
       "collections": [
         "Adventure selection"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sound Souler"
     },
     {
       "source": "bwiki",
@@ -30778,7 +31160,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "PTB10"
     },
     {
       "source": "bwiki",
@@ -30811,7 +31194,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "Morimori Atsushi"
     },
     {
       "source": "bwiki",
@@ -30844,7 +31228,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Ice"
     },
     {
       "source": "bwiki",
@@ -30874,7 +31259,8 @@
       "collections": [
         "Epilogue"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Jun Kuroda"
     },
     {
       "source": "bwiki",
@@ -30907,7 +31293,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Beethoven"
     },
     {
       "source": "bwiki",
@@ -30940,7 +31327,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun  Trevor Lin feat. Silvia Su"
     },
     {
       "source": "bwiki",
@@ -30973,7 +31361,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Chopin"
     },
     {
       "source": "bwiki",
@@ -31006,7 +31395,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Rabpit"
     },
     {
       "source": "bwiki",
@@ -31041,7 +31431,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Sta"
     },
     {
       "source": "bwiki",
@@ -31071,7 +31462,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "The Hoshizora Project"
     },
     {
       "source": "bwiki",
@@ -31105,7 +31497,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Sta feat.A"
     },
     {
       "source": "bwiki",
@@ -31332,7 +31725,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "FIG"
     },
     {
       "source": "bwiki",
@@ -31362,7 +31756,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Edmund Fu"
     },
     {
       "source": "bwiki",
@@ -31395,7 +31790,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Rabpit"
     },
     {
       "source": "bwiki",
@@ -31428,7 +31824,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Hikoshi Hashimoto"
     },
     {
       "source": "bwiki",
@@ -31458,7 +31855,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sherwin"
     },
     {
       "source": "bwiki",
@@ -31491,7 +31889,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Rayark Sound Team \"Ice & SIHanatsuka\""
     },
     {
       "source": "bwiki",
@@ -31609,7 +32008,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "Ayatsugu Otowa"
     },
     {
       "source": "bwiki",
@@ -31644,7 +32044,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "bwiki",
@@ -31677,7 +32078,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "vospi"
     },
     {
       "source": "bwiki",
@@ -31712,7 +32114,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "bwiki",
@@ -31742,7 +32145,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "TQ"
     },
     {
       "source": "bwiki",
@@ -31776,7 +32180,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "Ayatsugu Otowa"
     },
     {
       "source": "bwiki",
@@ -31809,7 +32214,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Brahms"
     },
     {
       "source": "bwiki",
@@ -31842,7 +32248,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Hundotte collection"
-      ]
+      ],
+      "composer": "Hundotte"
     },
     {
       "source": "bwiki",
@@ -31872,7 +32279,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "naoto"
     },
     {
       "source": "bwiki",
@@ -31902,7 +32310,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "SIHanatsuka & Yukino"
     },
     {
       "source": "bwiki",
@@ -31936,7 +32345,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Kaeru Underground (formerly DJ Trio)"
     },
     {
       "source": "bwiki",
@@ -31966,7 +32376,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "KillerBlood"
     },
     {
       "source": "bwiki",
@@ -31996,7 +32407,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "yourmythos"
     },
     {
       "source": "bwiki",
@@ -32031,7 +32443,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Rabpit"
     },
     {
       "source": "bwiki",
@@ -32065,7 +32478,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Shinichi Kobayashi"
     },
     {
       "source": "bwiki",
@@ -32099,7 +32513,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Baba Band"
     },
     {
       "source": "bwiki",
@@ -32210,7 +32625,8 @@
       "collections": [
         "Rayark selection Vol.2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rabpit"
     },
     {
       "source": "bwiki",
@@ -32266,7 +32682,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Abia Ng"
     },
     {
       "source": "bwiki",
@@ -32348,7 +32765,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "TERU FOX"
     },
     {
       "source": "bwiki",
@@ -32407,7 +32825,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Hundotte collection"
-      ]
+      ],
+      "composer": "Hundotte"
     },
     {
       "source": "bwiki",
@@ -32437,7 +32856,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "masaki kawasaki"
     },
     {
       "source": "bwiki",
@@ -32496,7 +32916,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -2"
-      ]
+      ],
+      "composer": "HALLPBESTUDIO"
     },
     {
       "source": "bwiki",
@@ -32529,7 +32950,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Mirai's selection"
-      ]
+      ],
+      "composer": "H△G"
     },
     {
       "source": "bwiki",
@@ -32559,7 +32981,8 @@
       "collections": [
         "Adventure selection"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "muyu + Yu-dachi"
     },
     {
       "source": "bwiki",
@@ -32594,7 +33017,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Edmund Fu"
     },
     {
       "source": "bwiki",
@@ -32625,7 +33049,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Hundotte"
     },
     {
       "source": "bwiki",
@@ -32659,7 +33084,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Alex Vourtsanis"
     },
     {
       "source": "bwiki",
@@ -32693,7 +33119,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Kaeru Underground"
     },
     {
       "source": "bwiki",
@@ -32801,7 +33228,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Freeleaves"
     },
     {
       "source": "bwiki",
@@ -32834,7 +33262,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Pianoboy"
     },
     {
       "source": "bwiki",
@@ -32868,7 +33297,8 @@
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
-      ]
+      ],
+      "composer": "Mai Aoyagi"
     },
     {
       "source": "bwiki",
@@ -32901,7 +33331,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "KIVA"
     },
     {
       "source": "bwiki",
@@ -32934,7 +33365,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration Collection"
-      ]
+      ],
+      "composer": "Sdorica (作曲・編曲:Hoskey) (歌:劉軒蓁)"
     },
     {
       "source": "bwiki",
@@ -32967,7 +33399,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "Pianoboy"
     },
     {
       "source": "bwiki",
@@ -32997,7 +33430,8 @@
       "collections": [
         "Adventure selection"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "studio neo"
     },
     {
       "source": "bwiki",
@@ -33030,7 +33464,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Kiva"
     },
     {
       "source": "bwiki",
@@ -33063,7 +33498,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Mirai's selection"
-      ]
+      ],
+      "composer": "H△G"
     },
     {
       "source": "bwiki",
@@ -33122,7 +33558,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -3"
-      ]
+      ],
+      "composer": "Kamome sano"
     },
     {
       "source": "bwiki",
@@ -33152,7 +33589,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "yourmythos"
     },
     {
       "source": "bwiki",
@@ -33182,7 +33620,8 @@
       "collections": [
         "Epilogue"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "technoplanet feat. Satoshi Oka"
     },
     {
       "source": "bwiki",
@@ -33215,7 +33654,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "RAC collection -1"
-      ]
+      ],
+      "composer": "soyomogi"
     },
     {
       "source": "bwiki",
@@ -33245,7 +33685,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Michiru Oshima"
     },
     {
       "source": "bwiki",
@@ -33278,7 +33719,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Chopin"
     },
     {
       "source": "bwiki",
@@ -33311,7 +33753,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Mozart"
     },
     {
       "source": "bwiki",
@@ -33344,7 +33787,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Hundotte collection"
-      ]
+      ],
+      "composer": "H Undo OTT e"
     },
     {
       "source": "bwiki",
@@ -33379,7 +33823,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "Yuk-cheung Chun, feat. Misi Ke"
     },
     {
       "source": "bwiki",
@@ -33413,7 +33858,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "FabricFactory"
     },
     {
       "source": "bwiki",
@@ -33449,7 +33895,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "Mili"
     },
     {
       "source": "bwiki",
@@ -33508,7 +33955,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Triodust"
     },
     {
       "source": "bwiki",
@@ -33541,7 +33989,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Mendelssohn"
     },
     {
       "source": "bwiki",
@@ -33574,7 +34023,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.3"
-      ]
+      ],
+      "composer": "Presti"
     },
     {
       "source": "bwiki",
@@ -33607,7 +34057,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Rayark selection Vol.1"
-      ]
+      ],
+      "composer": "Sta"
     },
     {
       "source": "bwiki",
@@ -33666,7 +34117,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Samsara collection"
-      ]
+      ],
+      "composer": "Michiru Oshima"
     },
     {
       "source": "bwiki",
@@ -33700,7 +34152,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "Edmund Fu"
     },
     {
       "source": "bwiki",
@@ -33733,7 +34186,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Etude collection"
-      ]
+      ],
+      "composer": "Chopin"
     },
     {
       "source": "bwiki",
@@ -33763,7 +34217,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ramenbot Jr."
     },
     {
       "source": "bwiki",
@@ -33793,7 +34248,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "SLS"
     },
     {
       "source": "bwiki",
@@ -33823,7 +34279,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Michiru Oshima"
     },
     {
       "source": "bwiki",
@@ -33856,7 +34313,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Collaboration collection"
-      ]
+      ],
+      "composer": "Hikoshi Hashimoto"
     },
     {
       "source": "bwiki",
@@ -33890,7 +34348,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
-      ]
+      ],
+      "composer": "V.K"
     },
     {
       "source": "bwiki",
@@ -33921,7 +34380,8 @@
       "collections": [
         "Shattered Memories 2"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "JohnTowse .LunaSafari feat.SAYA"
     },
     {
       "source": "bwiki",
@@ -33983,7 +34443,8 @@
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
-      ]
+      ],
+      "composer": "Mili"
     },
     {
       "source": "bwiki",
@@ -34039,7 +34500,8 @@
       "collections": [
         "Shattered Memories"
       ],
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "gondayu"
     },
     {
       "source": "bwiki",
@@ -34072,7 +34534,8 @@
       "mapping_method": "Exact normalized song title / image filename match",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
-      ]
+      ],
+      "composer": "V.K"
     }
   ]
 }

@@ -1,5 +1,5 @@
 """Offline checks that provenance reaches the pages: wiki art carries the composer of its mapped songs, copied from
-the song index by scripts/fetch_wikis.py.
+the song index by scripts/fetch_wikis.py and kept in the committed snapshot and manifest.
 
 Nothing touches the network: the fetcher runs against a temporary root and a fake web that serves canned bytes.
 """
@@ -168,6 +168,39 @@ class ComposerRecordTests(unittest.TestCase):
         self.assertEqual(list(renamed.items()), list({**first, "composer": "削除"}.items()))
         dropped = self.resume({key: value for key, value in art.items() if key != "composer"})["assets"][0]
         self.assertEqual(dropped, {key: value for key, value in first.items() if key != "composer"})
+
+
+class CommittedWikiDataTests(unittest.TestCase):
+    """The committed snapshot and manifest hold what the fetcher's own join gives for the committed song index."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.songs = read_json(SONG_INDEX)["songs"]
+        cls.candidates = read_json(DISCOVERY)["candidates"]
+        cls.assets = read_json(MANIFEST)["assets"]
+
+    def test_the_snapshot_holds_the_join_of_the_song_index(self):
+        expected = fetch.with_composers(self.candidates, self.songs)
+        differ = [row["file_title"] for row, want in zip(self.candidates, expected) if list(row.items()) != list(want.items())]
+        self.assertEqual(differ, [], "Patch the snapshot with fetch_wikis.with_composers()")
+        self.assertGreater(sum("composer" in row for row in self.candidates), 400)
+
+    def test_records_carry_their_candidates_composer(self):
+        by_id = {fetch.candidate_id(row): row for row in self.candidates}
+        for record in self.assets:
+            row = by_id.get(record["id"])
+            if row is None or record.get("upstream_status"):
+                continue  # a carried-forward record keeps what it had
+            with self.subTest(record=record["id"]):
+                self.assertEqual(record.get("composer"), row.get("composer"))
+                if "composer" in record:
+                    tail = [key for key in record if key in ("composer", "collection_aliases", "delivery_note")]
+                    self.assertEqual(list(record)[-len(tail):], tail, "composer sits where a verified re-run puts it")
+
+    def test_altale_carries_its_composer_on_both_wikis(self):
+        altale = {record["source_id"]: record.get("composer") for record in self.assets
+                  if record["title"] == "Altale" and record["kind"] == "song_art"}
+        self.assertEqual(altale, {"wikis:fandom": "Sakuzyo", "wikis:bwiki": "Sakuzyo"})
 
 
 if __name__ == "__main__":

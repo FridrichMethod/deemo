@@ -323,6 +323,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kaname Shigeyoshi",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -395,7 +396,8 @@
         "https://wiki.biligame.com/deemo/Alice_good_night"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sleepy WiFi"
     },
     {
       "id": "wikis:bwiki:0642deee0a70ac90",
@@ -433,6 +435,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Go raibh maith agat Orchestra",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -474,6 +477,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Edmund Fu",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -612,7 +616,8 @@
         "https://wiki.biligame.com/deemo/Futarimiti"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Morrigan & Cranky"
     },
     {
       "id": "wikis:bwiki:0a390b063e411558",
@@ -649,7 +654,8 @@
         "https://wiki.biligame.com/deemo/Moon_without_the_stars"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Jerry Barnes  Quiana"
     },
     {
       "id": "wikis:bwiki:0b836cbe6d902157",
@@ -686,7 +692,8 @@
         "https://wiki.biligame.com/deemo/Farewell_Waltz"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Stone"
     },
     {
       "id": "wikis:bwiki:0c744095a928b566",
@@ -724,6 +731,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rabpit",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -763,7 +771,8 @@
         "https://wiki.biligame.com/deemo/Go_or_Stay"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Zris"
     },
     {
       "id": "wikis:bwiki:10458b8efdef463d",
@@ -802,6 +811,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuk-cheung Chun, feat. Misi Ke",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -876,6 +886,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "H△G",
       "collection_aliases": [
         "Mirai's selection"
       ]
@@ -1123,6 +1134,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "I.O",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -1196,7 +1208,8 @@
         "https://wiki.biligame.com/deemo/Witch_hunting"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "JohnTowse .LunaSafari feat.SAYA"
     },
     {
       "id": "wikis:bwiki:21336747a1435279",
@@ -1233,7 +1246,8 @@
         "https://wiki.biligame.com/deemo/Arekstrar_Nornir"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuma.mizo Feat. Ai Ohsera"
     },
     {
       "id": "wikis:bwiki:234ca243c8dfcd92",
@@ -1271,6 +1285,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "NICODE feat. Romelon",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -1311,6 +1326,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "ZENTA",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -1350,7 +1366,8 @@
         "https://wiki.biligame.com/deemo/LandScape"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Keikaku Tsuukou"
     },
     {
       "id": "wikis:bwiki:258a46289c5f6338",
@@ -1387,7 +1404,8 @@
         "https://wiki.biligame.com/deemo/I_race_the_dawn"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kevin Penkin feat. Michiyo Honda"
     },
     {
       "id": "wikis:bwiki:259cb365ceb59d5b",
@@ -1425,6 +1443,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Jerry Barnes  Katreese Barnes  Rodger Green",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -1465,6 +1484,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Brahms",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -1506,6 +1526,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ice",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -1546,6 +1567,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "M2U feat. Guriri & Lucy",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -1587,6 +1609,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Chopin",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -1661,6 +1684,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ice",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -1700,7 +1724,8 @@
         "https://wiki.biligame.com/deemo/Rainbow%27s_End"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Edmund Fu"
     },
     {
       "id": "wikis:bwiki:300ac99efeaf78f5",
@@ -1738,6 +1763,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Mozart",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -1778,6 +1804,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Nikolai Rimsky-Korsakov",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -1818,6 +1845,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sta",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -1957,6 +1985,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "EARTHBOUND PAPAS",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -1997,6 +2026,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Beethoven",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -2038,6 +2068,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -2078,7 +2109,8 @@
         "https://wiki.biligame.com/deemo/Starry_Sky_Embrace"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "muyu + Yu-dachi"
     },
     {
       "id": "wikis:bwiki:39ea1d67afe693e7",
@@ -2149,6 +2181,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Hikoshi Hashimoto",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -2189,6 +2222,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rabpit",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -2231,6 +2265,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Mili",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -2272,6 +2307,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Liszt",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -2311,7 +2347,8 @@
         "https://wiki.biligame.com/deemo/Yaoyue"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "gondayu"
     },
     {
       "id": "wikis:bwiki:41637007569382b4",
@@ -2349,6 +2386,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "HALLPBESTUDIO",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -2388,7 +2426,8 @@
         "https://wiki.biligame.com/deemo/Kimi_ga_Nokoshita_Sekai_de"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "The SxPlay"
     },
     {
       "id": "wikis:bwiki:446e2cdae48b7f09",
@@ -2531,7 +2570,8 @@
         "https://wiki.biligame.com/deemo/Still-Waking_Sleep(DEEMO_edit)"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Hundotte"
     },
     {
       "id": "wikis:bwiki:498651f0f0de7bde",
@@ -2569,6 +2609,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "J.S.Bach",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -2608,7 +2649,8 @@
         "https://wiki.biligame.com/deemo/Sanctity"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rabpit"
     },
     {
       "id": "wikis:bwiki:4c61aa4f94278e58",
@@ -2646,6 +2688,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Cranky",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -2688,6 +2731,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuk-cheung Chun feat. Misi Ke",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -2729,6 +2773,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sta",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -2769,7 +2814,8 @@
         "https://wiki.biligame.com/deemo/A_Little_Servant"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Alice Schach and the magic orchestra"
     },
     {
       "id": "wikis:bwiki:4e347cea22a00fd8",
@@ -2806,7 +2852,8 @@
         "https://wiki.biligame.com/deemo/Ripples"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "naoto"
     },
     {
       "id": "wikis:bwiki:4f0e42408c5be3d6",
@@ -2843,7 +2890,8 @@
         "https://wiki.biligame.com/deemo/Spring_Snowflake_Flower"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "masaki kawasaki"
     },
     {
       "id": "wikis:bwiki:4fe6ebf2665064e3",
@@ -2950,7 +2998,8 @@
         "https://wiki.biligame.com/deemo/Post-script"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "The Hoshizora Project"
     },
     {
       "id": "wikis:bwiki:534bbb955a15bfc5",
@@ -2988,6 +3037,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "vospi",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -3060,7 +3110,8 @@
         "https://wiki.biligame.com/deemo/Guardian"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "The SxPlay"
     },
     {
       "id": "wikis:bwiki:567b2e11eae39705",
@@ -3098,6 +3149,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Chopin",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -3139,6 +3191,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kaeru Underground (formerly DJ Trio)",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -3179,6 +3232,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -3220,6 +3274,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Hundotte",
       "collection_aliases": [
         "Hundotte collection"
       ]
@@ -3259,7 +3314,8 @@
         "https://wiki.biligame.com/deemo/Miracle_of_Daybreak"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "WhiteCapella"
     },
     {
       "id": "wikis:bwiki:5a21a74ac9f51698",
@@ -3403,6 +3459,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Edmund Fu",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -3444,6 +3501,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "KIVA",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -3553,6 +3611,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sdorica (作曲・編曲:Hoskey) (歌:劉軒蓁)",
       "collection_aliases": [
         "Collaboration Collection"
       ]
@@ -3593,6 +3652,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Presti",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -3634,6 +3694,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuk-cheung Chun, Jeff Li, Justine Lu",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -3707,7 +3768,8 @@
         "https://wiki.biligame.com/deemo/White_Fantasy"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "SLS"
     },
     {
       "id": "wikis:bwiki:66b115e27f9f64b2",
@@ -3745,6 +3807,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "H△G",
       "collection_aliases": [
         "Mirai's selection"
       ]
@@ -3786,6 +3849,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ayatsugu Otowa",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -3859,6 +3923,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Hikoshi Hashimoto",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -3899,6 +3964,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rave Cyanide & Lunatic Sounds",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -3971,7 +4037,8 @@
         "https://wiki.biligame.com/deemo/Dance_in_the_midnight"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Manhattan Midnight"
     },
     {
       "id": "wikis:bwiki:6df40a247d2aa0e2",
@@ -4008,7 +4075,8 @@
         "https://wiki.biligame.com/deemo/Out_of_Ctrl"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sound Souler"
     },
     {
       "id": "wikis:bwiki:6effda07411097e5",
@@ -4046,6 +4114,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "yourmythos",
       "collection_aliases": [
         "Mirai's selection"
       ]
@@ -4087,6 +4156,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "FabricFactory",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -4127,6 +4197,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Edmund Fu",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -4168,6 +4239,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Beethoven",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -4244,7 +4316,8 @@
         "https://wiki.biligame.com/deemo/Lonely_Pianist"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Michiru Oshima"
     },
     {
       "id": "wikis:bwiki:78ed0b43fb89a1f3",
@@ -4316,6 +4389,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sun Chen feat. Bibi Chao",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -4427,7 +4501,8 @@
         "https://wiki.biligame.com/deemo/The_secret_tale"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "studio neo"
     },
     {
       "id": "wikis:bwiki:7a5abf78a1cea8c9",
@@ -4466,6 +4541,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "M2U feat. Guriri",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -4506,6 +4582,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "H△G",
       "collection_aliases": [
         "Mirai's selection"
       ]
@@ -4546,6 +4623,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -4622,6 +4700,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Chopin",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -4661,7 +4740,8 @@
         "https://wiki.biligame.com/deemo/Empedrado"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuma.Mizo"
     },
     {
       "id": "wikis:bwiki:7fa682b92b1c55ae",
@@ -4699,6 +4779,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "switchworks",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -4740,6 +4821,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Hundotte",
       "collection_aliases": [
         "Hundotte collection"
       ]
@@ -4780,6 +4862,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -4820,6 +4903,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Hikoshi Hashimoto",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -4927,6 +5011,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rabpit",
       "collection_aliases": [
         "Deemo's collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -4967,7 +5052,8 @@
         "https://wiki.biligame.com/deemo/Little_Love"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Michiru Oshima"
     },
     {
       "id": "wikis:bwiki:84dfcbe772f753e9",
@@ -5006,6 +5092,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ayatsugu Otowa",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -5079,6 +5166,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kaeru Underground",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -5120,6 +5208,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuk-cheung Chun  Trevor Lin feat. Silvia Su",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -5228,7 +5317,8 @@
         "https://wiki.biligame.com/deemo/Toshi_no_kokyu"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "technoplanet feat. Satoshi Oka"
     },
     {
       "id": "wikis:bwiki:8c54511b8a50a6ff",
@@ -5299,6 +5389,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ujico*",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -5338,7 +5429,8 @@
         "https://wiki.biligame.com/deemo/Out_of_Natura"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sound Souler"
     },
     {
       "id": "wikis:bwiki:8e9c3647d2426ac4",
@@ -5408,7 +5500,8 @@
         "https://wiki.biligame.com/deemo/Infinite_Puzzle"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Y-SHIN"
     },
     {
       "id": "wikis:bwiki:93b6dc4ebd06ba53",
@@ -5478,7 +5571,8 @@
         "https://wiki.biligame.com/deemo/Shadow_in_the_mirror"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Abia Ng"
     },
     {
       "id": "wikis:bwiki:9688424ffc478d17",
@@ -5550,6 +5644,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuk-cheung Chun, feat. Europa Huang",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -5590,7 +5685,8 @@
         "https://wiki.biligame.com/deemo/In_a_cradle"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "yourmythos"
     },
     {
       "id": "wikis:bwiki:98180b43849636d5",
@@ -5628,6 +5724,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Hundotte",
       "collection_aliases": [
         "Hundotte collection"
       ]
@@ -5667,7 +5764,8 @@
         "https://wiki.biligame.com/deemo/Revival"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "TQ"
     },
     {
       "id": "wikis:bwiki:998b6300067640cb",
@@ -5742,6 +5840,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Edmund Fu",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -5782,7 +5881,8 @@
         "https://wiki.biligame.com/deemo/Ensemble_Curtain_Fall"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "id": "wikis:bwiki:9d191cdf37aecefd",
@@ -5820,6 +5920,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Hundotte",
       "collection_aliases": [
         "Hundotte collection"
       ]
@@ -5895,7 +5996,8 @@
         "https://wiki.biligame.com/deemo/Tree_of_Dreams"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Michiru Oshima"
     },
     {
       "id": "wikis:bwiki:9fcb0008a4c48795",
@@ -5933,6 +6035,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Alex Vourtsanis",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -6007,6 +6110,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Pianoboy",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -6047,6 +6151,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rigel theatre",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -6086,6 +6191,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rayark Sound Team (Freeleaves)",
       "collection_aliases": [
         "Collaboration Collection"
       ]
@@ -6126,6 +6232,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "H Undo OTT e",
       "collection_aliases": [
         "Hundotte collection"
       ]
@@ -6166,6 +6273,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "KIVA",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -6207,6 +6315,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "NeLiME",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -6246,7 +6355,8 @@
         "https://wiki.biligame.com/deemo/Path_and_Period"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Jun Kuroda"
     },
     {
       "id": "wikis:bwiki:ab8f51f5ec87dd08",
@@ -6283,7 +6393,8 @@
         "https://wiki.biligame.com/deemo/Waltz_in_Devil%27s_Playground"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ramenbot Jr."
     },
     {
       "id": "wikis:bwiki:b080730c414fbf67",
@@ -6356,7 +6467,8 @@
         "https://wiki.biligame.com/deemo/Aquamarine"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Cashew"
     },
     {
       "id": "wikis:bwiki:b1a09d5b6f029d77",
@@ -6427,6 +6539,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sakuzyo",
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol. 2"
@@ -6469,7 +6582,8 @@
         "https://wiki.biligame.com/deemo/Aquarelle_010"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ruibass"
     },
     {
       "id": "wikis:bwiki:b41be570dfaf7b47",
@@ -6539,7 +6653,8 @@
         "https://wiki.biligame.com/deemo/Deemo_Goodbye"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Chamber Chu"
     },
     {
       "id": "wikis:bwiki:b4e0ebbfc44444ae",
@@ -6576,7 +6691,8 @@
         "https://wiki.biligame.com/deemo/Tempest"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Freeleaves"
     },
     {
       "id": "wikis:bwiki:b768bfbe67cd38de",
@@ -6614,6 +6730,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ice",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -6654,6 +6771,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "onoken / Vocal: Rin",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -6694,7 +6812,8 @@
         "https://wiki.biligame.com/deemo/Last_Promise"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "HyuN & Ritoru"
     },
     {
       "id": "wikis:bwiki:b83776e0af0be752",
@@ -6801,6 +6920,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "xi",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -6841,6 +6961,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Baba Band",
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol.2"
@@ -6881,7 +7002,8 @@
         "https://wiki.biligame.com/deemo/White_Rain"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Michiru Oshima"
     },
     {
       "id": "wikis:bwiki:bb47487876fafad9",
@@ -6985,6 +7107,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kaneko Chiharu",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -7025,6 +7148,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Schubert",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -7065,6 +7189,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sdorica (Chamber Chu)",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -7106,6 +7231,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Shinichi Kobayashi",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -7179,6 +7305,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "xi",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -7219,7 +7346,8 @@
         "https://wiki.biligame.com/deemo/Hana_no_Kotoba"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Shina Kami & Silaver"
     },
     {
       "id": "wikis:bwiki:c5169b5ff650fa6a",
@@ -7256,7 +7384,8 @@
         "https://wiki.biligame.com/deemo/Lose_my_mind"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "M-UE"
     },
     {
       "id": "wikis:bwiki:c748825e6fbba9b1",
@@ -7294,6 +7423,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Triodust",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -7333,7 +7463,8 @@
         "https://wiki.biligame.com/deemo/Amagiri"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Uemura Kanae"
     },
     {
       "id": "wikis:bwiki:c955806b985cf4c8",
@@ -7437,6 +7568,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Alice Lee & Michael Wyckoff",
       "collection_aliases": [
         "Mirai's selection"
       ]
@@ -7476,7 +7608,8 @@
         "https://wiki.biligame.com/deemo/Out_of_the_Box"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "PTB10"
     },
     {
       "id": "wikis:bwiki:ceebac4b7867c777",
@@ -7515,6 +7648,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -7556,6 +7690,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Mai Aoyagi",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -7596,7 +7731,8 @@
         "https://wiki.biligame.com/deemo/Ray_Of_Sunshine"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sherwin"
     },
     {
       "id": "wikis:bwiki:d2c5f1bc8501b72e",
@@ -7700,6 +7836,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Morimori Atsushi",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -7740,6 +7877,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kamome sano",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -7780,6 +7918,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Michiru Oshima",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -7821,6 +7960,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Yuk-cheung Chun",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -7861,7 +8001,8 @@
         "https://wiki.biligame.com/deemo/Out_of_Sense"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sound Souler"
     },
     {
       "id": "wikis:bwiki:d71ec9735ad70378",
@@ -7899,7 +8040,8 @@
         "https://wiki.biligame.com/deemo/Friction"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "HAMO from Mili"
     },
     {
       "id": "wikis:bwiki:d74d813d2a669fb4",
@@ -7937,6 +8079,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kiva",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -7977,6 +8120,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kitkit Lu",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -8049,7 +8193,8 @@
         "https://wiki.biligame.com/deemo/Ruins_in_the_Mirage"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "SIHanatsuka & Yukino"
     },
     {
       "id": "wikis:bwiki:d93139d60dc1f014",
@@ -8087,7 +8232,8 @@
         "https://wiki.biligame.com/deemo/Matricaria_-Pazs_cfzj_ze_Epfbfzm-"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "NOMA & Apo11o\"1.62\"program ft.Yuki Shizaki"
     },
     {
       "id": "wikis:bwiki:d96189c134c91cfd",
@@ -8161,6 +8307,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Pianoboy",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -8203,6 +8350,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Mili",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -8243,7 +8391,8 @@
         "https://wiki.biligame.com/deemo/H"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "orangentle"
     },
     {
       "id": "wikis:bwiki:ddd71929629b1177",
@@ -8281,6 +8430,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "KillerBlood",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -8321,6 +8471,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "soyomogi",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -8360,7 +8511,8 @@
         "https://wiki.biligame.com/deemo/Saeru"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "yourmythos"
     },
     {
       "id": "wikis:bwiki:df98b9b74faa06b7",
@@ -8399,6 +8551,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "3R2",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -8440,6 +8593,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rabpit",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -8483,6 +8637,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Mili",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -8523,7 +8678,8 @@
         "https://wiki.biligame.com/deemo/Lavuestia_Mutanz"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "NNarsil (from Ring) feat. Himeko Nemuri (Luna-Crescente)"
     },
     {
       "id": "wikis:bwiki:e34046abbdb6048b",
@@ -8560,7 +8716,8 @@
         "https://wiki.biligame.com/deemo/Hua_Sui_Yue"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "V.K"
     },
     {
       "id": "wikis:bwiki:e39519cb95260b0c",
@@ -8598,6 +8755,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Schumann",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -8639,6 +8797,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sta feat.A",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -8712,6 +8871,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "FIG",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -8785,6 +8945,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Rayark Sound Team \"Ice & SIHanatsuka\"",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -8858,6 +9019,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Feryquitous feat. Sennzai",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -8899,7 +9061,8 @@
         "https://wiki.biligame.com/deemo/Aquarelle_010"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ruibass"
     },
     {
       "id": "wikis:bwiki:ebaaf127fbeb0b2c",
@@ -8939,6 +9102,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Ice",
       "collection_aliases": [
         "Deemo's collection Vol. 1B"
       ]
@@ -9047,7 +9211,8 @@
         "https://wiki.biligame.com/deemo/Clover_Snow"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "RICHIE EAO"
     },
     {
       "id": "wikis:bwiki:f032a787b88f681b",
@@ -9084,7 +9249,8 @@
         "https://wiki.biligame.com/deemo/Run_Lads_Run"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "KillerBlood"
     },
     {
       "id": "wikis:bwiki:f0819fe20ac35d49",
@@ -9154,7 +9320,8 @@
         "https://wiki.biligame.com/deemo/If_I_Can_See_You_Again"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Sing Sing Rabbit"
     },
     {
       "id": "wikis:bwiki:f18ebe6741c6fb84",
@@ -9261,6 +9428,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "M2U / Arranger: M2U. NICODE / Vocal: Guriri. M2U",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -9300,7 +9468,8 @@
         "https://wiki.biligame.com/deemo/Shedding_Season"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "TERU FOX"
     },
     {
       "id": "wikis:bwiki:f337cdc82b5db75d",
@@ -9337,7 +9506,8 @@
         "https://wiki.biligame.com/deemo/Tomoshibi"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "yourmythos"
     },
     {
       "id": "wikis:bwiki:f404ae5a282c700f",
@@ -9374,7 +9544,8 @@
         "https://wiki.biligame.com/deemo/Nightfall"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "ginkiha"
     },
     {
       "id": "wikis:bwiki:f5e5b40d90b1a3ab",
@@ -9412,6 +9583,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Brahms",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -9485,6 +9657,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Mendelssohn",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -9525,6 +9698,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Kakumi Nishigomi",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -9565,6 +9739,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Shi Kuang Lee",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -9605,6 +9780,7 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match",
+      "composer": "Chopin",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -9686,7 +9862,8 @@
       },
       "download_sha1": "fe0b0912f28167813c0b5916372d6783734aa861",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "technoplanet feat. Satoshi Oka"
     },
     {
       "id": "wikis:fandom:01dc0ce851d90a6e",
@@ -9778,7 +9955,8 @@
       },
       "download_sha1": "896a2941da2a8abf09d7bea83bf23ddba6976aa0",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Uemura Kanae"
     },
     {
       "id": "wikis:fandom:0260019dd9976fb3",
@@ -9871,6 +10049,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -9920,7 +10099,8 @@
       },
       "download_sha1": "60f10b3216c7d45d4e7d28b7bc1a6797abf16fdc",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Stone"
     },
     {
       "id": "wikis:fandom:033c8a79f7020acd",
@@ -9966,7 +10146,8 @@
       },
       "download_sha1": "8b64a0f9d87ddb38ef4e0e75a87bce7a278cc61a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "EGOIST"
     },
     {
       "id": "wikis:fandom:042cf4f631ed4435",
@@ -10060,7 +10241,8 @@
       },
       "download_sha1": "886fda5d4a39f7e1f1383f054ceec394b1c84ba0",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "TERU FOX"
     },
     {
       "id": "wikis:fandom:04a474fc0ec4fb0d",
@@ -10107,6 +10289,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "H△G",
       "collection_aliases": [
         "Mirai's Selection"
       ]
@@ -10249,6 +10432,7 @@
       "download_sha1": "362227d56c95879f3542c3f2186616409fcafa2d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Rabpit",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -10468,6 +10652,7 @@
       "download_sha1": "a670c07fe2fc9863aec18ef341bf3f5869a9475d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Kakumi Nishigomi",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -10564,6 +10749,7 @@
       "download_sha1": "4264d323d97c9aefbcdc49d1acfa4f430ba628cc",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "NICODE. feat Romelon",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -10659,6 +10845,7 @@
       "download_sha1": "a41b92feef05520ea5fb61456a413a2e1e980852",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Chopin",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -10707,7 +10894,8 @@
       },
       "download_sha1": "7f43bf67385ffaeb19a856377ebfd76f524b0476",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "KIVΛ"
     },
     {
       "id": "wikis:fandom:08672dd87a511e91",
@@ -11359,6 +11547,7 @@
       "download_sha1": "b356b517b036d22e4e7496d30efc77ed8ebe5e4d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Cranky",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -11408,7 +11597,8 @@
       },
       "download_sha1": "b1956c20ccd88ee04f4c3c200ecbc4ed81228583",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "RICHIE EAO"
     },
     {
       "id": "wikis:fandom:0da581d8432fcafe",
@@ -11455,6 +11645,7 @@
       "download_sha1": "9e460e9a720c018b2665388f586da31f256006a4",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Rave Cyanide",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -11626,7 +11817,8 @@
       },
       "download_sha1": "06f851784658ec23dd0aab259616e6d81a821fe5",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Capchii"
     },
     {
       "id": "wikis:fandom:1096619cc26c20f5",
@@ -11672,7 +11864,8 @@
       },
       "download_sha1": "95594cf1bbbbe46485167954712faa9357985621",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Kevin Penkin feat. Michiyo Honda"
     },
     {
       "id": "wikis:fandom:10bc655127dd58a4",
@@ -11810,7 +12003,8 @@
       },
       "download_sha1": "e8e1fc89564387e4347d6d8a6ca9d4720b171c0d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Taishi"
     },
     {
       "id": "wikis:fandom:1264b5be5a3e184b",
@@ -11857,6 +12051,7 @@
       "download_sha1": "fc7661abed276b946d8dbaf65966d06092c6b7e1",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Feryquitous",
       "collection_aliases": [
         "Feryquitous collection"
       ]
@@ -11905,7 +12100,8 @@
       },
       "download_sha1": "d21de5a2eb03f82142937404b4e93548514de4a9",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "SLS"
     },
     {
       "id": "wikis:fandom:12f6c727b3bfa481",
@@ -11951,7 +12147,8 @@
       },
       "download_sha1": "85c9ead516496c4cbc6b4497cbdea9d6402a9f8f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Michiru Oshima"
     },
     {
       "id": "wikis:fandom:1307506bbfd4662d",
@@ -11997,7 +12194,8 @@
       },
       "download_sha1": "9b16536120f9a1ff512b4139024e199a000803c7",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "xi"
     },
     {
       "id": "wikis:fandom:13822cca0a62feb9",
@@ -12212,7 +12410,8 @@
       },
       "download_sha1": "9d038872fdc92b809f2e91ec423877ee1a9bf812",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "V.K"
     },
     {
       "id": "wikis:fandom:13b2edf0abcb8f5a",
@@ -12258,7 +12457,8 @@
       },
       "download_sha1": "ac219688c7b9fef3387a2a39df0dde6b0b81db05",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Narsil (from Ring) Feat. Himeko Nemuri (Luna Crescete)"
     },
     {
       "id": "wikis:fandom:13f702b7f6bae670",
@@ -12398,6 +12598,7 @@
       "download_sha1": "dafd1663a7aabb6f76f1eea3d9665c7681a26340",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "xi",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -12447,6 +12648,7 @@
       "download_sha1": "0253dd45f5accb6c88a227c6bec4cb9d6454b76d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Rayark Sound Team",
       "collection_aliases": [
         "Collaboration Collection"
       ]
@@ -12542,7 +12744,8 @@
       },
       "download_sha1": "e1a988cdd84bbd587038586a2a5c41cea3108988",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Freeleaves"
     },
     {
       "id": "wikis:fandom:1667638663121efc",
@@ -12680,7 +12883,8 @@
       },
       "download_sha1": "9df957960b32c0f9bfaad1987858def4043e896c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "xi"
     },
     {
       "id": "wikis:fandom:17d1b30757909a37",
@@ -12726,7 +12930,8 @@
       },
       "download_sha1": "de7a1d231f9a36b551468d26b06689e23cefda58",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Mihile"
     },
     {
       "id": "wikis:fandom:17d72284441fd710",
@@ -12772,7 +12977,8 @@
           "value": "Sikar",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "composer": "Sherwin"
     },
     {
       "id": "wikis:fandom:17dba05d9bce6b97",
@@ -12818,7 +13024,8 @@
       },
       "download_sha1": "e83c39d4aa246e80ab999f5944221bbacae8af8b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "yourmythos"
     },
     {
       "id": "wikis:fandom:17f31813c49fd3bd",
@@ -12864,7 +13071,8 @@
       },
       "download_sha1": "003d513a75b7f90e498afda917c8b8be8b538914",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "NOMA & Apo11o”1.62”program ft. Yuki Shizaki"
     },
     {
       "id": "wikis:fandom:18cbcd4447368d07",
@@ -12911,6 +13119,7 @@
       "download_sha1": "0a24204a43c38faf577e185aa609c988a9307302",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Rabpit",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -12961,6 +13170,7 @@
       "download_sha1": "72a76dcc994a904b8542ec44f86f65417e1fe850",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "onoken / Vocal: Rin",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -13275,6 +13485,7 @@
       "download_sha1": "e201299b91bdad7f94464b9115babfd4c81cf921",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Ice",
       "collection_aliases": [
         "Deemo's collection Vol. 1B"
       ]
@@ -13323,7 +13534,8 @@
       },
       "download_sha1": "8b6696249e34b3ebd1232f96e7bc9aba75e3f56f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Harunaba feat. Chihiro Ishigro"
     },
     {
       "id": "wikis:fandom:1d2f7974936396d0",
@@ -13370,6 +13582,7 @@
       "download_sha1": "9c75c16a209c55707d3bab268698567dd6c4178c",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Rayark Sound Team \"Ice & SIHanatsuka\"",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -13464,7 +13677,8 @@
           "value": "Etude",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "composer": "MIDInco"
     },
     {
       "id": "wikis:fandom:1fb5357c8e529930",
@@ -13510,7 +13724,8 @@
       },
       "download_sha1": "77d6711432876827b0f5c11f50fe7422e33453a1",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "id": "wikis:fandom:1fe903bdcb7e690b",
@@ -13556,7 +13771,8 @@
       },
       "download_sha1": "c4f2bab309c5041d83c7a41b3f078be4a5afd1e9",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Jun Kuroda"
     },
     {
       "id": "wikis:fandom:20802f0c0952f2e0",
@@ -13648,7 +13864,8 @@
       },
       "download_sha1": "b6447aea4292920d9f0efc36c911ad4fd79e1947",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sherwin"
     },
     {
       "id": "wikis:fandom:2145ff9ac1ca15f7",
@@ -13740,7 +13957,8 @@
       },
       "download_sha1": "a896efa1a93180d7ab744e0314cae5a3a8dbb694",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Video Game Orchestra"
     },
     {
       "id": "wikis:fandom:22798ae592dc2ef8",
@@ -13787,6 +14005,7 @@
       "download_sha1": "3f541fd8be3346af17a26237a300c1dc0fe3f8aa",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Shi Kuang Lee",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -14009,7 +14228,8 @@
       },
       "download_sha1": "a9917341b5cae9eed9650f910cd0c4e555612093",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sound Souler"
     },
     {
       "id": "wikis:fandom:25143071f6ab0b99",
@@ -14102,6 +14322,7 @@
       "download_sha1": "9b382b464812d626071b7c4564304431c7646bdc",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "yourmythos",
       "collection_aliases": [
         "Mirai's Selection"
       ]
@@ -14150,7 +14371,8 @@
       },
       "download_sha1": "27790d0b63557751347fad42ade9ff87cf9d2d34",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "orangentle"
     },
     {
       "id": "wikis:fandom:269f26e54f3e7b2c",
@@ -14197,6 +14419,7 @@
       "download_sha1": "5935ffc46cd2022bca8a072e0aaae18c412905d9",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Shi Kuang Lee & Pico",
       "collection_aliases": [
         "RAC collection #4"
       ]
@@ -14247,6 +14470,7 @@
       "download_sha1": "901425b3fd66e41549fb93b813d8fdcb5ce35c5e",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Kaeru Underground",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -14296,6 +14520,7 @@
       "download_sha1": "09c5e9aff4731a906c0bad6ce59e5a2e0521e683",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Chopin",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -14344,7 +14569,8 @@
       },
       "download_sha1": "12150d39c826505ef0a28e7dba9e1d3f6967f4cf",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "WhiteCapella"
     },
     {
       "id": "wikis:fandom:2700a92e1abe4ea7",
@@ -14390,7 +14616,8 @@
       },
       "download_sha1": "8112c49654a361cfb982e24dd5b59bfb3323f69f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Taishi"
     },
     {
       "id": "wikis:fandom:278f0bba5422ea5d",
@@ -14436,7 +14663,8 @@
       },
       "download_sha1": "cdbed2f0567a80b915925a39afce3ca120c22366",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sleepy WiFi"
     },
     {
       "id": "wikis:fandom:27c4cbce4e851782",
@@ -14484,6 +14712,7 @@
       "download_sha1": "8f96cf8fc30032bab3ed3c6d4dba128198a0b069",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Sta",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -14533,7 +14762,8 @@
       },
       "download_sha1": "8414f06db8bf08beceacbee928a1c12b266af8e2",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "TQ"
     },
     {
       "id": "wikis:fandom:281e74de623d5007",
@@ -14579,7 +14809,8 @@
       },
       "download_sha1": "389e1ab89ed6a8f8cfbc8f7062704a9980d14477",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sakuzyo"
     },
     {
       "id": "wikis:fandom:282dbc894086ebf8",
@@ -14627,6 +14858,7 @@
       "download_sha1": "6812d15fb0c111fe55265b7be52059572bdc77f3",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Jerry Barnes  Katreese Barnes  Rodger Green",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -14676,6 +14908,7 @@
       "download_sha1": "a21f9f315bbb90c54f0a8341952eabe67ce8f1ae",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "KIVA",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -14895,6 +15128,7 @@
       "download_sha1": "5c4cee725829a2c5441753c9193d587c91e233d5",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Sdorica (作曲・編曲:Hoskey) (歌:劉軒蓁)",
       "collection_aliases": [
         "Collaboration Collection"
       ]
@@ -15067,6 +15301,7 @@
       "download_sha1": "d492c116433def4d4f4736084010dddaa8eb452d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "ZENTA",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -15117,6 +15352,7 @@
       "download_sha1": "dd8c756c8b273bcdec47346f31d1f07818c39fd5",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "NeLiME",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -15172,6 +15408,7 @@
           "error": "503 Server Error: Backend fetch failed for url: https://static.wikia.nocookie.net/deemo/images/8/86/LILI.png/revision/latest?cb=20160507082853&format=original"
         }
       ],
+      "composer": "Rigel theatre",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -15361,7 +15598,8 @@
       },
       "download_sha1": "7aacb2b8d168cb311b2bdcd0b8e151bc4da9233c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Crawk × Capchii"
     },
     {
       "id": "wikis:fandom:2abe66f0845c0b6d",
@@ -15409,6 +15647,7 @@
       "download_sha1": "d52d548a8fec82d788d2b13f37df26219301cc70",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -15458,7 +15697,8 @@
       },
       "download_sha1": "06eabd741539b4ec0e0f8322d801daacb49ff2ca",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Ice vs Yuma.Mizo vs Ai Ohsera with YumaelServer"
     },
     {
       "id": "wikis:fandom:2be1ed2702ee5452",
@@ -15552,6 +15792,7 @@
       "download_sha1": "9f1ac8faaa8540193f87d6fdd1bcbec86608c242",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Yuk-cheung Chun, Jeff Li, Justine Lu",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -15647,7 +15888,8 @@
       },
       "download_sha1": "fc239151a167895781bf972323a76b3112d3580c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Spacebot (floating)"
     },
     {
       "id": "wikis:fandom:2cc2f7f11ada7a15",
@@ -15693,7 +15935,8 @@
       },
       "download_sha1": "30ea0a5a80d2801bfd683a381dd9ed1753db776b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "EGOIST"
     },
     {
       "id": "wikis:fandom:2cccbff5c028a34d",
@@ -15834,6 +16077,7 @@
       "download_sha1": "f67b17ca860f29e70d04060823d3a692c694647e",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "M2U / Arranger : M2U & NICODE / Vocal : Guriri & Lucy",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -15929,7 +16173,8 @@
       },
       "download_sha1": "c43bb43d04df555f41676f99130b7279aa8b85bf",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Iris feat. Victor Kong & LynH"
     },
     {
       "id": "wikis:fandom:2e0a034a97b03ce7",
@@ -15978,6 +16223,7 @@
       "download_sha1": "fa484845e94f43a09ff1b501c9aa9545fe028b94",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "M2U  Vocal by Guriri",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -16196,7 +16442,8 @@
           "value": "Clematis",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "composer": "Taishi"
     },
     {
       "id": "wikis:fandom:301e413e31b7f449",
@@ -16458,7 +16705,8 @@
       },
       "download_sha1": "a634001a74fdbbed4436b22977172458818aa17a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "t+pazolite feat. Nanahira"
     },
     {
       "id": "wikis:fandom:3197cbd0549a980f",
@@ -16596,7 +16844,8 @@
       },
       "download_sha1": "2e207884fab5ae42fd2a8eb15e8c7b5b61a1c9fc",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "id": "wikis:fandom:323b187b4be30b3c",
@@ -16644,6 +16893,7 @@
       "download_sha1": "06333d3e95788dad7c398dd4a069ce8f0710241a",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "xi",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -16694,6 +16944,7 @@
       "download_sha1": "6453264ebfd3f2b22da7ab7d4a28f5b457bcb15f",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "KillerBlood",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -16865,7 +17116,8 @@
           "value": "Toryu",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "composer": "Azu"
     },
     {
       "id": "wikis:fandom:3382389b8585bca2",
@@ -16957,7 +17209,8 @@
       },
       "download_sha1": "7d87430c234d01a3c3156e2ebba43154cad27ab8",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "CLoTiVE (Feat. Lielle)"
     },
     {
       "id": "wikis:fandom:348d55dd0cba76a9",
@@ -17049,7 +17302,8 @@
       },
       "download_sha1": "d80aedd0ed53d6868f5be089e4cbb6e5e17d13a7",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Silaver"
     },
     {
       "id": "wikis:fandom:35606d107bb3816c",
@@ -17095,7 +17349,8 @@
       },
       "download_sha1": "d652057903315b969bc29b6666dfa2bcbafc2ca7",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Iris feat. LynH"
     },
     {
       "id": "wikis:fandom:35742f4534b86f21",
@@ -17233,7 +17488,8 @@
       },
       "download_sha1": "33e27e509e926b89e34ba0006a947af6b0d29cfd",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Rabpit"
     },
     {
       "id": "wikis:fandom:369a974709b6d2a6",
@@ -17371,7 +17627,8 @@
       },
       "download_sha1": "28d4693d9fdeac7fcc560e6dd65dd1134526d3e5",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Silaver"
     },
     {
       "id": "wikis:fandom:37d5b42dede259cd",
@@ -17605,7 +17862,8 @@
       },
       "download_sha1": "23edbc740ed30880fd8b7cac5c4e6c41924b80e0",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sherwin"
     },
     {
       "id": "wikis:fandom:3c1f850cc4ad7148",
@@ -17651,7 +17909,8 @@
           "value": "Glaciology",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "composer": "Sherwin"
     },
     {
       "id": "wikis:fandom:3ce5a482b03074b1",
@@ -17698,6 +17957,7 @@
       "download_sha1": "d0da828ad90ca42551105dee2f6411596eeb04f6",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "SUi",
       "collection_aliases": [
         "RAC collection #4"
       ]
@@ -17746,7 +18006,8 @@
       },
       "download_sha1": "d42f759917bfc61cd60081bc4d5b732486687d8a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sound Souler"
     },
     {
       "id": "wikis:fandom:3e3ee4c4612cfd1a",
@@ -17838,7 +18099,8 @@
       },
       "download_sha1": "e55c0d19049fdce397a3442492a836e35ee4326e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Yuma.Mizo feat. Ai Ohsera"
     },
     {
       "id": "wikis:fandom:3ea593f91f420cec",
@@ -17885,6 +18147,7 @@
       "download_sha1": "373d2ff1114fb5bdef4aa0d140d064168c1f4978",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Schumann",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -17933,7 +18196,8 @@
       },
       "download_sha1": "e1954d3c3a9d5b5270a90c637351bcda4fd374af",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sakuzyo"
     },
     {
       "id": "wikis:fandom:3f827e16a77dede6",
@@ -18272,6 +18536,7 @@
       "download_sha1": "0eafb9edbae50eb37dadcdf1516cacd4b6e1dc88",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Mendelssohn",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -18320,7 +18585,8 @@
       },
       "download_sha1": "9c219c82d2b52312db157962f8fea1ba05a0a9e0",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "naoto"
     },
     {
       "id": "wikis:fandom:41c77cc1e62f683a",
@@ -18413,7 +18679,8 @@
       },
       "download_sha1": "fbc53364def95f32fa643c9e387a5183e70348a1",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Iris"
     },
     {
       "id": "wikis:fandom:4583389eb85795de",
@@ -18506,6 +18773,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "masaki kawasaki",
       "delivery_note": "Full-size public CDN file matches published dimensions but differs from the wiki original upload checksum/size; downloaded bytes preserved unchanged."
     },
     {
@@ -18552,7 +18820,8 @@
       },
       "download_sha1": "19ad8c2956fba2008bb423f34848a2416068468b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Hundotte"
     },
     {
       "id": "wikis:fandom:46847967e0dba985",
@@ -18598,7 +18867,8 @@
       },
       "download_sha1": "e39db4c8d4d9b71ae74aeb40df1233efac7ed514",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Chroma"
     },
     {
       "id": "wikis:fandom:46b414dfe23a8c70",
@@ -18644,7 +18914,8 @@
       },
       "download_sha1": "459a50bf7619001db64774336f13dec5812f1e87",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "EmoCosine"
     },
     {
       "id": "wikis:fandom:46ebac470f401c89",
@@ -18690,7 +18961,8 @@
       },
       "download_sha1": "fa3fc35f7eade186f1998f60d186d698b7b2738e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "gondayu"
     },
     {
       "id": "wikis:fandom:46f5b38b66074f33",
@@ -18860,6 +19132,7 @@
       "download_sha1": "84c0f88e0c0ba70070d473c111b2001d5aa7dd45",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "H△G",
       "collection_aliases": [
         "Mirai's Selection"
       ]
@@ -18908,7 +19181,8 @@
       },
       "download_sha1": "eaa364d14dd4639a9107c3857286cadfff83e6af",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Yuta Murase"
     },
     {
       "id": "wikis:fandom:4795edcdf3cc8924",
@@ -18955,6 +19229,7 @@
       "download_sha1": "8c35ffb986755f2cdc9062893f641da35feca9ef",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "switchworks",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -19174,6 +19449,7 @@
       "download_sha1": "025a8a447c54b69249768cf055fe331e113153a7",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Brahms",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -19345,7 +19621,8 @@
       },
       "download_sha1": "3607d3e34b3e275c0e1d7856fa06a1704325c5ed",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sakuzyo"
     },
     {
       "id": "wikis:fandom:490c7cb397763ad0",
@@ -19438,6 +19715,7 @@
       "download_sha1": "6bcd637e3273cb4911274d291929e2c527f759e5",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Beethoven",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -19486,7 +19764,8 @@
       },
       "download_sha1": "13727d1c1d003fdbc63979f839d7fb32469be9d0",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "John Towse, LunaSafari feat. SAYA"
     },
     {
       "id": "wikis:fandom:49e3fd71b404f07f",
@@ -19582,6 +19861,7 @@
       "download_sha1": "e4da1053fc6345108e727e3c3d04d7f8124a6b11",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -19803,7 +20083,8 @@
       },
       "download_sha1": "2b15d4359284508a874c4a2455078f8e1ed6e672",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Michiru Oshima"
     },
     {
       "id": "wikis:fandom:4df25b18381b484d",
@@ -19850,6 +20131,7 @@
       "download_sha1": "943e3040c983b8e5922715502f4c20f1158fc382",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Nikolai Rimsky-Korsakov",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -19898,7 +20180,8 @@
       },
       "download_sha1": "13cfd58d1bf16d0e103d351b067e1edbaf367f13",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "brz1128 vs. M-UE"
     },
     {
       "id": "wikis:fandom:4f1c59d8d5985487",
@@ -20114,6 +20397,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Michiru Oshima",
       "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
@@ -20162,6 +20446,7 @@
       "download_sha1": "9d3828ede7aa572c2d47a83110a73ea56ec914cd",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Yuk-cheung Chun feat. Misi Ke",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -20458,6 +20743,7 @@
       "download_sha1": "a8df244ce7beec1a5b44b6556a33b3cfc81d0605",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Kaname Shigeyoshi",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -20831,6 +21117,7 @@
       "download_sha1": "180d1ffdee0891fe5524c61808ec2807ddd80314",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Schubert",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -20880,6 +21167,7 @@
       "download_sha1": "10e67d2d0d9a910df2af205043308f1c1daeebea",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "J.S. Bach",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -21066,7 +21354,8 @@
       },
       "download_sha1": "7873f16813d9b2332bee6fcea770a9f87e1eaef5",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Taishi"
     },
     {
       "id": "wikis:fandom:5800598b926c08d0",
@@ -21112,7 +21401,8 @@
       },
       "download_sha1": "152b714e736715630897db46bc3aa4c01511b285",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Freeleaves"
     },
     {
       "id": "wikis:fandom:584602f6b086e8a5",
@@ -21158,7 +21448,8 @@
       },
       "download_sha1": "dcbcb9d0dd282c3e570ab576332b3a2cb28be954",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sing Sing Rabbit"
     },
     {
       "id": "wikis:fandom:586458f109b78321",
@@ -21204,7 +21495,8 @@
       },
       "download_sha1": "51a66ef81c5c7c4f12035f9bd8b27d8ff3762d99",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Keikaku Tsuukou feat. Parorto"
     },
     {
       "id": "wikis:fandom:58fd6dd72acc306c",
@@ -21351,7 +21643,8 @@
       },
       "download_sha1": "be29df5e60d0fe95eb1c8c4b984c0532c55bf18f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Takashi OKAMOTO(12sound)"
     },
     {
       "id": "wikis:fandom:5a2eb08a848e0a49",
@@ -21397,7 +21690,8 @@
       },
       "download_sha1": "a82a405136fb2d40304c7ff1aa7d31144b76e1ff",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Jerry Barnes  Quiana"
     },
     {
       "id": "wikis:fandom:5a514176bee0db29",
@@ -21446,6 +21740,7 @@
       "download_sha1": "56e6b1d92ed7d843bb4cf043b3cfe09d5f711d4d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Ice",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -21682,7 +21977,8 @@
       },
       "download_sha1": "bab5dc4fb679455fb6ee80062e6e7f11d8c36a26",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "柳田Ethnica"
     },
     {
       "id": "wikis:fandom:5fcb43267798a4aa",
@@ -21728,7 +22024,8 @@
       },
       "download_sha1": "8343ab056abdcb685db4745c7dfe3623c7902a1a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Video Game Orchestra"
     },
     {
       "id": "wikis:fandom:60d4c18f0e3b9a1b",
@@ -21775,6 +22072,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Laur",
       "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
@@ -21822,6 +22120,7 @@
       "download_sha1": "084d4ad64c3a64f651f74c4edb0ad75aad191e17",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Pianoboy",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -21916,7 +22215,8 @@
           "value": "Funeral of Stars",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "composer": "void (Mournfinale)"
     },
     {
       "id": "wikis:fandom:61d0d06ccd4d970c",
@@ -21963,6 +22263,7 @@
       "download_sha1": "399c4464e4f67245ddeb1e82fc30ff9a05f57441",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Hundotte",
       "collection_aliases": [
         "Hundotte Collection"
       ]
@@ -22011,7 +22312,8 @@
       },
       "download_sha1": "91b98d36bdc44830c271af0e6dcb4214fb4175e5",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "3R2"
     },
     {
       "id": "wikis:fandom:62f4241f3e75de48",
@@ -22057,7 +22359,8 @@
       },
       "download_sha1": "f3246144d08ea3122c838bca33728804dddcb574",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "id": "wikis:fandom:631d2170fc7f4ca7",
@@ -22103,7 +22406,8 @@
       },
       "download_sha1": "490c28407c7ff09b09d63b3edf761935fe8f662f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Abia Ng"
     },
     {
       "id": "wikis:fandom:63d0af65b2d30f8a",
@@ -22149,7 +22453,8 @@
       },
       "download_sha1": "53ba52992621abcdc430ffc1d3879b17b19cefee",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Ayatsugu_Revolved"
     },
     {
       "id": "wikis:fandom:643d004d2e3ad940",
@@ -22198,6 +22503,7 @@
       "download_sha1": "2364697baa49286dc0c491c5194b43eff0f7266a",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "M2U  Vocal by Guriri",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -22343,7 +22649,8 @@
       },
       "download_sha1": "7e172f6a9566f627c2ef2c387260a5def06a862a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Capchii feat. Yuzuha"
     },
     {
       "id": "wikis:fandom:662c851b962ed7bc",
@@ -22563,6 +22870,7 @@
       "download_sha1": "edd3e66ca730f7541315078d748fb5d2debce7f7",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Alex Vourtsanis",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -22612,7 +22920,8 @@
       },
       "download_sha1": "cfdb7b967b1b15ab34fe9aa96a420b8682a30005",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "ginkiha"
     },
     {
       "id": "wikis:fandom:6778199558b172dc",
@@ -22659,6 +22968,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "I.O",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -22708,6 +23018,7 @@
       "download_sha1": "be3499f55107bb6804678d38e72f9b46f2a2723d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Morimori Atsushi",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -22971,7 +23282,8 @@
       },
       "download_sha1": "aa497ec8ee0e2ac583f7cb5694fb450acf99a3f0",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "onoken feat. 実咲"
     },
     {
       "id": "wikis:fandom:6a19aba990eda59c",
@@ -23064,7 +23376,8 @@
       },
       "download_sha1": "b185730b9e74f91c50e66d0bbfe84c6fff25d53e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sherwin"
     },
     {
       "id": "wikis:fandom:6a64f712d703f2aa",
@@ -23110,7 +23423,8 @@
       },
       "download_sha1": "cf10a50893a8b54c97b670ce56b2c91519378d97",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Y-SHIN"
     },
     {
       "id": "wikis:fandom:6b077f2ab54dcc03",
@@ -23156,7 +23470,8 @@
       },
       "download_sha1": "6146113b64100196e5b736a7e798b18b3649e708",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sakuzyo"
     },
     {
       "id": "wikis:fandom:6c21e8f0b553c070",
@@ -23248,7 +23563,8 @@
       },
       "download_sha1": "4b40f244609ca6aad0cdbadb1c834ccb9d46b7a2",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "gondayu"
     },
     {
       "id": "wikis:fandom:6c93cdd4ad1f1b57",
@@ -23432,7 +23748,8 @@
       },
       "download_sha1": "6abe660b754fcc384ed1ddd4add3fd1cc2dbffa1",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Taishi"
     },
     {
       "id": "wikis:fandom:6dbc4257b4356425",
@@ -23478,7 +23795,8 @@
       },
       "download_sha1": "0c2f00b92335db48ce0c19b725fad7cd9639ae82",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Ayatsugu_Otowa"
     },
     {
       "id": "wikis:fandom:6dff16ea37ca986e",
@@ -23647,7 +23965,8 @@
       },
       "download_sha1": "5aa5904e9a4b791d838ae3b9f5aa6beae399eab5",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Video Game Orchestra"
     },
     {
       "id": "wikis:fandom:6eb54637ea8a520c",
@@ -23817,6 +24136,7 @@
       "download_sha1": "848385bb5a1d379dc93897f491baa0cb77ceea6d",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Chopin",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -24006,7 +24326,8 @@
       },
       "download_sha1": "3bef2f4855aeb2d633591380b25beeaa013e9ef2",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Lyo"
     },
     {
       "id": "wikis:fandom:71016b5c3d69b93a",
@@ -24145,7 +24466,8 @@
       },
       "download_sha1": "dc528560f6eadd5a263da419e033e7d1082f8a7d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "onoken feat.Rin"
     },
     {
       "id": "wikis:fandom:72843dfabf6001b5",
@@ -24192,6 +24514,7 @@
       "download_sha1": "fca573c6843ff4e135222480019cda0354e7320c",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "H Undo OTT e",
       "collection_aliases": [
         "Hundotte Collection"
       ]
@@ -24241,7 +24564,8 @@
       },
       "download_sha1": "a17ff394405766a2de86c7ba0f60ba1e4fa95f39",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "t+pazolite"
     },
     {
       "id": "wikis:fandom:742ec0cfd85cd008",
@@ -24333,7 +24657,8 @@
       },
       "download_sha1": "00d620fb3831481a370314ade76f3078a0f296f1",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "MisoilePunch"
     },
     {
       "id": "wikis:fandom:75bf8ca2d9a36b3d",
@@ -24626,6 +24951,7 @@
       "download_sha1": "380f05eff20abb3d62a49fa55df90ad17c982345",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Ujico*",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -24674,7 +25000,8 @@
       },
       "download_sha1": "df604227b6349be6173b894713a7e2254f0d38e3",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "EGOIST"
     },
     {
       "id": "wikis:fandom:77f87b10517f7c11",
@@ -25015,7 +25342,8 @@
       },
       "download_sha1": "e9e72fb1fe5bee75b3f776a9f7c57fadd8170070",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sound Souler"
     },
     {
       "id": "wikis:fandom:79fc518e8c3d249f",
@@ -25061,7 +25389,8 @@
       },
       "download_sha1": "c65708dbadbb2f5a7bb6782ef6dcb83e235efc95",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Apo11o\"QUASAR\"program ft.遠藤駿"
     },
     {
       "id": "wikis:fandom:7a3854f3f3853c03",
@@ -25341,6 +25670,7 @@
       "download_sha1": "2e8dd15db75b3014ca3dac462f2c8c68896beb11",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "vospi",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -25513,6 +25843,7 @@
       "download_sha1": "bdb7f23a65e71115f11ae611b5d48c84e747e409",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Mozart",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -25731,6 +26062,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "HALLPBESTUDIO",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -25782,6 +26114,7 @@
       "download_sha1": "7a21fed4151fe73a2d97b8ad97622ab443789508",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "FabricFactory",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -25831,6 +26164,7 @@
       "download_sha1": "7884feee985ab2d8fce12b4e9d6e1c7b4232bb18",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Baba Band",
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol.2"
@@ -25880,7 +26214,8 @@
       },
       "download_sha1": "cd1bb56b41f912aae9b3ebfc8a2adfdf9db0d67a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "xi"
     },
     {
       "id": "wikis:fandom:7fdffbf67722ff07",
@@ -25929,6 +26264,7 @@
       "download_sha1": "c720cf0a603648b48d763cb9b3eb586adf9f6fb0",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Yuk-cheung Chun",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -25979,6 +26315,7 @@
       "download_sha1": "1abb03eb15624e93e6fb448dea7762bccea19113",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Xiaoming",
       "collection_aliases": [
         "RAC collection #4"
       ]
@@ -26027,7 +26364,8 @@
       },
       "download_sha1": "14eb932e91549582195983e5738ab14f1dd288cc",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "KillerBlood"
     },
     {
       "id": "wikis:fandom:8002b21c3943753f",
@@ -26073,7 +26411,8 @@
       },
       "download_sha1": "7b9f6f0a98fd0c7a5bc1ad043123e8ab56e91226",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Zris"
     },
     {
       "id": "wikis:fandom:80c1758deed551cd",
@@ -26214,7 +26553,8 @@
       },
       "download_sha1": "d4b5a81e75f0f3b4962a032c1decc270c01e42c7",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "計畫通行"
     },
     {
       "id": "wikis:fandom:822b0b21732518d3",
@@ -26385,6 +26725,7 @@
       "download_sha1": "a1b03d15d0b734bf91151d9ad20d5c4d0556eb39",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Kaeru Underground",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -26434,7 +26775,8 @@
       },
       "download_sha1": "d941ac0c2496d40ca3f928fa5c4fb5c134d52896",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "yourmythos"
     },
     {
       "id": "wikis:fandom:8389e09a734dd56f",
@@ -26777,6 +27119,7 @@
       "download_sha1": "760ae216000679536bec4a3b0e40ae6058c7bd66",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "M2U",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -26996,6 +27339,7 @@
       "download_sha1": "7586de9b8ced9e22064ff2317660116c9c41e214",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Rabpit",
       "collection_aliases": [
         "Deemo's collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -27091,7 +27435,8 @@
       },
       "download_sha1": "6657d88bf14780db56ce1b85b4e00e30e59e13e1",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Capchii"
     },
     {
       "id": "wikis:fandom:85e33dae0e985f84",
@@ -27185,6 +27530,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Sta feat. A",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ],
@@ -27450,7 +27796,8 @@
       },
       "download_sha1": "9d9f5037a8381fa92585e7c4ed89ac6eab86fe6f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "HAMO from Mili"
     },
     {
       "id": "wikis:fandom:877acaeeb9c76633",
@@ -27497,6 +27844,7 @@
       "download_sha1": "10e618fdddfea6324d6d85ce4eb9468005e3ceb6",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Pianoboy",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -27547,6 +27895,7 @@
       "download_sha1": "35397cb09295d96e99bf83e8a6d9bb9002502633",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "3R2",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -27597,6 +27946,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Sakuzyo",
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol. 2"
@@ -27646,7 +27996,8 @@
       },
       "download_sha1": "21da1d3a813c5ec629cb52c2b997bd283768342c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Ramenbot Jr."
     },
     {
       "id": "wikis:fandom:88ca2939acf0e495",
@@ -27984,7 +28335,8 @@
           "value": "Place Your Bets",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "composer": "3R2"
     },
     {
       "id": "wikis:fandom:89d527da52080da8",
@@ -28031,6 +28383,7 @@
       "download_sha1": "aafdf1f1b9d1dd37cc6d6d7e4852ca1eb017377a",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Liszt",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -28080,6 +28433,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Presti",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -28624,7 +28978,8 @@
       },
       "download_sha1": "272468349272ce222a73025cf186dbdcffc668be",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "onoken"
     },
     {
       "id": "wikis:fandom:8edb3782209a5372",
@@ -28721,6 +29076,7 @@
       "download_sha1": "6b66c84c12f6922c56b18ea92300bdcd724dc7cb",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Kaneko Chiharu",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -28865,7 +29221,8 @@
       },
       "download_sha1": "0fea67619d9492377ed8167d9edee4b6b88b10cd",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sleepy WiFi"
     },
     {
       "id": "wikis:fandom:91bcbf518a990736",
@@ -28911,7 +29268,8 @@
       },
       "download_sha1": "bac8a15b088e0559622880edddb297cde9d7c721",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "SIHanatsuka"
     },
     {
       "id": "wikis:fandom:932df728b8ae9aa0",
@@ -28960,6 +29318,7 @@
       "download_sha1": "9e3eb319da1334b6c0819fac90a043962b458007",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Shinichi Kobayashi",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -29011,6 +29370,7 @@
       "download_sha1": "c75c7609a16cc8509f0b242b87cf439c48393a17",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "onoken / Vocal: Rin",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -29107,6 +29467,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Sta",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ],
@@ -29158,6 +29519,7 @@
       "download_sha1": "2f4d4f38e49b98278e539f01fd49977862675307",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Pianoboy",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -29490,7 +29852,8 @@
       },
       "download_sha1": "3616c414d250180c46fcf9bbeaef1eddff19898d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "The SxPlay"
     },
     {
       "id": "wikis:fandom:97b36b4e154ddc1d",
@@ -29660,6 +30023,7 @@
       "download_sha1": "165c56cc30e0215c8cdad11d137a1f7f48879287",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Hundotte",
       "collection_aliases": [
         "Hundotte Collection"
       ]
@@ -29754,7 +30118,8 @@
       },
       "download_sha1": "9cc955332ca6e7b5a52b93d441c4166d85356394",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Edmund Fu"
     },
     {
       "id": "wikis:fandom:9a0595738b5489cd",
@@ -29801,6 +30166,7 @@
       "download_sha1": "84a50470ef611f500cf99b529ad14196d54da586",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Feryquitous feat. Sennzai",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -29943,6 +30309,7 @@
       "download_sha1": "3fb73a11ab3fa39febd868955651989876ade9d7",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Hikoshi Hashimoto",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -29992,6 +30359,7 @@
       "download_sha1": "f9a076df3e9a658328b446c3de9209f1d7e0c3ad",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Beethoven",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -30040,7 +30408,8 @@
       },
       "download_sha1": "9fc689aba5d7821014da61e183b01d3fa395f7b1",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "onoken"
     },
     {
       "id": "wikis:fandom:9b2c91ae65fc39a5",
@@ -30209,7 +30578,8 @@
       },
       "download_sha1": "e219772961b46740fff7662467f8198d422df32b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Yuma.Mizo feat. Ai Ohsera"
     },
     {
       "id": "wikis:fandom:9c872de0d98feb8d",
@@ -30256,7 +30626,8 @@
       },
       "download_sha1": "f4d28c130f6b22c000d09b4cad6963bfb8aa3155",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Apo11o program ft.Ritsuka"
     },
     {
       "id": "wikis:fandom:9cdcc532214453a2",
@@ -30349,6 +30720,7 @@
       "download_sha1": "de7d2623a17ed2b09108209a27087238c201e59e",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Mai Aoyagi",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -30492,7 +30864,8 @@
       },
       "download_sha1": "d367e8a1f6f98c654ae588c3b40fd785a4cbae30",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "ReZister"
     },
     {
       "id": "wikis:fandom:9dddad52dcc4db03",
@@ -30538,7 +30911,8 @@
       },
       "download_sha1": "9137560c9a7dead7e071ab9ddefb1305b4e1a894",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Video Game Orchestra"
     },
     {
       "id": "wikis:fandom:9e712d75a51f476b",
@@ -30725,6 +31099,7 @@
       "download_sha1": "ea0de7dd1ce25224bbc70b77de0badc84cf70567",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Feryquitous",
       "collection_aliases": [
         "Feryquitous collection"
       ]
@@ -31066,6 +31441,7 @@
       "download_sha1": "23b88dfee860537367410bcc6d9532c43b94e54a",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Ice",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -31114,7 +31490,8 @@
       },
       "download_sha1": "fd5a45e83b80ecc53953f9ed551dbe4f81c35987",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Keikaku Tsuukou feat. Parorto"
     },
     {
       "id": "wikis:fandom:a2c7dfd12234dae2",
@@ -31162,6 +31539,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Edmund Fu",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -31213,6 +31591,7 @@
       "download_sha1": "576111942d9078e4e9f87b0c64468a5e7cc55ddb",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "soyomogi",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -31262,7 +31641,8 @@
       },
       "download_sha1": "cede0623f925e0ce481789d30707d61e92b58c9e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Tsukasa feat. kalon"
     },
     {
       "id": "wikis:fandom:a5dd7fa770190bcb",
@@ -31308,7 +31688,8 @@
       },
       "download_sha1": "24f388ffff2b019369563712273364155b2cac40",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Jerico"
     },
     {
       "id": "wikis:fandom:a5edeceddf437660",
@@ -31354,7 +31735,8 @@
       },
       "download_sha1": "bbae88f7a4efb75e9dec5b33f1be86a6969e470f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "studio neo"
     },
     {
       "id": "wikis:fandom:a5fe29f16fa56548",
@@ -31401,6 +31783,7 @@
       "download_sha1": "6a1fb93c68172d95a4147f14284bdcc504d936db",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "FIG",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -31495,7 +31878,8 @@
       },
       "download_sha1": "9c4f52a3d658f7e5f3a93b22478825389bb04368",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Valunava"
     },
     {
       "id": "wikis:fandom:a8758763e9b4c46b",
@@ -31542,6 +31926,7 @@
       "download_sha1": "da26b4cd3535cd5d5f3b3d5ee59224b4bb2f7a32",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Brahms",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -31960,6 +32345,7 @@
       "download_sha1": "11932248206d4d87bf938efc8f5355c922221662",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Chopin",
       "collection_aliases": [
         "Etude collection"
       ]
@@ -32008,7 +32394,8 @@
       },
       "download_sha1": "834affdb5b1bb934925f823ab4fb41038f81786b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "xi"
     },
     {
       "id": "wikis:fandom:ab156487f33a8f24",
@@ -32194,6 +32581,7 @@
       "download_sha1": "43c0db16a740f71a54264d1bda84d6591c7c0deb",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Edmund Fu",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -32458,7 +32846,8 @@
       },
       "download_sha1": "754ead08960adb23ac82f63be496ae6ca806980b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Capchii feat. Uzumaki"
     },
     {
       "id": "wikis:fandom:ad8f515aa806fed2",
@@ -32550,7 +32939,8 @@
       },
       "download_sha1": "539d20367ff9e8a2bf155515be836152cc5db581",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "EGOIST"
     },
     {
       "id": "wikis:fandom:ae6b37a3a62a4a61",
@@ -32935,6 +33325,7 @@
       "download_sha1": "0966bf61cd1adff5a79e5f8375df55f151e78adc",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Triodust",
       "collection_aliases": [
         "RAC collection #4"
       ]
@@ -32984,6 +33375,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Kitkit Lu",
       "collection_aliases": [
         "RAC collection -2"
       ]
@@ -33033,6 +33425,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Go raibh maith agat Orchestra",
       "collection_aliases": [
         "RAC collection -1"
       ]
@@ -33253,7 +33646,8 @@
       },
       "download_sha1": "1bff501975e8e7b9d5336de1aa52b9ad4a54fbb6",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "muyu+Yu-dachi"
     },
     {
       "id": "wikis:fandom:b45a2e80d9cfd2b3",
@@ -33515,7 +33909,8 @@
       },
       "download_sha1": "1730bfec1c6f70d1cd316edff68279b1e902340b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "white tail box ft.riri"
     },
     {
       "id": "wikis:fandom:b51eb5ceed228ae7",
@@ -33684,7 +34079,8 @@
           "value": "Dance in the midnight",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "composer": "Manhattan Midnight"
     },
     {
       "id": "wikis:fandom:b5b77d26afc63004",
@@ -33730,7 +34126,8 @@
       },
       "download_sha1": "dab50b32dc2e1b2c990e41a9acfdc16aaf81905e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sakuzyo"
     },
     {
       "id": "wikis:fandom:b7120dffcdf1678d",
@@ -33822,7 +34219,8 @@
       },
       "download_sha1": "f46d29de69bada3061042976e2019fb4b56e8a40",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "technoplanet"
     },
     {
       "id": "wikis:fandom:b83c3e7a42f45c4c",
@@ -33868,7 +34266,8 @@
       },
       "download_sha1": "ecd180eb5e6e0f7686b17a81321380952b21bbcc",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "SIHanatsuka & Yukino"
     },
     {
       "id": "wikis:fandom:b86b129b4f97e168",
@@ -33914,7 +34313,8 @@
       },
       "download_sha1": "7c84bf101c6bce9f130d15971dc22ed72dfe74c2",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "HyuN & Ritoru"
     },
     {
       "id": "wikis:fandom:b8c556a709d1eec7",
@@ -34006,7 +34406,8 @@
       },
       "download_sha1": "32e3b1b1b81a80997cfc322fb4a3ae61659eda9e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "a_hisa"
     },
     {
       "id": "wikis:fandom:b9859734d3cba244",
@@ -34175,7 +34576,8 @@
       },
       "download_sha1": "88e09c4cb42a9bb7dd65135b31548e5734005802",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "TAKU1175"
     },
     {
       "id": "wikis:fandom:ba342b5fccfad511",
@@ -34222,6 +34624,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "H△G",
       "collection_aliases": [
         "Mirai's Selection"
       ]
@@ -34531,7 +34934,8 @@
       },
       "download_sha1": "b360c37cc54d673c8f640c0f6fe7e54418a43306",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "onoken"
     },
     {
       "id": "wikis:fandom:bd254f98218f3d04",
@@ -34623,7 +35027,8 @@
           "value": "Aitai",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "composer": "onoken feat. Rin"
     },
     {
       "id": "wikis:fandom:be74d0759eff55a5",
@@ -34669,7 +35074,8 @@
       },
       "download_sha1": "464572853ed6ecb4e308a282589e7e77c09be24d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Michiru Oshima"
     },
     {
       "id": "wikis:fandom:be7f5108323f5779",
@@ -34838,7 +35244,8 @@
       },
       "download_sha1": "25cc02bc5661eb7a9d96ae3108b7e7c0a1ef1745",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "xi"
     },
     {
       "id": "wikis:fandom:bf66fd1a659ac231",
@@ -34886,6 +35293,7 @@
       "download_sha1": "8cb92fa746bac504db5689d70160ac76a38a01db",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Baba Band",
       "collection_aliases": [
         "Deemo's Collection Vol.2",
         "Deemo's collection Vol.2"
@@ -34935,7 +35343,8 @@
       },
       "download_sha1": "6f1ac184bb47f46e3de62965cd1a2a8ba73536a7",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "onoken feat. b"
     },
     {
       "id": "wikis:fandom:c00838a65dfa9169",
@@ -34982,6 +35391,7 @@
       "download_sha1": "21a808274a43848c9de57d9303c065b53250c36c",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Alice Lee & Michael Wyckoff",
       "collection_aliases": [
         "Mirai's Selection"
       ]
@@ -35031,6 +35441,7 @@
       "download_sha1": "bc66f5c35decd242d8d35174770bf0cca5421c15",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Michiru Oshima",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -35079,7 +35490,8 @@
       },
       "download_sha1": "24246167e91f8898fe9b21d179b5f48a9b595517",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "onoken"
     },
     {
       "id": "wikis:fandom:c181d202bb3c49a3",
@@ -35297,7 +35709,8 @@
       },
       "download_sha1": "ffb4a5f879e2cc3107418a241c79280b8efaedd4",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Chamber Chu"
     },
     {
       "id": "wikis:fandom:c20b60db272de866",
@@ -35344,6 +35757,7 @@
       "download_sha1": "29ebe482a236183e3887146398b9ccd7ddade112",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "EARTHBOUND PAPAS",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -35439,6 +35853,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -35534,7 +35949,8 @@
       },
       "download_sha1": "5b6f7228637f1d787623e00a58d04fa14571fcc8",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sherwin"
     },
     {
       "id": "wikis:fandom:c495a870df3c1bf1",
@@ -35874,6 +36290,7 @@
       "download_sha1": "caafe5a34170530dda4547ebf86e38f2bae8f8ad",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Amber Wishes",
       "collection_aliases": [
         "Ice collection"
       ]
@@ -35922,7 +36339,8 @@
       },
       "download_sha1": "e1449587bc4f443ea4b198bfd7d861ffc40a6344",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Art of Fighters vs. Apo11o program + DD\"ナカタ\"Metal"
     },
     {
       "id": "wikis:fandom:c7b0499139c12f80",
@@ -36020,6 +36438,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Alex Vourtsanis",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -36071,6 +36490,7 @@
       "download_sha1": "519d4f0ba2eab9f272a159094fd2bbf4891d1f98",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Kiva",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -36121,6 +36541,7 @@
       "download_sha1": "0d4f79cccaf891c3d062538c4ff608f444ad9c9b",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Yuk-cheung Chun feat. Misi Ke",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -36310,7 +36731,8 @@
       },
       "download_sha1": "c1de9b7be831ff7d3f658f27c4063f3c258416f8",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "計畫通行"
     },
     {
       "id": "wikis:fandom:cac4f29bcaf6566f",
@@ -36356,7 +36778,8 @@
       },
       "download_sha1": "d99d2930a90ffeff31725d8bf6c9133b15627173",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Ayatsugu_Revolved"
     },
     {
       "id": "wikis:fandom:cba860e15cc8df06",
@@ -36635,7 +37058,8 @@
       },
       "download_sha1": "ecca97361d4c1fbe50ed1d15b644a71d43d4a5fd",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Morrigan & Cranky"
     },
     {
       "id": "wikis:fandom:cc7a57223e011f68",
@@ -36774,6 +37198,7 @@
       "download_sha1": "da7653b43b09a99a186aff2f3cb0070551eb129b",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Triodust",
       "collection_aliases": [
         "Samsara collection"
       ]
@@ -36868,7 +37293,8 @@
       },
       "download_sha1": "21a0f04607de291c70f87a750d80311140acdfc4",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Freeleaves"
     },
     {
       "id": "wikis:fandom:cee3433d361265e4",
@@ -36964,6 +37390,7 @@
       "download_sha1": "c296e49dfcfaabf403d9b70e924e3a2311252baa",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Feryquitous,feat.Sennzai",
       "collection_aliases": [
         "Feryquitous collection"
       ]
@@ -37305,6 +37732,7 @@
       "download_sha1": "76e9b48c6ad4e90b23b2ac06bf014703499075b3",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Rabpit",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -37399,7 +37827,8 @@
       },
       "download_sha1": "1c60e9c4789ea81bd7a251185a729af071dab4ef",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Shina Kami & Silaver"
     },
     {
       "id": "wikis:fandom:d4422a310810befe",
@@ -37445,7 +37874,8 @@
       },
       "download_sha1": "1fdf910049543b73b4487ece4e91b443ceb37779",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Sakuzyo"
     },
     {
       "id": "wikis:fandom:d51474421fbe6be0",
@@ -37615,6 +38045,7 @@
       "download_sha1": "7a4489d0864d1ec4af7a24c2fa67393f4a860098",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Hundotte",
       "collection_aliases": [
         "Hundotte Collection"
       ]
@@ -37664,6 +38095,7 @@
       "download_sha1": "dcd428475cfe7f39d284c2baadfba74ba7d3492c",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "The AirCarrier",
       "collection_aliases": [
         "RAC collection #4"
       ]
@@ -37713,6 +38145,7 @@
           "source": "mediawiki-metadata"
         }
       },
+      "composer": "Kaeru Underground",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -37763,7 +38196,8 @@
       },
       "download_sha1": "e041ce748368d22c10de595dc56b6c79b741fce2",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Takashi OKAMOTO(12sound) feat.Tsukasa Shiraki"
     },
     {
       "id": "wikis:fandom:d6fd790abb52475a",
@@ -37811,6 +38245,7 @@
       "download_sha1": "d4214e4e3c6e37070a6f9c5c99f31370a655e9a8",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "V.K",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -37906,6 +38341,7 @@
       "download_sha1": "21b53b565b4f7c8f766649456638cea4217cbac9",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Feryquitous",
       "collection_aliases": [
         "Feryquitous collection"
       ]
@@ -37957,6 +38393,7 @@
       "download_sha1": "4898372385e3555074991c2c7ab7d3890040517c",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Mili",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -38006,7 +38443,8 @@
       },
       "download_sha1": "fb5f7d695a2d4fdbc7cdc0b5cfba638560aa8993",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "HAGANE"
     },
     {
       "id": "wikis:fandom:d9689612d62305f5",
@@ -38222,6 +38660,7 @@
       "download_sha1": "00e2fb28b0872beebf386c24be7f5eb87ce2aecf",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Sdorica (Chamber Chu)",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -38486,6 +38925,7 @@
       "download_sha1": "ee14edefaf7e8f8f15365dee04a2b887e60d6705",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Yuk-cheung Chun  Trevor Lin feat. Silvia Su",
       "collection_aliases": [
         "Rayark selection Vol.1"
       ]
@@ -38534,7 +38974,8 @@
       },
       "download_sha1": "9e42ec5fc5241a100a9b1a89f9cf97208a1aeea2",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "The Hoshizora Project"
     },
     {
       "id": "wikis:fandom:dc1f69810c8a3c10",
@@ -38628,6 +39069,7 @@
       "download_sha1": "34b73d8c3996d884d3e212453b67fc2f2e9fe6f1",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Edmund Fu",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -38846,7 +39288,8 @@
       },
       "download_sha1": "25b1a49183f3f7adb6445b3bdf965fc0c4fb6539",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "yourmythos"
     },
     {
       "id": "wikis:fandom:dea02914019b00e8",
@@ -39061,7 +39504,8 @@
       },
       "download_sha1": "b0000e0e9e89d1f79373aa83f93d5135de151cb9",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Cashew"
     },
     {
       "id": "wikis:fandom:e0311d9dd97addd1",
@@ -39107,7 +39551,8 @@
       },
       "download_sha1": "fe1e417033b37abe9fbd4c7080c0ed23e576a89e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Chroma"
     },
     {
       "id": "wikis:fandom:e12ab4f136fea7bb",
@@ -39154,6 +39599,7 @@
       "download_sha1": "873ca73df5f6da4a8e8ada553f8e3165f6998b92",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Mili",
       "collection_aliases": [
         "Mili Collection Vol. 3"
       ]
@@ -39204,6 +39650,7 @@
       "download_sha1": "a014a41a31df105a27886c0eae57732939742a53",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Yuk-cheung Chun feat. Europa Huang",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol.1A"
@@ -39254,6 +39701,7 @@
       "download_sha1": "06d7c4076556737b4680da0371ea6424d73c4393",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Hikoshi Hashimoto",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -39617,6 +40065,7 @@
           "error": "HTTPSConnectionPool(host='static.wikia.nocookie.net', port=443): Read timed out."
         }
       ],
+      "composer": "Video Game Orchestra",
       "delivery_note": "Full-size public CDN file matches published dimensions but differs from the wiki original upload checksum/size; downloaded bytes preserved unchanged."
     },
     {
@@ -39755,7 +40204,8 @@
       },
       "download_sha1": "0468fafd9bbf63cd227a89c0c7c63983d3085677",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "PTB10"
     },
     {
       "id": "wikis:fandom:e843e4d6702cd971",
@@ -39973,7 +40423,8 @@
       },
       "download_sha1": "cd00e4ecf5eb263c87ac25b8cba35d43245c892d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "EGOIST"
     },
     {
       "id": "wikis:fandom:e897ee646a7e97df",
@@ -40265,7 +40716,8 @@
       },
       "download_sha1": "ce5d138c0be1daee6883ff924f0abb440ae92eb5",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "The SxPlay"
     },
     {
       "id": "wikis:fandom:e9f4a51f390bc4c4",
@@ -40312,6 +40764,7 @@
       "download_sha1": "569217384506ca9d6fcf919290c6719fc055bb92",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Kamome sano",
       "collection_aliases": [
         "RAC collection -3"
       ]
@@ -40485,6 +40938,7 @@
       "download_sha1": "81bc409c83be8efdb2261e59cb46190489744a29",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Sun Chen feat. Bibi Chao",
       "collection_aliases": [
         "Deemo's collection Vol.1B"
       ]
@@ -40674,7 +41128,8 @@
       },
       "download_sha1": "c2a0cc9e18f7672a1769093e2e011aa2ad02eaf9",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Apo11o program&ゆゆうたft.OFFICE萬田㈱"
     },
     {
       "id": "wikis:fandom:f00c632c4c4a65fe",
@@ -40723,6 +41178,7 @@
       "download_sha1": "683c928f681882312a39853aeb567f1583e39902",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Mili",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -40871,6 +41327,7 @@
       "download_sha1": "e3047b74d3a2a664980d4bcc0f7eb6ac7e066609",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Hundotte",
       "collection_aliases": [
         "Hundotte Collection"
       ]
@@ -40920,6 +41377,7 @@
       "download_sha1": "493465e5441cc15741b52e641dfa09009d9131a0",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Edmund Fu",
       "collection_aliases": [
         "Deemo's collection Vol. 2",
         "Deemo's collection Vol.2"
@@ -41067,6 +41525,7 @@
       "download_sha1": "b5a29ea8f8412ca759ceb64a4d601f5cba0fa476",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Mili",
       "collection_aliases": [
         "Deemo's Collection Vol. 1A",
         "Deemo's collection Vol. 1A"
@@ -41118,6 +41577,7 @@
       "download_sha1": "c12a5a7249f5566167a5f1bfc916cc94a7bbe1f2",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Hikoshi Hashimoto",
       "collection_aliases": [
         "Collaboration collection"
       ]
@@ -41214,6 +41674,7 @@
       "download_sha1": "eb0d1dbf4bb0af681327c94574fb5435661fd9dd",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "KIVA",
       "collection_aliases": [
         "Rayark selection Vol.3"
       ]
@@ -41308,7 +41769,8 @@
       },
       "download_sha1": "18f16d8d8d34f2806cc592b982ca153f9b9c1a9f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "composer": "Alice Schach and the magic orchestra"
     },
     {
       "id": "wikis:fandom:fcee0d4244c9a240",
@@ -41647,6 +42109,7 @@
       "download_sha1": "16dc54c86d6e79b1ef025f20d47dcee59394d7b1",
       "wiki_original_size_matches": true,
       "wiki_original_sha1_matches": true,
+      "composer": "Feryquitous",
       "collection_aliases": [
         "Feryquitous collection"
       ]
