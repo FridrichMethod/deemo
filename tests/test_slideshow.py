@@ -207,6 +207,17 @@ class SlideshowTemplateTests(unittest.TestCase):
     def test_short_screens_keep_the_artist_credit(self):
         """Tiers that drop credits keep the artist's row, so no layout shows an artwork without its artist."""
         self.assertIn('"notes-artist"', self.html, "metaRow() tags the artist's row")
+        # metaRow() tags a row by its label, so the label it compares with must be the one notesFor() gives the
+        # slide's artist (data.artist), and no other notes row may share that label in either language.
+        tagged = re.findall(r'if \(label === DEEMO_I18N\.t\("(slideshow\.notes\.[\w.]+)"\)\)\s*dt\.className = dd\.className = "notes-artist"', self.html)
+        self.assertEqual(len(tagged), 1, "metaRow() tags one label as the artist's row")
+        rows = {field: key for key, field in re.findall(r'metaRow\(meta, DEEMO_I18N\.t\("(slideshow\.notes\.[\w.]+)"\), data\.(\w+)\)', self.html)}
+        self.assertEqual(rows.get("artist"), tagged[0], "The tagged label is the one the artist's row is given")
+        others = set(re.findall(r'"(slideshow\.notes\.[\w.]+)"', self.html)) - {tagged[0], "slideshow.notes.label"}
+        self.assertTrue(others, "The other notes rows (music, collection) are labelled too")
+        for lang in ("en", "zh-CN"):
+            with self.subTest(lang=lang):
+                self.assertNotIn(self.messages[lang][tagged[0]], {self.messages[lang][key] for key in others})
         self.assertNotRegex(self.css, r"\.notes-meta\s*\{[^}]*display:\s*none")
         for selector in re.findall(r"([^{}/]*\.notes-meta[^{}]*)\{[^}]*display:\s*none", self.css):
             for part in selector.split(","):

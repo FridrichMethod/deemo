@@ -103,18 +103,16 @@ To rediscover wiki entries, drop `--resume`. Network sources may be rate-limited
 Offline verification and browser acceptance checks:
 
 ```sh
-.venv/bin/python -I tests/test_catalog.py
-.venv/bin/python -I tests/test_layout.py
-.venv/bin/python -I tests/test_pages.py
-.venv/bin/python -I tests/test_i18n.py
-.venv/bin/python -I tests/test_check_sources.py
+# Every offline test file, as CI runs them
+for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done
 .venv/bin/python scripts/build_catalog.py --verify --check
 .venv/bin/python scripts/build_legacy_inventory.py
 .venv/bin/python -I scripts/fetch_archives.py --verify
 
-# Optional: with the local HTTP server running, run the browser acceptance check with an installed Chrome
+# Optional: with the local HTTP server above running, the browser acceptance check in an installed Chrome
+# (under a minute; it also fails on any console error or failed request)
 .venv/bin/python -m pip install -r requirements-dev.txt
-.venv/bin/python -I tests/browser_smoke.py --browser /usr/bin/google-chrome
+.venv/bin/python -I tests/browser_smoke.py --base http://127.0.0.1:8765 --browser /usr/bin/google-chrome
 ```
 
 ## Grid previews
