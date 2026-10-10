@@ -39,6 +39,16 @@ NAMED_CONTROLS = [
     ("button", "slideshow.music.label"), ("button", "slideshow.autoplay.label"), ("button", "lang.toggle"),
     ("link", "slideshow.github.label"), ("link", "slideshow.archive.text"), ("link", "slideshow.attribution"),
 ]
+# Liner-notes titles ([text, data-length]) of wiki slides: a title that is only the file's key gives the headline
+# to the mapped song and follows as a quiet file reference; a key that is the song's name stays the headline.
+NOTES_CASES = {
+    "wikis:fandom:0813480151e3f1b9": [["Tristesse", ""], ["Classic01", "file"]],
+    "wikis:fandom:9eb27d23921f3320": [["For Sis", ""], ["Celia02forsis fc", "file"]],
+    "wikis:fandom:082622a106c6977b": [["Code : 11", ""], ["Code11", "file"]],
+    "wikis:fandom:7f71c166494b2ff8": [["Cloud9", ""]],
+    "wikis:fandom:3a93b33265bbb130": [["Continuum", ""]],
+}
+NOTES_TITLES = "[...document.querySelectorAll('.slide-notes .notes-title')].map((title) => [title.textContent.replace(/\\u00a0/g, ' '), title.dataset.length || ''])"
 
 
 def mounted_url(relative, source=base):
@@ -704,6 +714,20 @@ def check_small_screens(browser):
     checks.extend(["next arrow clear of the toggle at 568x320", "artist credit at 844x390", "artwork dominant at 375x553"])
 
 
+def check_liner_notes(browser):
+    page = new_page(browser)
+    for asset_id, titles in NOTES_CASES.items():
+        navigate(page, "index.html?asset=" + quote(asset_id))
+        page.wait_for_function(f"{SHOWN_ID} === {json.dumps(asset_id)} && document.querySelector('.slide-notes .notes-title') !== null")
+        assert page.evaluate(NOTES_TITLES) == titles, (asset_id, page.evaluate(NOTES_TITLES))
+    # Across the whole show, no wiki slide with mapped songs gets a file-styled headline.
+    styled = page.evaluate("""() => [...imgTargets].filter((img) => img.dataset.songs && /^wikis:/.test(img.dataset.sourceId || ''))
+        .filter((img) => notesFor(img).querySelector('.notes-title').dataset.length === 'file').map((img) => img.dataset.id)""")
+    assert not styled, styled
+    finish(page)
+    checks.append("liner notes headline the mapped song for a wiki file key")
+
+
 def check_site_icons(page):
     manifest_url = mounted_url("site.webmanifest")
     manifest_response = page.request.get(manifest_url)
@@ -742,6 +766,7 @@ with sync_playwright() as p:
     check_screenshot_overlay(browser)
     check_slide_hit_testing(browser)
     check_small_screens(browser)
+    check_liner_notes(browser)
     check_site_icons(page)
     check_removed_files(page)
     finish(page)
