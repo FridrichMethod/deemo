@@ -6,6 +6,7 @@ exception, console error, HTTP error, failed request or request that leaves the 
 failures it causes itself (see Monitor)."""
 
 import argparse
+import base64
 import hashlib
 import json
 import re
@@ -40,6 +41,9 @@ BOTTOM_ROW = ["photo", "github", "archive-link", "iplayer", "random"]
 # and of short portrait phones (browser toolbars included, as the page never scrolls them away).
 SHORT_LANDSCAPE = [(568, 320), (480, 320), (667, 325), (740, 320), (812, 330)]
 SHORT_PORTRAIT = [(375, 553), (360, 568), (320, 454)]
+# A 1 x 1 PNG served in place of every artwork where the smoke steps through the whole show: the liner column's layout
+# does not depend on the image, and the run need not download the collection.
+PIXEL = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
 # Controls by role and the message key of their accessible name.
 NAMED_CONTROLS = [
     ("button", "slideshow.nav.prev"), ("button", "slideshow.nav.next"), ("button", "slideshow.screenshot.take"),
@@ -864,6 +868,31 @@ def check_small_screens(browser):
     checks.extend([f"both arrows clear of the toggle at {landscape}", "artist credit at 844x390", f"artwork dominant at {portrait}"])
 
 
+def check_caption_clear_of_controls(browser):
+    """On a phone held sideways (568 x 320), stepping through the whole show with the arrows, no slide's notes push the
+    caption under the bottom control row, in either language."""
+    width, height = SHORT_LANDSCAPE[0]
+    for lang in ("en", "zh-CN"):
+        page = new_page(browser, width, height, reduced_motion="reduce")
+        page.route(re.compile(r"/assets/(public|legacy)/"), lambda route: route.fulfill(status=200, content_type="image/png", body=PIXEL))
+        navigate(page, f"index.html?asset=legacy%3Amagnolia&lang={lang}")
+        page.wait_for_function("document.querySelector('.deemo-view').style.opacity === '1'")
+        covered = page.evaluate("""(names) => { const covered = [];
+            for (let step = 0; step < imgTargets.length; step++) {
+                plusSlides(1);
+                const caption = document.querySelector('.asset-caption').getBoundingClientRect();
+                const under = names.filter((name) => { const box = document.querySelector('.' + name).getBoundingClientRect();
+                    return box.top < caption.bottom && box.bottom > caption.top && box.left < caption.right && box.right > caption.left; });
+                if (under.length) covered.push([imgTargets[slideIndex - 1].dataset.id, Math.round(caption.bottom), under]);
+            }
+            return [covered, slideIndex]; }""", BOTTOM_ROW)
+        start = page.evaluate("[...imgTargets].findIndex((img) => img.dataset.id === 'legacy:magnolia') + 1")
+        assert covered[1] == start, (lang, covered[1], start)  # once round the whole show
+        assert not covered[0], (lang, width, height, covered[0])
+        finish(page)
+    checks.append(f"caption clear of the bottom control row on every slide at {width}x{height}, en and zh-CN")
+
+
 def check_liner_notes(browser):
     page = new_page(browser)
     for asset_id, titles in NOTES_CASES.items():
@@ -949,6 +978,7 @@ with sync_playwright() as p:
     check_screenshot_overlay(browser)
     check_slide_hit_testing(browser)
     check_small_screens(browser)
+    check_caption_clear_of_controls(browser)
     check_liner_notes(browser)
     check_composer_credits(browser)
     check_site_icons(page)

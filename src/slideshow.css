@@ -907,12 +907,17 @@ canvas {
     }
 }
 
-/* Phones held sideways: of the credits only the artist's stays, as one run of text without the rule above it, and
-   the caption leaves out the image size while the notes are up, so the title and the caption stay clear of the
-   control row and the artwork is never shown without its artist (screenshots too). */
+/* Phones held sideways: of the credits only the artist's stays, as one run of text without the rule above it, a
+   file reference takes the credits' size and keeps a long key ("Rac01rethefullmoonworld") on one line, and the
+   caption leaves out the image size while the notes are up, so the title and the caption stay clear of the control
+   row and the artwork is never shown without its artist (screenshots too). */
 @media screen and (orientation: landscape) and (max-height: 430px) {
     .dear-alice {
         font-size: min((40vw - var(--gutter) - 24px) / 12.6, 4.2vh);
+    }
+    .notes-title[data-length="file"] {
+        font-size: 13px;
+        letter-spacing: .04em;
     }
     .notes-meta {
         display: block;
