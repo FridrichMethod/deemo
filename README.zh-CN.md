@@ -53,7 +53,7 @@ python -I -m http.server 8765 --bind 127.0.0.1
 
 所有下载均保留响应的原始 bytes，没有 AI 放大、裁切、去水印、去背景或格式转换。`original` 表示站点提供的原始下载规格，不自动等同于画师工作母档。Fandom 中部分下载的 checksum 与 Wiki 上传 metadata 不同，清单会明确记录。
 
-旧素材曲名使用公开映射的精确内部 key 补全；没有精确 key 时，使用唯一一个仅大小写不同的 key，并标记为 `mapped_case_insensitive_internal_key`。画师帖子中无法直接确认的单图曲名保留原帖与页序，并标记 `unmapped`；原帖分组不自动当作附图的曲包归属。作曲家和画师使用不同字段。
+旧素材曲名使用公开映射的精确内部 key 补全；没有精确 key 时，使用唯一一个仅大小写不同的 key，并标记为 `mapped_case_insensitive_internal_key`。映射中完全没有的纹理，若有文件 key 相同（忽略大小写、空格和标点，如 `samsara105_fc` 与 Fandom 的 `Samsara105 fc.png`）的 Wiki 单曲图上传且其映射的歌曲一致，则采用这些歌曲，并标记为 `mapped_wiki_file_key`（6 张纹理）。画师帖子中无法直接确认的单图曲名保留原帖与页序，并标记 `unmapped`；原帖分组不自动当作附图的曲包归属。作曲家和画师使用不同字段。
 
 付费画集与游戏只记录购买来源，未下载。失效分享、访问失败、音频波形/谱图、视频和无法确认归属的混合 fanart 站点记录在来源清单中，不作为成功下载的曲绘。
 

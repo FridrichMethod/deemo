@@ -71,6 +71,26 @@ def required_input(root: Path, relative: str, directory: bool = False) -> Path:
     return path
 
 
+def fold(text: str) -> str:
+    """A name with case, spacing and punctuation dropped, for telling spellings of one name apart from other names."""
+    return "".join(char for char in text.casefold() if char.isalnum())
+
+
+def wiki_file_key_songs(records: list[dict]) -> dict[str, tuple[list[str], str]]:
+    """The songs wiki uploads of song artwork map their file keys to: folded file key ("Samsara105 fc" ->
+    "samsara105fc") -> (song titles, the first such upload's page), for keys whose uploads all agree on the songs."""
+    found: dict[str, tuple[list[str], str]] = {}
+    disputed = set()
+    for record in sorted(records, key=lambda record: record["id"]):
+        key = fold(str(record.get("title") or ""))
+        if record.get("kind") != "song_art" or not record.get("song_titles") or not key:
+            continue
+        if key in found and found[key][0] != list(record["song_titles"]):
+            disputed.add(key)
+        found.setdefault(key, (list(record["song_titles"]), record["page_url"]))
+    return {key: value for key, value in found.items() if key not in disputed}
+
+
 def legacy_pngs(directory: Path) -> list[Path]:
     """A legacy directory's PNGs in file-name order. The explicit key and the exact suffix test give the same list
     on every platform (WindowsPath sorts case-folded, and glob matches case-insensitively on Windows)."""
@@ -88,7 +108,12 @@ def mapped_song(songs: dict, key: str) -> tuple[dict, str]:
     return {}, "internal_key"
 
 
-def legacy_assets(root: Path) -> list[dict]:
+def legacy_assets(root: Path, wiki_records: list[dict] | None = None) -> list[dict]:
+    """The inherited textures, each mapped to its song by its internal key in the song mapping (mapped_song()). A key
+    the mapping lacks takes the songs of the wiki uploads of song artwork whose file has the same key, ignoring case,
+    spacing and punctuation ("Samsara105 fc" for samsara105_fc), when they agree; it is marked mapped_wiki_file_key and
+    its mapping_source is that upload's page. Otherwise the same texture would be unmapped here and song artwork there."""
+    wiki_songs = wiki_file_key_songs(wiki_records or [])
     assets = []
     mapping_path = required_input(root, "data/sources/song-mapping.json")
     mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
@@ -108,16 +133,19 @@ def legacy_assets(root: Path) -> list[dict]:
             format_name = image.format
         key = path.stem
         song, title_status = mapped_song(songs, key)
+        titles, mapping_source = ([song["name"]] if song.get("name") else []), (mapping.get("source_url") if song else None)
+        if not song and fold(key) in wiki_songs:
+            (titles, mapping_source), title_status = wiki_songs[fold(key)], "mapped_wiki_file_key"
         book_index = song.get("book")
         book = books[book_index].get("name") if isinstance(book_index, int) and 0 <= book_index < len(books) else None
         is_cover = bool(COVER_KEY.search(key))
         asset = {
             "id": f"legacy:{key}", "source_id": "legacy",
-            "title": song.get("name", key), "internal_key": key, "artist": None,
+            "title": song.get("name") or " / ".join(titles) or key, "internal_key": key, "artist": None,
             "composer": song.get("artist"), "collection": book,
-            "song_titles": [song["name"]] if song.get("name") else [],
-            "mapping_source": mapping.get("source_url") if song else None,
-            "kind": "song_art" if song else "collection_cover" if is_cover else "illustration",
+            "song_titles": titles,
+            "mapping_source": mapping_source,
+            "kind": "song_art" if song or titles else "collection_cover" if is_cover else "illustration",
             "page_url": "https://github.com/mashirozx/deemo",
             "download_url": None, "path": path.relative_to(root).as_posix(),
             "width": width, "height": height, "format": format_name,
@@ -191,7 +219,7 @@ def combine(root: Path, verify: bool = False) -> dict:
         sources.extend({**source, "family": family} for source in manifest["sources"])
         assets.extend({**asset, "family": family} for asset in manifest["assets"])
         failures.extend(manifest.get("failures", []))
-    assets.extend({**asset, "family": "legacy"} for asset in legacy_assets(root))
+    assets.extend({**asset, "family": "legacy"} for asset in legacy_assets(root, [asset for asset in assets if asset["family"] == "wikis"]))
     priority = {"artists": 0, "wikis": 1, "legacy": 2, "archives": 3}
     assets.sort(key=lambda asset: priority[asset["family"]])
     source_map = {source["id"]: source for source in sources}
@@ -245,11 +273,6 @@ def combine(root: Path, verify: bool = False) -> dict:
             "downloaded_bytes": sum(asset["bytes"] for asset in assets if asset["family"] != "legacy"),
         },
     }
-
-
-def fold(text: str) -> str:
-    """A name with case, spacing and punctuation dropped, for telling spellings of one name apart from other names."""
-    return "".join(char for char in text.casefold() if char.isalnum())
 
 
 def slide_records(asset: dict) -> list[dict]:

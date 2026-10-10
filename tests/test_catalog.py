@@ -351,6 +351,41 @@ class CatalogTests(unittest.TestCase):
         # Two keys that differ only in case leave the texture unmapped rather than guessing.
         self.assertEqual((assets["Echo"]["title"], assets["Echo"]["title_status"], assets["Echo"]["mapping_source"]), ("Echo", "internal_key", None))
 
+    def test_unmapped_legacy_key_takes_the_songs_of_a_same_key_wiki_upload(self):
+        # The wiki's song artwork "Samsara105 fc.png" is the texture samsara105_fc, which the song mapping lacks: both
+        # pages then call it "The 105th Day" rather than song artwork in the archive and an unmapped texture here.
+        for key in ("samsara105_fc", "walkingbythesea", "magnolia", "disputed_key", "booksprites_0"):
+            self.legacy_pair(key)
+        mapping = {"source_url": "https://example.com/mapping", "data": {"songs": {"magnolia": {"name": "Magnolia"}}, "books": []}}
+        (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping), encoding="utf-8")
+
+        def upload(name, title, songs, kind="song_art"):
+            colour = tuple(hashlib.sha256(name.encode()).digest()[:3])
+            return self.image(f"assets/public/wikis/{name}.png", colour, id=f"wikis:test:{name}", source_id="wikis:test",
+                              title=title, kind=kind, song_titles=songs, page_url=f"https://wiki.example/File:{name}")
+
+        uploads = [upload("a", "Samsara105 fc", ["The 105th Day"]), upload("b", "Walking By The Sea", ["Walking by the sea"]),
+                   upload("c", "Walking by the sea", ["Walking by the sea"]), upload("d", "Magnolia", ["Not this one"]),
+                   upload("e", "Disputed key", ["One"]), upload("f", "Disputed Key", ["Two"]),
+                   upload("g", "Booksprites 0", [], kind="collection_cover")]
+        (self.root / "data/sources/wikis.json").write_text(json.dumps({"sources": [{"id": "wikis:test", "name": "Wiki", "url": "https://wiki.example/"}],
+                                                                       "assets": uploads}), encoding="utf-8")
+        catalog = build.combine(self.root, verify=True)
+        legacy = {asset["internal_key"]: asset for asset in catalog["assets"] if asset["family"] == "legacy"}
+        self.assertEqual({key: (asset["title"], asset["song_titles"], asset["kind"], asset["title_status"], asset["mapping_source"])
+                          for key, asset in legacy.items()}, {
+            "samsara105_fc": ("The 105th Day", ["The 105th Day"], "song_art", "mapped_wiki_file_key", "https://wiki.example/File:a"),
+            "walkingbythesea": ("Walking by the sea", ["Walking by the sea"], "song_art", "mapped_wiki_file_key", "https://wiki.example/File:b"),
+            # The song mapping's own key wins; uploads that disagree on the songs map nothing; covers map no song.
+            "magnolia": ("Magnolia", ["Magnolia"], "song_art", "mapped_exact_internal_key", "https://example.com/mapping"),
+            "disputed_key": ("disputed_key", [], "illustration", "internal_key", None),
+            "booksprites_0": ("booksprites_0", [], "collection_cover", "internal_key", None),
+        })
+        self.assertIsNone(legacy["samsara105_fc"]["composer"])
+        kinds = {slide["data-id"]: (slide["data-kind"], slide.get("data-songs")) for slide in self.slides(catalog) if slide["data-id"].startswith("legacy:")}
+        self.assertEqual(kinds["legacy:samsara105_fc"], ("song_art", "The 105th Day"))
+        self.assertEqual(kinds["legacy:disputed_key"], ("unmapped", None))
+
     def test_unambiguous_legacy_cover_keys_are_collection_covers(self):
         for key in ("deemo1a", "Deemo1B", "booksprites_0", "MN2_booksprites", "deemo1", "deemo1ab", "walkingbythesea"):
             self.legacy_pair(key)
