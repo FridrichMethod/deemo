@@ -14,6 +14,8 @@
   }
   const familyName = (family) => i18n.has(`family.${family}`) ? t(`family.${family}`) : family;
   const kindName = (kind) => i18n.has(`kind.${kind}`) ? t(`kind.${kind}`) : kind;
+  const qualityName = (quality) => i18n.has(`quality.${quality}`) ? t(`quality.${quality}`) : quality;
+  const statusName = (status) => i18n.has(`status.${status}`) ? t(`status.${status}`) : status;
   const sourceName = (record) => i18n.sourceName(record.source_id, record.source_name);
   const images = catalog.assets.filter((asset) => asset.gallery);
   const fields = ["query", "family", "kind", "minimum", "sort"];
@@ -26,6 +28,12 @@
     const node = document.createElement(tag);
     if (text != null) node.textContent = text;
     if (className) node.className = className;
+    return node;
+  }
+  // Maintainer notes in the manifests are English prose, shown verbatim; the tag keeps a zh-CN page from voicing them as Chinese.
+  function note(tag, text) {
+    const node = element(tag, textValue(text));
+    node.lang = "en";
     return node;
   }
   function sourceLink(text, href) {
@@ -127,9 +135,10 @@
     }
     if (p.collections?.length) block.append(element("p", t("provenance.collections", {collections: p.collections.join(" / ")})));
     if (p.song_titles?.length) block.append(element("p", t("provenance.song_titles", {titles: p.song_titles.join(" / ")})));
-    if (p.notes) block.append(element("p", textValue(p.notes)));
-    for (const key of ["quality", "variant_note", "layout_note", "delivery_note"]) {
-      if (p[key]) block.append(element("p", textValue(p[key])));
+    if (p.notes) block.append(note("p", p.notes));
+    if (p.quality) block.append(element("p", t("provenance.quality", {quality: qualityName(p.quality)})));
+    for (const key of ["variant_note", "layout_note", "delivery_note"]) {
+      if (p[key]) block.append(note("p", p[key]));
     }
     if (p.wiki_original_sha1_matches === false) block.append(element("p", t("provenance.checksum_mismatch")));
     if (p.mapping_status === "unmapped" || p.title_status === "unmapped" || p.title_status === "internal_key") block.append(element("p", t("provenance.unmapped")));
@@ -202,9 +211,10 @@
       return p;
     }));
     $("sources").replaceChildren(...catalog.sources.map((source) => {
-      const row = element("tr"), name = element("td");
+      const row = element("tr"), name = element("td"), status = element("td", `${statusName(source.status)} · `);
       name.append(sourceLink(i18n.sourceName(source.id, source.name), source.url));
-      row.append(name, element("td", counts.get(source.id) || 0), element("td", `${source.status} · ${textValue(source.notes)}`));
+      status.append(note("span", source.notes));
+      row.append(name, element("td", counts.get(source.id) || 0), status);
       return row;
     }));
     const wasOpen = $("failures").querySelector("details")?.open ?? false;
