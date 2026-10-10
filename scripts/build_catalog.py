@@ -18,7 +18,9 @@ SOURCE_MANIFESTS = ("artists", "wikis", "archives")
 
 
 def attr(value: object) -> str:
-    return escape(str(value), {'"': "&quot;", "'": "&#39;", "\n": "&#10;"})
+    """A double- or single-quoted attribute value. CR, LF and TAB become character references, so HTML parsing
+    (which turns a raw CR into LF) and --check (which compares the file exactly) both keep the value as it is."""
+    return escape(str(value), {'"': "&quot;", "'": "&#39;", "\n": "&#10;", "\r": "&#13;", "\t": "&#9;"})
 
 
 def safe_path(root: Path, value: str) -> Path:
@@ -275,11 +277,11 @@ def render_slideshow(root: Path, catalog: dict) -> str:
     return template.replace("@python-work-area", "\n".join(slides))
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify", action="store_true", help="Verify every hash, image header and format")
     parser.add_argument("--check", action="store_true", help="Check generated files without writing")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     catalog = combine(ROOT, args.verify)
     encoded = json.dumps(catalog, ensure_ascii=False, indent=2) + "\n"
     script = "window.DEEMO_CATALOG = " + json.dumps(catalog, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029") + ";\n"
@@ -290,11 +292,13 @@ def main() -> None:
     }
     for path, content in outputs.items():
         if args.check:
-            if not path.exists() or path.read_text(encoding="utf-8") != content:
+            # No newline translation, so a stray CR is never read back as LF. The outputs themselves never contain
+            # a CR (attr() and JSON escape it), so folding CRLF only accepts a Windows core.autocrlf checkout.
+            if not path.is_file() or path.read_text(encoding="utf-8", newline="").replace("\r\n", "\n") != content:
                 raise SystemExit(f"Out-of-date generated file: {path.relative_to(ROOT)}")
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(content, encoding="utf-8")
+            path.write_text(content, encoding="utf-8", newline="\n")
     print(json.dumps(catalog["summary"], ensure_ascii=False, indent=2))
 
 

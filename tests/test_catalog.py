@@ -1,8 +1,11 @@
 """Checks for catalog integrity, attribution, and safe generated markup."""
 
+import contextlib
 import copy
 import hashlib
+import html
 import importlib.util
+import io
 import json
 import tempfile
 import unittest
@@ -46,6 +49,19 @@ class CatalogTests(unittest.TestCase):
     def manifest(self, family, asset):
         content = {"sources": [{"id": asset["source_id"], "name": family, "url": asset["page_url"]}], "assets": [asset]}
         (self.root / f"data/sources/{family}.json").write_text(json.dumps(content), encoding="utf-8")
+
+    def run_main(self, *args):
+        """Run the command line against this test's root; returns the SystemExit message, or None on success."""
+        (self.root / "templates").mkdir(exist_ok=True)
+        template = self.root / "templates/slideshow.html"
+        if not template.exists():
+            template.write_text("<main>\n@python-work-area\n</main>\n", encoding="utf-8")
+        with patch.object(build, "ROOT", self.root), contextlib.redirect_stdout(io.StringIO()):
+            try:
+                build.main(list(args))
+            except SystemExit as error:
+                return str(error)
+        return None
 
     def legacy_pair(self, key="magnolia"):
         for variant in ("trans", "tiny"):
@@ -181,6 +197,30 @@ class CatalogTests(unittest.TestCase):
         self.assertNotIn("<script>", rendered)
         self.assertIn("&lt;script&gt;", rendered)
         self.assertIn("A &amp; B", rendered)
+
+    def test_attributes_escape_control_whitespace(self):
+        value = "a\rb\tc\nd"
+        self.assertEqual(build.attr(value), "a&#13;b&#9;c&#10;d")
+        self.assertEqual(html.unescape(build.attr(value)), value)
+
+    def test_check_passes_right_after_a_build_whose_metadata_has_a_carriage_return(self):
+        self.manifest("artists", {**self.asset, "title": "Berlin\rStation Chief"})
+        self.assertIsNone(self.run_main())
+        self.assertNotIn(b"\r", (self.root / "index.html").read_bytes())
+        self.assertIsNone(self.run_main("--check"))
+
+    def test_check_compares_line_ends_exactly_except_a_crlf_checkout(self):
+        self.manifest("artists", self.asset)
+        self.assertIsNone(self.run_main())
+        index = self.root / "index.html"
+        built = index.read_bytes()
+        self.assertNotIn(b"\r", built)
+        # Git with core.autocrlf checks text out with CRLF line ends: still the same generated file.
+        index.write_bytes(built.replace(b"\n", b"\r\n"))
+        self.assertIsNone(self.run_main("--check"))
+        # A lone CR where the build wrote LF is a different file.
+        index.write_bytes(built.replace(b"\n", b"\r", 1))
+        self.assertEqual(self.run_main("--check"), "Out-of-date generated file: index.html")
 
 
 if __name__ == "__main__":
