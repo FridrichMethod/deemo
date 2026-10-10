@@ -314,11 +314,16 @@ https://github.com/FridrichMethod/deemo
             eyebrow.append(element("span", "notes-count", slideIndex + " / " + imgTargets.length));
             // A wiki title that names none of the slide's mapped songs (data-songs) is only the file's key
             // ("Classic01" for "Tristesse"): the songs are the headline and the key follows as a quiet file
-            // reference. A title that names a mapped song ("Cloud9", "Fur Alice") is a real title, never a file name.
+            // reference. A title that looks like a file name names a song only when it is the song's name ("Cloud9",
+            // "U7228"), never by containment ("Celia02forsis fc" for "For Sis", "Code11" for "Code : 11"). Any other
+            // title names a song when either contains the other, ignoring case, accents and punctuation ("Fur Alice",
+            // "Continuum (DEEMO Ver.)").
             var songs = data.songs ? data.songs.split("\n") : [];
             var fold = function(text) { return text.normalize("NFKD").toLowerCase().replace(/[^\p{L}\p{N}]/gu, ""); };
             var folded = fold(data.title);
+            var file = isFileName(data.title, data.id);
             var named = songs.some(function(song) {
+                if (file) return song.toLowerCase() === data.title.toLowerCase();
                 var name = fold(song);
                 return Boolean(name && folded) && (folded.indexOf(name) >= 0 || name.indexOf(folded) >= 0);
             });
@@ -335,7 +340,7 @@ https://github.com/FridrichMethod/deemo
             var weight = Array.from(headline).reduce(function(sum, char) {
                 return sum + (/[\u1100-\u11ff\u2e80-\ua4cf\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/.test(char) ? 2 : 1);
             }, 0);
-            if (!named && !fileKey && isFileName(data.title, data.id)) title.dataset.length = "file";
+            if (file && !named && !fileKey) title.dataset.length = "file";
             else if (weight > 30) title.dataset.length = "longer";
             else if (weight > 18) title.dataset.length = "long";
             var meta = element("dl", "notes-meta");
