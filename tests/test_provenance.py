@@ -347,10 +347,11 @@ class CommittedWikiDataTests(unittest.TestCase):
         self.assertEqual(composer_drift(named, resumed), [record["id"]])
 
     def test_altale_carries_its_composer_on_both_wikis(self):
-        altale = {record["source_id"]: (record.get("composer"), record.get("composer_source")) for record in self.assets
+        altale = {record["source_id"]: record.get("composer") for record in self.assets
                   if record["title"] == "Altale" and record["kind"] == "song_art"}
-        # Fandom's Altale page names no composer; the credit comes from BWIKI's, and the record says so.
-        self.assertEqual(altale, {"wikis:fandom": ("Sakuzyo", "wikis:bwiki"), "wikis:bwiki": ("Sakuzyo", None)})
+        # Fandom's Altale page names no composer today, so its credit comes from BWIKI's. Which wiki supplies it is
+        # held to the snapshot above, not pinned here: an Artist added upstream moves it to Fandom's own page.
+        self.assertEqual(altale, {"wikis:fandom": "Sakuzyo", "wikis:bwiki": "Sakuzyo"})
 
 
 class SlideProvenanceTests(unittest.TestCase):
