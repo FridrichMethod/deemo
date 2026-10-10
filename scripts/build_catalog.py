@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -15,6 +16,9 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_MANIFESTS = ("artists", "wikis", "archives")
+# Legacy keys that name a collection cover: the book sprites, and deemo1a/deemo1b, the Deemo's Collection Vol.1A/1B
+# covers (the same files are covers on Fandom; see the cover pattern in scripts/fetch_wikis.py).
+COVER_KEY = re.compile(r"booksprite|bookcover|^deemo1[ab]$", re.IGNORECASE)
 
 
 def attr(value: object) -> str:
@@ -82,7 +86,7 @@ def legacy_assets(root: Path) -> list[dict]:
         song, title_status = mapped_song(songs, key)
         book_index = song.get("book")
         book = books[book_index].get("name") if isinstance(book_index, int) and 0 <= book_index < len(books) else None
-        is_cover = any(word in key.lower() for word in ("booksprite", "bookcover"))
+        is_cover = bool(COVER_KEY.search(key))
         asset = {
             "id": f"legacy:{key}", "source_id": "legacy",
             "title": song.get("name", key), "internal_key": key, "artist": None,

@@ -132,6 +132,16 @@ class CatalogTests(unittest.TestCase):
         # Two keys that differ only in case leave the texture unmapped rather than guessing.
         self.assertEqual((assets["Echo"]["title"], assets["Echo"]["title_status"], assets["Echo"]["mapping_source"]), ("Echo", "internal_key", None))
 
+    def test_unambiguous_legacy_cover_keys_are_collection_covers(self):
+        for key in ("deemo1a", "Deemo1B", "booksprites_0", "MN2_booksprites", "deemo1", "deemo1ab", "walkingbythesea"):
+            self.legacy_pair(key)
+        kinds = {asset["internal_key"]: asset["kind"] for asset in build.legacy_assets(self.root)}
+        self.assertEqual(kinds, {
+            "deemo1a": "collection_cover", "Deemo1B": "collection_cover", "booksprites_0": "collection_cover",
+            "MN2_booksprites": "collection_cover", "deemo1": "illustration", "deemo1ab": "illustration",
+            "walkingbythesea": "illustration",
+        })
+
     def test_quantized_legacy_file_is_a_verified_variant_not_an_extra_slide(self):
         self.legacy_pair()
         catalog = build.combine(self.root, verify=True)
