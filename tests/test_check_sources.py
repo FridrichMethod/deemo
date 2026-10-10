@@ -36,6 +36,13 @@ def split_languages(markdown):
     return english, chinese[:-len("\n</details>\n")]
 
 
+def sentences(next_steps, lang):
+    """The sentences of the prose after the command block of a next-steps text."""
+    prose = next_steps.rsplit("```", 1)[1].strip()
+    parts = re.split(r"(?<=。)", prose) if lang == "zh-CN" else re.split(r"(?<=\.)\s+", prose)
+    return [part.strip() for part in parts if part.strip()]
+
+
 def without_code_spans(text):
     """Replace every CommonMark code span with NUL, keeping unmatched backtick runs as literal text."""
     output, position = [], 0
@@ -275,12 +282,29 @@ class CompareTests(unittest.TestCase):
     def test_next_steps_say_resume_keeps_records_and_files(self):
         statuses = ('"upstream_status": "superseded"', '"upstream_status": "removed"', '"upstream_status": "fetch_failed"')
         for lang, never_deletes in (("en", "never deletes files"), ("zh-CN", "不会删除任何文件")):
-            steps = check.TEXT[lang]["next_steps"]
-            self.assertIn("fetch_wikis.py --resume", steps)
-            self.assertIn(never_deletes, steps)
-            for status in statuses + ("`upstream_status`",):
-                self.assertIn(status, steps)
+            with self.subTest(lang=lang):
+                steps = check.TEXT[lang]["next_steps"]
+                self.assertIn("fetch_wikis.py --resume", steps)
+                # The guarantee is fetch_wikis.py's: its sentence names `--resume`, not `build_thumbnails.py --prune`,
+                # which does delete previews.
+                guarantee = [sentence for sentence in sentences(steps, lang) if never_deletes in sentence]
+                self.assertEqual(len(guarantee), 1, guarantee)
+                self.assertTrue(guarantee[0].startswith("`--resume` "), guarantee[0])
+                self.assertNotIn("build_thumbnails", guarantee[0])
+                for status in statuses + ("`upstream_status`",):
+                    self.assertIn(status, guarantee[0])
         self.assertNotIn("not deleted automatically", check.TEXT["en"]["next_steps"])
+
+    def test_next_steps_commit_everything_the_steps_write(self):
+        # The steps also write the previews and rebuild the catalog, which CI's tests/test_thumbnails.py and
+        # build_catalog.py --verify --check read; committing only the images and the manifest would turn CI red.
+        written = ["`assets/thumbs/`", "`data/thumbs.json`", "`data/sources/`", "`data/catalog.json`", "`data/catalog.js`", "`index.html`"]
+        for lang, commit in (("en", "commit"), ("zh-CN", "提交")):
+            with self.subTest(lang=lang):
+                last = sentences(check.TEXT[lang]["next_steps"], lang)[-1]
+                self.assertIn(commit, last)
+                for path in written:
+                    self.assertIn(path, last)
 
     def test_next_steps_rebuild_the_previews_before_the_catalog_and_run_every_test(self):
         # New or re-uploaded originals need grid previews, which the catalog build records and tests/test_thumbnails.py
