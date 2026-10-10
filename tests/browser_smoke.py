@@ -503,6 +503,23 @@ def viewer_record(page):
     }""")
 
 
+def check_card_tags(browser):
+    """A card's tag sets its family and kind apart with a dash, in both languages, though both labels may hold " / "
+    ("Public archives / reposts — Scan / reference"), and never runs them together as four peer labels."""
+    for lang in ("en", "zh-CN"):
+        page = new_page(browser)
+        navigate(page, f"archive.html?family=archives&lang={lang}")
+        page.wait_for_selector(".card")
+        tags = page.evaluate("""() => { const t = DEEMO_I18N.t, labels = new Set();
+            for (const family of ['artists', 'wikis', 'archives', 'legacy']) for (const kind of ['song_art', 'collection_cover', 'contact_sheet', 'illustration', 'reference'])
+                labels.add(`${t('family.' + family)} — ${t('kind.' + kind)}`);
+            return [...document.querySelectorAll('.card .tag')].map((tag) => [tag.textContent.split(' · ')[0], labels.has(tag.textContent.split(' · ')[0])]); }""")
+        assert tags and all(known for _, known in tags), (lang, [tag for tag, known in tags if not known][:3])
+        assert any(" / " in tag.split(" — ")[0] and " / " in tag.split(" — ")[1] for tag, _ in tags), (lang, tags[:3])
+        finish(page)
+    checks.append("card tags set the family and kind apart, in both languages")
+
+
 def check_viewer_provenance(browser):
     """The viewer states each record's composer and provenance class in the page language; a record a refetch kept
     with an upstream_status gets a localized line for it."""
@@ -871,6 +888,7 @@ with sync_playwright() as p:
     check_viewer_scroll_and_focus(browser)
     check_deep_link_filters(browser)
     check_viewer_provenance(browser)
+    check_card_tags(browser)
     check_previews(browser)
     check_attribution(browser)
     check_slideshow_controls(browser)

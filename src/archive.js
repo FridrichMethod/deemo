@@ -104,13 +104,14 @@
     if (i18n.lang !== i18n.defaultLang) params.set("lang", i18n.lang);
     try { history.replaceState(null, "", `${location.pathname}?${params}`); } catch { /* file:// remains usable */ }
   }
-  // Language-dependent parts of a card; card.children is [image button, title, size line, source line, tag].
+  // Language-dependent parts of a card; card.children is [image button, title, size line, source line, tag]. The family
+  // and kind labels, which may hold " / " themselves ("Public archives / reposts"), are set apart with a dash.
   function localizeCard(card, asset) {
     const [button, , , source, tag] = card.children;
     button.setAttribute("aria-label", t("card.view", {title: asset.title}));
     source.textContent = [asset.artist, sourceName(asset)].filter(Boolean).join(" · ");
     const records = asset.provenance.length > 1 ? [t("card.records", {count: asset.provenance.length})] : [];
-    tag.textContent = [`${familyName(asset.family)} / ${kindName(asset.kind)}`, ...records].join(" · ");
+    tag.textContent = [`${familyName(asset.family)} — ${kindName(asset.kind)}`, ...records].join(" · ");
   }
   function more() {
     const stop = Math.min(shown + 60, filtered.length);
