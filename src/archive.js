@@ -16,6 +16,12 @@
   const kindName = (kind) => i18n.has(`kind.${kind}`) ? t(`kind.${kind}`) : kind;
   const qualityName = (quality) => i18n.has(`quality.${quality}`) ? t(`quality.${quality}`) : quality;
   const statusName = (status) => i18n.has(`status.${status}`) ? t(`status.${status}`) : status;
+  // Archives records carry a class token (community_repost, official_website, …); every wiki upload carries the same
+  // lineage caveat as prose, labelled as the "wiki" class. Without a label the recorded value is shown as it is.
+  function provenanceClass(p) {
+    const token = p.family === "wikis" ? "wiki" : p.provenance;
+    return i18n.has(`provenance.class.${token}`) ? t(`provenance.class.${token}`) : p.provenance;
+  }
   const sourceName = (record) => i18n.sourceName(record.source_id, record.source_name);
   const images = catalog.assets.filter((asset) => asset.gallery);
   const fields = ["query", "family", "kind", "minimum", "sort"];
@@ -141,9 +147,11 @@
     if (p.song_titles?.length) block.append(element("p", t("provenance.song_titles", {titles: p.song_titles.join(" / ")})));
     if (p.notes) block.append(note("p", p.notes));
     if (p.quality) block.append(element("p", t("provenance.quality", {quality: qualityName(p.quality)})));
-    for (const key of ["variant_note", "layout_note", "delivery_note"]) {
+    if (typeof p.provenance === "string" && p.provenance) block.append(element("p", t("provenance.class", {label: provenanceClass(p)})));
+    for (const key of ["quality_notes", "variant_note", "layout_note", "delivery_note"]) {
       if (p[key]) block.append(note("p", p[key]));
     }
+    if (p.rights_holder) block.append(element("p", t("provenance.rights_holder", {holder: textValue(p.rights_holder)})));
     if (p.wiki_original_sha1_matches === false) block.append(element("p", t("provenance.checksum_mismatch")));
     if (p.mapping_status === "unmapped" || p.title_status === "unmapped" || p.title_status === "internal_key") block.append(element("p", t("provenance.unmapped")));
     if (p.download_url) block.append(sourceLink(t("provenance.remote"), p.download_url));

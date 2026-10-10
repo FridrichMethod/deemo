@@ -87,6 +87,14 @@ DEEMO_I18N.register({
     "provenance.quality": "File quality: {quality}",
     "quality.artist_original_upload": "artist's original upload",
     "quality.artist_public_platform_image": "image as served by the artist's public platform",
+    "provenance.class": "Provenance: {label}",
+    "provenance.class.community_repost": "unofficial community repost, not an author master",
+    "provenance.class.community_edit": "community edit of the artwork, not a production master",
+    "provenance.class.community_scan": "community scan of official packaging or print",
+    "provenance.class.official_website": "official website image",
+    "provenance.class.official_reference": "official reference document",
+    "provenance.class.wiki": "public community wiki upload; the original creator and upload lineage are not independently established",
+    "provenance.rights_holder": "Rights holder: {holder}",
     "provenance.tiny": "Old palette-quantized copy (tiny) · {width} × {height} · {size}"
   },
   "zh-CN": {
@@ -176,6 +184,14 @@ DEEMO_I18N.register({
     "provenance.quality": "文件质量：{quality}",
     "quality.artist_original_upload": "画师上传的原文件",
     "quality.artist_public_platform_image": "画师公开平台提供的图片",
+    "provenance.class": "来源性质：{label}",
+    "provenance.class.community_repost": "非官方社区转载，并非作者原档",
+    "provenance.class.community_edit": "社区修图版本，并非制作原档",
+    "provenance.class.community_scan": "社区扫描的官方包装或印刷品",
+    "provenance.class.official_website": "官方网站图片",
+    "provenance.class.official_reference": "官方参考文档",
+    "provenance.class.wiki": "公开社区 Wiki 上传；原作者与上传来源未经独立核实",
+    "provenance.rights_holder": "权利人：{holder}",
     "provenance.tiny": "旧量化版本（tiny） · {width} × {height} · {size}"
   }
 });

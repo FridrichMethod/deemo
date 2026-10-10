@@ -1,4 +1,5 @@
-"""Every catalog token the archive page labels (source status, file quality) has an English and a Chinese label."""
+"""Every catalog token the archive page labels (source status, file quality, provenance class) has an English and a
+Chinese label."""
 
 import json
 import re
@@ -31,6 +32,12 @@ class ArchiveLabelTests(unittest.TestCase):
 
     def test_file_qualities_are_labelled(self):
         self.assert_labelled("quality", {record["quality"] for record in self.records if record.get("quality")})
+
+    def test_provenance_classes_are_labelled(self):
+        # Archives records carry a class token; every wiki upload carries the same lineage caveat, labelled "wiki".
+        classes = {"wiki" if record["family"] == "wikis" else record["provenance"]
+                   for record in self.records if isinstance(record.get("provenance"), str)}
+        self.assert_labelled("provenance.class", classes)
 
 
 if __name__ == "__main__":
