@@ -1069,6 +1069,88 @@ canvas {
     }
 }
 
+/* Short portrait phones with the browser's bars showing (375 x 553, 360 x 568, 393 x 600; the page never scrolls,
+   so the bars never collapse): the reserves above left the artwork smaller than the text under it. A compact
+   label keeps the artwork the largest element: the language toggle takes the bottom row's 56px size, so the stage
+   starts higher; smaller type; of the credits only the artist's, as one run of text (as on landscape phones). Alice's
+   dedication, set smaller, gives the notes cell its height (about 88px), so the stage stays put between slides.
+   --chrome: 92px + 96px padding, the stage's 10px margin and the caption's 66.5px. */
+@media screen and (orientation: portrait) and (max-width: 480px) and (max-height: 600px) {
+    .deemo-view {
+        --notes-reserve: 0px;
+        --chrome: 264.5px;
+        padding-top: 92px;
+    }
+    .lang-toggle {
+        top: 28px;
+        right: 8px;
+        width: 40px;
+        height: 40px;
+        padding: 8px;
+        font-size: 13px;
+    }
+    .slideshow-container {
+        margin-bottom: 10px;
+    }
+    .dear-alice {
+        font-size: clamp(14px, 4.2vw, 16px);
+    }
+    .notes-eyebrow {
+        margin-bottom: .3em;
+        font-size: 10.5px;
+    }
+    .notes-title {
+        font-size: clamp(20px, 6vw, 24px);
+    }
+    .notes-title[data-length="long"] {
+        font-size: clamp(18px, 5.2vw, 21px);
+    }
+    .notes-title[data-length="longer"] {
+        font-size: clamp(16px, 4.6vw, 19px);
+    }
+    .notes-title[data-length="file"] {
+        font-size: 14px;
+    }
+    .notes-meta {
+        display: block;
+        margin-top: .4em;
+        font-size: 12px;
+    }
+    .notes-meta::before,
+    .notes-meta > :not(.notes-artist) {
+        display: none;
+    }
+    .notes-meta > .notes-artist {
+        display: inline;
+    }
+    .notes-meta dt {
+        margin-right: .8em;
+    }
+    .asset-caption {
+        padding-top: 6px;
+    }
+}
+
+/* The smallest (320 x 454, the first iPhone SE): the eyebrow and the caption's title and size line give way too,
+   and the caption keeps two lines. --chrome: 92px + 96px padding, 10px and the caption's 50px. */
+@media screen and (orientation: portrait) and (max-width: 480px) and (max-height: 500px) {
+    .deemo-view {
+        --chrome: 248px;
+    }
+    .dear-alice {
+        font-size: clamp(13px, 4vw, 14px);
+    }
+    .notes-eyebrow {
+        display: none;
+    }
+    .asset-heading {
+        display: none;
+    }
+    .asset-caption {
+        min-height: 3em;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .mySlides,
     .mySlides.is-current,
