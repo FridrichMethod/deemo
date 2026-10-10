@@ -12,20 +12,29 @@ concurrency:
   group: check-sources
   cancel-in-progress: false
 
+defaults:
+  run:
+    shell: bash
+
 env:
   SNAPSHOT_BRANCH: auto/wiki-source-check
+  BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
 jobs:
-  check:
+  discover:
+    # Installs packages from PyPI and parses wiki responses, so it gets a read-only token and keeps no
+    # credentials on disk. Only the new snapshot files leave this job, as an artifact.
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
     steps:
       - name: Checkout
-        # Credentials are kept so the job can push the snapshot branch below.
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Install fetch dependencies
         run: |
           python3 -m venv "$RUNNER_TEMP/venv"
@@ -49,27 +58,72 @@ jobs:
           import json, sys
           summary = json.load(open(sys.argv[1], encoding="utf-8"))
           print("changed=" + str(summary["changed"]).lower())
-          print("title=" + summary["title"].replace("\n", " "))
           PY
           cat "$RUNNER_TEMP/report.md" >> "$GITHUB_STEP_SUMMARY"
-      - name: Open or update the snapshot pull request
+      - name: Hand the new snapshot to the publishing job
         if: steps.compare.outputs.changed == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: wiki-snapshot
+          path: |
+            data/sources/wiki-discovery.json
+            data/sources/wiki-song-index.json
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    # The only job that can write. It runs no third-party code: it treats the artifact as data, rebuilds
+    # the report from it with the standard library, commits the two snapshot files and opens or updates
+    # the pull request. The token reaches git only for the push and is never written to .git/config.
+    needs: discover
+    if: needs.discover.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            data/sources
+            scripts
+      - name: Download the new snapshot
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: wiki-snapshot
+          path: ${{ runner.temp }}/snapshot
+      - name: Rebuild the report from the new snapshot
+        run: |
+          python3 -I -c 'import json, sys; json.load(open(sys.argv[1], encoding="utf-8"))' "$RUNNER_TEMP/snapshot/wiki-song-index.json"
+          python3 -I scripts/check_sources.py \
+            --baseline data/sources/wiki-discovery.json \
+            --current "$RUNNER_TEMP/snapshot/wiki-discovery.json" \
+            --manifest data/sources/wikis.json \
+            --report "$RUNNER_TEMP/report.md" \
+            --summary "$RUNNER_TEMP/summary.json"
+      - name: Open or update the snapshot pull request
         env:
           GH_TOKEN: ${{ github.token }}
-          TITLE: ${{ steps.compare.outputs.title }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          title="$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["title"])' "$RUNNER_TEMP/summary.json")"
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "$BOT_EMAIL"
           git checkout -B "$SNAPSHOT_BRANCH"
-          git add data/sources/wiki-discovery.json data/sources/wiki-song-index.json
-          git commit -m "chore: refresh wiki discovery snapshot" -m "$TITLE" -m "Metadata only; no images downloaded. $RUN_URL"
-          git push --force origin "$SNAPSHOT_BRANCH"
+          cp -- "$RUNNER_TEMP/snapshot/wiki-discovery.json" "$RUNNER_TEMP/snapshot/wiki-song-index.json" data/sources/
+          git add -- data/sources/wiki-discovery.json data/sources/wiki-song-index.json
+          git commit -m "chore: refresh wiki discovery snapshot" -m "$title" -m "Metadata only; no images downloaded. $RUN_URL"
+          GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="http.https://github.com/.extraheader" \
+            GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+            git push --force origin "HEAD:refs/heads/$SNAPSHOT_BRANCH"
           printf '\n---\nSource · 来源: %s\n' "$RUN_URL" >> "$RUNNER_TEMP/report.md"
           number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open --json number --jq '.[0].number')"
           if [ "${number:-}" != "" ]; then
-            gh pr edit "$number" --title "$TITLE" --body-file "$RUNNER_TEMP/report.md"
+            gh pr edit "$number" --title "$title" --body-file "$RUNNER_TEMP/report.md"
             gh pr comment "$number" --body "Snapshot refreshed by a new check run · 快照已由新的检查运行刷新: $RUN_URL"
           else
-            gh pr create --base main --head "$SNAPSHOT_BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/report.md"
+            gh pr create --base main --head "$SNAPSHOT_BRANCH" --title "$title" --body-file "$RUNNER_TEMP/report.md"
           fi
