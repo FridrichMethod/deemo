@@ -24,6 +24,21 @@ licenses/:
     (licenses/punycode-MIT.txt)
   Pace 1.0.0, Copyright (c) 2013 HubSpot, Inc. (licenses/pace-MIT.txt)
 
+The upstream snapshot also shipped two commercial fonts. Their licences do
+not allow redistribution, so in 2026 they were removed from the repository's
+current files and from the website:
+  Copperplate Gothic Light (src/COPRGTL.ttf): data copyright URW Software &
+    Type GmbH, additional data copyright The Font Bureau, Inc., Copyright
+    1994 Microsoft Corporation; all rights reserved.
+  RocknRoll Typo bold (src/RocknRoll_Typo_bold.ttf): Copyright (c) 2010 by
+    Otto Maurer; all rights reserved. The licence embedded in the font says
+    it shall not be "made available in any other manner to any third party".
+The slideshow now uses these two faces only when a visitor already has them
+installed. Fantique Four (assets/site/fonts/Fantique-Four.ttf), by Steve Tune
+of Digital Empires (Copyright Digital Empires Inc 1997), is still included:
+the licence embedded in the font calls it shareware/donationware and says
+"The font is complete as is and you may use it".
+
 Inherited site media are organized under assets/site/, and both versions
 of the inherited artwork are preserved under assets/legacy/. Attribution
 and license locations are indexed in licenses/README.md; relocation does

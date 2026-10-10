@@ -100,14 +100,6 @@
       "git_blob": "8d1893eebfef0bbb71c5de8cb23d60459ecd786e"
     },
     {
-      "original_path": "src/COPRGTL.ttf",
-      "path": "assets/site/fonts/COPRGTL.ttf",
-      "category": "site_font",
-      "bytes": 62716,
-      "sha256": "607520e814ebd77845cfb7824d0afd47ffff9ea4f335c8f2db356d3c6396a99d",
-      "git_blob": "a0edd5c6304955b96bf42320aeed009264b00d97"
-    },
-    {
       "original_path": "src/Capture.PNG",
       "path": "assets/site/images/upstream-preview-upper.png",
       "category": "historical_preview",
@@ -138,14 +130,6 @@
       "bytes": 3289519,
       "sha256": "5deaf86e8bc1c8b69bbef316078c2dc3f73221736a8fe841c02bbcfec500a031",
       "git_blob": "429f900c393b143f7f68bfbdd92df9c3293dc122"
-    },
-    {
-      "original_path": "src/RocknRoll_Typo_bold.ttf",
-      "path": "assets/site/fonts/RocknRoll_Typo_bold.ttf",
-      "category": "site_font",
-      "bytes": 119992,
-      "sha256": "aa9d7ef8be96cd6f2c27a7cf08c44d1b55e4dec4c7a03d7fb73cbec591ee610f",
-      "git_blob": "4a8bd51a87baa77c7a0812e10926669fd37fa7a9"
     },
     {
       "original_path": "src/bg.png",

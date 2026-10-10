@@ -71,7 +71,7 @@ templates/slideshow.html           slideshow template (generates the root index.
 scripts/                           fetching, building and verification; legacy/ holds historical experiment scripts
 data/sources/                      per-source manifests, candidates and song-title mapping
 data/catalog.{json,js}              full provenance records and the offline browsing catalog
-data/legacy-inventory.json          migration paths, Git blobs and SHA-256 of 670 legacy files
+data/legacy-inventory.json          migration paths, Git blobs and SHA-256 of 668 legacy files
 licenses/                          third-party license texts and asset attribution index
 *.zh-CN.md                         Simplified Chinese versions of README, docs/ and other documents; the same-name .md is the default English version
 LICENSE / NOTICE                   standard software license and attribution entry points

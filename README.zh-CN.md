@@ -71,7 +71,7 @@ templates/slideshow.html           幻灯片模板（生成根 index.html）
 scripts/                           抓取、构建与校验；legacy/ 为历史实验脚本
 data/sources/                      各来源 manifest、候选与曲名映射
 data/catalog.{json,js}              完整来源记录及离线浏览目录
-data/legacy-inventory.json          670 个旧文件的迁移路径、Git blob 和 SHA-256
+data/legacy-inventory.json          668 个旧文件的迁移路径、Git blob 和 SHA-256
 licenses/                          第三方许可文本及素材归属索引
 *.zh-CN.md                         README、docs/ 等文档的简体中文版；同名 .md 为默认英文版
 LICENSE / NOTICE                   标准软件许可证与署名入口

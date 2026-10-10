@@ -17,9 +17,17 @@ ROOT_ICONS = {
     "android-chrome-192x192.png", "apple-touch-icon.png", "favicon-16x16.png",
     "favicon-32x32.png", "favicon.ico", "mstile-150x150.png", "safari-pinned-tab.svg",
 }
+# Inherited from upstream but deliberately not redistributed: commercial fonts whose licences forbid
+# it (see NOTICE). They map to no destination and must not reappear at either path.
+WITHDRAWN = {
+    "src/COPRGTL.ttf": "assets/site/fonts/COPRGTL.ttf",
+    "src/RocknRoll_Typo_bold.ttf": "assets/site/fonts/RocknRoll_Typo_bold.ttf",
+}
 
 
 def destination(original):
+    if original in WITHDRAWN:
+        return None
     path = Path(original)
     if original.startswith("trans/"):
         return "assets/legacy/" + original, "legacy_original"
@@ -88,6 +96,9 @@ def verify(inventory):
             raise ValueError(f"Inventory hash mismatch: {relative}")
         if row["original_path"] != row["path"] and (ROOT / row["original_path"]).exists():
             raise ValueError(f"Old path still exists: {row['original_path']}")
+    for original, former in WITHDRAWN.items():
+        if any(row["original_path"] == original for row in inventory["files"]) or (ROOT / original).exists() or (ROOT / former).exists():
+            raise ValueError(f"Withdrawn file is back in the repository: {original}")
     print(f"Verified {len(seen)} inherited files: bytes, hashes, paths and case-insensitive uniqueness.")
 
 
