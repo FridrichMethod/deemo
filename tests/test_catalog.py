@@ -274,14 +274,35 @@ class CatalogTests(unittest.TestCase):
             build.validate_asset(self.root, {**self.asset, "page_url": "javascript:alert(1)"})
 
     def test_html_escapes_remote_metadata(self):
-        (self.root / "templates").mkdir()
-        (self.root / "templates/slideshow.html").write_text("<main>@python-work-area</main>")
-        asset = copy.deepcopy(self.asset)
-        asset.update(gallery=True, url="assets/public/sample.png", source_name="Artist", title='A & B "><script>alert(1)</script>')
+        # Scraped titles and names go into double-quoted attributes: none may end the attribute or the tag, add an
+        # attribute, or lose a character (a raw CR would be read back as LF by an HTML parser).
+        hostile = 'A & B "><script>alert(1)</script>\' onerror=\'alert(2)\r\nline 2\tend <b>&amp;'
+        record = {**self.asset, "title": hostile, "composer": f"Composer {hostile}", "artist": f"Artist {hostile}",
+                  "collection": f"Pack {hostile}", "song_titles": [f"Song {hostile}"]}
+        asset = {**copy.deepcopy(record), "family": "artists", "gallery": True, "url": "assets/public/artists/sample.png",
+                 "source_name": f"Source {hostile}", "provenance": [record]}
+        self.template()
         rendered = build.render_slideshow(self.root, {"assets": [asset]})
-        self.assertNotIn("<script>", rendered)
-        self.assertIn("&lt;script&gt;", rendered)
-        self.assertIn("A &amp; B", rendered)
+        images = ImgTags(rendered).images
+        self.assertEqual(len(images), 1)
+        self.assertEqual([name for name, _ in images[0]], [
+            "class", "data-src", "data-id", "data-title", "data-source", "data-source-id", "data-page", "data-size",
+            "data-kind", "data-songs", "data-composer", "data-artist", "data-collection", "alt",
+        ])
+        values = dict(images[0])
+        self.assertEqual(values["data-title"], hostile)
+        self.assertEqual(values["alt"], hostile)
+        self.assertEqual(values["data-source"], f"Source {hostile}")
+        self.assertEqual(values["data-songs"], f"Song {hostile}")
+        self.assertEqual(values["data-composer"], f"Composer {hostile}")
+        self.assertEqual(values["data-artist"], f"Artist {hostile}")
+        self.assertEqual(values["data-collection"], f"Pack {hostile}")
+        self.assertNotIn("<script", rendered)
+        self.assertNotIn("\r", rendered)
+        self.assertNotIn("\t", rendered)
+        self.assertEqual(len(rendered.splitlines()), 3, "the slide must stay on one line")
+        # attr() holds in a single-quoted attribute too.
+        self.assertEqual(ImgTags(f"<img alt='{build.attr(hostile)}'>").images, [[("alt", hostile)]])
 
     def test_attributes_escape_control_whitespace(self):
         value = "a\rb\tc\nd"
