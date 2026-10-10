@@ -5,13 +5,15 @@ import hashlib
 import importlib.util
 import io
 import json
+import re
 import shutil
+import struct
 import tempfile
 import unittest
 from pathlib import Path
 from urllib.parse import quote
 
-from PIL import Image, ImageCms
+from PIL import Image, ImageCms, ImageStat
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -46,6 +48,21 @@ def pattern(size, mode):
 SRGB = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
 
 
+def grey_profile(gamma):
+    """A minimal ICC v2 greyscale display profile (a gamma curve and a D50 white point); Pillow can only create RGB,
+    Lab and XYZ profiles."""
+    def xyz(x, y, z):
+        return b"XYZ " + bytes(4) + struct.pack(">3i", *(round(value * 65536) for value in (x, y, z)))
+    tags = [(b"kTRC", b"curv" + bytes(4) + struct.pack(">IH", 1, round(gamma * 256))), (b"wtpt", xyz(0.9642, 1.0, 0.8249))]
+    offset, table, body = 128 + 4 + 12 * len(tags), b"", b""
+    for signature, data in tags:
+        table += signature + struct.pack(">II", offset + len(body), len(data))
+        body += data + bytes(-len(data) % 4)
+    header = (struct.pack(">I", offset + len(body)) + bytes(4) + bytes([2, 0x10, 0, 0]) + b"mntrGRAYXYZ " + bytes(12)
+              + b"acsp" + bytes(28) + xyz(0.9642, 1.0, 0.8249)[8:] + bytes(48))
+    return header + struct.pack(">I", len(tags)) + table + body
+
+
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -78,16 +95,21 @@ class Fixture(unittest.TestCase):
         })
 
     def add_image(self, name, size, mode, format_name):
-        buffer = io.BytesIO()
         image = pattern(size, mode)
         if format_name == "JPEG":
             # EXIF must not reach the preview; the colour profile must, so colours match the original.
             exif = Image.Exif()
             exif[0x010E] = "fixture description"
-            image.save(buffer, format_name, quality=90, exif=exif, icc_profile=SRGB)
+            self.add_encoded(name, image, format_name, quality=90, exif=exif, icc_profile=SRGB)
         else:
-            image.save(buffer, format_name)
-        self.add_file(name, buffer.getvalue(), {"width": size[0], "height": size[1], "format": format_name})
+            self.add_encoded(name, image, format_name)
+
+    def add_encoded(self, name, image, format_name, **options):
+        """Add any image as an original; like the fetchers, the record holds the stored (unrotated) size."""
+        buffer = io.BytesIO()
+        image.save(buffer, format_name, **options)
+        self.add_file(name, buffer.getvalue(), {"width": image.width, "height": image.height, "format": format_name})
+        return self.records[-1]["path"]
 
     def write_manifest(self, records=None):
         content = {"sources": [{"id": "artist", "name": "Artist", "url": "https://example.com"}], "assets": records if records is not None else self.records}
@@ -171,6 +193,69 @@ class BuildTests(Fixture):
             thumbs.build(self.root)
         self.assertEqual(thumbs.build(self.root, rebuild=True)["rendered"], 3)
         self.assertEqual(thumbs.problems(self.root), [])
+
+
+class ColourModeTests(Fixture):
+    """Originals in uncommon modes or with non-RGB colour profiles are previewed faithfully, or refused."""
+
+    def render(self, name, image, format_name="PNG", **options):
+        data, _ = thumbs.render(self.root, {"path": self.add_encoded(name, image, format_name, **options)})
+        preview = Image.open(io.BytesIO(data))
+        preview.load()
+        return preview
+
+    def test_sixteen_bit_greyscale_keeps_its_tones(self):
+        tones = Image.linear_gradient("L").resize((800, 600))
+        # 16-bit PNGs open in mode I;16; a plain conversion to RGB would clip them to near white.
+        preview = self.render("deep.png", tones.convert("I").point(lambda value: value * 257).convert("I;16"))
+        self.assertEqual((preview.mode, preview.size), ("RGB", (480, 360)))
+        self.assertAlmostEqual(ImageStat.Stat(preview).mean[0], ImageStat.Stat(tones).mean[0], delta=2)
+        low, high = preview.getextrema()[0]
+        self.assertLess(low, 10)
+        self.assertGreater(high, 245)
+
+    def test_greyscale_profile_is_applied_not_embedded(self):
+        # A linear (gamma 1.0) greyscale profile: mid-grey 128 is much lighter in sRGB, so applying it is visible.
+        flat = Image.new("L", (800, 600), 128)
+        expected = ImageCms.profileToProfile(flat, ImageCms.ImageCmsProfile(io.BytesIO(grey_profile(1.0))),
+                                             ImageCms.createProfile("sRGB"), outputMode="RGB").getpixel((0, 0))
+        self.assertGreater(expected[0], 170)
+        for name, mode, format_name in (("grey.jpg", "L", "JPEG"), ("grey-cutout.png", "LA", "PNG")):
+            with self.subTest(mode=mode):
+                image = flat.convert(mode)
+                if mode == "LA":
+                    alpha = Image.new("L", flat.size, 255)
+                    alpha.paste(0, (0, 0, 200, 600))
+                    image.putalpha(alpha)
+                preview = self.render(name, image, format_name, icc_profile=grey_profile(1.0))
+                self.assertNotIn("icc_profile", preview.info)
+                self.assertEqual(preview.mode, "RGBA" if mode == "LA" else "RGB")
+                pixel = preview.getpixel((300, 180))
+                for channel in pixel[:3]:
+                    self.assertAlmostEqual(channel, expected[0], delta=3)
+                if mode == "LA":
+                    self.assertEqual(pixel[3], 255)
+                    self.assertEqual(preview.getpixel((5, 180))[3], 0)
+
+    def test_previews_that_would_change_the_colours_are_refused(self):
+        flat = Image.new("L", (800, 600), 128)
+        lab = ImageCms.ImageCmsProfile(ImageCms.createProfile("LAB")).tobytes()
+        deep = flat.convert("I").point(lambda value: value * 257).convert("I;16")
+        cases = [
+            ("lab.png", flat, "PNG", {"icc_profile": lab}, "Lab ICC profile on a L image"),
+            ("rgb-on-grey.png", flat, "PNG", {"icc_profile": SRGB}, "RGB ICC profile on a L image"),
+            ("grey-on-rgb.png", flat.convert("RGB"), "PNG", {"icc_profile": grey_profile(2.2)}, "GRAY ICC profile on a RGB image"),
+            ("broken-profile.png", flat, "PNG", {"icc_profile": b"not a profile" * 10}, "unreadable ICC profile"),
+            ("print.jpg", Image.new("CMYK", (800, 600), (0, 255, 255, 0)), "JPEG", {}, "unsupported image mode CMYK"),
+            ("deep-cutout.png", deep, "PNG", {"transparency": 0}, "unsupported image mode I;16"),
+        ]
+        for name, image, format_name, options, message in cases:
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, re.escape(message)):
+                self.render(name, image, format_name, **options)
+        # The build stops too, instead of writing a preview with wrong colours.
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "Cannot preview"):
+            thumbs.build(self.root)
 
 
 class CheckTests(Fixture):

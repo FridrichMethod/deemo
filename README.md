@@ -119,7 +119,7 @@ Offline verification and browser acceptance checks:
 
 ## Grid previews
 
-The gallery grid shows small derived previews instead of the full originals, so the first view loads well under 1 MB of images instead of tens of megabytes. `scripts/build_thumbnails.py` writes one WebP preview for each gallery image whose long edge exceeds 480 px (long edge 480 px, quality 75, no EXIF or XMP; an embedded ICC colour profile is kept) to `assets/thumbs/`, named by the first 16 hex digits of the original's SHA-256, and lists them in `data/thumbs.json`; `scripts/build_catalog.py` then adds each preview to its catalog entry as `thumb`. The previews are display copies, not archive files: the originals stay byte-identical, and the viewer, the download link and the link to the original file always serve the original. Smaller images and the PDFs get no preview, and a card falls back to the original if its preview fails to load. The previews (about 33 MB) are published with the site and count toward the 950 MB Pages budget.
+The gallery grid shows small derived previews instead of the full originals, so the first view loads well under 1 MB of images instead of tens of megabytes. `scripts/build_thumbnails.py` writes one WebP preview for each gallery image whose long edge exceeds 480 px (long edge 480 px, quality 75, no EXIF or XMP; an embedded RGB colour profile is kept, a greyscale one is converted to sRGB, and 16-bit greyscale is scaled to 8 bits) to `assets/thumbs/`, named by the first 16 hex digits of the original's SHA-256, and lists them in `data/thumbs.json`; `scripts/build_catalog.py` then adds each preview to its catalog entry as `thumb`. The previews are display copies, not archive files: the originals stay byte-identical, and the viewer, the download link and the link to the original file always serve the original. Smaller images and the PDFs get no preview, and a card falls back to the original if its preview fails to load. The previews (about 33 MB) are published with the site and count toward the 950 MB Pages budget.
 
 After originals are added or removed, rebuild the previews before the catalog, then check them:
 
@@ -130,7 +130,7 @@ After originals are added or removed, rebuild the previews before the catalog, t
 .venv/bin/python -I tests/test_thumbnails.py
 ```
 
-With the Pillow version pinned in `requirements.txt`, a rebuild writes byte-identical files, and `--verify` re-encodes every preview from its original to confirm it. `--check`, which `tests/test_thumbnails.py` also runs, confirms that every larger gallery image has a preview and that each preview exists, decodes, and has the expected size and hash, with no orphaned files. `--prune` deletes previews whose original has left the gallery. The script will not mix encoder settings or Pillow versions; `--rebuild` re-encodes every preview.
+With the Pillow version pinned in `requirements.txt`, a rebuild writes byte-identical files, and `--verify` re-encodes every preview from its original to confirm it. `--check`, which `tests/test_thumbnails.py` also runs, confirms that every larger gallery image has a preview and that each preview exists, decodes, and has the expected size and hash, with no orphaned files. `--prune` deletes previews whose original has left the gallery. The script will not mix encoder settings or Pillow versions; `--rebuild` re-encodes every preview. It stops with an error on an original whose colour mode or profile it cannot preview faithfully, such as CMYK, rather than write a preview with wrong colours.
 
 ## Attribution
 

@@ -19,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import PIL
-from PIL import Image, ImageOps, features
+from PIL import Image, ImageCms, ImageOps, features
 
 ROOT = Path(__file__).resolve().parents[1]
 THUMB_DIR = "assets/thumbs"
@@ -34,6 +34,11 @@ QUALITY = 75
 METHOD = 6  # libwebp's slowest, smallest setting; deterministic like the others
 NAME_DIGITS = 16
 VERSION_KEYS = ("pillow", "libwebp")
+# Modes whose plain conversion to 8-bit RGB(A) keeps their meaning. 16-bit greyscale is scaled down first; anything else
+# (CMYK, 32-bit integer or float, YCbCr, ...) is refused rather than previewed with wrong colours.
+EIGHT_BIT_MODES = {"1", "L", "LA", "P", "PA", "RGB", "RGBA"}
+GREY_MODES = {"1", "L", "LA"}
+SIXTEEN_BIT_GREY = {"I;16", "I;16L", "I;16B", "I;16N"}
 DESCRIPTION = ("Derived WebP previews for the archive grid only; they are not archive files. "
                "Originals are unchanged and listed with their hashes in data/catalog.json.")
 
@@ -90,14 +95,51 @@ def originals(root: Path) -> dict[str, dict]:
     return dict(sorted(wanted.items()))
 
 
+def eight_bit(image: Image.Image, path: str) -> Image.Image:
+    """The image in a mode that converts to RGB(A) exactly. 16-bit greyscale is scaled to 8 bits as browsers show it;
+    a plain conversion would clip it to near white."""
+    if image.mode in SIXTEEN_BIT_GREY and "transparency" not in image.info:
+        return image.convert("I").point(lambda value: value / 257 + 0.5).convert("L")
+    if image.mode not in EIGHT_BIT_MODES:
+        raise ValueError(f"Cannot preview {path}: unsupported image mode {image.mode}")
+    return image
+
+
+def colour_managed(image: Image.Image, path: str) -> tuple[Image.Image, bytes | None]:
+    """The image and the ICC profile to embed in its preview. An RGB profile on a colour image is kept, so the preview's
+    colours match the original's. A greyscale profile on a greyscale image is applied instead, giving untagged sRGB
+    pixels, which browsers show as sRGB. Any other profile is refused: an RGB preview cannot carry it."""
+    icc = image.info.get("icc_profile")
+    if not icc:
+        return image, None
+    try:
+        profile = ImageCms.ImageCmsProfile(io.BytesIO(icc))
+    except (OSError, ImageCms.PyCMSError) as error:
+        raise ValueError(f"Cannot preview {path}: unreadable ICC profile ({error})") from error
+    space = profile.profile.xcolor_space.strip()
+    if space == "RGB" and image.mode not in GREY_MODES:
+        return image, icc
+    if space != "GRAY" or image.mode not in GREY_MODES:
+        raise ValueError(f"Cannot preview {path}: {space} ICC profile on a {image.mode} image")
+    alpha = image.mode == "LA" or "transparency" in image.info
+    grey = image.convert("LA" if alpha else "L")
+    try:
+        # A fresh sRGB profile on every call, so worker threads never share a LittleCMS profile handle.
+        rgb = ImageCms.profileToProfile(grey.convert("L"), profile, ImageCms.createProfile("sRGB"), outputMode="RGB")
+    except ImageCms.PyCMSError as error:
+        raise ValueError(f"Cannot preview {path}: its greyscale ICC profile cannot be applied ({error})") from error
+    if alpha:
+        rgb.putalpha(grey.getchannel("A"))
+    return rgb, None
+
+
 def render(root: Path, original: dict) -> tuple[bytes, tuple[int, int]]:
-    """Downscale one original to a WebP preview. No EXIF or XMP is written; an embedded ICC profile is kept so
-    the preview's colours match the original's."""
+    """Downscale one original to a WebP preview. No EXIF or XMP is written; colour_managed() decides the ICC profile."""
     with Image.open(build_catalog.safe_path(root, original["path"])) as image:
         image.load()
         # Browsers show originals upright, so the preview applies the EXIF orientation too.
         ImageOps.exif_transpose(image, in_place=True)
-        icc_profile = image.info.get("icc_profile")
+        image, icc_profile = colour_managed(eight_bit(image, original["path"]), original["path"])
         size = thumb_size(*image.size)
         if size is None:
             raise ValueError(f"Original is not larger than {LONG_EDGE} px: {original['path']}")
