@@ -15,7 +15,7 @@ MESSAGES = ROOT / "src/i18n/slideshow.js"
 REGISTER = re.compile(r"DEEMO_I18N\.register\((\{.*\})\);\s*$", re.DOTALL)
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
 # Icon-only controls, found by their own or their container's class: whether each is a toggle (aria-pressed).
-ICON_BUTTONS = {"prev": False, "next": False}
+ICON_BUTTONS = {"prev": False, "next": False, "photo": False, "random": True, "iplayer": True, "save": False, "close": False}
 
 
 class Node:
@@ -102,6 +102,17 @@ class SlideshowTemplateTests(unittest.TestCase):
                 self.assertEqual(node.attrs.get("aria-label"), self.messages["en"][key])
                 if toggle:
                     self.assertIn(node.attrs.get("aria-pressed"), ("true", "false"), "Toggles expose their state with aria-pressed")
+
+    def test_no_javascript_urls(self):
+        for node in self.nodes:
+            with self.subTest(tag=node.tag, href=node.attrs.get("href")):
+                self.assertFalse((node.attrs.get("href") or "").strip().lower().startswith("javascript:"))
+
+    def test_template_images_have_alt_text(self):
+        for node in self.nodes:
+            if node.tag == "img":
+                with self.subTest(src=node.attrs.get("src")):
+                    self.assertIn("alt", node.attrs, "Decorative icons take alt=\"\"")
 
     def test_screenshot_overlay_does_not_live_in_the_url(self):
         self.assertNotIn(":target", self.css, "The overlay must not depend on the URL fragment")

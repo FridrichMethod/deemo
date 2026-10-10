@@ -90,36 +90,36 @@ https://github.com/FridrichMethod/deemo
         <div class="signature">DEEMO 1 · <a href="https://github.com/FridrichMethod" target="_blank" rel="noopener noreferrer">FridrichMethod</a></div>
 
         <div class="photo bt">
-            <a href="javascript:screenshot();">
-                <div class="pop"><img src="assets/site/icons/camera.svg" class="css-1bgbwga" data-reactid="50"></div>
-            </a>
+            <button type="button" aria-label="Take a screenshot" data-i18n-attr="aria-label:slideshow.screenshot.take" onclick="screenshot()">
+                <span class="pop"><img src="assets/site/icons/camera.svg" alt="" class="css-1bgbwga" data-reactid="50"></span>
+            </button>
         </div>
 
         <div class="iplayer bt">
-            <div class="speaker" id="speaker"></div>
-            <img src="assets/site/icons/pause.svg" style="width:0;height:0;">
+            <button type="button" class="speaker" id="speaker" aria-label="Background music" aria-pressed="false" data-i18n-attr="aria-label:slideshow.music.label"></button>
+            <img src="assets/site/icons/pause.svg" alt="" style="width:0;height:0;">
         </div>
 
         <div class="random bt">
-            <a href="javascript:randomClick();">
-                <div class="pop"><img src="assets/site/icons/sand-clock.svg" class="sand-clock" data-reactid="50"></div>
-            </a>
+            <button type="button" aria-label="Shuffle autoplay" aria-pressed="true" data-i18n-attr="aria-label:slideshow.autoplay.label" onclick="randomClick()">
+                <span class="pop"><img src="assets/site/icons/sand-clock.svg" alt="" class="sand-clock" data-reactid="50"></span>
+            </button>
         </div>
 
         <div class="github bt">
             <a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository" data-i18n-attr="aria-label:slideshow.github.label">
-                <div class="pop"><img src="assets/site/icons/github.svg" class="css-1bgbwga" data-reactid="50"></div>
+                <div class="pop"><img src="assets/site/icons/github.svg" alt="" class="css-1bgbwga" data-reactid="50"></div>
             </a>
         </div>
 
         <div class="archive-link bt"><a href="archive.html" data-lang-link aria-label="Browse the Artwork Archive" data-i18n="slideshow.archive.text" data-i18n-attr="aria-label:slideshow.archive.label">Gallery</a></div>
 
         <!-- Opened by screenshot() with the is-open class, not the URL hash, so a reload, Back or a shared link never reopens it empty. -->
-        <div id="screenshot" class="overlay" role="dialog" aria-modal="true" aria-label="Screenshot" data-i18n-attr="aria-label:slideshow.screenshot.dialog">
+        <div id="screenshot" class="overlay" role="dialog" aria-modal="true" aria-label="Screenshot preview" data-i18n-attr="aria-label:slideshow.screenshot.dialog">
             <div class="save bt">
-                <a href="javascript:downloadCanvas();">
-                    <div class="pop"><img src="assets/site/icons/save.svg" class="css-1bgbwga" data-reactid="50"></div>
-                </a>
+                <button type="button" aria-label="Save screenshot" data-i18n-attr="aria-label:slideshow.screenshot.save" onclick="downloadCanvas()">
+                    <span class="pop"><img src="assets/site/icons/save.svg" alt="" class="css-1bgbwga" data-reactid="50"></span>
+                </button>
             </div>
             <div class="popup">
                 <button type="button" class="close" aria-label="Close screenshot" data-i18n-attr="aria-label:slideshow.screenshot.close" onclick="closeScreenshot()">&times;</button>
@@ -214,7 +214,7 @@ https://github.com/FridrichMethod/deemo
             setDedication(false);
             try {
                 int = window.clearInterval(int);
-                document.getElementsByClassName("sand-clock")[0].style.transform = "rotate(0deg)";
+                showAutoplay(false);
                 randomFlag = 1;
             } catch (err) {}
         }
@@ -423,17 +423,22 @@ https://github.com/FridrichMethod/deemo
 
         var randomFlag = 0;
 
+        // The sand clock is pressed while autoplay runs, which also tilts it (see src/slideshow.css).
+        function showAutoplay(on) {
+            document.querySelector(".random button").setAttribute("aria-pressed", String(on));
+        }
+
         function randomClick() {
             if (randomFlag == 1) {
                 int = self.setInterval(autoplayTick, 6000);
-                document.getElementsByClassName("sand-clock")[0].style.transform = "rotate(20deg)";
+                showAutoplay(true);
                 // Resuming autoplay replays the opening: the dedication first, the notes on the next beat.
                 setDedication(true);
                 randomSlide();
                 randomFlag = 0;
             } else {
                 int = window.clearInterval(int);
-                document.getElementsByClassName("sand-clock")[0].style.transform = "rotate(0deg)";
+                showAutoplay(false);
                 setDedication(false);
                 randomFlag = 1;
             }
@@ -454,10 +459,10 @@ https://github.com/FridrichMethod/deemo
                 if (child !== screenshotOverlay) child.inert = open;
             });
             if (open) {
-                screenshotOverlay.querySelector(".save a").focus();
+                screenshotOverlay.querySelector(".save button").focus();
             } else {
                 screenshotContent.replaceChildren();
-                document.querySelector(".photo a").focus();
+                document.querySelector(".photo button").focus();
             }
         }
 
@@ -548,7 +553,6 @@ https://github.com/FridrichMethod/deemo
                     getaudio.load();
                     getaudio.play();
                     audiostatus = 'on';
-                    return false;
                 } else if (audiostatus == 'on') {
                     addClass(speaker, 'speakerplay');
                     getaudio.play()
@@ -558,10 +562,12 @@ https://github.com/FridrichMethod/deemo
                 removeClass(speaker, 'speakerplay');
                 audiostatus = 'on';
             }
+            speaker.setAttribute("aria-pressed", String(hasClass(speaker, "speakerplay")));
         });
 
         document.getElementById("player").addEventListener("ended", function() {
             removeClass(speaker, 'speakerplay');
+            speaker.setAttribute("aria-pressed", "false");
             audiostatus = 'off';
         });
 

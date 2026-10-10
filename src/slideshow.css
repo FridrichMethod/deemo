@@ -575,6 +575,22 @@ canvas {
     height: 100%
 }
 
+/* The round controls that act on the page are buttons; they fill their disc like the links do. */
+.bt > button {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
 .bt {
     position: fixed;
     bottom: 0;
@@ -637,12 +653,12 @@ canvas {
     outline-offset: 3px;
 }
 
-/* Draw the keyboard ring round the disc, like .lang-toggle, not round the link box inside it. */
+/* Draw the keyboard ring round the disc, like .lang-toggle, not round the link or button box inside it. */
 @supports selector(:has(a)) {
-    .bt > a:focus-visible {
+    .bt > :is(a, button):focus-visible {
         outline: none;
     }
-    .bt:has(> a:focus-visible) {
+    .bt:has(> :is(a, button):focus-visible) {
         outline: 3px solid #9c8656;
         outline-offset: 3px;
     }
@@ -692,6 +708,11 @@ canvas {
     -webkit-transition-timing-function: linear; /* Safari */
     transition: transform 0.3s;
     transition-timing-function: linear;
+}
+
+/* Upright while autoplay is paused (randomClick() and plusSlides() keep aria-pressed in step). */
+.random [aria-pressed="false"] img {
+    transform: none;
 }
 
 /* Give the player a height & width of 0. Otherwise the player is visible on mobile devices (tested on iPhone 5). */
