@@ -59,6 +59,8 @@ MIN_COVER_EDGE = 100
 ILLEGAL_TITLE = re.compile(r"[#<>\[\]{}|]")
 # Optional record fields describing how a carried-forward record relates to the current upstream file.
 UPSTREAM_FIELDS = ("upstream_status", "superseded_by")
+# Optional candidate fields a record copies at its end, in this order (then delivery_note), on download and re-run.
+SONG_INDEX_FIELDS = ("composer", "composer_source", "collection_aliases")
 
 
 def now():
@@ -187,6 +189,39 @@ def with_collection_aliases(candidates, songs):
         aliases = sorted({alias for name in own for alias in spellings.get(normalized(name) or name, ())} - own)
         rest = {key: value for key, value in candidate.items() if key != "collection_aliases"}
         result.append({**rest, "collection_aliases": aliases} if aliases else rest)
+    return result
+
+
+def with_composers(candidates, songs):
+    """The candidates, each piece of song art given the composer of the songs it is mapped to.
+
+    The join is on the exact song title: a candidate's song_titles are titles of song pages in the song index. The
+    candidate's own wiki answers first, since its titles come from that wiki's pages; the other wiki's page of the same
+    title answers only when none of the own wiki's pages names a composer (the wikis credit some songs differently).
+    Several composers are joined with " / " in song-title order, and spellings that differ only in case, spacing or
+    punctuation count once. A page's credit that holds several names apart only by a run of spaces (all the song index
+    kept of a line break: "Jerry Barnes  Quiana") is split into those names, which HTML would otherwise run together
+    into one. A composer taken from the other wiki also gets composer_source, that wiki's source id:
+    otherwise the credit would read as the candidate's own wiki's. Collection covers get none: a cover is not one
+    song's artwork."""
+    by_title = defaultdict(list)
+    for song in songs:
+        if song.get("composer"):
+            by_title[song["title"]].append(song)
+    result = []
+    for candidate in candidates:
+        rest = {key: value for key, value in candidate.items() if key not in ("composer", "composer_source")}
+        credits, own = [], SOURCES[candidate["source"]]["id"]
+        if candidate.get("kind") == "song_art":
+            matched = [song for title in candidate.get("song_titles", []) for song in by_title.get(title, ())]
+            credits = [song for song in matched if song["source_id"] == own] or matched
+        composers = {}
+        for song in credits:
+            for name in re.split(r"\s{2,}", song["composer"].strip()):
+                composers.setdefault(normalized(name) or name, name)
+        other = " / ".join(dict.fromkeys(song["source_id"] for song in credits if song["source_id"] != own))
+        credit = {"composer": " / ".join(composers.values())} if composers else {}
+        result.append({**rest, **credit, **({"composer_source": other} if other else {})})
     return result
 
 
@@ -358,13 +393,12 @@ def download(candidate, existing):
         if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == previous["sha256"] and previous.get("wiki_sha1") == info.get("sha1"):
             download_sha1 = hashlib.sha1(path.read_bytes()).hexdigest()
             current = {key: value for key, value in previous.items()
-                       if key not in UPSTREAM_FIELDS + ("collection_aliases", "delivery_note")}
+                       if key not in UPSTREAM_FIELDS + SONG_INDEX_FIELDS + ("delivery_note",)}
             record = {**current, "kind": candidate["kind"], "song_titles": candidate["song_titles"],
                       "collections": candidate["collections"], "related_pages": candidate["related_pages"],
                       "download_sha1": download_sha1, "wiki_original_size_matches": path.stat().st_size == info["size"],
                       "wiki_original_sha1_matches": download_sha1 == info.get("sha1")}
-            if candidate.get("collection_aliases"):
-                record["collection_aliases"] = candidate["collection_aliases"]
+            record.update({field: candidate[field] for field in SONG_INDEX_FIELDS if candidate.get(field)})
             note = delivery_note(previous.get("download_url", ""), record["wiki_original_size_matches"], record["wiki_original_sha1_matches"])
             if note:
                 record["delivery_note"] = note
@@ -430,9 +464,8 @@ def download(candidate, existing):
         record["wiki_extmetadata"] = info["extmetadata"]
     if attempted_failures:
         record["download_attempt_failures"] = attempted_failures
-    # Placed as a verified re-run places it, so a later --resume keeps the key order.
-    if candidate.get("collection_aliases"):
-        record["collection_aliases"] = candidate["collection_aliases"]
+    # Placed as a verified re-run places them, so a later --resume keeps the key order.
+    record.update({field: candidate[field] for field in SONG_INDEX_FIELDS if candidate.get(field)})
     note = delivery_note(url, record["wiki_original_size_matches"], record["wiki_original_sha1_matches"])
     if note:
         record["delivery_note"] = note
@@ -560,8 +593,9 @@ def main():
             manifest["sources"].append({**SOURCES[source], "status": "discovered",
                                         "discovery": {**stats[source], "snapshot_fetched_at": discovered_at},
                                         "notes": "Only original DEEMO and its ports. DEEMO II categories, audio, charts, screenshots and unrelated UI are excluded."})
-        write_json("data/sources/wiki-song-index.json", {"schema_version": 1, "fetched_at": now(), "songs": fandom_songs + bwiki_songs})
-        candidates = with_collection_aliases(fandom + bwiki, fandom_songs + bwiki_songs)
+        songs = fandom_songs + bwiki_songs
+        write_json("data/sources/wiki-song-index.json", {"schema_version": 1, "fetched_at": now(), "songs": songs})
+        candidates = with_composers(with_collection_aliases(fandom + bwiki, songs), songs)
         # The statistics travel with the snapshot, so a later --resume can describe the enumeration it resumes.
         write_json("data/sources/wiki-discovery.json", {"schema_version": 1, "fetched_at": discovered_at, "stats": stats,
                                                          "candidates": candidates})

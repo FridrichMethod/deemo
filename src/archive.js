@@ -24,6 +24,7 @@
     return i18n.has(`provenance.class.${token}`) ? t(`provenance.class.${token}`) : p.provenance;
   }
   const sourceName = (record) => i18n.sourceName(record.source_id, record.source_name);
+  const sourceNames = new Map(catalog.sources.map((source) => [source.id, source.name]));
   const images = catalog.assets.filter((asset) => asset.gallery);
   const fields = ["query", "family", "kind", "minimum", "sort"];
   const initial = new URLSearchParams(location.search);
@@ -148,11 +149,48 @@
     const [width, height] = Array.isArray(p.source_dimensions) ? p.source_dimensions : [];
     return i18n.has(key) && width && height ? element("p", t(key, {width, height})) : note("p", p.source_dimensions_kind);
   }
+  // Shows a gallery entry in the viewer, clearing the filters first (as the reset button does) when they hide it; focus
+  // moves to the new title, since the control that asked for it is replaced with the rest of the viewer's text.
+  function show(asset) {
+    if (!filtered.includes(asset)) { $("filters").reset(); filter(); }
+    const index = filtered.indexOf(asset);
+    if (index < 0) return;
+    open(index);
+    $("viewer-title").tabIndex = -1;
+    $("viewer-title").focus();
+  }
+  // The upstream line of a record a refetch kept although upstream no longer offers this file, offers a newer upload,
+  // or failed to re-serve it. A superseded record names the record of the newer upload (superseded_by); when that file
+  // is in the gallery, a button shows it.
+  function upstreamNotes(p) {
+    const notes = [element("p", t("provenance.upstream", {status: upstreamName(p.upstream_status)}))];
+    const newer = p.superseded_by && images.find((asset) => asset.provenance.some((record) => record.id === p.superseded_by));
+    if (newer) {
+      const button = element("button", t("provenance.superseded_by", {width: newer.width, height: newer.height}));
+      button.type = "button";
+      button.addEventListener("click", () => show(newer));
+      const paragraph = element("p");
+      paragraph.append(button);
+      notes.push(paragraph);
+    }
+    return notes;
+  }
+  // The credit shows under this record's source link, so a composer taken from another source's page (composer_source:
+  // the wiki whose song page of the same title names one when the record's own page does not) is followed by a line
+  // naming that source.
+  function composerLines(p) {
+    const lines = [element("p", t("provenance.composer", {composer: textValue(p.composer)}))];
+    if (p.composer_source) {
+      const source = textValue(p.composer_source).split(" / ").map((id) => i18n.sourceName(id, sourceNames.get(id) || id)).join(" / ");
+      lines.push(element("p", t("provenance.composer_source", {source})));
+    }
+    return lines;
+  }
   function provenanceBlock(p) {
     const block = element("section", null, "provenance-item");
     block.append(sourceLink(sourceName(p), p.page_url), element("p", p.title));
     if (p.artist) block.append(element("p", t("provenance.artist", {artist: textValue(p.artist)})));
-    if (p.composer) block.append(element("p", t("provenance.composer", {composer: textValue(p.composer)})));
+    if (p.composer) block.append(...composerLines(p));
     if (p.collection) {
       const collection = {collection: textValue(p.collection)};
       block.append(element("p", p.collection_scope === "source_post_grouping" ? t("provenance.post_grouping", collection) : t("provenance.collection", collection)));
@@ -167,8 +205,7 @@
     }
     if (p.rights_holder) block.append(element("p", t("provenance.rights_holder", {holder: textValue(p.rights_holder)})));
     if (p.wiki_original_sha1_matches === false) block.append(element("p", t("provenance.checksum_mismatch")));
-    // A record a refetch kept although upstream no longer offers this file, offers a newer upload, or failed to re-serve it.
-    if (p.upstream_status) block.append(element("p", t("provenance.upstream", {status: upstreamName(p.upstream_status)})));
+    if (p.upstream_status) block.append(...upstreamNotes(p));
     if (p.mapping_status === "unmapped" || p.title_status === "unmapped" || p.title_status === "internal_key") block.append(element("p", t("provenance.unmapped")));
     if (p.download_url) block.append(sourceLink(t("provenance.remote"), p.download_url));
     for (const variant of p.variants || []) {

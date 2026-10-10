@@ -83,6 +83,7 @@ DEEMO_I18N.register({
     "viewer.inherited": "Kept as inherited from the original repository",
     "provenance.artist": "Artist: {artist}",
     "provenance.composer": "Music: {composer}",
+    "provenance.composer_source": "Composer credit from {source}",
     "provenance.post_grouping": "Original-post grouping: {collection}",
     "provenance.collection": "Collection: {collection}",
     "provenance.collections": "Related collections: {collections}",
@@ -106,6 +107,7 @@ DEEMO_I18N.register({
     "upstream.removed": "no longer offered by the source; the copy fetched earlier is kept",
     "upstream.superseded": "replaced at the source by a newer upload; this is the earlier version",
     "upstream.fetch_failed": "the latest re-download failed; this is the copy verified earlier",
+    "provenance.superseded_by": "Show the newer version ({width} × {height})",
     "provenance.tiny": "Old palette-quantized copy (tiny) · {width} × {height} · {size}"
   },
   "zh-CN": {
@@ -191,6 +193,7 @@ DEEMO_I18N.register({
     "viewer.inherited": "随原仓库保留",
     "provenance.artist": "画师：{artist}",
     "provenance.composer": "曲师：{composer}",
+    "provenance.composer_source": "曲师署名来自 {source}",
     "provenance.post_grouping": "原帖分组：{collection}",
     "provenance.collection": "曲包：{collection}",
     "provenance.collections": "相关曲包：{collections}",
@@ -214,6 +217,7 @@ DEEMO_I18N.register({
     "upstream.removed": "来源已不再提供此文件；保留此前获取的副本",
     "upstream.superseded": "来源已上传更新的版本取代此文件；此为较早版本",
     "upstream.fetch_failed": "最近一次重新下载失败；此为此前已验证的副本",
+    "provenance.superseded_by": "查看较新版本（{width} × {height}）",
     "provenance.tiny": "旧量化版本（tiny） · {width} × {height} · {size}"
   }
 });
