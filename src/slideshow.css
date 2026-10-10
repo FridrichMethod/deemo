@@ -855,6 +855,12 @@ canvas {
     .slideshow-container {
         margin-top: 24px;
     }
+    /* The next arrow shares its column with the language toggle (35-105px from the top); below about 345px of
+       height the stage's centre comes within its reach, so the arrows stop where the toggle ends. */
+    .prev,
+    .next {
+        top: max(50%, 112px);
+    }
     .dear-alice {
         font-size: min((40vw - var(--gutter) - 24px) / 12.6, 4.6vh);
     }
