@@ -235,11 +235,22 @@ def tumblr_mirror():
     pool(fetch_post, posts.values(), 5)
 
 
+CLEANED_NOTE = "Fan edits linked by the Tunes of Rayark FAQ."
+
+
+def cleaned_note(posts_listed, downloaded):
+    """Describe the Kitsunefreak result without claiming images that were not retained."""
+    if downloaded:
+        return CLEANED_NOTE + " Public largest-size Tumblr images retained unchanged; source image was edited by uploader, not a production master."
+    if not posts_listed:
+        return CLEANED_NOTE + " The public Tumblr API returned no DEEMO-tagged posts, so no images were retained."
+    return CLEANED_NOTE + " No images were retained in this run; see failures."
+
+
 def tumblr_cleaned():
     sid, blog = "kitsunefreak-cleaned", "kitsunefreak"
     page = f"https://{blog}.tumblr.com/tagged/my%20edit"
-    record = source(sid, "Kitsunefreak cleaned DEEMO artwork", page, "fetched",
-                    "Fan edits linked by the Tunes of Rayark FAQ. Public largest-size Tumblr images retained unchanged; source image was edited by uploader, not a production master.", provenance="community_edit")
+    record = source(sid, "Kitsunefreak cleaned DEEMO artwork", page, "fetched", CLEANED_NOTE, provenance="community_edit")
     try:
         posts = tumblr_tag(blog, "my edit")
     except Exception as exc:
@@ -247,14 +258,16 @@ def tumblr_cleaned():
         return
     posts = [p for p in posts if "deemo" in json.dumps(p.get("tags", [])).lower() or "deemo" in p.get("photo-caption", "").lower()]
     record["posts_listed"] = len(posts)
+    downloaded = 0
     for post in posts:
         photos = post.get("photos", []) or ([post] if post.get("photo-url-1280") else [])
         title = BeautifulSoup(post.get("photo-caption", ""), "html.parser").get_text(" ", strip=True)[:160] or post.get("slug", post["id"])
         for n, photo in enumerate(photos, 1):
             url = photo.get("photo-url-1280") or photo.get("photo-url-500")
             if url:
-                download(sid, f"{post['id']}-{n}", title, post["url"], url, "illustration", hosts=TUMBLR_MEDIA_HOSTS,
-                         provenance="community_edit", tags=post.get("tags", []))
+                downloaded += download(sid, f"{post['id']}-{n}", title, post["url"], url, "illustration", hosts=TUMBLR_MEDIA_HOSTS,
+                                       provenance="community_edit", tags=post.get("tags", [])) is not None
+    record["notes"] = cleaned_note(len(posts), downloaded)
 
 
 def official():
@@ -280,7 +293,7 @@ def official():
 
 
 CATALOG_ENTRIES = [
-    ("kadokawa-artbook", "DEEMO Visual Collection", "https://www.kadokawa.co.jp/product/322109001023/", "purchase_required", "Official 400+ artwork book; not downloaded because user excludes purchases."),
+    ("kadokawa-artbook", "DEEMO Visual Collection", "https://www.kadokawa.co.jp/product/322109001023/", "purchase_required", "Official 400+ artwork book; purchases are out of scope, so it was not bought or downloaded."),
     ("bookwalker-artbook", "DEEMO Visual Collection — BookWalker", "https://bookwalker.jp/deebf58ee2-8a3a-4e18-bdc2-6f75f704dd7a/", "purchase_required", "Paid DRM ebook; no purchase, preview extraction, or DRM bypass attempted."),
     ("reddit-34", "DEEMO 3.4 extracted OST thread", "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/", "index_only", "Historical soundtrack bundle; earlier source audit attributes artwork to Wikia. No audio downloaded."),
     ("reddit-4x", "DEEMO 4.x extracted OST thread", "https://www.reddit.com/r/TrueDeemo/comments/mzq53n/deemo_4x_extracted_ost/", "historical_unavailable", "Earlier search found reports of dead links; uploader mentions image scaling, so not native-resolution masters."),
@@ -295,9 +308,9 @@ CATALOG_ENTRIES = [
     ("tumgik-blazewu", "Tumgik mirror of Blaze Wu", "https://www.tumgik.com/wublaze", "mirror_index", "Third-party mirror; fetch author Tumblr through the artist-source importer instead."),
     ("blazewu-tumblr", "Blaze Wu MILI Collection Vol.2", "https://wublaze.tumblr.com/post/129276170315/deemomili-collection-vol2songs-illustration", "delegated", "Author's original upload; handled by the separate artist-source importer to avoid duplicate ownership."),
     ("bilibili-video-search", "Bilibili DEEMO artwork videos", "https://search.bilibili.com/all?keyword=DEEMO%20%E6%9B%B2%E7%BB%98", "index_only", "Video search leads are recompressed frames, not loose native artwork; no videos/audio downloaded."),
-    ("steam-reborn", "DEEMO -Reborn-", "https://store.steampowered.com/app/1282210/DEEMO_Reborn/", "purchase_required", "Paid game not available in this workspace; no game download. Shared original-game songs are only a subset."),
+    ("steam-reborn", "DEEMO -Reborn-", "https://store.steampowered.com/app/1282210/DEEMO_Reborn/", "purchase_required", "Paid game; purchases are out of scope, so it was not bought or downloaded. Shared original-game songs are only a subset."),
     ("steamdb-reborn", "DEEMO -Reborn- songcover bundle index", "https://steamdb.info/depot/1282212/", "index_only", "Lists Unity songcover bundles, not publicly downloadable image files. Actual texture dimensions remain unverified."),
-    ("illustrator-directory", "Japanese DEEMO illustrator directory", "https://wikiwiki.jp/deemo/%E3%82%A2%E3%83%BC%E3%83%86%E3%82%A3%E3%82%B9%E3%83%88%E5%88%A5%E3%83%AA%E3%82%B9%E3%83%882", "index_only", "Artist-account routing directory; source artwork is fetched by the artist importer."),
+    ("illustrator-directory", "Japanese DEEMO illustrator directory", "https://wikiwiki.jp/deemo/%E3%82%A2%E3%83%BC%E3%83%86%E3%82%A3%E3%82%B9%E3%83%88%E5%88%A5%E3%83%AA%E3%82%B9%E3%83%882", "delegated", "Same page as wikis:wikiwiki-illustrators; handled by the wiki importer to avoid duplicate ownership."),
 ]
 
 
