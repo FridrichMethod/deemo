@@ -272,6 +272,16 @@ class CompareTests(unittest.TestCase):
         self.assertTrue(0 < listed < check.ROW_LIMIT, listed)
         self.assertEqual((english, chinese), (check.render(report, "en", listed), check.render(report, "zh-CN", listed)))
 
+    def test_next_steps_say_resume_keeps_records_and_files(self):
+        statuses = ('"upstream_status": "superseded"', '"upstream_status": "removed"', '"upstream_status": "fetch_failed"')
+        for lang, never_deletes in (("en", "never deletes files"), ("zh-CN", "不会删除任何文件")):
+            steps = check.TEXT[lang]["next_steps"]
+            self.assertIn("fetch_wikis.py --resume", steps)
+            self.assertIn(never_deletes, steps)
+            for status in statuses + ("`upstream_status`",):
+                self.assertIn(status, steps)
+        self.assertNotIn("not deleted automatically", check.TEXT["en"]["next_steps"])
+
     def test_language_tables_match(self):
         english, chinese = check.TEXT["en"], check.TEXT["zh-CN"]
         self.assertEqual(english.keys(), chinese.keys())
