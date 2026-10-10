@@ -7,6 +7,7 @@ import html
 import importlib.util
 import io
 import json
+import os
 import struct
 import subprocess
 import tempfile
@@ -21,6 +22,13 @@ from PIL import Image
 spec = importlib.util.spec_from_file_location("build_catalog", Path(__file__).resolve().parents[1] / "scripts/build_catalog.py")
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)
+
+# Git exports these to hooks (as absolute paths in a linked worktree). Inherited, they would point the temp roots'
+# git commands, and build.tracked_files(), at the enclosing checkout and stage the fixtures into its index.
+GIT_REPOSITORY_ENVIRONMENT = (
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+)
 
 
 def png_chunk(data, kind):
@@ -50,6 +58,11 @@ class ImgTags(HTMLParser):
 
 class CatalogTests(unittest.TestCase):
     def setUp(self):
+        environment = patch.dict(os.environ)
+        environment.start()
+        self.addCleanup(environment.stop)
+        for name in GIT_REPOSITORY_ENVIRONMENT:
+            os.environ.pop(name, None)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
