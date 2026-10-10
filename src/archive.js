@@ -20,7 +20,11 @@
   const images = catalog.assets.filter((asset) => asset.gallery);
   const fields = ["query", "family", "kind", "minimum", "sort"];
   const initial = new URLSearchParams(location.search);
-  for (const field of fields) if (initial.has(field)) $(field).value = initial.get(field);
+  // A stale or hand-edited value that matches no option is ignored, so the select keeps showing the default it applies.
+  for (const field of fields) {
+    const value = initial.get(field), control = $(field);
+    if (value !== null && (!control.options || [...control.options].some((option) => option.value === value))) control.value = value;
+  }
   let filtered = [], shown = 0, current = -1;
   const size = (bytes) => bytes >= 1048576 ? `${(bytes / 1048576).toFixed(2)} MiB` : `${Math.round(bytes / 1024)} KiB`;
   const textValue = (value) => typeof value === "string" ? value : value == null ? "" : JSON.stringify(value);
