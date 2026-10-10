@@ -1452,8 +1452,8 @@ https://github.com/FridrichMethod/deemo
         <div class="mySlides fade"><img class="deemo-draw" data-src="assets/public/archives/rayarkmusic-tumblr/99970499282-1.jpg" data-id="archives:rayarkmusic-tumblr:99970499282-1" data-title="Finding Home" data-source="Tunes of Rayark — DEEMO" data-source-id="archives:rayarkmusic-tumblr" data-page="https://rayarkmusic.tumblr.com/post/99970499282/deemo-finding-home-by-brian-crain" data-size="500 × 500" data-kind="song_art" alt="Finding Home"></div>
         <div class="mySlides fade"><img class="deemo-draw" data-src="assets/public/archives/rayarkmusic-tumblr/99970673932-1.jpg" data-id="archives:rayarkmusic-tumblr:99970673932-1" data-title="Almost Morning" data-source="Tunes of Rayark — DEEMO" data-source-id="archives:rayarkmusic-tumblr" data-page="https://rayarkmusic.tumblr.com/post/99970673932/deemo-almost-morning-by-eshen" data-size="475 × 475" data-kind="song_art" alt="Almost Morning"></div>
 
-            <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-            <a class="next" onclick="plusSlides(1)">&#10095;</a>
+            <button type="button" class="prev" aria-label="Previous artwork" data-i18n-attr="aria-label:slideshow.nav.prev" onclick="plusSlides(-1)"></button>
+            <button type="button" class="next" aria-label="Next artwork" data-i18n-attr="aria-label:slideshow.nav.next" onclick="plusSlides(1)"></button>
         </div>
         <!-- Liner notes: Alice's dedication opens the show (and returns as an autoplay interlude), then each slide's own notes. -->
         <section class="liner" aria-label="About this artwork" data-i18n-attr="aria-label:slideshow.notes.label">
@@ -1470,41 +1470,43 @@ https://github.com/FridrichMethod/deemo
                 <a id="asset-original" download data-i18n="slideshow.caption.original">Original file</a>&nbsp;· <a href="archive.html" data-lang-link data-i18n="slideshow.caption.browse">Browse all / Search</a>
             </div>
         </section>
-        <div class="signature">DEEMO 1 · <a href="https://github.com/FridrichMethod" target="_blank" rel="noopener noreferrer">FridrichMethod</a></div>
+        <div class="signature">DEEMO 1 · <a href="https://github.com/FridrichMethod" target="_blank" rel="noopener noreferrer">FridrichMethod</a> · <a href="https://github.com/FridrichMethod/deemo/blob/main/NOTICE" target="_blank" rel="noopener noreferrer" data-i18n="slideshow.attribution">Attribution</a></div>
 
+        <!-- The bottom control row in its on-screen order, left to right, so Tab follows it (see src/slideshow.css). -->
         <div class="photo bt">
-            <a href="javascript:screenshot();">
-                <div class="pop"><img src="assets/site/icons/camera.svg" class="css-1bgbwga" data-reactid="50"></div>
-            </a>
-        </div>
-
-        <div class="iplayer bt">
-            <div class="speaker" id="speaker"></div>
-            <img src="assets/site/icons/pause.svg" style="width:0;height:0;">
-        </div>
-
-        <div class="random bt">
-            <a href="javascript:randomClick();">
-                <div class="pop"><img src="assets/site/icons/sand-clock.svg" class="sand-clock" data-reactid="50"></div>
-            </a>
+            <button type="button" aria-label="Take a screenshot" data-i18n-attr="aria-label:slideshow.screenshot.take" onclick="screenshot()">
+                <span class="pop"><img src="assets/site/icons/camera.svg" alt="" class="css-1bgbwga" data-reactid="50"></span>
+            </button>
         </div>
 
         <div class="github bt">
             <a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository" data-i18n-attr="aria-label:slideshow.github.label">
-                <div class="pop"><img src="assets/site/icons/github.svg" class="css-1bgbwga" data-reactid="50"></div>
+                <div class="pop"><img src="assets/site/icons/github.svg" alt="" class="css-1bgbwga" data-reactid="50"></div>
             </a>
         </div>
 
-        <div class="archive-link bt"><a href="archive.html" data-lang-link aria-label="Browse the Artwork Archive" data-i18n="slideshow.archive.text" data-i18n-attr="aria-label:slideshow.archive.label">Gallery</a></div>
+        <div class="archive-link bt"><a href="archive.html" data-lang-link title="Browse the Artwork Archive" data-i18n="slideshow.archive.text" data-i18n-attr="title:slideshow.archive.label">Gallery</a></div>
 
-        <div id="screenshot" class="overlay">
+        <div class="iplayer bt">
+            <button type="button" class="speaker" id="speaker" aria-label="Background music" aria-pressed="false" data-i18n-attr="aria-label:slideshow.music.label"></button>
+            <img src="assets/site/icons/pause.svg" alt="" style="width:0;height:0;">
+        </div>
+
+        <div class="random bt">
+            <button type="button" aria-label="Shuffle autoplay" aria-pressed="true" data-i18n-attr="aria-label:slideshow.autoplay.label" onclick="randomClick()">
+                <span class="pop"><img src="assets/site/icons/sand-clock.svg" alt="" class="sand-clock" data-reactid="50"></span>
+            </button>
+        </div>
+
+        <!-- Opened by screenshot() with the is-open class, not the URL hash, so a reload, Back or a shared link never reopens it empty. -->
+        <div id="screenshot" class="overlay" role="dialog" aria-modal="true" aria-label="Screenshot preview" data-i18n-attr="aria-label:slideshow.screenshot.dialog">
             <div class="save bt">
-                <a href="javascript:downloadCanvas();">
-                    <div class="pop"><img src="assets/site/icons/save.svg" class="css-1bgbwga" data-reactid="50"></div>
-                </a>
+                <button type="button" aria-label="Save screenshot" data-i18n-attr="aria-label:slideshow.screenshot.save" onclick="downloadCanvas()">
+                    <span class="pop"><img src="assets/site/icons/save.svg" alt="" class="css-1bgbwga" data-reactid="50"></span>
+                </button>
             </div>
             <div class="popup">
-                <a class="close" href="#">&times;</a>
+                <button type="button" class="close" aria-label="Close screenshot" data-i18n-attr="aria-label:slideshow.screenshot.close" onclick="closeScreenshot()">&times;</button>
                 <div id="scerrn-content"></div>
             </div>
         </div>
@@ -1596,7 +1598,7 @@ https://github.com/FridrichMethod/deemo
             setDedication(false);
             try {
                 int = window.clearInterval(int);
-                document.getElementsByClassName("sand-clock")[0].style.transform = "rotate(0deg)";
+                showAutoplay(false);
                 randomFlag = 1;
             } catch (err) {}
         }
@@ -1619,15 +1621,19 @@ https://github.com/FridrichMethod/deemo
             slideShown = true;
             // load
             lazyload(slideIndex - 1);
-            // hide
+            // hide (see .is-current in src/slideshow.css)
             for (i = 0; i < slides.length; i++) {
                 slides[i].style.opacity = 0;
+                slides[i].classList.remove("is-current");
             }
             // check load condition
             var displayedIndex = slideIndex - 1;
             imgLoad(displayedIndex, function() {
                 // display
-                if (slideIndex - 1 === displayedIndex) slides[displayedIndex].style.opacity = 1;
+                if (slideIndex - 1 === displayedIndex) {
+                    slides[displayedIndex].style.opacity = 1;
+                    slides[displayedIndex].classList.add("is-current");
+                }
             });
             // preload
             //if (slideIndex < imgTargets.length) {
@@ -1668,12 +1674,15 @@ https://github.com/FridrichMethod/deemo
         function metaRow(list, label, value) {
             if (!value) return;
             var values = value.split("\n");
+            var dt = element("dt", null, label);
             var dd = element("dd");
             values.forEach(function(line, i) {
                 if (i) dd.append(document.createElement("br"));
                 dd.append(line);
             });
-            list.append(element("dt", null, label), dd);
+            // The artist's credit is the row that stays where short screens drop the others (see src/slideshow.css).
+            if (label === DEEMO_I18N.t("slideshow.notes.artist")) dt.className = dd.className = "notes-artist";
+            list.append(dt, dd);
         }
 
         // A title that is only a file name ("booksprites_10", "Rac01lifill", "Celia02forsis fc", "MN2 Booksprites")
@@ -1805,47 +1814,83 @@ https://github.com/FridrichMethod/deemo
 
         var randomFlag = 0;
 
+        // The sand clock is pressed while autoplay runs, which also tilts it (see src/slideshow.css).
+        function showAutoplay(on) {
+            document.querySelector(".random button").setAttribute("aria-pressed", String(on));
+        }
+
         function randomClick() {
             if (randomFlag == 1) {
                 int = self.setInterval(autoplayTick, 6000);
-                document.getElementsByClassName("sand-clock")[0].style.transform = "rotate(20deg)";
+                showAutoplay(true);
                 // Resuming autoplay replays the opening: the dedication first, the notes on the next beat.
                 setDedication(true);
                 randomSlide();
                 randomFlag = 0;
             } else {
                 int = window.clearInterval(int);
-                document.getElementsByClassName("sand-clock")[0].style.transform = "rotate(0deg)";
+                showAutoplay(false);
                 setDedication(false);
                 randomFlag = 1;
             }
         }
 
-        function saveFile(url) {
-            var date = new Date();
-            var filename = "deemo-";
-            filename = filename + date.getTime();
-            filename = filename + ".png";
-            var xhr = new XMLHttpRequest();
-            xhr.responseType = 'blob';
-            xhr.onload = function() {
-                var a = document.createElement('a');
-                a.href = window.URL.createObjectURL(xhr.response);
-                a.download = filename;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                //a = null;
-            };
-            xhr.open('GET', url);
-            xhr.send();
+        // Screenshot overlay: one canvas at a time, shown with a class (see the markup) and dropped on close.
+        var screenshotOverlay = document.getElementById("screenshot");
+        var screenshotContent = document.getElementById("scerrn-content");
+
+        function isScreenshotOpen() {
+            return screenshotOverlay.classList.contains("is-open");
+        }
+
+        function setScreenshotOpen(open) {
+            screenshotOverlay.classList.toggle("is-open", open);
+            // While it is open the page behind it is inert, so Tab and the arrow keys stay with the overlay.
+            Array.prototype.forEach.call(screenshotOverlay.parentElement.children, function(child) {
+                if (child !== screenshotOverlay) child.inert = open;
+            });
+            if (open) {
+                screenshotOverlay.querySelector(".save button").focus();
+            } else {
+                screenshotContent.replaceChildren();
+                document.querySelector(".photo button").focus();
+            }
+        }
+
+        function closeScreenshot() {
+            if (isScreenshotOpen()) setScreenshotOpen(false);
         }
 
         function downloadCanvas() {
-            var src = document.getElementsByTagName("canvas");
-            var img = src[src.length - 1].toDataURL("image/png");
-            saveFile(img);
+            var canvas = screenshotContent.querySelector("canvas");
+            if (!canvas) return;
+            canvas.toBlob(function(blob) {
+                if (!blob) return;
+                var link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "deemo-" + Date.now() + ".png";
+                document.body.append(link);
+                link.click();
+                link.remove();
+                // The download reads the blob after the click returns; release it once that has had ample time.
+                window.setTimeout(URL.revokeObjectURL.bind(URL, link.href), 40000);
+            }, "image/png");
         }
+
+        // Keyboard: Escape closes the screenshot overlay; the arrow keys turn the slides, but not while the overlay
+        // is open or a form field has focus, and a held key does not race through the collection.
+        document.addEventListener("keydown", function(event) {
+            if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+            if (isScreenshotOpen()) {
+                if (event.key === "Escape") closeScreenshot();
+                return;
+            }
+            var step = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0;
+            if (!step || event.shiftKey || event.repeat) return;
+            if (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) return;
+            event.preventDefault();
+            plusSlides(step);
+        });
 
         function screenshot() {
             var sholdHide = new Array("photo", "iplayer", "random", "github", "archive-link", "lang-toggle", "asset-caption", "signature", "prev", "next");
@@ -1856,8 +1901,8 @@ https://github.com/FridrichMethod/deemo
                 useCORS: true
             };
             html2canvas(document.body, opt).then(function(canvas) {
-                document.getElementById("scerrn-content").appendChild(canvas);
-                location.href = "#screenshot";
+                screenshotContent.replaceChildren(canvas);
+                setScreenshotOpen(true);
             });
 
             for (var i = 0; i < sholdHide.length; i++) document.getElementsByClassName(sholdHide[i])[0].style.visibility = 'visible';
@@ -1890,6 +1935,17 @@ https://github.com/FridrichMethod/deemo
         var audiostatus = 'off';
         var speaker = document.getElementById("speaker");
 
+        // play() is rejected when a pause interrupts it or the browser will not play; if the music did not start,
+        // the control shows it as off instead of leaving an unhandled rejection.
+        function playMusic() {
+            var playing = getaudio.play();
+            if (playing) playing.catch(function() {
+                if (!getaudio.paused) return;
+                removeClass(speaker, 'speakerplay');
+                speaker.setAttribute("aria-pressed", "false");
+            });
+        }
+
         speaker.addEventListener("click", function() {
             // on touchend?
 
@@ -1897,22 +1953,23 @@ https://github.com/FridrichMethod/deemo
                 if (audiostatus == 'off') {
                     addClass(speaker, 'speakerplay');
                     getaudio.load();
-                    getaudio.play();
+                    playMusic();
                     audiostatus = 'on';
-                    return false;
                 } else if (audiostatus == 'on') {
                     addClass(speaker, 'speakerplay');
-                    getaudio.play()
+                    playMusic();
                 }
             } else if (hasClass(speaker, "speakerplay")) {
                 getaudio.pause();
                 removeClass(speaker, 'speakerplay');
                 audiostatus = 'on';
             }
+            speaker.setAttribute("aria-pressed", String(hasClass(speaker, "speakerplay")));
         });
 
         document.getElementById("player").addEventListener("ended", function() {
             removeClass(speaker, 'speakerplay');
+            speaker.setAttribute("aria-pressed", "false");
             audiostatus = 'off';
         });
 
