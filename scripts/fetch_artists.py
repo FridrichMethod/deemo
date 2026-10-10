@@ -14,8 +14,10 @@ from datetime import datetime, timezone
 from hashlib import sha256
 from io import BytesIO
 import json
+import os
 from pathlib import Path
 import re
+import threading
 import time
 from urllib.parse import urljoin, urlsplit
 
@@ -321,6 +323,30 @@ def download(job, cache, refresh):
     return job, response.content, now()
 
 
+def replace_file(path, data):
+    """Write bytes through a temporary sibling and os.replace, so no partial file is ever left at path."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    try:
+        temporary.write_bytes(data)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def keep_file(path, data, digest):
+    """Store data at path; an identical file is left alone and different bytes are never overwritten."""
+    if path.exists():
+        if sha256(path.read_bytes()).hexdigest() != digest:
+            raise ValueError(f"Refusing to overwrite different bytes at {path}")
+        return
+    replace_file(path, data)
+
+
+def write_json(path, data):
+    replace_file(path, (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+
+
 def save_asset(job, data, fetched_at, hashes):
     with Image.open(BytesIO(data)) as img:
         width, height, fmt, mode = img.width, img.height, img.format, img.mode
@@ -337,9 +363,11 @@ def save_asset(job, data, fetched_at, hashes):
         relative, duplicate_of = hashes[digest]
     else:
         path = ROOT / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if not path.exists() or sha256(path.read_bytes()).hexdigest() != digest:
-            path.write_bytes(data)
+        if path.exists() and sha256(path.read_bytes()).hexdigest() != digest:
+            # Upstream bytes changed: keep the archived file and store the new version beside it.
+            relative = f"assets/public/artists/{job['directory']}/{job['stem']}-{digest[:12]}{extension}"
+            path = ROOT / relative
+        keep_file(path, data, digest)
         hashes[digest] = (relative, job["id"])
     asset = {key: value for key, value in job.items() if key not in ("directory", "stem")}
     asset.update({"path": relative, "width": width, "height": height, "format": fmt,
@@ -391,8 +419,7 @@ def main():
                 source["status"] = "failed"
     manifest["assets"].sort(key=lambda asset: asset["id"])
     manifest["sources"].sort(key=lambda source: source["id"])
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    write_json(manifest_path, manifest)
     print(json.dumps({"sources": len(manifest["sources"]), "assets": len(manifest["assets"]),
                       "unique_files": len(hashes), "failures": len(manifest["failures"])}, indent=2))
     return 1 if manifest["failures"] else 0

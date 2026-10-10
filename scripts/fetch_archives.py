@@ -120,12 +120,11 @@ def download(sid, key, title, page, url, kind, hosts, **extra):
         filename = re.sub(r"[^a-zA-Z0-9_-]", "-", str(key)).strip("-") + ext
         path = Path("assets/public/archives") / sid / filename
         target = ROOT / path
-        target.parent.mkdir(parents=True, exist_ok=True)
         if target.exists() and hashlib.sha256(target.read_bytes()).hexdigest() != digest:
             # Preserve the previous remote version if the source changes.
             path = path.with_name(path.stem + "-" + digest[:12] + ext)
             target = ROOT / path
-        target.write_bytes(blob)
+        keep_file(target, blob, digest)
         row = {"id": f"archives:{sid}:{key}", "source_id": "archives:" + sid, "title": title,
                "kind": kind, "page_url": page, "download_url": url,
                "resolved_url": r.url, "path": path.as_posix(), "width": width,
@@ -367,15 +366,29 @@ def main():
     return 1 if MANIFEST["failures"] else 0
 
 
-def write_json(path, data):
-    """Replace path through a temporary sibling, so a killed run never leaves truncated JSON."""
+def replace_file(path, data):
+    """Write bytes through a temporary sibling and os.replace, so no partial file is ever left at path."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     try:
-        temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        temporary.write_bytes(data)
         os.replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
+
+
+def keep_file(path, blob, digest):
+    """Store blob at path; an identical file is left alone and different bytes are never overwritten."""
+    if path.exists():
+        if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            raise ValueError(f"Refusing to overwrite different bytes at {path}")
+        return
+    replace_file(path, blob)
+
+
+def write_json(path, data):
+    """Replace the manifest atomically, so a killed run never leaves truncated JSON."""
+    replace_file(path, (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
 
 
 def save():
