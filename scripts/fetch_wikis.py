@@ -174,21 +174,26 @@ def unique_collections(names):
 
 
 def with_collection_aliases(candidates, songs):
-    """The candidates, each given the other spellings of its collections as collection_aliases.
+    """The candidates, each showing the one spelling of each of its collections that every record shows, and given
+    the other spellings as collection_aliases.
 
-    A record lists one spelling per collection, so a search for another spelling ("RAC collection -1" for
-    "RAC Collection #1") would miss it. The aliases are every spelling that a song page of either wiki uses for one of
-    the candidate's collections; the archive searches them, but does not show them."""
+    The wikis spell a collection differently ("RAC Collection #1" on Fandom, "RAC collection -1" on BWIKI), so records
+    of the same collection would otherwise disagree. Of all the spellings that the song pages of either wiki and the
+    candidates use for names that differ only in case, spacing or punctuation, every record shows the first in
+    code-point order, as unique_collections() picks within one record. The other spellings are the aliases, so a
+    search for one of them still finds the record; the archive searches them, but does not show them. Aliases the
+    candidates already carry count as spellings too, so applying this to its own result changes nothing."""
     spellings = defaultdict(set)
-    for song in songs:
-        for name in song["collections"]:
-            spellings[normalized(name) or name].add(name)
+    for name in [*(name for song in songs for name in song["collections"]),
+                 *(name for candidate in candidates for name in candidate["collections"] + candidate.get("collection_aliases", []))]:
+        spellings[normalized(name) or name].add(name)
     result = []
     for candidate in candidates:
-        own = set(candidate["collections"])
-        aliases = sorted({alias for name in own for alias in spellings.get(normalized(name) or name, ())} - own)
+        keys = list(dict.fromkeys(normalized(name) or name for name in candidate["collections"]))
+        shown = [min(spellings[key]) for key in keys]
+        aliases = sorted({alias for key in keys for alias in spellings[key]} - set(shown))
         rest = {key: value for key, value in candidate.items() if key != "collection_aliases"}
-        result.append({**rest, "collection_aliases": aliases} if aliases else rest)
+        result.append({**rest, "collections": shown, **({"collection_aliases": aliases} if aliases else {})})
     return result
 
 
@@ -321,8 +326,9 @@ def discover_bwiki(fandom_songs):
     lookup = defaultdict(list)
     for song in songs + fandom_songs:
         lookup[normalized(song["title"])].append(song)
-    # A cover's related page is a BWIKI page, so BWIKI's own spelling of a collection wins; a Fandom spelling only
-    # fills in a collection that no BWIKI song page names.
+    # A cover's related page is a BWIKI page, so BWIKI's own spelling of a collection names it; a Fandom spelling only
+    # fills in a collection that no BWIKI song page names. The record then shows the spelling every record shows
+    # (with_collection_aliases()), but its related page keeps the BWIKI title.
     collection_lookup = {}
     for group in (songs, fandom_songs):
         for name in unique_collections(collection for song in group for collection in song["collections"]):

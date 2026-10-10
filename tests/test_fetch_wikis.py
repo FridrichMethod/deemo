@@ -417,17 +417,30 @@ class CollectionNameTests(unittest.TestCase):
 
 
 class CollectionAliasTests(FetcherRun):
-    def test_aliases_are_the_other_spellings_the_song_pages_use(self):
+    def test_every_record_shows_one_spelling_and_keeps_the_others_as_aliases(self):
         songs = [song("A", ["RAC Collection #1", "Etude Collection"]), song("B", ["RAC collection -1"], source="bwiki"),
                  song("C", ["Etude collection"]), song("D", ["Sakuzyo collection"])]
         candidates = [{"file_title": "1", "collections": ["RAC collection -1"]},
                       {"file_title": "2", "collections": ["Etude Collection", "RAC Collection #1"], "collection_aliases": ["Old"]},
-                      {"file_title": "3", "collections": ["Sakuzyo collection", "Book of Alice"], "collection_aliases": ["Old"]}]
+                      {"file_title": "3", "collections": ["Sakuzyo collection", "Book of Alice"], "collection_aliases": ["Old"]},
+                      {"file_title": "4", "collections": ["Book of alice", "etude collection"]}]
         result = fetch.with_collection_aliases(candidates, songs)
+        # The BWIKI cover's "RAC collection -1" reads as every other record's "RAC Collection #1": the first spelling in
+        # code-point order of all that the song pages and the candidates use. A cover's own spelling is one of them.
+        self.assertEqual([row["collections"] for row in result],
+                         [["RAC Collection #1"], ["Etude Collection", "RAC Collection #1"], ["Sakuzyo collection", "Book of Alice"],
+                          ["Book of Alice", "Etude Collection"]])
         self.assertEqual([row.get("collection_aliases") for row in result],
-                         [["RAC Collection #1"], ["Etude collection", "RAC collection -1"], None])
-        self.assertEqual([row["collections"] for row in result], [row["collections"] for row in candidates])
+                         [["RAC collection -1"], ["Etude collection", "RAC collection -1", "etude collection"], ["Book of alice"],
+                          ["Book of alice", "Etude collection", "etude collection"]])
+        self.assertEqual({tuple(row)[:2] for row in result}, {("file_title", "collections")})  # collections stays in place
         self.assertEqual(candidates[1]["collection_aliases"], ["Old"])  # the input is left as it was
+        self.assertEqual(fetch.with_collection_aliases(result, songs), result)
+        shown = {}
+        for row in result:
+            for name in row["collections"]:
+                shown.setdefault(fetch.normalized(name), set()).add(name)
+        self.assertEqual({key: len(names) for key, names in shown.items() if len(names) > 1}, {})
 
     def test_discovery_stores_the_aliases_with_the_snapshot(self):
         candidate = self.offer("Art.png", png("red"), collections=["Etude Collection"])
