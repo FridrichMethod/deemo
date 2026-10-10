@@ -247,16 +247,23 @@ def combine(root: Path, verify: bool = False) -> dict:
     }
 
 
+def fold(text: str) -> str:
+    """A name with case, spacing and punctuation dropped, for telling spellings of one name apart from other names."""
+    return "".join(char for char in text.casefold() if char.isalnum())
+
+
+def slide_records(asset: dict) -> list[dict]:
+    """A catalog entry's provenance records, the caption's (the highest-priority family's) first; a bare record alone."""
+    records = asset.get("provenance")
+    return records if isinstance(records, list) and records else [asset]
+
+
 def slide_notes(asset: dict) -> dict:
     """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated.
     A collection name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out.
     data-songs lists the mapped song titles, which the notes headline when the title is only a wiki file key."""
     found = {"songs": [], "composer": [], "artist": [], "collection": []}
     seen = {key: set() for key in found}
-
-    def fold(text: str) -> str:
-        return "".join(char for char in text.casefold() if char.isalnum())
-
     title = fold(str(asset.get("title") or ""))
 
     def add(key: str, value: object) -> None:
@@ -268,7 +275,7 @@ def slide_notes(asset: dict) -> dict:
             seen[key].add(folded)
             found[key].append(text)
 
-    for record in asset.get("provenance") or [asset]:
+    for record in slide_records(asset):
         for value in record.get("song_titles") or []:
             add("songs", value)
         add("composer", record.get("composer"))
@@ -326,8 +333,7 @@ def slide_provenance(asset: dict) -> dict:
     the highest-priority family), which the slideshow names next to the kind. A wiki upload, whose manifest states its
     lineage caveat as prose, is "wiki"; an archives record carries a class token (community_repost, community_scan,
     official_website, ...). Artist uploads and legacy textures carry none."""
-    records = asset.get("provenance")
-    record = records[0] if isinstance(records, list) and records else asset
+    record = slide_records(asset)[0]
     if record.get("family") == "wikis":
         return {"data-provenance": "wiki"}
     token = record.get("provenance")
@@ -335,21 +341,29 @@ def slide_provenance(asset: dict) -> dict:
 
 
 def slide_composer_source(asset: dict, names: dict) -> dict:
-    """data-composer-source: the sources whose pages give the slide's composer credit, by name, one per line, when the
-    source its caption credits (the entry's first record) is not one of them. A wiki record whose own song page names
-    no composer has the credit of the other wiki's page of the same title (composer_source), and the notes would
-    otherwise read it as the caption source's."""
-    records = asset.get("provenance")
-    records = records if isinstance(records, list) and records else [asset]
-    suppliers = []
+    """data-composer-sources: who gives each composer credit on the slide. Records spell a credit differently
+    ("Narsil (from Ring) feat. ..." on BWIKI, "... Feat. ..." on Fandom), so data-composer lists one line per spelling
+    (slide_notes()), and the notes would otherwise read every line as the caption's source's. For each line, in order,
+    this is a JSON list of the [source id, name] pairs whose pages give it, or [] when the source the caption credits
+    (the entry's first record) is one of them. A wiki record whose own song page names no composer gives the other
+    wiki's credit (composer_source). The slideshow localizes each name by its id, as it does the caption's source;
+    with no line to attribute there is no attribute."""
+    records = slide_records(asset)
+    lines: dict[str, list[str]] = {}
     for record in records:
-        if record.get("composer"):
-            for source in str(record.get("composer_source") or record.get("source_id") or "").split(" / "):
-                if source and source not in suppliers:
-                    suppliers.append(source)
-    if not suppliers or records[0].get("source_id") in suppliers:
+        text = str(record.get("composer") or "").strip()
+        if not text:
+            continue
+        suppliers = lines.setdefault(fold(text), [])
+        for source in str(record.get("composer_source") or record.get("source_id") or "").split(" / "):
+            if source and source not in suppliers:
+                suppliers.append(source)
+    caption = records[0].get("source_id")
+    credits = [[] if caption in suppliers else [[source, names.get(source, source)] for source in suppliers]
+               for suppliers in lines.values()]
+    if not any(credits):
         return {}
-    return {"data-composer-source": "\n".join(names.get(source, source) for source in suppliers)}
+    return {"data-composer-sources": json.dumps(credits, ensure_ascii=False, separators=(",", ":"))}
 
 
 def render_slideshow(root: Path, catalog: dict) -> str:

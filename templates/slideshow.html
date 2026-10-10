@@ -299,14 +299,18 @@ https://github.com/FridrichMethod/deemo
             return node;
         }
 
-        function metaRow(list, label, value) {
+        // A row of the notes, one value per line. A line may carry a note in a quieter type under it (notes[i]; a run of
+        // lines with the same note shows it once, under the last of them).
+        function metaRow(list, label, value, notes) {
             if (!value) return;
             var values = value.split("\n");
+            notes = notes || [];
             var dt = element("dt", null, label);
             var dd = element("dd");
             values.forEach(function(line, i) {
                 if (i) dd.append(document.createElement("br"));
                 dd.append(line);
+                if (notes[i] && notes[i] !== notes[i + 1]) dd.append(document.createElement("br"), element("span", "notes-composer-source", notes[i]));
             });
             // The artist's credit is the row that stays where short screens drop the others (see src/slideshow.css).
             if (label === DEEMO_I18N.t("slideshow.notes.artist")) dt.className = dd.className = "notes-artist";
@@ -322,6 +326,19 @@ https://github.com/FridrichMethod/deemo
                 || (/^[A-Za-z0-9 ]+$/.test(title)
                     && words.some(function(word) { return /[A-Za-z]/.test(word) && /\d/.test(word); })
                     && words.slice(1).every(function(word) { return word === word.toLowerCase(); }));
+        }
+
+        // Who gives each composer credit, from data-composer-sources: for each line of data-composer, the sources
+        // ([id, name]) whose pages give it when the caption's source is not one of them ([] when it is). A credit that
+        // only another source's page gives (BWIKI's song page for a Fandom upload whose own page names no composer,
+        // Fandom's spelling under a BWIKI upload) names that source under its line; names are localized like the caption's.
+        function composerCredits(data) {
+            if (!data.composer || !data.composerSources) return [];
+            return JSON.parse(data.composerSources).map(function(sources) {
+                return sources.length ? DEEMO_I18N.t("slideshow.notes.composer_source", {source: sources.map(function(source) {
+                    return DEEMO_I18N.sourceName(source[0], source[1]);
+                }).join(" / ")}) : "";
+            });
         }
 
         // Liner notes from the slide's data-* attributes: names stay verbatim, only labels are translated.
@@ -381,13 +398,7 @@ https://github.com/FridrichMethod/deemo
             else if (weight > 30) title.dataset.length = "longer";
             else if (weight > 18) title.dataset.length = "long";
             var meta = element("dl", "notes-meta");
-            metaRow(meta, DEEMO_I18N.t("slideshow.notes.music"), data.composer);
-            // A credit given by another source's page than the caption's (data-composer-source: BWIKI's song page for
-            // a Fandom upload whose own page names no composer) names that source under it.
-            if (data.composer && data.composerSource) {
-                meta.lastElementChild.append(document.createElement("br"), element("span", "notes-composer-source",
-                    DEEMO_I18N.t("slideshow.notes.composer_source", {source: data.composerSource.split("\n").join(" / ")})));
-            }
+            metaRow(meta, DEEMO_I18N.t("slideshow.notes.music"), data.composer, composerCredits(data));
             metaRow(meta, DEEMO_I18N.t("slideshow.notes.artist"), data.artist);
             if (data.collection) {
                 metaRow(meta, data.collection.indexOf("\n") >= 0 ? DEEMO_I18N.t("slideshow.notes.collections") : DEEMO_I18N.t("slideshow.notes.collection"), data.collection);

@@ -792,6 +792,27 @@ def check_liner_notes(browser):
     checks.append("liner notes headline the mapped song for a wiki file key")
 
 
+def check_composer_credits(browser):
+    """Each composer line that only another source gives names that source under it, in the page language, with the
+    source's localized name when there is one: Lavuestia Mutanz's BWIKI upload credits its own spelling, and Fandom's
+    spelling follows with Fandom named under it."""
+    music = """() => { const dt = [...document.querySelectorAll('.slide-notes dt')].find((dt) => dt.textContent === DEEMO_I18N.t('slideshow.notes.music'));
+        return [...dt.nextElementSibling.childNodes].filter((node) => node.nodeName !== 'BR').map((node) => [node.nodeName, node.textContent]); }"""
+    for lang in ("en", "zh-CN"):
+        page = open_slideshow(browser, f"asset={quote('wikis:bwiki:e339d70947111b67')}&lang={lang}")
+        page.wait_for_function("document.querySelector('.slide-notes dt') !== null")
+        lines = page.evaluate("imgTargets[slideIndex - 1].dataset.composer.split('\\n')")
+        credit = page.evaluate("""(lines) => DEEMO_I18N.t('slideshow.notes.composer_source', {source: JSON.parse(imgTargets[slideIndex - 1].dataset.composerSources)[1][0][1]})""", lines)
+        assert len(lines) == 2 and "Fandom" in credit and (lang == "zh-CN") == page.evaluate(HAS_HAN, credit), (lang, lines, credit)
+        assert page.evaluate(music) == [["#text", lines[0]], ["#text", lines[1]], ["SPAN", credit]], (lang, page.evaluate(music))
+        # A localized source name replaces the recorded one, as it does in the caption.
+        page.evaluate("""() => { DEEMO_I18N.register({'en': {'source.wikis:fandom': 'Smoke Fandom'}, 'zh-CN': {'source.wikis:fandom': 'Smoke 维基'}}); renderNotes(); }""")
+        localized = page.evaluate("DEEMO_I18N.t('slideshow.notes.composer_source', {source: DEEMO_I18N.t('source.wikis:fandom')})")
+        assert page.evaluate(music)[-1] == ["SPAN", localized], (lang, page.evaluate(music), localized)
+        finish(page)
+    checks.append("composer credits name the source of each line, localized, in both languages")
+
+
 def check_site_icons(page):
     manifest_url = mounted_url("site.webmanifest")
     manifest_response = page.request.get(manifest_url)
@@ -831,6 +852,7 @@ with sync_playwright() as p:
     check_slide_hit_testing(browser)
     check_small_screens(browser)
     check_liner_notes(browser)
+    check_composer_credits(browser)
     check_site_icons(page)
     check_removed_files(page)
     finish(page)
