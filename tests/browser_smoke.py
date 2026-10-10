@@ -29,6 +29,16 @@ REMOVED_FONTS = ("assets/site/fonts/COPRGTL.ttf", "assets/site/fonts/RocknRoll_T
 HAS_HAN = "(text) => /[\\u3400-\\u9fff]/.test(text)"
 IMAGE_SHOWN = "(() => { const img = document.getElementById('full-image'); return img.complete && img.naturalWidth > 0; })()"
 PARAGRAPHS = "[...document.querySelectorAll('#provenance p')].map((p) => p.textContent)"
+SHOWN_ID = "imgTargets[slideIndex - 1].dataset.id"
+SLIDE_SHOWN = "imgTargets[slideIndex - 1].naturalWidth > 0 && imgTargets[slideIndex - 1].closest('.mySlides').classList.contains('is-current')"
+# The slideshow's round controls along the bottom, left to right on screen.
+BOTTOM_ROW = ["photo", "github", "archive-link", "iplayer", "random"]
+# Controls by role and the message key of their accessible name.
+NAMED_CONTROLS = [
+    ("button", "slideshow.nav.prev"), ("button", "slideshow.nav.next"), ("button", "slideshow.screenshot.take"),
+    ("button", "slideshow.music.label"), ("button", "slideshow.autoplay.label"), ("button", "lang.toggle"),
+    ("link", "slideshow.github.label"), ("link", "slideshow.archive.text"), ("link", "slideshow.attribution"),
+]
 
 
 def mounted_url(relative, source=base):
@@ -561,6 +571,139 @@ def check_removed_files(page):
     checks.append("no removed fonts requested or served; no title-tab sprites")
 
 
+def open_slideshow(browser, query, width=1440, height=1000):
+    page = new_page(browser, width, height)
+    navigate(page, "index.html?" + query)
+    page.wait_for_function("document.querySelector('.deemo-view').style.opacity === '1'")
+    page.wait_for_function(SLIDE_SHOWN)
+    return page
+
+
+def hit(page, selector):
+    """Whether a tap at the centre of the first element matching the selector reaches it."""
+    return page.locator(selector).first.evaluate("""(node) => { const box = node.getBoundingClientRect();
+        return node.contains(document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2)); }""")
+
+
+def check_slideshow_controls(browser):
+    """Each control carries its translated accessible name in both languages. The arrow keys turn the slides, but
+    not while a form field has focus; Tab runs along the bottom row as it is drawn; the sand clock reports whether
+    autoplay runs."""
+    for lang in ("en", "zh-CN"):
+        page = open_slideshow(browser, f"asset=legacy%3Amagnolia&lang={lang}")
+        for role, key in NAMED_CONTROLS:
+            name = page.evaluate("(key) => DEEMO_I18N.t(key)", key)
+            assert page.get_by_role(role, name=name, exact=True).count() == 1, (lang, role, name)
+            assert key == "lang.toggle" or (lang == "zh-CN") == page.evaluate(HAS_HAN, name), (lang, name)
+        # The overlay's buttons are hidden while it is closed, so read their labels.
+        labels = page.locator("#screenshot button").evaluate_all("(buttons) => buttons.map((button) => button.getAttribute('aria-label'))")
+        expected = page.evaluate("[DEEMO_I18N.t('slideshow.screenshot.save'), DEEMO_I18N.t('slideshow.screenshot.close')]")
+        assert labels == expected and all((lang == "zh-CN") == page.evaluate(HAS_HAN, label) for label in labels), (lang, labels)
+        finish(page)
+    page = open_slideshow(browser, "asset=legacy%3Amagnolia")
+    page.evaluate("document.activeElement.blur()")
+    start = page.evaluate("slideIndex")
+    page.keyboard.press("ArrowRight")
+    assert page.evaluate("slideIndex") == start + 1 and page.evaluate(SHOWN_ID) != "legacy:magnolia"
+    page.keyboard.press("ArrowLeft")
+    assert page.evaluate("slideIndex") == start and page.evaluate(SHOWN_ID) == "legacy:magnolia"
+    page.evaluate("document.body.append(Object.assign(document.createElement('input'), {id: 'smoke-field'}))")
+    page.locator("#smoke-field").focus()
+    page.keyboard.press("ArrowRight")
+    assert page.evaluate("slideIndex") == start, "The arrow keys belong to a focused form field"
+    page.evaluate("document.getElementById('smoke-field').remove()")
+    row = []
+    for _ in range(40):
+        page.keyboard.press("Tab")
+        stop = page.evaluate("""(names) => { const control = document.activeElement.closest(names.map((name) => '.' + name).join(', '));
+            return control && [control.classList[0], document.activeElement.getBoundingClientRect().left]; }""", BOTTOM_ROW)
+        if stop and stop[0] not in [name for name, _ in row]:
+            row.append(stop)
+        if len(row) == len(BOTTOM_ROW):
+            break
+    assert [name for name, _ in row] == BOTTOM_ROW, row
+    assert [left for _, left in row] == sorted(left for _, left in row), row
+    clock = page.locator(".random button")
+    assert clock.get_attribute("aria-pressed") == "false", "A deep link pauses autoplay"
+    clock.click()
+    assert [clock.get_attribute("aria-pressed"), page.evaluate("randomFlag")] == ["true", 0]
+    clock.click()
+    assert [clock.get_attribute("aria-pressed"), page.evaluate("randomFlag")] == ["false", 1]
+    finish(page)
+    checks.extend(["slideshow control names in both languages", "arrow keys", "bottom-row focus order", "sand clock state"])
+
+
+def check_screenshot_overlay(browser):
+    """A shared or reloaded #screenshot URL opens nothing. The camera opens the overlay with the focus inside and the
+    arrow keys idle; Escape closes and empties it and hands the focus back, with no history entry or URL change."""
+    page = open_slideshow(browser, "asset=legacy%3Amagnolia#screenshot")
+    overlay_open = "document.getElementById('screenshot').classList.contains('is-open')"
+    assert not page.evaluate(overlay_open)
+    assert page.evaluate("getComputedStyle(document.getElementById('screenshot')).visibility") == "hidden"
+    assert hit(page, ".next"), "Nothing covers the page"
+    page.evaluate("downloadCanvas()")  # Save with no screenshot does nothing
+    history = page.evaluate("[history.length, location.href]")
+    page.locator(".photo button").click()
+    page.wait_for_function(overlay_open, timeout=20_000)
+    assert page.evaluate("Boolean(document.activeElement.closest('#screenshot'))")
+    start = page.evaluate("slideIndex")
+    page.keyboard.press("ArrowRight")
+    assert page.evaluate("slideIndex") == start, "The arrow keys wait while the overlay is open"
+    page.keyboard.press("Escape")
+    assert not page.evaluate(overlay_open)
+    assert page.evaluate("document.getElementById('scerrn-content').childElementCount") == 0
+    assert page.evaluate("document.activeElement === document.querySelector('.photo button')")
+    assert page.evaluate("[history.length, location.href]") == history
+    finish(page)
+    checks.append("screenshot overlay: no URL state, Escape, focus return")
+
+
+def check_slide_hit_testing(browser):
+    """Hidden slides stack over the shown one; only the shown slide may take a tap on the artwork."""
+    page = open_slideshow(browser, "asset=legacy%3Amagnolia")
+    current = "imgTargets[slideIndex - 1]"
+    assert page.locator(".mySlides.is-current img").evaluate(f"(img) => img === {current}")
+    assert hit(page, ".mySlides.is-current img")
+    for control in (".next", ".next", ".prev"):
+        page.locator(control).click()
+        page.wait_for_function(SLIDE_SHOWN)
+        assert hit(page, ".mySlides.is-current img"), control
+    finish(page)
+    checks.append("only the shown slide takes taps")
+
+
+def check_small_screens(browser):
+    # A short landscape phone: the next arrow shares its column with the language toggle and takes every tap.
+    page = open_slideshow(browser, "asset=artists%3Apixiv%3A47910628%3Ap0", 568, 320)
+    assert page.locator(".lang-toggle").is_visible()
+    misses = page.locator(".next").evaluate("""(arrow) => { const box = arrow.getBoundingClientRect(), radius = box.width / 2 - 1, misses = [];
+        for (let dx = -radius; dx <= radius; dx += 4) for (let dy = -radius; dy <= radius; dy += 4) {
+            const point = document.elementFromPoint((box.left + box.right) / 2 + dx, (box.top + box.bottom) / 2 + dy);
+            if (dx * dx + dy * dy <= radius * radius && !arrow.contains(point)) misses.push(point && point.className);
+        }
+        return misses; }""")
+    assert not misses, misses
+    start = page.evaluate("slideIndex")
+    page.locator(".next").click(timeout=5000)
+    assert page.evaluate("slideIndex") == start + 1
+    finish(page)
+    # A landscape phone keeps the artist credit on screen, above the control row.
+    page = open_slideshow(browser, "asset=artists%3Ajimdo%3Akolokolsan%3Aglaciology", 844, 390)
+    page.wait_for_function("document.querySelector('.slide-notes dd.notes-artist')?.checkVisibility({opacityProperty: true})", timeout=5000)
+    credit = page.evaluate("""(names) => { const dd = document.querySelector('.slide-notes dd.notes-artist'), box = dd.getBoundingClientRect();
+        const row = Math.min(...names.map((name) => document.querySelector('.' + name).getBoundingClientRect().top));
+        return {text: dd.textContent, artist: imgTargets[slideIndex - 1].dataset.artist.replace(/\\n/g, ''), top: box.top, bottom: box.bottom, row}; }""", BOTTOM_ROW)
+    assert credit["text"] == credit["artist"] and 0 <= credit["top"] and credit["bottom"] <= credit["row"], credit
+    finish(page)
+    # A short portrait phone keeps the artwork at least as tall as the notes and caption below it.
+    page = open_slideshow(browser, "asset=artists%3Apixiv%3A47910628%3Ap0", 375, 553)
+    sizes = page.evaluate("""() => { const art = imgTargets[slideIndex - 1].getBoundingClientRect(), notes = document.querySelector('.liner-text').getBoundingClientRect();
+        return {art: art.height, text: document.querySelector('.asset-caption').getBoundingClientRect().bottom - notes.top}; }""")
+    assert sizes["art"] >= sizes["text"], sizes
+    finish(page)
+    checks.extend(["next arrow clear of the toggle at 568x320", "artist credit at 844x390", "artwork dominant at 375x553"])
+
+
 def check_site_icons(page):
     manifest_url = mounted_url("site.webmanifest")
     manifest_response = page.request.get(manifest_url)
@@ -595,6 +738,10 @@ with sync_playwright() as p:
     check_viewer_provenance(browser)
     check_previews(browser)
     check_attribution(browser)
+    check_slideshow_controls(browser)
+    check_screenshot_overlay(browser)
+    check_slide_hit_testing(browser)
+    check_small_screens(browser)
     check_site_icons(page)
     check_removed_files(page)
     finish(page)
