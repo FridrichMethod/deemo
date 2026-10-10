@@ -428,6 +428,8 @@ def write_json(path, data):
 def save():
     MANIFEST["sources"].sort(key=lambda row: row["id"])
     MANIFEST["assets"].sort(key=lambda row: row["id"])
+    # Failures arrive in thread-completion order; sort them so reruns give stable diffs.
+    MANIFEST["failures"].sort(key=lambda row: (row["source_id"], row.get("asset_id", ""), row["url"], row["error"]))
     write_json(ROOT / MANIFEST_PATH, MANIFEST)
 
 

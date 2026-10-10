@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from hashlib import sha256
 from io import BytesIO
@@ -140,6 +140,10 @@ def slug(text):
 def record_failure(manifest, source_id, url, error, **extra):
     manifest["failures"].append({"source_id": source_id, "url": url,
                                  "error": str(error), **extra})
+
+
+def failure_order(row):
+    return row["source_id"], row.get("asset_id", ""), row["url"], row["error"]
 
 
 def collect_pixiv(manifest, jobs):
@@ -307,7 +311,7 @@ def collect_tumblr(manifest, jobs):
                          "source_page_index": index, "published_at": post.get("date-gmt"),
                          "song_titles": [], "mapping_status": "unmapped",
                          "quality": "artist_public_platform_image"})
-    for missing in TUMBLR_POSTS.keys() - seen:
+    for missing in sorted(TUMBLR_POSTS.keys() - seen):
         source_id = f"artists:tumblr:{missing}"
         page = f"https://wublaze.tumblr.com/post/{missing}"
         manifest["sources"].append({"id": source_id, "name": TUMBLR_POSTS[missing],
@@ -400,6 +404,23 @@ def save_asset(job, data, fetched_at, hashes):
     return asset
 
 
+def fetch_all(manifest, jobs, cache, refresh, workers):
+    """Download in parallel but save in asset-id order, so the SHA-256 dedup primary is deterministic."""
+    hashes = {}
+    ordered = sorted(jobs, key=lambda job: job["id"])
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = [pool.submit(download, job, cache, refresh) for job in ordered]
+        for job, future in zip(ordered, futures):
+            try:
+                result = save_asset(*future.result(), hashes)
+                manifest["assets"].append(result)
+                print(f"Saved {result['id']} {result['width']}x{result['height']}", flush=True)
+            except Exception as error:
+                record_failure(manifest, job["source_id"], job["download_url"], error, asset_id=job["id"])
+                print(f"Failed {job['id']}: {error}", flush=True)
+    return hashes
+
+
 def require_unique(jobs):
     """Stop before any download when two jobs would share an asset id or a file stem."""
     for label, keys in (("asset id", [job["id"] for job in jobs]),
@@ -470,18 +491,7 @@ def main():
     collect_reference(manifest)
     keep_source_details(previous, manifest)
     require_unique(jobs)
-    hashes = {}
-    with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        futures = {pool.submit(download, job, cache, args.refresh): job for job in jobs}
-        for future in as_completed(futures):
-            job = futures[future]
-            try:
-                result = save_asset(*future.result(), hashes)
-                manifest["assets"].append(result)
-                print(f"Saved {result['id']} {result['width']}x{result['height']}", flush=True)
-            except Exception as error:
-                record_failure(manifest, job["source_id"], job["download_url"], error, asset_id=job["id"])
-                print(f"Failed {job['id']}: {error}", flush=True)
+    hashes = fetch_all(manifest, jobs, cache, args.refresh, args.workers)
     successes = Counter(asset["source_id"] for asset in manifest["assets"])
     failures = Counter(failure["source_id"] for failure in manifest["failures"])
     for source in manifest["sources"]:
@@ -495,6 +505,7 @@ def main():
         source["asset_count"] = records[source["id"]]
     manifest["assets"].sort(key=lambda asset: asset["id"])
     manifest["sources"].sort(key=lambda source: source["id"])
+    manifest["failures"].sort(key=failure_order)
     write_json(manifest_path, manifest)
     print(json.dumps({"sources": len(manifest["sources"]), "assets": len(manifest["assets"]),
                       "unique_files": len(hashes), "failures": len(manifest["failures"])}, indent=2))
