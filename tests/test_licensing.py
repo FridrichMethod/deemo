@@ -146,6 +146,18 @@ class ProvenanceTests(unittest.TestCase):
                     self.assertEqual(len(matching), 1, "Each file under assets/site/ needs exactly one provenance row")
                     self.assertIn(f"`{inherited.get(relative, '(not in the legacy inventory)')}`", matching[0], "Name the inherited upstream path")
 
+    def test_unverified_music_rights_are_not_assigned_to_rayark_alone(self):
+        # The wikis credit the song to Sleepy WiFi feat. Riin; nothing names Rayark as the sole rights holder.
+        hedges = {"licenses/README.md": "Rayark Inc. and/or the artists", "licenses/README.zh-CN.md": "Rayark Inc. 及/或原作者"}
+        for document, hedge in hedges.items():
+            with self.subTest(document=document):
+                lines = (ROOT / document).read_text(encoding="utf-8").splitlines()
+                rows = [line for line in lines if line.startswith("| `audio/")]
+                self.assertEqual(len(rows), 1)
+                creator = rows[0].split(" | ")[3]
+                self.assertIn(hedge, creator)
+                self.assertNotRegex(creator, r"© Rayark Inc\.\s*$")
+
     def test_readmes_state_the_inventory_size(self):
         count = len(inventory_records())
         for document, pattern in (("README.md", r"SHA-256 of (\d+) legacy files"), ("README.zh-CN.md", r"(\d+) 个旧文件")):

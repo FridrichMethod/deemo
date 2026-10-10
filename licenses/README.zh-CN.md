@@ -21,7 +21,7 @@
 
 | 文件 | 继承自 | 用途 | 创作者 / 权利人 | 许可与说明 |
 | --- | --- | --- | --- | --- |
-| `audio/Riin - Alice good night.mp3` | `src/Riin - Alice good night.mp3` | 幻灯片背景音乐 | DEEMO 曲目《Alice good night》（Epilogue 曲包），DEEMO wiki 署名为 Sleepy WiFi feat. Riin；© Rayark Inc. | 未知许可。ID3 标签（艺术家“Riin”、专辑“最新热歌慢摇102”、网易云音乐“163 key”注释）表明它来自音乐平台下载，而非官方发行；尚未核实该录音是否就是游戏内音轨。 |
+| `audio/Riin - Alice good night.mp3` | `src/Riin - Alice good night.mp3` | 幻灯片背景音乐 | DEEMO 曲目《Alice good night》（Epilogue 曲包），DEEMO wiki 署名为 Sleepy WiFi feat. Riin；© Rayark Inc. 及/或原作者（Sleepy WiFi、Riin），未核实。 | 未知许可。ID3 标签（艺术家“Riin”、专辑“最新热歌慢摇102”、网易云音乐“163 key”注释）表明它来自音乐平台下载，而非官方发行；尚未核实该录音是否就是游戏内音轨。 |
 | `fonts/Fantique-Four.ttf` | `src/Fantique-Four.ttf` | 幻灯片标题字体（`Fantique`） | Steve Tune，Digital Empires（Copyright Digital Empires Inc 1997） | 共享软件 / 捐赠软件。字体内嵌许可写明“The font is complete as is and you may use it”，未提及再分发。 |
 | `icons/android-chrome-192x192.png` | `android-chrome-192x192.png` | Web 应用清单 | DEEMO 应用图标插画（Deemo 与少女），© Rayark Inc. | 无许可。为游戏图标的缩放副本；图标集由谁、从哪张图片制作均无记录。 |
 | `icons/apple-touch-icon.png` | `apple-touch-icon.png` | 幻灯片触屏图标与 `og:image` | DEEMO 应用图标插画，© Rayark Inc. | 同上。 |
