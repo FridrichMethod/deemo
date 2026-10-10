@@ -217,17 +217,18 @@ class ArtistsTests(TempRoot):
             self.assertEqual(by_id["artists:pixiv:9:p1"]["duplicate_of"], "artists:pixiv:9:p0")
 
     def test_download_refuses_other_hosts_and_redirects(self):
-        job = {"id": "artists:pixiv:1:p0", "source_id": "artists:pixiv:1", "page_url": PAGE_URL,
-               "download_url": "https://i.pximg.net.evil.example/1_p0.png"}
-        web = FakeWeb()
-        with patch.object(artists.requests, "get", web), self.assertRaisesRegex(ValueError, "expected hosts"):
-            artists.download(job, {}, False)
-        self.assertEqual(web.requested, [])
-        job["download_url"] = NEW_P0
-        web = FakeWeb({NEW_P0: (302, b"", {"Location": "http://169.254.169.254/latest"})})
-        with patch.object(artists.requests, "get", web), self.assertRaisesRegex(ValueError, "expected hosts"):
-            artists.download(job, {}, False)
-        self.assertEqual(web.requested, [NEW_P0])
+        job = {"id": "artists:pixiv:1:p0", "source_id": "artists:pixiv:1", "page_url": PAGE_URL}
+        # urllib3 reads the backslash as the start of the path, so the second URL goes to 169.254.169.254.
+        for url in ("https://i.pximg.net.evil.example/1_p0.png", "https://169.254.169.254\\@i.pximg.net/img-original/1_p0.png"):
+            web = FakeWeb()
+            with patch.object(artists.requests, "get", web), self.assertRaisesRegex(ValueError, "expected hosts"):
+                artists.download({**job, "download_url": url}, {}, False)
+            self.assertEqual(web.requested, [])
+        for location in ("http://169.254.169.254/latest", "https://169.254.169.254\\@i.pximg.net/1_p0.png"):
+            web = FakeWeb({NEW_P0: (302, b"", {"Location": location})})
+            with patch.object(artists.requests, "get", web), self.assertRaisesRegex(ValueError, "expected hosts"):
+                artists.download({**job, "download_url": NEW_P0}, {}, False)
+            self.assertEqual(web.requested, [NEW_P0])
 
 
 class TumblrArtistTests(unittest.TestCase):
@@ -291,11 +292,12 @@ class JimdoTests(TempRoot):
         self.assertIn("Duplicate", manifest["failures"][0]["error"])
 
     def test_lightbox_host_is_checked_by_hostname(self):
-        image = self.image("A", "i0000000000000001")
-        image["lightbox"] = "https://evil.example/image.jimcdn.com/app/cms/image/transf/none/image/i0000000000000001/x.png"
-        manifest, jobs = self.collect([image])
-        self.assertEqual(jobs, [])
-        self.assertEqual(manifest["sources"][0]["status"], "failed")
+        for lightbox in ("https://evil.example/image.jimcdn.com/app/cms/image/transf/none/image/i0000000000000001/x.png",
+                         "https://evil.example\\@image.jimcdn.com/app/cms/image/transf/none/image/i0000000000000001/x.png"):
+            image = {**self.image("A", "i0000000000000001"), "lightbox": lightbox}
+            manifest, jobs = self.collect([image])
+            self.assertEqual(jobs, [], lightbox)
+            self.assertEqual(manifest["sources"][0]["status"], "failed")
 
     def test_duplicate_jobs_abort_before_downloading(self):
         job = {"id": "artists:x:1", "directory": "x", "stem": "one"}
@@ -419,6 +421,7 @@ class ArchivesTests(TempRoot):
             "https://attacker.example/x?media.tumblr.com/_cover.png",
             "http://169.254.169.254/latest/media.tumblr.com/_cover.png",
             "https://media.tumblr.com.attacker.example/a_cover.png",
+            "https://attacker.example\\@64.media.tumblr.com/tumblr_y_cover.png",
             "https://64.media.tumblr.com/tumblr_x_1280.jpg"))
         self.assertEqual(archives.post_covers(html, {}), ["https://64.media.tumblr.com/tumblr_x_cover.jpg"])
 
@@ -429,7 +432,8 @@ class ArchivesTests(TempRoot):
                        "https://ia800.us.archive.org/1.jpg": png("red")})
         with patch.object(archives, "session", lambda: web):
             self.assertEqual(archives.get(start, archives.CAA_HOSTS).url, "https://ia800.us.archive.org/1.jpg")
-            for location in ("https://attacker.example/1.jpg", "http://archive.org/1.jpg", "http://169.254.169.254/"):
+            for location in ("https://attacker.example/1.jpg", "http://archive.org/1.jpg", "http://169.254.169.254/",
+                             "https://attacker.example\\@archive.org/1.jpg"):
                 web.routes[start] = (302, b"", {"Location": location})
                 web.requested.clear()
                 with self.assertRaisesRegex(ValueError, "expected hosts"):
@@ -453,6 +457,50 @@ class ArchivesTests(TempRoot):
         with patch.object(archives, "session", lambda: FakeWeb({url: one, post["photo-url-1280"]: png("red")})):
             archives.tumblr_cleaned()
         self.assertIn("retained unchanged", archives.MANIFEST["sources"][0]["notes"])
+
+
+class ConnectionHostTests(unittest.TestCase):
+    """The allow-list must judge the host requests really connects to, read here from the real HTTPAdapter."""
+
+    HOSTS = ("media.tumblr.com",)
+    REFUSED = ("https://attacker.example\\@64.media.tumblr.com/x_cover.png",
+               "https://64.media.tumblr.com\\.attacker.example/x_cover.png",
+               "https://64.media.tumblr.com@attacker.example/x_cover.png",
+               "https://user:secret@64.media.tumblr.com/x_cover.png",
+               "https://64.media.tumblr.com%2eattacker.example/x_cover.png",
+               "https://64.media.tumblr.com:8443/x_cover.png",
+               "https:///x_cover.png")
+    ACCEPTED = ("https://64.media.tumblr.com/x_cover.png", "HTTPS://64.MEDIA.TUMBLR.COM./x_cover.png",
+                "https://64.media.tumblr.com#@attacker.example/", "https://64.media.tumblr.com?@attacker.example/")
+
+    def setUp(self):
+        self.addCleanup(lambda: hasattr(archives.LOCAL, "session") and delattr(archives.LOCAL, "session"))
+
+    def connection_hosts(self, call):
+        hosts = []
+
+        def send(adapter, request, **kwargs):
+            hosts.append(adapter.build_connection_pool_key_attributes(request, True, None)[0]["host"])
+            raise requests.ConnectionError("offline test")
+
+        with patch.object(requests.adapters.HTTPAdapter, "send", send), contextlib.suppress(ValueError, requests.ConnectionError):
+            call()
+        return hosts
+
+    def test_only_allowed_connection_hosts_are_contacted(self):
+        fetches = {"archives.get": lambda url: archives.get(url, self.HOSTS),
+                   "artists.get_within": lambda url: artists.get_within(url, {}, self.HOSTS)}
+        for name, fetch in fetches.items():
+            for module in (archives, artists):
+                for url in self.REFUSED:
+                    self.assertFalse(module.host_allowed(url, self.HOSTS), (module.__name__, url))
+                for url in self.ACCEPTED:
+                    self.assertTrue(module.host_allowed(url, self.HOSTS), (module.__name__, url))
+            for url in self.REFUSED:
+                self.assertEqual(self.connection_hosts(lambda: fetch(url)), [], (name, url))
+            for url in self.ACCEPTED:
+                hosts = self.connection_hosts(lambda: fetch(url))
+                self.assertEqual([host.rstrip(".") for host in hosts], ["64.media.tumblr.com"], (name, url))
 
 
 class RetryStatusTests(unittest.TestCase):

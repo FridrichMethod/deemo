@@ -67,14 +67,23 @@ def https(url):
 
 
 def host_allowed(url, hosts):
-    """True for an https URL whose hostname is one of hosts or a subdomain of one."""
-    try:
-        parts = urlsplit(url)
-        port = parts.port
-    except ValueError:
+    """True for an https URL whose hostname is one of hosts or a subdomain of one.
+
+    The hostname checked is the one requests connects to: it is read from the URL as requests
+    prepares it. A URL whose raw form names another host (urllib3 reads a backslash as the start of
+    the path, so "https://a.example\\@b.example/" goes to a.example) or carries user info is refused.
+    """
+    if not isinstance(url, str):
         return False
-    host = (parts.hostname or "").rstrip(".")
-    return (parts.scheme == "https" and port in (None, 443)
+    try:
+        raw = urlsplit(url)
+        sent = urlsplit(requests.Request("GET", url).prepare().url)
+        ports = {raw.port, sent.port}
+    except (ValueError, requests.RequestException):
+        return False
+    host = (sent.hostname or "").rstrip(".")
+    return (sent.scheme == "https" and raw.hostname == sent.hostname and ports <= {None, 443}
+            and "@" not in raw.netloc + sent.netloc
             and any(host == allowed or host.endswith("." + allowed) for allowed in hosts))
 
 
