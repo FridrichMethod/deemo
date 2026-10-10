@@ -31,11 +31,12 @@ def safe_path(root: Path, value: str) -> Path:
     relative = Path(value)
     if relative.is_absolute() or not relative.parts or ".." in relative.parts:
         raise ValueError(f"Unsafe asset path: {value}")
-    path = (root / relative).resolve()
-    if not path.is_relative_to(root.resolve()):
-        raise ValueError(f"Asset outside repository: {value}")
     if relative.parts[0] != "assets":
         raise ValueError(f"Unexpected asset directory: {value}")
+    # Resolving follows symlinks: a linked file or directory must still land inside the repository's assets/.
+    path = (root / relative).resolve()
+    if not path.is_relative_to(root.resolve()) or not path.is_relative_to((root / "assets").resolve()):
+        raise ValueError(f"Asset outside the repository's assets directory: {value}")
     return path
 
 

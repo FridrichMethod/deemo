@@ -264,6 +264,34 @@ class CatalogTests(unittest.TestCase):
         with self.assertRaises((ValueError, FileNotFoundError)):
             build.legacy_assets(self.root)
 
+    def test_symlinks_cannot_lead_an_asset_path_out_of_assets(self):
+        outside = tempfile.TemporaryDirectory()
+        self.addCleanup(outside.cleanup)
+        secret = Path(outside.name) / "secret.png"
+        secret.write_bytes((self.root / self.asset["path"]).read_bytes())
+        (self.root / "NOTICE").write_text("not an asset", encoding="utf-8")
+        links = {
+            "assets/public/artists/outside.png": secret,
+            "assets/public/artists/notice.png": self.root / "NOTICE",
+            "assets/public/linked": self.root / "data",
+        }
+        for link, target in links.items():
+            try:
+                (self.root / link).symlink_to(target)
+            except OSError as error:  # Windows without the symlink privilege
+                self.skipTest(f"Cannot create symlinks: {error}")
+        for value in ("assets/public/artists/outside.png", "assets/public/artists/notice.png", "assets/public/linked/sources/artists.json"):
+            with self.subTest(value), self.assertRaisesRegex(ValueError, "outside"):
+                build.safe_path(self.root, value)
+        with self.assertRaisesRegex(ValueError, "outside"):
+            build.validate_asset(self.root, {**self.asset, "path": "assets/public/artists/outside.png"}, True)
+        # A checkout whose whole assets/ directory links elsewhere does not pass either.
+        checkout = Path(outside.name) / "checkout"
+        checkout.mkdir()
+        (checkout / "assets").symlink_to(self.root / "assets", target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "outside"):
+            build.safe_path(checkout, self.asset["path"])
+
     def test_unsafe_paths_rejected(self):
         for path in ("../secret.png", "/tmp/secret.png", "assets/../../secret.png", "README.md", "trans/magnolia.png", "tiny/magnolia.png", ""):
             with self.subTest(path=path), self.assertRaises(ValueError):
