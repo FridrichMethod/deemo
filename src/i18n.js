@@ -35,6 +35,15 @@
     const query = params.toString();
     return match[1] + (query ? `?${query}` : "") + (match[3] || "");
   }
+  // The toggle's label and title when src/i18n/common.js has not registered (or failed to load). The markup is the
+  // English page's, which names zh-CN; the other way needs no table. Captured before the first relabelling.
+  const staticToggles = new WeakMap();
+  function toggleText(button, key) {
+    if (has(key)) return t(key);
+    if (!staticToggles.has(button)) staticToggles.set(button, {"lang.toggle": button.textContent.trim(), "lang.toggle.title": button.title});
+    if (lang === DEFAULT) return staticToggles.get(button)[key];
+    return key === "lang.toggle" ? "English" : "Switch to English";
+  }
   // Runs again after each register(); keys whose table has not registered yet keep the page's static English text.
   function apply(root = document) {
     document.documentElement.lang = lang;
@@ -46,16 +55,16 @@
       }
     }
     for (const link of root.querySelectorAll("a[data-lang-link]")) link.setAttribute("href", localizeHref(link.getAttribute("href")));
-    if (!has("lang.toggle")) return;
     for (const button of root.querySelectorAll("[data-lang-toggle]")) {
       // The label names the other language in that language, so only its span carries that language's tag;
       // the button inherits the page language, which its title is written in.
       const label = document.createElement("span");
       label.lang = lang === DEFAULT ? ALTERNATE : DEFAULT;
-      label.textContent = t("lang.toggle");
+      label.textContent = toggleText(button, "lang.toggle");
+      const title = toggleText(button, "lang.toggle.title");
       button.replaceChildren(label);
       button.removeAttribute("lang");
-      button.title = t("lang.toggle.title");
+      button.title = title;
     }
   }
   function setLang(value) {
@@ -71,8 +80,9 @@
     const toggle = event.target instanceof Element && event.target.closest("[data-lang-toggle]");
     if (!toggle) return;
     event.preventDefault();
-    // Go to the language the label names (its lang tag). Until src/i18n/common.js registers, the label is still the
-    // static one of the English page, which names zh-CN, so a zh-CN page stays put instead of doing the opposite.
+    // Go to the language the label names (its lang tag). apply() labels the toggle from the page language as soon as
+    // the page is parsed, with or without src/i18n/common.js; before that the static label names zh-CN, so a zh-CN
+    // page stays put instead of doing the opposite of what the label says.
     const named = normalize(toggle.querySelector("[lang]")?.getAttribute("lang"));
     setLang(named || (lang === DEFAULT ? ALTERNATE : DEFAULT));
   });

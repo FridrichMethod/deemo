@@ -8,7 +8,7 @@
 
 ## 浏览
 
-在线访问：[可搜索图库](https://fridrichmethod.github.io/deemo/archive.html) · [幻灯片](https://fridrichmethod.github.io/deemo/)。仓库、网站和曲绘均公开，无需登录即可访问。
+在线访问：[可搜索的曲绘档案](https://fridrichmethod.github.io/deemo/archive.html) · [幻灯片](https://fridrichmethod.github.io/deemo/)。仓库、网站和曲绘均公开，无需登录即可访问。
 
 启动仅限本机的静态服务：
 
@@ -36,7 +36,7 @@ python -I -m http.server 8765 --bind 127.0.0.1
 
 抓取 Wiki 和安装依赖在只读令牌、不保存凭据的任务中进行。另一个不运行任何第三方代码的任务只接收这两个快照文件，据此重新生成报告、提交并创建 PR；写权限令牌只用于这次推送和 PR 命令。它只更新或关闭本仓库中从 `auto/wiki-source-check` 发起的 PR，无论由机器人还是维护者创建（来自 fork、分支同名的 PR 会被忽略）；若有其他人向该分支提交过，工作流拒绝覆盖它：先合并或转移这些提交，再删除分支。PR 的标题和正文归机器人所有，每次更新都会重写。不合并而关闭 PR 并不能阻止下一次仍发现差异的运行创建新 PR；如需暂停检查，请停用该工作流。GitHub 不会为用 `GITHUB_TOKEN` 创建的 PR 运行工作流，因此测试工作流不会在快照 PR 上运行；该 PR 只改动构建不读取的两个发现文件，合并后 Pages 工作流会再次运行全部检查。
 
-合并该 PR 只更新快照，不改变图库。随后在本地运行 `scripts/fetch_wikis.py --resume` 下载新增和重新上传的文件，再 build、verify、检查 `failures`、`upstream_status` 与 checksum 字段并提交图片与清单（命令见 PR 正文和下文"目录与复现"）。`--resume` 不会删除任何文件：已移除和被取代的记录仍保留在清单中，以 `upstream_status` 标记。首次启用前需要在仓库 Settings → Actions → General → Workflow permissions 勾选 "Allow GitHub Actions to create and approve pull requests"，否则工作流能推分支但无法创建 PR。公开仓库 60 天没有提交时 GitHub 会暂停 `schedule` 触发，需在 Actions 页重新启用。
+合并该 PR 只更新快照，不改变图库。随后在本地运行 `scripts/fetch_wikis.py --resume` 下载新增和重新上传的文件，用 `scripts/build_thumbnails.py --prune` 刷新网格预览图（见下文"网格预览图"），再用 `scripts/build_catalog.py --verify` 构建，运行全部 `tests/test_*.py`，检查 `failures`、`upstream_status` 与 checksum 字段，然后提交图片、预览图、清单与重新生成的目录（命令见 PR 正文和下文"目录与复现"）。`--resume` 不会删除任何文件：已移除和被取代的记录仍保留在清单中，以 `upstream_status` 标记。首次启用前需要在仓库 Settings → Actions → General → Workflow permissions 勾选 "Allow GitHub Actions to create and approve pull requests"，否则工作流能推分支但无法创建 PR。公开仓库 60 天没有提交时 GitHub 会暂停 `schedule` 触发，需在 Actions 页重新启用。
 
 画师来源（`fetch_artists.py`）的 Pixiv 作品 ID 写在脚本里，公开档案来源基本是静态内容，二者都不在自动检查范围内；要补充新作品仍需手动编辑脚本并重新抓取。
 
@@ -53,7 +53,7 @@ python -I -m http.server 8765 --bind 127.0.0.1
 
 所有下载均保留响应的原始 bytes，没有 AI 放大、裁切、去水印、去背景或格式转换。`original` 表示站点提供的原始下载规格，不自动等同于画师工作母档。Fandom 中部分下载的 checksum 与 Wiki 上传 metadata 不同，清单会明确记录。
 
-旧素材曲名使用公开映射的精确内部 key 补全；没有精确 key 时，使用唯一一个仅大小写不同的 key，并标记为 `mapped_case_insensitive_internal_key`。画师帖子中无法直接确认的单图曲名保留原帖与页序，并标记 `unmapped`；原帖分组不自动当作附图的曲包归属。作曲家和画师使用不同字段。
+旧素材曲名使用公开映射的精确内部 key 补全；没有精确 key 时，使用唯一一个仅大小写不同的 key，并标记为 `mapped_case_insensitive_internal_key`。映射中完全没有的纹理，若有文件 key 相同（忽略大小写、空格和标点，如 `samsara105_fc` 与 Fandom 的 `Samsara105 fc.png`）的 Wiki 单曲图上传且其映射的歌曲一致，则采用这些歌曲，并标记为 `mapped_wiki_file_key`（6 张纹理）。画师帖子中无法直接确认的单图曲名保留原帖与页序，并标记 `unmapped`；原帖分组不自动当作附图的曲包归属。作曲家和画师使用不同字段。同一曲包在所有来源中只显示一种拼写：Wiki 记录共用的拼写（见 [docs/sources-wikis.zh-CN.md](docs/sources-wikis.zh-CN.md)）；没有 Wiki 记录提及的曲包，取其各拼写中按码位排序的第一个。拼写不同的记录（如歌曲映射中的 `Etude collection`）把自己的拼写保留在 `collection_aliases` 中，档案搜索会匹配它；原帖分组按原帖的写法引用。
 
 付费画集与游戏只记录购买来源，未下载。失效分享、访问失败、音频波形/谱图、视频和无法确认归属的混合 fanart 站点记录在来源清单中，不作为成功下载的曲绘。
 
@@ -110,7 +110,7 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
 .venv/bin/python -I scripts/fetch_archives.py --verify
 
 # 可选：上文的本机 HTTP 服务运行时，使用已安装的 Chrome 做浏览器验收
-# （不到一分钟；出现任何控制台错误或失败的请求也会判为失败）
+# （约一分半钟；出现任何控制台错误或失败的请求也会判为失败）
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -I tests/browser_smoke.py --base http://127.0.0.1:8765 --browser /usr/bin/google-chrome
 ```
@@ -126,9 +126,11 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
 .venv/bin/python scripts/build_catalog.py --verify
 .venv/bin/python -I scripts/build_thumbnails.py --check
 .venv/bin/python -I tests/test_thumbnails.py
+# 可选，较慢：从原图重新编码每张预览图
+.venv/bin/python -I scripts/build_thumbnails.py --verify
 ```
 
-使用 `requirements.txt` 中固定的 Pillow 版本时，重建会写出逐字节相同的文件；`--verify` 会从原图重新编码每张预览图并加以确认。`--check`（`tests/test_thumbnails.py` 也会运行）确认每张较大的图库图片都有预览图，且每张预览图存在、可解码、尺寸和哈希符合记录，也没有孤立文件。`--prune` 删除原图已不在图库中的预览图。脚本不会混用不同的编码设置或 Pillow 版本；`--rebuild` 会重新编码全部预览图。遇到无法如实预览的色彩模式或配置文件（如 CMYK）时，脚本会报错停止，而不是写出颜色错误的预览图。
+使用 `requirements.txt` 中固定的 Pillow 版本时，重建会写出逐字节相同的文件；`scripts/build_thumbnails.py --verify` 会从原图重新编码每张预览图并加以确认，而 `scripts/build_catalog.py --verify` 只检查记录中的每张预览图存在且大小与 SHA-256 符合记录。`scripts/build_thumbnails.py --check`（`tests/test_thumbnails.py` 也会运行）确认每张较大的图库图片都有预览图，且每张预览图存在、可解码、尺寸和哈希符合记录，也没有孤立文件。`scripts/build_thumbnails.py --prune` 删除原图已不在图库中的预览图。脚本不会混用不同的编码设置或 Pillow 版本；`scripts/build_thumbnails.py --rebuild` 会重新编码全部预览图。遇到无法如实预览的色彩模式或配置文件（如 CMYK）时，脚本会报错停止，而不是写出颜色错误的预览图。
 
 ## 署名
 

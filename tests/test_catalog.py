@@ -85,6 +85,7 @@ class CatalogTests(unittest.TestCase):
         for family in build.SOURCE_MANIFESTS:
             (self.root / f"data/sources/{family}.json").write_text(json.dumps({"sources": [], "assets": []}), encoding="utf-8")
         (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {"songs": {}, "books": []}}), encoding="utf-8")
+        (self.root / "data/thumbs.json").write_text(json.dumps({"thumbnails": {}}), encoding="utf-8")
         for variant in ("trans", "tiny"):
             (self.root / f"assets/legacy/{variant}").mkdir(parents=True, exist_ok=True)
 
@@ -350,6 +351,77 @@ class CatalogTests(unittest.TestCase):
         # Two keys that differ only in case leave the texture unmapped rather than guessing.
         self.assertEqual((assets["Echo"]["title"], assets["Echo"]["title_status"], assets["Echo"]["mapping_source"]), ("Echo", "internal_key", None))
 
+    def test_unmapped_legacy_key_takes_the_songs_of_a_same_key_wiki_upload(self):
+        # The wiki's song artwork "Samsara105 fc.png" is the texture samsara105_fc, which the song mapping lacks: both
+        # pages then call it "The 105th Day" rather than song artwork in the archive and an unmapped texture here.
+        for key in ("samsara105_fc", "walkingbythesea", "magnolia", "disputed_key", "booksprites_0"):
+            self.legacy_pair(key)
+        mapping = {"source_url": "https://example.com/mapping", "data": {"songs": {"magnolia": {"name": "Magnolia"}}, "books": []}}
+        (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping), encoding="utf-8")
+
+        def upload(name, title, songs, kind="song_art"):
+            colour = tuple(hashlib.sha256(name.encode()).digest()[:3])
+            return self.image(f"assets/public/wikis/{name}.png", colour, id=f"wikis:test:{name}", source_id="wikis:test",
+                              title=title, kind=kind, song_titles=songs, page_url=f"https://wiki.example/File:{name}")
+
+        uploads = [upload("a", "Samsara105 fc", ["The 105th Day"]), upload("b", "Walking By The Sea", ["Walking by the sea"]),
+                   upload("c", "Walking by the sea", ["Walking by the sea"]), upload("d", "Magnolia", ["Not this one"]),
+                   upload("e", "Disputed key", ["One"]), upload("f", "Disputed Key", ["Two"]),
+                   upload("g", "Booksprites 0", [], kind="collection_cover")]
+        (self.root / "data/sources/wikis.json").write_text(json.dumps({"sources": [{"id": "wikis:test", "name": "Wiki", "url": "https://wiki.example/"}],
+                                                                       "assets": uploads}), encoding="utf-8")
+        catalog = build.combine(self.root, verify=True)
+        legacy = {asset["internal_key"]: asset for asset in catalog["assets"] if asset["family"] == "legacy"}
+        self.assertEqual({key: (asset["title"], asset["song_titles"], asset["kind"], asset["title_status"], asset["mapping_source"])
+                          for key, asset in legacy.items()}, {
+            "samsara105_fc": ("The 105th Day", ["The 105th Day"], "song_art", "mapped_wiki_file_key", "https://wiki.example/File:a"),
+            "walkingbythesea": ("Walking by the sea", ["Walking by the sea"], "song_art", "mapped_wiki_file_key", "https://wiki.example/File:b"),
+            # The song mapping's own key wins; uploads that disagree on the songs map nothing; covers map no song.
+            "magnolia": ("Magnolia", ["Magnolia"], "song_art", "mapped_exact_internal_key", "https://example.com/mapping"),
+            "disputed_key": ("disputed_key", [], "illustration", "internal_key", None),
+            "booksprites_0": ("booksprites_0", [], "collection_cover", "internal_key", None),
+        })
+        self.assertIsNone(legacy["samsara105_fc"]["composer"])
+        kinds = {slide["data-id"]: (slide["data-kind"], slide.get("data-songs")) for slide in self.slides(catalog) if slide["data-id"].startswith("legacy:")}
+        self.assertEqual(kinds["legacy:samsara105_fc"], ("song_art", "The 105th Day"))
+        self.assertEqual(kinds["legacy:disputed_key"], ("unmapped", None))
+
+    def test_every_family_shows_the_wikis_spelling_of_a_collection(self):
+        # The legacy song mapping spells books "Etude collection" where the wikis say "Etude Collection"; the archive and
+        # the slideshow show one spelling, the wikis', and the record's own stays searchable as a collection alias.
+        for key in ("magnolia", "altale", "sheep"):
+            self.legacy_pair(key)
+        songs = {"magnolia": {"name": "Magnolia", "book": 0}, "altale": {"name": "Altale", "book": 1}, "sheep": {"name": "Sheep", "book": 2}}
+        books = [{"name": "Etude collection"}, {"name": "MILI collection"}, {"name": "Post grouping"}]
+        (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {"songs": songs, "books": books}}), encoding="utf-8")
+        wiki = [self.image("assets/public/wikis/a.png", "red", id="wikis:test:a", source_id="wikis:test", collections=["Etude Collection"],
+                           collection_aliases=["Etude collection"]),
+                self.image("assets/public/wikis/b.png", "green", id="wikis:test:b", source_id="wikis:test", collections=["ETUDE collection"],
+                           upstream_status="removed")]
+        artists = [self.image("assets/public/artists/m.png", "blue", id="artist:m", collection="Mili Collection"),
+                   self.image("assets/public/artists/p.png", "black", id="artist:p", collection="post grouping", collection_scope="source_post_grouping")]
+        for family, assets, source in (("wikis", wiki, "wikis:test"), ("artists", artists, "artist")):
+            content = {"sources": [{"id": source, "name": family, "url": "https://example.com/"}], "assets": assets}
+            (self.root / f"data/sources/{family}.json").write_text(json.dumps(content), encoding="utf-8")
+        records = {record["id"]: record for asset in build.combine(self.root, verify=True)["assets"] for record in asset["provenance"]}
+        shown = {record_id: (record.get("collection"), record.get("collections"), record.get("collection_aliases"))
+                 for record_id, record in records.items()}
+        self.assertEqual(shown, {
+            # The current wiki records' spelling wins (they are left as they are), over a removed record's and the
+            # first in code-point order.
+            "wikis:test:a": (None, ["Etude Collection"], ["Etude collection"]),
+            "wikis:test:b": (None, ["Etude Collection"], ["ETUDE collection"]),
+            "legacy:magnolia": ("Etude Collection", None, ["Etude collection"]),
+            # No current wiki record names this one: the first spelling in code-point order.
+            "legacy:altale": ("MILI collection", None, None),
+            "artist:m": ("MILI collection", None, ["Mili Collection"]),
+            # A post's grouping is quoted as the post spells it.
+            "artist:p": ("post grouping", None, None),
+            "legacy:sheep": ("Post grouping", None, None),
+        })
+        slides = {slide["data-id"]: slide.get("data-collection") for slide in self.slides(build.combine(self.root, verify=True))}
+        self.assertEqual((slides["legacy:magnolia"], slides["wikis:test:a"], slides["artist:m"]), ("Etude Collection", "Etude Collection", "MILI collection"))
+
     def test_unambiguous_legacy_cover_keys_are_collection_covers(self):
         for key in ("deemo1a", "Deemo1B", "booksprites_0", "MN2_booksprites", "deemo1", "deemo1ab", "walkingbythesea"):
             self.legacy_pair(key)
@@ -433,6 +505,17 @@ class CatalogTests(unittest.TestCase):
                 with self.assertRaisesRegex(FileNotFoundError, f"Missing required input: {relative}"):
                     build.combine(self.root, verify=True)
                 self.required_inputs()
+
+    def test_missing_thumbnail_manifest_fails_the_build(self):
+        # Without data/thumbs.json the catalog would lose every grid preview; the build stops instead, before it
+        # writes any generated file.
+        self.assertIsNone(self.run_main("--verify"))
+        written = {name: (self.root / name).read_bytes() for name in ("data/catalog.json", "data/catalog.js", "index.html")}
+        (self.root / "data/thumbs.json").unlink()
+        for args in (("--verify",), ("--verify", "--check"), ()):
+            with self.subTest(args=args), self.assertRaisesRegex(FileNotFoundError, "Missing required input: data/thumbs.json"):
+                self.run_main(*args)
+        self.assertEqual({name: (self.root / name).read_bytes() for name in written}, written)
 
     def test_song_mapping_without_songs_is_rejected(self):
         (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {}}), encoding="utf-8")
@@ -548,6 +631,22 @@ class CatalogTests(unittest.TestCase):
         # A lone CR where the build wrote LF is a different file.
         index.write_bytes(built.replace(b"\n", b"\r", 1))
         self.assertEqual(self.run_main("--check"), "Out-of-date generated file: index.html")
+
+
+class CommittedCatalogTests(unittest.TestCase):
+    def test_every_record_shows_one_spelling_of_a_collection(self):
+        # The archive viewer and the slideshow show the collections of every family's records (build.shared_collection_spellings()).
+        catalog = json.loads((Path(__file__).resolve().parents[1] / "data/catalog.json").read_text(encoding="utf-8"))
+        shown, records = {}, {}
+        for asset in catalog["assets"]:
+            for record in asset["provenance"]:
+                records[record["id"]] = record
+                if record.get("collection_scope") != "source_post_grouping":
+                    for name in filter(None, [record.get("collection"), *(record.get("collections") or [])]):
+                        shown.setdefault(build.collection_key(name), set()).add(name)
+        self.assertEqual({key: sorted(names) for key, names in shown.items() if len(names) > 1}, {})
+        legacy = [record for record in records.values() if record["family"] == "legacy" and "Etude collection" in record.get("collection_aliases", [])]
+        self.assertTrue(legacy and all(record["collection"] == "Etude Collection" for record in legacy), "Run scripts/build_catalog.py")
 
 
 if __name__ == "__main__":

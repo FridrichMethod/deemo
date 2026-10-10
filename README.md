@@ -8,7 +8,7 @@ The project originates from [mashirozx/deemo](https://github.com/mashirozx/deemo
 
 ## Browsing
 
-Online: [searchable gallery](https://fridrichmethod.github.io/deemo/archive.html) · [slideshow](https://fridrichmethod.github.io/deemo/). The repository, website and artwork are all public; no login is required.
+Online: [searchable Artwork Archive](https://fridrichmethod.github.io/deemo/archive.html) · [slideshow](https://fridrichmethod.github.io/deemo/). The repository, website and artwork are all public; no login is required.
 
 Start a static server that only listens on this machine:
 
@@ -36,7 +36,7 @@ The [check workflow](.github/workflows/check-sources.yml) runs automatically eve
 
 Fetching the wikis and installing packages happens in a job with a read-only token and no stored credentials. A second job, which runs no third-party code, receives only the two snapshot files, rebuilds the report from them, commits them and opens the PR; the write token is used only for that push and the PR commands. It updates or closes only the PR opened from `auto/wiki-source-check` in this repository, by the bot or by a maintainer (a PR from a fork with the same branch name is ignored), and it refuses to overwrite that branch if anyone else has committed to it: merge or move those commits, then delete the branch. The bot owns the PR title and body and rewrites them on every update. Closing the PR without merging does not stop the next run that still finds differences from opening a new one; disable the workflow to pause the check. GitHub does not run workflows for a PR created with `GITHUB_TOKEN`, so the test workflow does not run on the snapshot PR; it changes only the two discovery files, which the build does not read, and the Pages workflow runs every check again after the merge.
 
-Merging that PR only updates the snapshot; it does not change the gallery. Afterwards, run `scripts/fetch_wikis.py --resume` locally to download the added and re-uploaded files, then build, verify, check the `failures`, `upstream_status` and checksum fields, and commit the images and the manifest (commands in the PR body and in "Directory layout and reproduction" below). `--resume` never deletes files: removed and superseded records stay in the manifest, marked with `upstream_status`. Before first use, tick "Allow GitHub Actions to create and approve pull requests" under the repository's Settings → Actions → General → Workflow permissions; otherwise the workflow can push the branch but cannot create the PR. If a public repository has no commits for 60 days, GitHub suspends `schedule` triggers, and the workflow has to be re-enabled on the Actions page.
+Merging that PR only updates the snapshot; it does not change the gallery. Afterwards, run `scripts/fetch_wikis.py --resume` locally to download the added and re-uploaded files, refresh the grid previews with `scripts/build_thumbnails.py --prune` (see "Grid previews" below), then build with `scripts/build_catalog.py --verify`, run every `tests/test_*.py`, check the `failures`, `upstream_status` and checksum fields, and commit the images, the previews, the manifests and the rebuilt catalog (commands in the PR body and in "Directory layout and reproduction" below). `--resume` never deletes files: removed and superseded records stay in the manifest, marked with `upstream_status`. Before first use, tick "Allow GitHub Actions to create and approve pull requests" under the repository's Settings → Actions → General → Workflow permissions; otherwise the workflow can push the branch but cannot create the PR. If a public repository has no commits for 60 days, GitHub suspends `schedule` triggers, and the workflow has to be re-enabled on the Actions page.
 
 The Pixiv artwork IDs for the artist source (`fetch_artists.py`) are written into the script, and the public archive sources are largely static content, so neither is covered by the automatic check; adding new works still requires editing the script by hand and fetching again.
 
@@ -53,7 +53,7 @@ On 2026-09-05, 1,057 public source files were archived in total; on 2026-10-08, 
 
 Every download keeps the original bytes of the response, with no AI upscaling, cropping, watermark removal, background removal or format conversion. `original` means the original download variant offered by the site; it is not automatically the same as the artist's working master. Some Fandom downloads have checksums that differ from the wiki upload metadata; the manifest records this explicitly.
 
-Song titles for the legacy assets are filled in from exact internal keys in a public mapping; a texture with no exact key takes the single key that differs from it only in letter case and is marked `mapped_case_insensitive_internal_key`. For single images in artist posts whose song title cannot be confirmed directly, the original post and page index are kept and the image is marked `unmapped`; a post's grouping is not automatically taken as the collection of the attached images. Composers and artists are kept in separate fields.
+Song titles for the legacy assets are filled in from exact internal keys in a public mapping; a texture with no exact key takes the single key that differs from it only in letter case and is marked `mapped_case_insensitive_internal_key`. A texture that the mapping lacks altogether takes the songs of the wiki uploads of song artwork whose file has the same key, ignoring case, spacing and punctuation (`samsara105_fc` and Fandom's `Samsara105 fc.png`), when they agree, and is marked `mapped_wiki_file_key` (6 textures). For single images in artist posts whose song title cannot be confirmed directly, the original post and page index are kept and the image is marked `unmapped`; a post's grouping is not automatically taken as the collection of the attached images. Composers and artists are kept in separate fields. A collection is shown in one spelling across all sources: the one the wiki records share (see [docs/sources-wikis.md](docs/sources-wikis.md)) or, for a collection no wiki record names, the first of its spellings in code-point order. A record that spells it otherwise (the song mapping's `Etude collection`) keeps its own spelling in `collection_aliases`, which the archive search matches; a post's grouping is quoted as the post spells it.
 
 For paid art books and games, only the purchase source is recorded; they were not downloaded. Dead share links, failed accesses, audio waveforms/spectrograms, videos and mixed fanart sites whose attribution cannot be confirmed are recorded in the source inventory and are not counted as successfully downloaded artwork.
 
@@ -110,7 +110,7 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
 .venv/bin/python -I scripts/fetch_archives.py --verify
 
 # Optional: with the local HTTP server above running, the browser acceptance check in an installed Chrome
-# (under a minute; it also fails on any console error or failed request)
+# (about a minute and a half; it also fails on any console error or failed request)
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -I tests/browser_smoke.py --base http://127.0.0.1:8765 --browser /usr/bin/google-chrome
 ```
@@ -126,9 +126,11 @@ After originals are added or removed, rebuild the previews before the catalog, t
 .venv/bin/python scripts/build_catalog.py --verify
 .venv/bin/python -I scripts/build_thumbnails.py --check
 .venv/bin/python -I tests/test_thumbnails.py
+# Optional and slower: re-encode every preview from its original
+.venv/bin/python -I scripts/build_thumbnails.py --verify
 ```
 
-With the Pillow version pinned in `requirements.txt`, a rebuild writes byte-identical files, and `--verify` re-encodes every preview from its original to confirm it. `--check`, which `tests/test_thumbnails.py` also runs, confirms that every larger gallery image has a preview and that each preview exists, decodes, and has the expected size and hash, with no orphaned files. `--prune` deletes previews whose original has left the gallery. The script will not mix encoder settings or Pillow versions; `--rebuild` re-encodes every preview. It stops with an error on an original whose colour mode or profile it cannot preview faithfully, such as CMYK, rather than write a preview with wrong colours.
+With the Pillow version pinned in `requirements.txt`, a rebuild writes byte-identical files, and `scripts/build_thumbnails.py --verify` re-encodes every preview from its original to confirm it; `scripts/build_catalog.py --verify` only checks that each listed preview exists with its recorded size and SHA-256. `scripts/build_thumbnails.py --check`, which `tests/test_thumbnails.py` also runs, confirms that every larger gallery image has a preview and that each preview exists, decodes, and has the expected size and hash, with no orphaned files. `scripts/build_thumbnails.py --prune` deletes previews whose original has left the gallery. The script will not mix encoder settings or Pillow versions; `scripts/build_thumbnails.py --rebuild` re-encodes every preview. It stops with an error on an original whose colour mode or profile it cannot preview faithfully, such as CMYK, rather than write a preview with wrong colours.
 
 ## Attribution
 

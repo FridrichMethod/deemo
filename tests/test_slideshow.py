@@ -266,6 +266,27 @@ class SlideshowTemplateTests(unittest.TestCase):
         self.assert_translated(key)
         self.assertEqual(links[0].text.strip(), self.messages["en"][key])
 
+    def test_the_archive_page_has_one_name(self):
+        """The slideshow's archive button (whose label stays in its tooltip, WCAG 2.5.3), its caption link and the
+        README links call archive.html by the name the page gives itself, in each language. The caption link is that
+        name alone: a longer one wraps onto a line of its own, under the bottom control row of a phone held sideways."""
+        archive = json.loads(REGISTER.search((ROOT / "src/i18n/archive.js").read_text(encoding="utf-8")).group(1))
+        links = [node for node in self.nodes if node.tag == "a" and node.attrs.get("href") == "archive.html"]
+        self.assertEqual({node.attrs.get("data-i18n") for node in links}, {"slideshow.archive.text", "slideshow.caption.browse"})
+        for node in links:
+            self.assertEqual(node.text.strip(), self.messages["en"][node.attrs["data-i18n"]], "static text is the English string")
+        for lang, readme in (("en", "README.md"), ("zh-CN", "README.zh-CN.md")):
+            with self.subTest(lang=lang):
+                name = archive[lang]["header.title"].removeprefix("DEEMO 1 ")  # "Artwork Archive" / "曲绘档案"
+                messages = self.messages[lang]
+                self.assertIn(messages["slideshow.archive.text"].casefold(), name.casefold())
+                self.assertIn(messages["slideshow.archive.text"].casefold(), messages["slideshow.archive.label"].casefold())
+                self.assertIn(name, messages["slideshow.archive.label"])
+                self.assertEqual(messages["slideshow.caption.browse"], name)
+                online = re.search(r"\[([^\]]+)\]\(https://fridrichmethod\.github\.io/deemo/archive\.html\)",
+                                   (ROOT / readme).read_text(encoding="utf-8"))
+                self.assertIn(name, online.group(1))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,7 +8,8 @@ import json
 import re
 import subprocess
 import sys
-from collections import Counter
+import unicodedata
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import quote, urlsplit
@@ -71,6 +72,26 @@ def required_input(root: Path, relative: str, directory: bool = False) -> Path:
     return path
 
 
+def fold(text: str) -> str:
+    """A name with case, spacing and punctuation dropped, for telling spellings of one name apart from other names."""
+    return "".join(char for char in text.casefold() if char.isalnum())
+
+
+def wiki_file_key_songs(records: list[dict]) -> dict[str, tuple[list[str], str]]:
+    """The songs wiki uploads of song artwork map their file keys to: folded file key ("Samsara105 fc" ->
+    "samsara105fc") -> (song titles, the first such upload's page), for keys whose uploads all agree on the songs."""
+    found: dict[str, tuple[list[str], str]] = {}
+    disputed = set()
+    for record in sorted(records, key=lambda record: record["id"]):
+        key = fold(str(record.get("title") or ""))
+        if record.get("kind") != "song_art" or not record.get("song_titles") or not key:
+            continue
+        if key in found and found[key][0] != list(record["song_titles"]):
+            disputed.add(key)
+        found.setdefault(key, (list(record["song_titles"]), record["page_url"]))
+    return {key: value for key, value in found.items() if key not in disputed}
+
+
 def legacy_pngs(directory: Path) -> list[Path]:
     """A legacy directory's PNGs in file-name order. The explicit key and the exact suffix test give the same list
     on every platform (WindowsPath sorts case-folded, and glob matches case-insensitively on Windows)."""
@@ -88,7 +109,12 @@ def mapped_song(songs: dict, key: str) -> tuple[dict, str]:
     return {}, "internal_key"
 
 
-def legacy_assets(root: Path) -> list[dict]:
+def legacy_assets(root: Path, wiki_records: list[dict] | None = None) -> list[dict]:
+    """The inherited textures, each mapped to its song by its internal key in the song mapping (mapped_song()). A key
+    the mapping lacks takes the songs of the wiki uploads of song artwork whose file has the same key, ignoring case,
+    spacing and punctuation ("Samsara105 fc" for samsara105_fc), when they agree; it is marked mapped_wiki_file_key and
+    its mapping_source is that upload's page. Otherwise the same texture would be unmapped here and song artwork there."""
+    wiki_songs = wiki_file_key_songs(wiki_records or [])
     assets = []
     mapping_path = required_input(root, "data/sources/song-mapping.json")
     mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
@@ -108,16 +134,19 @@ def legacy_assets(root: Path) -> list[dict]:
             format_name = image.format
         key = path.stem
         song, title_status = mapped_song(songs, key)
+        titles, mapping_source = ([song["name"]] if song.get("name") else []), (mapping.get("source_url") if song else None)
+        if not song and fold(key) in wiki_songs:
+            (titles, mapping_source), title_status = wiki_songs[fold(key)], "mapped_wiki_file_key"
         book_index = song.get("book")
         book = books[book_index].get("name") if isinstance(book_index, int) and 0 <= book_index < len(books) else None
         is_cover = bool(COVER_KEY.search(key))
         asset = {
             "id": f"legacy:{key}", "source_id": "legacy",
-            "title": song.get("name", key), "internal_key": key, "artist": None,
+            "title": song.get("name") or " / ".join(titles) or key, "internal_key": key, "artist": None,
             "composer": song.get("artist"), "collection": book,
-            "song_titles": [song["name"]] if song.get("name") else [],
-            "mapping_source": mapping.get("source_url") if song else None,
-            "kind": "song_art" if song else "collection_cover" if is_cover else "illustration",
+            "song_titles": titles,
+            "mapping_source": mapping_source,
+            "kind": "song_art" if song or titles else "collection_cover" if is_cover else "illustration",
             "page_url": "https://github.com/mashirozx/deemo",
             "download_url": None, "path": path.relative_to(root).as_posix(),
             "width": width, "height": height, "format": format_name,
@@ -141,6 +170,51 @@ def legacy_assets(root: Path) -> list[dict]:
         asset["variants"] = [variant]
         assets.append(asset)
     return assets
+
+
+def collection_key(name: str) -> str:
+    """A collection name with width, case, spacing and punctuation dropped, as scripts/fetch_wikis.py folds it."""
+    return fold(unicodedata.normalize("NFKC", name)) or name
+
+
+def shared_collection_spellings(assets: list[dict]) -> list[dict]:
+    """The records with one spelling of each collection across the families, so the archive and the slideshow never
+    show two ("Etude collection" from the legacy song mapping's books next to the wikis' "Etude Collection").
+
+    Spellings that differ only in width, case, spacing or punctuation name one collection. The current wiki records
+    already show one spelling of each (fetch_wikis.with_collection_aliases()), and every other record takes it; a
+    collection that no current wiki record names shows the first of its spellings in code-point order, as the wikis
+    pick theirs. A record whose own spelling is replaced keeps it in collection_aliases, which the archive searches
+    but does not show. An artist post's grouping (collection_scope "source_post_grouping") is quoted as the post
+    spells it and is left out. Records with nothing to change are returned as they are."""
+    def names(asset: dict) -> list[str]:
+        if asset.get("collection_scope") == "source_post_grouping":
+            return []
+        return [name for name in [asset.get("collection"), *(asset.get("collections") or [])] if isinstance(name, str) and name]
+
+    wiki, every = defaultdict(set), defaultdict(set)
+    for asset in assets:
+        for name in names(asset):
+            every[collection_key(name)].add(name)
+            if asset["family"] == "wikis" and not asset.get("upstream_status"):
+                wiki[collection_key(name)].add(name)
+    shown = {key: min(wiki.get(key) or spellings) for key, spellings in every.items()}
+    result = []
+    for asset in assets:
+        own = names(asset)
+        changes = {}
+        if asset.get("collection") in own:
+            changes["collection"] = shown[collection_key(asset["collection"])]
+        if set(asset.get("collections") or []) & set(own):
+            changes["collections"] = list(dict.fromkeys(shown[collection_key(name)] for name in asset["collections"]))
+        displayed = {changes.get("collection"), *changes.get("collections", [])}
+        replaced = set(own) - displayed
+        if not replaced and all(asset.get(key) == value for key, value in changes.items()):
+            result.append(asset)
+            continue
+        aliases = sorted((set(asset.get("collection_aliases") or []) | replaced) - displayed)
+        result.append({**asset, **changes, **({"collection_aliases": aliases} if aliases else {})})
+    return result
 
 
 def validate_asset(root: Path, asset: dict, verify: bool = False) -> None:
@@ -191,7 +265,8 @@ def combine(root: Path, verify: bool = False) -> dict:
         sources.extend({**source, "family": family} for source in manifest["sources"])
         assets.extend({**asset, "family": family} for asset in manifest["assets"])
         failures.extend(manifest.get("failures", []))
-    assets.extend({**asset, "family": "legacy"} for asset in legacy_assets(root))
+    assets.extend({**asset, "family": "legacy"} for asset in legacy_assets(root, [asset for asset in assets if asset["family"] == "wikis"]))
+    assets = shared_collection_spellings(assets)
     priority = {"artists": 0, "wikis": 1, "legacy": 2, "archives": 3}
     assets.sort(key=lambda asset: priority[asset["family"]])
     source_map = {source["id"]: source for source in sources}
@@ -247,16 +322,18 @@ def combine(root: Path, verify: bool = False) -> dict:
     }
 
 
+def slide_records(asset: dict) -> list[dict]:
+    """A catalog entry's provenance records, the caption's (the highest-priority family's) first; a bare record alone."""
+    records = asset.get("provenance")
+    return records if isinstance(records, list) and records else [asset]
+
+
 def slide_notes(asset: dict) -> dict:
     """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated.
     A collection name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out.
     data-songs lists the mapped song titles, which the notes headline when the title is only a wiki file key."""
     found = {"songs": [], "composer": [], "artist": [], "collection": []}
     seen = {key: set() for key in found}
-
-    def fold(text: str) -> str:
-        return "".join(char for char in text.casefold() if char.isalnum())
-
     title = fold(str(asset.get("title") or ""))
 
     def add(key: str, value: object) -> None:
@@ -268,7 +345,7 @@ def slide_notes(asset: dict) -> dict:
             seen[key].add(folded)
             found[key].append(text)
 
-    for record in asset.get("provenance") or [asset]:
+    for record in slide_records(asset):
         for value in record.get("song_titles") or []:
             add("songs", value)
         add("composer", record.get("composer"))
@@ -326,8 +403,7 @@ def slide_provenance(asset: dict) -> dict:
     the highest-priority family), which the slideshow names next to the kind. A wiki upload, whose manifest states its
     lineage caveat as prose, is "wiki"; an archives record carries a class token (community_repost, community_scan,
     official_website, ...). Artist uploads and legacy textures carry none."""
-    records = asset.get("provenance")
-    record = records[0] if isinstance(records, list) and records else asset
+    record = slide_records(asset)[0]
     if record.get("family") == "wikis":
         return {"data-provenance": "wiki"}
     token = record.get("provenance")
@@ -335,21 +411,29 @@ def slide_provenance(asset: dict) -> dict:
 
 
 def slide_composer_source(asset: dict, names: dict) -> dict:
-    """data-composer-source: the sources whose pages give the slide's composer credit, by name, one per line, when the
-    source its caption credits (the entry's first record) is not one of them. A wiki record whose own song page names
-    no composer has the credit of the other wiki's page of the same title (composer_source), and the notes would
-    otherwise read it as the caption source's."""
-    records = asset.get("provenance")
-    records = records if isinstance(records, list) and records else [asset]
-    suppliers = []
+    """data-composer-sources: who gives each composer credit on the slide. Records spell a credit differently
+    ("Narsil (from Ring) feat. ..." on BWIKI, "... Feat. ..." on Fandom), so data-composer lists one line per spelling
+    (slide_notes()), and the notes would otherwise read every line as the caption's source's. For each line, in order,
+    this is a JSON list of the [source id, name] pairs whose pages give it, or [] when the source the caption credits
+    (the entry's first record) is one of them. A wiki record whose own song page names no composer gives the other
+    wiki's credit (composer_source). The slideshow localizes each name by its id, as it does the caption's source;
+    with no line to attribute there is no attribute."""
+    records = slide_records(asset)
+    lines: dict[str, list[str]] = {}
     for record in records:
-        if record.get("composer"):
-            for source in str(record.get("composer_source") or record.get("source_id") or "").split(" / "):
-                if source and source not in suppliers:
-                    suppliers.append(source)
-    if not suppliers or records[0].get("source_id") in suppliers:
+        text = str(record.get("composer") or "").strip()
+        if not text:
+            continue
+        suppliers = lines.setdefault(fold(text), [])
+        for source in str(record.get("composer_source") or record.get("source_id") or "").split(" / "):
+            if source and source not in suppliers:
+                suppliers.append(source)
+    caption = records[0].get("source_id")
+    credits = [[] if caption in suppliers else [[source, names.get(source, source)] for source in suppliers]
+               for suppliers in lines.values()]
+    if not any(credits):
         return {}
-    return {"data-composer-source": "\n".join(names.get(source, source) for source in suppliers)}
+    return {"data-composer-sources": json.dumps(credits, ensure_ascii=False, separators=(",", ":"))}
 
 
 def render_slideshow(root: Path, catalog: dict) -> str:
@@ -375,12 +459,14 @@ def render_slideshow(root: Path, catalog: dict) -> str:
     return template.replace("@python-work-area", "\n".join(slides))
 
 
-def attach_thumbnails(root: Path, catalog: dict, verify: bool = False) -> None:
+def attach_thumbnails(root: Path, catalog: dict, verify: bool = False, required: bool = True) -> None:
     """Add `thumb`, the derived grid preview listed in data/thumbs.json (scripts/build_thumbnails.py), to gallery
-    entries. Previews are not archive files: `url` stays the original, and entries without a preview get no field."""
-    manifest = root / "data" / "thumbs.json"
-    if not manifest.exists():
+    entries. Previews are not archive files: `url` stays the original, and entries without a preview get no field.
+    The repository's build requires the manifest, so a missing one fails rather than quietly dropping every preview;
+    only a caller that builds without previews (a test fixture) passes required=False."""
+    if not required and not (root / "data" / "thumbs.json").exists():
         return
+    manifest = required_input(root, "data/thumbs.json")
     thumbnails = json.loads(manifest.read_text(encoding="utf-8"))["thumbnails"]
     for entry in catalog["assets"]:
         thumb = thumbnails.get(entry["sha256"]) if entry["gallery"] else None

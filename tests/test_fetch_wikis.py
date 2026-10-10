@@ -191,6 +191,24 @@ class CarryForwardTests(FetcherRun):
         # Resuming the same snapshot again changes nothing.
         self.assertEqual(self.resume(new)["assets"], manifest["assets"])
 
+    def test_revert_to_an_earlier_upload_keeps_one_record_of_its_file(self):
+        first = self.resume(self.offer("Art.png", png("red")))["assets"][0]
+        green = self.resume(self.offer("Art.png", png("green")))["assets"][0]
+        # Upstream reverts to the first upload: the canonical record holds its file again, and only the green version
+        # stays superseded; the red one is not also kept as "superseded by" a record of the same file.
+        manifest = self.resume(self.offer("Art.png", png("red")))
+        records = {record["id"]: record for record in manifest["assets"]}
+        green_id = first["id"] + ":" + green["sha256"][:12]
+        self.assertEqual(sorted(records), [first["id"], green_id])
+        self.assertEqual((records[first["id"]]["path"], records[first["id"]]["sha256"]), (first["path"], first["sha256"]))
+        self.assertNotIn("upstream_status", records[first["id"]])
+        self.assertEqual({**records[green_id], "fetched_at": None}, {**green, "fetched_at": None, "id": green_id,
+                                                                     "upstream_status": "superseded", "superseded_by": first["id"]})
+        files = {path.relative_to(self.root).as_posix() for path in (self.root / "assets").rglob("*") if path.is_file()}
+        self.assertEqual(sorted(record["path"] for record in records.values()), sorted(files))
+        # Resuming the reverted snapshot again changes nothing.
+        self.assertEqual(self.resume(self.offer("Art.png", png("red")))["assets"], manifest["assets"])
+
     def test_failed_redownload_keeps_the_verified_record(self):
         old = self.offer("Art.png", png("red"))
         first = self.resume(old)["assets"][0]
@@ -399,17 +417,30 @@ class CollectionNameTests(unittest.TestCase):
 
 
 class CollectionAliasTests(FetcherRun):
-    def test_aliases_are_the_other_spellings_the_song_pages_use(self):
+    def test_every_record_shows_one_spelling_and_keeps_the_others_as_aliases(self):
         songs = [song("A", ["RAC Collection #1", "Etude Collection"]), song("B", ["RAC collection -1"], source="bwiki"),
                  song("C", ["Etude collection"]), song("D", ["Sakuzyo collection"])]
         candidates = [{"file_title": "1", "collections": ["RAC collection -1"]},
                       {"file_title": "2", "collections": ["Etude Collection", "RAC Collection #1"], "collection_aliases": ["Old"]},
-                      {"file_title": "3", "collections": ["Sakuzyo collection", "Book of Alice"], "collection_aliases": ["Old"]}]
+                      {"file_title": "3", "collections": ["Sakuzyo collection", "Book of Alice"], "collection_aliases": ["Old"]},
+                      {"file_title": "4", "collections": ["Book of alice", "etude collection"]}]
         result = fetch.with_collection_aliases(candidates, songs)
+        # The BWIKI cover's "RAC collection -1" reads as every other record's "RAC Collection #1": the first spelling in
+        # code-point order of all that the song pages and the candidates use. A cover's own spelling is one of them.
+        self.assertEqual([row["collections"] for row in result],
+                         [["RAC Collection #1"], ["Etude Collection", "RAC Collection #1"], ["Sakuzyo collection", "Book of Alice"],
+                          ["Book of Alice", "Etude Collection"]])
         self.assertEqual([row.get("collection_aliases") for row in result],
-                         [["RAC Collection #1"], ["Etude collection", "RAC collection -1"], None])
-        self.assertEqual([row["collections"] for row in result], [row["collections"] for row in candidates])
+                         [["RAC collection -1"], ["Etude collection", "RAC collection -1", "etude collection"], ["Book of alice"],
+                          ["Book of alice", "Etude collection", "etude collection"]])
+        self.assertEqual({tuple(row)[:2] for row in result}, {("file_title", "collections")})  # collections stays in place
         self.assertEqual(candidates[1]["collection_aliases"], ["Old"])  # the input is left as it was
+        self.assertEqual(fetch.with_collection_aliases(result, songs), result)
+        shown = {}
+        for row in result:
+            for name in row["collections"]:
+                shown.setdefault(fetch.normalized(name), set()).add(name)
+        self.assertEqual({key: len(names) for key, names in shown.items() if len(names) > 1}, {})
 
     def test_discovery_stores_the_aliases_with_the_snapshot(self):
         candidate = self.offer("Art.png", png("red"), collections=["Etude Collection"])

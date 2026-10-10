@@ -72,12 +72,12 @@ Merging this PR only updates the discovery snapshot; it includes no images. Afte
 
 ```sh
 .venv/bin/python -I scripts/fetch_wikis.py --resume --workers 4
+.venv/bin/python -I scripts/build_thumbnails.py --prune
 .venv/bin/python scripts/build_catalog.py --verify
-.venv/bin/python -I tests/test_catalog.py
-.venv/bin/python -I tests/test_layout.py
+for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done
 ```
 
-`--resume` verifies the SHA-256 and Wiki SHA-1 of existing files against the snapshot and downloads only added and re-uploaded files. It never deletes files and keeps every previously verified record, marked with `upstream_status`: a re-uploaded file is saved under a new file name and keeps the asset id, while the previous version keeps its file and record as `"upstream_status": "superseded"`; a removed file keeps its record as `"upstream_status": "removed"`; a failed re-download keeps the old record as `"upstream_status": "fetch_failed"`. "Added" entries uploaded before the baseline snapshot are usually changes in the wiki enumeration or the song-title mapping, not newly published artwork. Check the `failures`, `upstream_status` and checksum comparison fields in `data/sources/wikis.json` before committing the images and the manifest.
+`--resume` verifies the SHA-256 and Wiki SHA-1 of existing files against the snapshot and downloads only added and re-uploaded files. `--resume` never deletes files and keeps every previously verified record, marked with `upstream_status`: a re-uploaded file is saved under a new file name and keeps the asset id, while the previous version keeps its file and record as `"upstream_status": "superseded"`; a removed file keeps its record as `"upstream_status": "removed"`; a failed re-download keeps the old record as `"upstream_status": "fetch_failed"`. `build_thumbnails.py --prune` then writes the grid previews of new and re-uploaded images and deletes the previews whose original left the gallery; it runs before the catalog build, which records the previews, and `tests/test_thumbnails.py` fails without them. "Added" entries uploaded before the baseline snapshot are usually changes in the wiki enumeration or the song-title mapping, not newly published artwork. Check the `failures`, `upstream_status` and checksum comparison fields in `data/sources/wikis.json`, then commit the images, the previews (`assets/thumbs/`, `data/thumbs.json`), the manifests (`data/sources/`) and the rebuilt catalog (`data/catalog.json`, `data/catalog.js`, `index.html`).
 """,
     },
     "zh-CN": {
@@ -102,12 +102,12 @@ Merging this PR only updates the discovery snapshot; it includes no images. Afte
 
 ```sh
 .venv/bin/python -I scripts/fetch_wikis.py --resume --workers 4
+.venv/bin/python -I scripts/build_thumbnails.py --prune
 .venv/bin/python scripts/build_catalog.py --verify
-.venv/bin/python -I tests/test_catalog.py
-.venv/bin/python -I tests/test_layout.py
+for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done
 ```
 
-`--resume` 按快照校验已有文件的 SHA-256 与 Wiki SHA-1，只下载新增和重新上传的文件。它不会删除任何文件，并保留所有已校验的记录，以 `upstream_status` 标记：重新上传的文件以新文件名保存并沿用原资产 ID，旧版本保留文件和记录，标记为 `"upstream_status": "superseded"`；已移除的文件保留记录，标记为 `"upstream_status": "removed"`；重新下载失败时保留旧记录，标记为 `"upstream_status": "fetch_failed"`。上传时间早于基线快照的"新增"条目通常是 Wiki 枚举或曲名映射的变化，而不是新发布的曲绘。检查 `data/sources/wikis.json` 中的 `failures`、`upstream_status` 与 checksum 比较字段，再提交图片与清单。
+`--resume` 按快照校验已有文件的 SHA-256 与 Wiki SHA-1，只下载新增和重新上传的文件。`--resume` 不会删除任何文件，并保留所有已校验的记录，以 `upstream_status` 标记：重新上传的文件以新文件名保存并沿用原资产 ID，旧版本保留文件和记录，标记为 `"upstream_status": "superseded"`；已移除的文件保留记录，标记为 `"upstream_status": "removed"`；重新下载失败时保留旧记录，标记为 `"upstream_status": "fetch_failed"`。随后 `build_thumbnails.py --prune` 为新增和重新上传的图片生成网格预览图，并删除原图已不在图库中的预览图；它须在构建目录之前运行（目录会记录预览图），缺少预览图时 `tests/test_thumbnails.py` 会失败。上传时间早于基线快照的"新增"条目通常是 Wiki 枚举或曲名映射的变化，而不是新发布的曲绘。检查 `data/sources/wikis.json` 中的 `failures`、`upstream_status` 与 checksum 比较字段，然后提交图片、预览图（`assets/thumbs/`、`data/thumbs.json`）、清单（`data/sources/`）与重新生成的目录（`data/catalog.json`、`data/catalog.js`、`index.html`）。
 """,
     },
 }

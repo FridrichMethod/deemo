@@ -6,9 +6,12 @@ exception, console error, HTTP error, failed request or request that leaves the 
 failures it causes itself (see Monitor)."""
 
 import argparse
+import base64
 import hashlib
 import json
+import re
 import time
+import unicodedata
 import xml.etree.ElementTree as ET
 from collections import Counter
 from urllib.parse import quote, unquote, urljoin, urlparse
@@ -38,6 +41,9 @@ BOTTOM_ROW = ["photo", "github", "archive-link", "iplayer", "random"]
 # and of short portrait phones (browser toolbars included, as the page never scrolls them away).
 SHORT_LANDSCAPE = [(568, 320), (480, 320), (667, 325), (740, 320), (812, 330)]
 SHORT_PORTRAIT = [(375, 553), (360, 568), (320, 454)]
+# A 1 x 1 PNG served in place of every artwork where the smoke steps through the whole show: the liner column's layout
+# does not depend on the image, and the run need not download the collection.
+PIXEL = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
 # Controls by role and the message key of their accessible name.
 NAMED_CONTROLS = [
     ("button", "slideshow.nav.prev"), ("button", "slideshow.nav.next"), ("button", "slideshow.screenshot.take"),
@@ -52,8 +58,29 @@ NOTES_CASES = {
     "wikis:fandom:082622a106c6977b": [["Code : 11", ""], ["Code11", "file"]],
     "wikis:fandom:7f71c166494b2ff8": [["Cloud9", ""]],
     "wikis:fandom:3a93b33265bbb130": [["Continuum", ""]],
+    # Keys that run the song's letters into another word name no song, however much of it they contain.
+    "wikis:fandom:14805c02b0032bb2": [["Aragami", ""], ["Samsaraaragami", "file"]],
+    "wikis:fandom:0da581d8432fcafe": [["Lost in the nowhere", "long"], ["Samsaralostinthenowhere", "file"]],
+    "wikis:fandom:c040224c93362520": [["Voice of Cell", ""], ["Samsaravoiceofcell", "file"]],
+    "wikis:fandom:c8dfb0e6211cccd3": [["The way home", ""], ["Samsarathewayhome", "file"]],
+    "wikis:fandom:cd7c10954e3a8712": [["Valle De Los Caidos", "long"], ["Samsaravalledeloscaidos", "file"]],
+    "wikis:fandom:07a098acfa802dd9": [["Knots Way", ""], ["Crossknotsway", "file"]],
 }
 NOTES_TITLES = "[...document.querySelectorAll('.slide-notes .notes-title')].map((title) => [title.textContent.replace(/\\u00a0/g, ' '), title.dataset.length || ''])"
+
+
+def title_words(text):
+    """A title's words as the liner notes compare them: case and accents folded, split at anything but a letter or digit."""
+    stripped = "".join(char for char in unicodedata.normalize("NFKD", text).lower() if not unicodedata.combining(char))
+    return re.findall(r"[^\W_]+", stripped)
+
+
+def names_song(title, song):
+    """Whether a title names a song: the same letters and digits, or the words of either running whole in the other's."""
+    def runs_within(part, whole):
+        return any(whole[start:start + len(part)] == part for start in range(len(whole) - len(part) + 1))
+    a, b = title_words(title), title_words(song)
+    return bool(a and b) and ("".join(a) == "".join(b) or runs_within(a, b) or runs_within(b, a))
 
 
 def mounted_url(relative, source=base):
@@ -326,21 +353,22 @@ def check_language_before_catalog(browser):
     page.wait_for_selector(".card")
     assert page.evaluate(f"!({HAS_HAN})(document.querySelector('h1').textContent)")
     finish(page)
-    # Until src/i18n/common.js registers, the toggle keeps the English page's static label, which names zh-CN.
+    # Without src/i18n/common.js (it fails to load here), the toggle still names the other language and goes there.
     page = new_page(browser)
-    held = []
-    page.route("**/src/i18n/common.js", lambda route: held.append(route))
-    page.goto(mounted_url("archive.html?lang=zh-CN"), wait_until="commit")
-    page.wait_for_function("window.DEEMO_I18N && document.readyState !== 'loading'", timeout=5000)
-    assert page.locator("[data-lang-toggle]").inner_text() == "中文"
-    page.locator("[data-lang-toggle]").click()
-    assert page.evaluate("DEEMO_I18N.lang") == "zh-CN", "A click on the static 中文 label keeps Chinese"
-    for route in held:
-        route.continue_()
+    common = mounted_url("src/i18n/common.js")
+    monitor.expect(common)
+    page.route(common, lambda route: route.abort())
+    navigate(page, "archive.html?lang=zh-CN")
     page.wait_for_selector(".card")
-    assert page.locator("[data-lang-toggle]").inner_text() == "English"
+    toggle = page.locator("[data-lang-toggle]")
+    for lang, label, title in (("zh-CN", "English", "Switch to English"), ("en", "中文", "Switch to Simplified Chinese"),
+                               ("zh-CN", "English", "Switch to English")):
+        assert page.evaluate("DEEMO_I18N.lang") == lang, lang
+        assert [toggle.inner_text(), toggle.get_attribute("title"), toggle.locator("span").get_attribute("lang")] == \
+            [label, title, "en" if lang == "zh-CN" else "zh-CN"], (lang, toggle.inner_text())
+        toggle.click()
     finish(page)
-    checks.append("translations before the catalog loads; toggle follows its label")
+    checks.append("translations before the catalog loads; toggle follows its label, also without common.js")
 
 
 def check_explicit_language_persists(browser):
@@ -479,6 +507,74 @@ def viewer_record(page):
     }""")
 
 
+def check_card_tags(browser):
+    """A card's tag sets its family and kind apart with a dash, in both languages, though both labels may hold " / "
+    ("Public archives / reposts — Scan / reference"), and never runs them together as four peer labels."""
+    for lang in ("en", "zh-CN"):
+        page = new_page(browser)
+        navigate(page, f"archive.html?family=archives&lang={lang}")
+        page.wait_for_selector(".card")
+        tags = page.evaluate("""() => { const t = DEEMO_I18N.t, labels = new Set();
+            for (const family of ['artists', 'wikis', 'archives', 'legacy']) for (const kind of ['song_art', 'collection_cover', 'contact_sheet', 'illustration', 'reference'])
+                labels.add(`${t('family.' + family)} — ${t('kind.' + kind)}`);
+            return [...document.querySelectorAll('.card .tag')].map((tag) => [tag.textContent.split(' · ')[0], labels.has(tag.textContent.split(' · ')[0])]); }""")
+        assert tags and all(known for _, known in tags), (lang, [tag for tag, known in tags if not known][:3])
+        assert any(" / " in tag.split(" — ")[0] and " / " in tag.split(" — ")[1] for tag, _ in tags), (lang, tags[:3])
+        finish(page)
+    checks.append("card tags set the family and kind apart, in both languages")
+
+
+def check_no_repeated_names(browser):
+    """A card names an artist that its source's name already starts with once (the Jimdo works lead the default
+    order), and a reference file's row does not repeat its title as the name of its source link."""
+    for lang in ("en", "zh-CN"):
+        page = new_page(browser)
+        navigate(page, f"archive.html?lang={lang}")
+        page.wait_for_selector(".card")
+        lines = page.evaluate("[...document.querySelectorAll('.card')].map((card) => card.children[3].textContent)")
+        repeated = [line for line in lines if len(line.split(" · ")) == 2 and line.split(" · ")[1].startswith(line.split(" · ")[0])]
+        assert not repeated, (lang, repeated[:3])
+        assert any(" / " in line and " · " not in line for line in lines), (lang, lines[:5])  # Jimdo: "artist / artist — ..."
+        page.locator(".source-inventory summary").first.click()
+        rows = page.evaluate("[...document.querySelectorAll('#references p')].map((row) => [...row.querySelectorAll('a')].map((link) => link.textContent))")
+        assert rows and all(len(links) == 2 and not links[0].startswith(links[1]) for links in rows), (lang, rows)
+        finish(page)
+    checks.append("no artist or reference title shown twice, in both languages")
+
+
+def check_inventory_table(browser):
+    """The source inventory fits a phone and a desktop window in both languages: the record-count header keeps to one
+    line, no cell overflows (long notes and names wrap in their column), and the notes keep a readable measure."""
+    for lang in ("en", "zh-CN"):
+        for width, height in ((375, 667), (1440, 900)):
+            page = new_page(browser, width, height)
+            navigate(page, f"archive.html?lang={lang}")
+            page.wait_for_selector(".card")
+            page.locator(".source-inventory summary").first.click()
+            table = page.evaluate("""() => {
+                const lines = (node) => { const range = document.createRange(); range.selectNodeContents(node); return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size; };
+                const scroll = document.querySelector('.table-scroll'), headers = [...document.querySelectorAll('.source-inventory th')];
+                return {records: lines(headers[1]), notes: Math.round(headers[2].getBoundingClientRect().width), scroll: [scroll.scrollWidth, scroll.clientWidth],
+                        overflowing: [...document.querySelectorAll('.source-inventory th, .source-inventory td')].filter((cell) => cell.scrollWidth > cell.clientWidth + 1).map((cell) => cell.textContent.slice(0, 40))}; }""")
+            assert table["records"] == 1 and table["scroll"][0] <= table["scroll"][1] and not table["overflowing"], (lang, width, table)
+            assert table["notes"] >= min(width / 3, 300), (lang, width, table)
+            finish(page)
+    checks.append("source inventory fits 375 and 1440 px wide in both languages")
+
+
+def check_without_javascript(browser):
+    """With JavaScript off, a phone's first screen explains it, in both languages, and no status line claims that the
+    catalog is loading."""
+    page = new_page(browser, 375, 667, java_script_enabled=False)
+    navigate(page, "archive.html")
+    notice = page.locator(".noscript")
+    assert notice.is_visible() and notice.bounding_box()["y"] + notice.bounding_box()["height"] <= 667, notice.bounding_box()
+    assert "JavaScript" in notice.inner_text() and "需要 JavaScript" in notice.inner_text()
+    assert not page.locator("#count").is_visible() and not page.get_by_text("Loading local catalog").is_visible()
+    finish(page)
+    checks.append("without JavaScript the notice is on a phone's first screen and nothing claims to load")
+
+
 def check_viewer_provenance(browser):
     """The viewer states each record's composer and provenance class in the page language; a record a refetch kept
     with an upstream_status gets a localized line for it."""
@@ -536,27 +632,31 @@ def check_previews(browser):
     monitor.settle(page)
     cards = page.evaluate("""() => { const assets = window.DEEMO_CATALOG.assets.filter((a) => a.gallery);
         return [...document.querySelectorAll('.card-image img')].map((img, index) => [img.getAttribute('src'), assets[index].thumb || null, assets[index].url]); }""")
-    assert len(cards) == 60 and all(thumb for _, thumb, _ in cards), "The first cards all have previews"
-    assert all(src == thumb for src, thumb, _ in cards), cards[:3]
-    originals = {urlparse(mounted_url(url)).path for _, _, url in cards}
+    # Images of 480 px or less have no preview and are their own card image; a card with a preview never requests its
+    # original. Most of the first cards have one, so the check cannot pass on cards without any.
+    previewed = [index for index, (_, thumb, _) in enumerate(cards) if thumb]
+    assert len(cards) == 60 and len(previewed) * 2 > len(cards), (len(cards), len(previewed))
+    assert all(src == (thumb or url) for src, thumb, url in cards), cards[:3]
+    originals = {urlparse(mounted_url(cards[index][2])).path for index in previewed}
     assert not originals & set(requested), sorted(originals & set(requested))[:3]
     image_bytes = page.evaluate("performance.getEntriesByType('resource').filter((e) => e.initiatorType === 'img').reduce((sum, e) => sum + e.encodedBodySize, 0)")
     assert 0 < image_bytes < 2_000_000, f"The first screen of the grid loaded {image_bytes} bytes of images"
-    page.locator(".card-image").first.click()
+    first = previewed[0]
+    page.locator(".card-image").nth(first).click()
     page.wait_for_function(IMAGE_SHOWN)
-    url = cards[0][2]
+    url = cards[first][2]
     assert urlparse(page.evaluate("document.getElementById('full-image').currentSrc")).path == urlparse(mounted_url(url)).path
     assert page.locator("#download").get_attribute("href") == url == page.locator("#original").get_attribute("href")
     assert urlparse(mounted_url(url)).path in requested
     finish(page)
-    # The first card's preview fails on purpose.
+    # The first previewed card's preview fails on purpose.
     page = new_page(browser, 1440, 900)
-    preview = mounted_url(cards[0][1])
+    preview = mounted_url(cards[first][1])
     monitor.expect(preview)
     page.route(preview, lambda route: route.abort())
     navigate(page, "archive.html")
-    page.wait_for_function("(() => { const img = document.querySelector('.card-image img'); return img.complete && img.naturalWidth > 0; })()", timeout=10_000)
-    assert page.locator(".card-image img").first.get_attribute("src") == cards[0][2]
+    page.wait_for_function("(index) => { const img = document.querySelectorAll('.card-image img')[index]; return img.complete && img.naturalWidth > 0; }", arg=first, timeout=10_000)
+    assert page.locator(".card-image img").nth(first).get_attribute("src") == cards[first][2]
     finish(page)
     checks.append(f"grid previews ({image_bytes} bytes of images on the first screen), originals in the viewer, fallback")
 
@@ -606,10 +706,16 @@ def open_slideshow(browser, query, width=1440, height=1000):
     return page
 
 
+# Whether a tap at the centre of an element reaches it, and what takes the tap instead.
+HITS = """(node) => { const box = node.getBoundingClientRect();
+    return node.contains(document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2)); }"""
+OBSTACLE = """((node) => { const box = node.getBoundingClientRect(), at = document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2);
+    return at && `${at.tagName}.${at.className}`; })"""
+
+
 def hit(page, selector):
     """Whether a tap at the centre of the first element matching the selector reaches it."""
-    return page.locator(selector).first.evaluate("""(node) => { const box = node.getBoundingClientRect();
-        return node.contains(document.elementFromPoint((box.left + box.right) / 2, (box.top + box.bottom) / 2)); }""")
+    return page.locator(selector).first.evaluate(HITS)
 
 
 def check_slideshow_controls(browser):
@@ -681,8 +787,23 @@ def check_screenshot_overlay(browser):
     assert page.evaluate("document.getElementById('scerrn-content').childElementCount") == 0
     assert page.evaluate("document.activeElement === document.querySelector('.photo button')")
     assert page.evaluate("[history.length, location.href]") == history
+    # On short landscape phones the preview canvas spans most of the screen; Save and close stay on top of it.
+    for width, height in ((568, 320), (667, 375), (844, 390)):
+        page.set_viewport_size({"width": width, "height": height})
+        page.locator(".photo button").click()
+        page.wait_for_function(overlay_open, timeout=20_000)
+        # The popup's visibility follows a transition, so the preview and the close button take taps only once it
+        # has settled; Save, outside the popup, is checked then.
+        for control in ("#scerrn-content canvas", "#screenshot .close"):
+            try:
+                page.wait_for_function(f"({HITS})(document.querySelector({json.dumps(control)}))", timeout=5000)
+            except PlaywrightTimeoutError:
+                raise AssertionError((width, height, control, page.locator(control).evaluate(OBSTACLE))) from None
+        assert hit(page, "#screenshot .save button"), (width, height, page.locator("#screenshot .save button").evaluate(OBSTACLE))
+        page.keyboard.press("Escape")
+        assert not page.evaluate(overlay_open)
     finish(page)
-    checks.append("screenshot overlay: no URL state, Escape, focus return")
+    checks.append("screenshot overlay: no URL state, Escape, focus return; Save and close clear of the preview at 568x320, 667x375, 844x390")
 
 
 def check_slide_hit_testing(browser):
@@ -747,18 +868,72 @@ def check_small_screens(browser):
     checks.extend([f"both arrows clear of the toggle at {landscape}", "artist credit at 844x390", f"artwork dominant at {portrait}"])
 
 
+def check_caption_clear_of_controls(browser):
+    """On a phone held sideways (568 x 320), stepping through the whole show with the arrows, no slide's notes push the
+    caption under the bottom control row, in either language."""
+    width, height = SHORT_LANDSCAPE[0]
+    for lang in ("en", "zh-CN"):
+        page = new_page(browser, width, height, reduced_motion="reduce")
+        page.route(re.compile(r"/assets/(public|legacy)/"), lambda route: route.fulfill(status=200, content_type="image/png", body=PIXEL))
+        navigate(page, f"index.html?asset=legacy%3Amagnolia&lang={lang}")
+        page.wait_for_function("document.querySelector('.deemo-view').style.opacity === '1'")
+        covered = page.evaluate("""(names) => { const covered = [];
+            for (let step = 0; step < imgTargets.length; step++) {
+                plusSlides(1);
+                const caption = document.querySelector('.asset-caption').getBoundingClientRect();
+                const under = names.filter((name) => { const box = document.querySelector('.' + name).getBoundingClientRect();
+                    return box.top < caption.bottom && box.bottom > caption.top && box.left < caption.right && box.right > caption.left; });
+                if (under.length) covered.push([imgTargets[slideIndex - 1].dataset.id, Math.round(caption.bottom), under]);
+            }
+            return [covered, slideIndex]; }""", BOTTOM_ROW)
+        start = page.evaluate("[...imgTargets].findIndex((img) => img.dataset.id === 'legacy:magnolia') + 1")
+        assert covered[1] == start, (lang, covered[1], start)  # once round the whole show
+        assert not covered[0], (lang, width, height, covered[0])
+        finish(page)
+    checks.append(f"caption clear of the bottom control row on every slide at {width}x{height}, en and zh-CN")
+
+
 def check_liner_notes(browser):
     page = new_page(browser)
     for asset_id, titles in NOTES_CASES.items():
         navigate(page, "index.html?asset=" + quote(asset_id))
         page.wait_for_function(f"{SHOWN_ID} === {json.dumps(asset_id)} && document.querySelector('.slide-notes .notes-title') !== null")
         assert page.evaluate(NOTES_TITLES) == titles, (asset_id, page.evaluate(NOTES_TITLES))
-    # Across the whole show, no wiki slide with mapped songs gets a file-styled headline.
-    styled = page.evaluate("""() => [...imgTargets].filter((img) => img.dataset.songs && /^wikis:/.test(img.dataset.sourceId || ''))
-        .filter((img) => notesFor(img).querySelector('.notes-title').dataset.length === 'file').map((img) => img.dataset.id)""")
+    # Across the whole show, no wiki slide with mapped songs gets a file-styled headline, and a headline that is the
+    # slide's own title names one of its songs; otherwise the songs are the headline and the title follows as a key.
+    slides = page.evaluate("""() => [...imgTargets].filter((img) => img.dataset.songs && /^wikis:/.test(img.dataset.sourceId || ''))
+        .map((img) => [img.dataset.id, img.dataset.title, img.dataset.songs.split('\\n'),
+                       [...notesFor(img).querySelectorAll('.notes-title')].map((title) => [title.textContent.replace(/\\u00a0/g, ' '), title.dataset.length || ''])])""")
+    assert slides, "No wiki slides with mapped songs"
+    styled = [asset_id for asset_id, _, _, titles in slides if titles[0][1] == "file"]
     assert not styled, styled
+    wrong = [(asset_id, titles) for asset_id, title, songs, titles in slides
+             if not (len(titles) == 1 and titles[0][0] == title and any(names_song(title, song) for song in songs)
+                     or len(titles) == 2 and titles[0][0] == " / ".join(songs) and titles[1] == [title, "file"])]
+    assert not wrong, wrong
     finish(page)
     checks.append("liner notes headline the mapped song for a wiki file key")
+
+
+def check_composer_credits(browser):
+    """Each composer line that only another source gives names that source under it, in the page language, with the
+    source's localized name when there is one: Lavuestia Mutanz's BWIKI upload credits its own spelling, and Fandom's
+    spelling follows with Fandom named under it."""
+    music = """() => { const dt = [...document.querySelectorAll('.slide-notes dt')].find((dt) => dt.textContent === DEEMO_I18N.t('slideshow.notes.music'));
+        return [...dt.nextElementSibling.childNodes].filter((node) => node.nodeName !== 'BR').map((node) => [node.nodeName, node.textContent]); }"""
+    for lang in ("en", "zh-CN"):
+        page = open_slideshow(browser, f"asset={quote('wikis:bwiki:e339d70947111b67')}&lang={lang}")
+        page.wait_for_function("document.querySelector('.slide-notes dt') !== null")
+        lines = page.evaluate("imgTargets[slideIndex - 1].dataset.composer.split('\\n')")
+        credit = page.evaluate("""(lines) => DEEMO_I18N.t('slideshow.notes.composer_source', {source: JSON.parse(imgTargets[slideIndex - 1].dataset.composerSources)[1][0][1]})""", lines)
+        assert len(lines) == 2 and "Fandom" in credit and (lang == "zh-CN") == page.evaluate(HAS_HAN, credit), (lang, lines, credit)
+        assert page.evaluate(music) == [["#text", lines[0]], ["#text", lines[1]], ["SPAN", credit]], (lang, page.evaluate(music))
+        # A localized source name replaces the recorded one, as it does in the caption.
+        page.evaluate("""() => { DEEMO_I18N.register({'en': {'source.wikis:fandom': 'Smoke Fandom'}, 'zh-CN': {'source.wikis:fandom': 'Smoke 维基'}}); renderNotes(); }""")
+        localized = page.evaluate("DEEMO_I18N.t('slideshow.notes.composer_source', {source: DEEMO_I18N.t('source.wikis:fandom')})")
+        assert page.evaluate(music)[-1] == ["SPAN", localized], (lang, page.evaluate(music), localized)
+        finish(page)
+    checks.append("composer credits name the source of each line, localized, in both languages")
 
 
 def check_site_icons(page):
@@ -793,13 +968,19 @@ with sync_playwright() as p:
     check_viewer_scroll_and_focus(browser)
     check_deep_link_filters(browser)
     check_viewer_provenance(browser)
+    check_card_tags(browser)
+    check_no_repeated_names(browser)
+    check_inventory_table(browser)
+    check_without_javascript(browser)
     check_previews(browser)
     check_attribution(browser)
     check_slideshow_controls(browser)
     check_screenshot_overlay(browser)
     check_slide_hit_testing(browser)
     check_small_screens(browser)
+    check_caption_clear_of_controls(browser)
     check_liner_notes(browser)
+    check_composer_credits(browser)
     check_site_icons(page)
     check_removed_files(page)
     finish(page)

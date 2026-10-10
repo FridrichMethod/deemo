@@ -9,6 +9,8 @@
   <link rel="icon" href="assets/site/icons/favicon.ico">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="src/archive.css">
+  <!-- Without JavaScript nothing loads, so the status line does not claim it; the notice at the top of <main> explains. -->
+  <noscript><style>#count { display: none; }</style></noscript>
   <script src="src/i18n.js" defer></script>
   <script src="src/i18n/common.js" defer></script>
   <script src="src/i18n/archive.js" defer></script>
@@ -17,13 +19,14 @@
 </head>
 <body>
   <header>
-    <p class="eyebrow">FRIDRICHMETHOD / PERSONAL COLLECTION</p>
+    <p class="eyebrow" lang="en" translate="no">FRIDRICHMETHOD / PERSONAL COLLECTION</p>
     <div class="heading-row">
       <div><h1 data-i18n="header.title">DEEMO 1 Artwork Archive</h1><p data-i18n="header.tagline">Artist releases, game textures and community versions. Files are kept as they are, and every image is traced back to its source.</p></div>
       <nav aria-label="Navigation" data-i18n-attr="aria-label:nav.label"><a href="index.html" data-lang-link data-i18n="nav.slideshow">Slideshow</a><a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer">GitHub ↗</a><button type="button" class="lang-toggle" data-lang-toggle title="Switch to Simplified Chinese"><span lang="zh-CN">中文</span></button></nav>
     </div>
   </header>
   <main>
+    <noscript><p class="noscript">Browsing the Artwork Archive requires JavaScript. Every file, with its path and source, is listed in <a href="data/catalog.json">data/catalog.json</a>, and the files themselves can be browsed in the <a href="https://github.com/FridrichMethod/deemo/tree/main/assets">GitHub repository</a>. <span lang="zh-CN">浏览曲绘档案需要 JavaScript。所有文件及其路径和来源都列在 <a href="data/catalog.json">data/catalog.json</a> 中，文件本身可在 <a href="https://github.com/FridrichMethod/deemo/tree/main/assets">GitHub 仓库</a>中浏览。</span></p></noscript>
     <form id="filters" class="filters" role="search">
       <label class="search"><span data-i18n="filters.query">Search song titles, artists, collections</span><input id="query" type="search" placeholder="Magnolia / SnowEgg / Sakuzyo …" autocomplete="off"></label>
       <label><span data-i18n="filters.family">Source</span><select id="family">
@@ -50,6 +53,5 @@
     <div class="viewer-image"><img id="full-image" alt=""><p id="image-error" hidden data-i18n="viewer.image_error">The image failed to load. Use the original-file link to check it.</p></div>
     <div class="viewer-info"><div class="viewer-controls"><button id="previous" type="button" aria-label="Previous image" data-i18n-attr="aria-label:viewer.previous"><svg class="icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M12.5 8h-9M7 4.5 3.5 8 7 11.5"/></svg></button><span id="position"></span><button id="next" type="button" aria-label="Next image" data-i18n-attr="aria-label:viewer.next"><svg class="icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M3.5 8h9M9 4.5 12.5 8 9 11.5"/></svg></button></div><h2 id="viewer-title"></h2><p id="viewer-meta"></p><p class="links"><a id="download" download data-i18n="viewer.download">Download original file</a><a id="slideshow" data-i18n="viewer.slideshow">View in slideshow</a><a id="original" target="_blank" rel="noopener noreferrer" data-i18n="viewer.original">Open original file in browser ↗</a></p><div id="provenance"></div><details><summary data-i18n="viewer.file_info">File info</summary><p id="file-info"></p></details></div>
   </dialog>
-  <noscript>Browsing the gallery requires JavaScript. Every file, with its path and source, is listed in <a href="data/catalog.json">data/catalog.json</a>, and the files themselves can be browsed in the <a href="https://github.com/FridrichMethod/deemo/tree/main/assets">GitHub repository</a>. <span lang="zh-CN">浏览图库需要 JavaScript。所有文件及其路径和来源都列在 <a href="data/catalog.json">data/catalog.json</a> 中，文件本身可在 <a href="https://github.com/FridrichMethod/deemo/tree/main/assets">GitHub 仓库</a>中浏览。</span></noscript>
 </body>
 </html>

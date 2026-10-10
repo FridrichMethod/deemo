@@ -399,7 +399,8 @@ def save_asset(job, data, fetched_at, hashes):
     relative = f"assets/public/artists/{job['directory']}/{job['stem']}{extension}"
     duplicate_of = None
     if digest in hashes:
-        relative, duplicate_of = hashes[digest]
+        relative, primary = hashes[digest]
+        duplicate_of = None if primary == job["id"] else primary
     else:
         beside = f"assets/public/artists/{job['directory']}/{job['stem']}-{digest[:12]}{extension}"
         if (ROOT / relative).exists():
@@ -422,9 +423,26 @@ def save_asset(job, data, fetched_at, hashes):
     return asset
 
 
-def fetch_all(manifest, jobs, cache, refresh, workers):
-    """Download in parallel but save in asset-id order, so the SHA-256 dedup primary is deterministic."""
-    hashes = {}
+def archived_primaries(previous):
+    """SHA-256 -> (path, id) of the previous manifest's current records that own their file (neither a superseded
+    version nor a duplicate of another record) and whose file still holds those bytes, the first by id for each."""
+    primaries = {}
+    for row in sorted(previous, key=lambda row: row["id"]):
+        if row.get("upstream_status") == "superseded" or row.get("duplicate_of") or row["sha256"] in primaries:
+            continue
+        if holds(ROOT / row["path"], row["sha256"]):
+            primaries[row["sha256"]] = (row["path"], row["id"])
+    return primaries
+
+
+def fetch_all(manifest, jobs, cache, refresh, workers, previous=()):
+    """Download in parallel but save in asset-id order, so the SHA-256 dedup primary is deterministic.
+
+    Bytes already archived keep their record and file as the primary (previous: the last manifest's records), so a
+    new upstream image with the same bytes becomes a duplicate of that record instead of a second copy, whatever its
+    id. If that primary itself now has other bytes, the first record of this run that still has these bytes stands
+    in as their primary, on the archived file, so duplicate_of always names a record with the same bytes."""
+    hashes = archived_primaries(previous)
     ordered = sorted(jobs, key=lambda job: job["id"])
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(download, job, cache, refresh) for job in ordered]
@@ -436,7 +454,17 @@ def fetch_all(manifest, jobs, cache, refresh, workers):
             except Exception as error:
                 record_failure(manifest, job["source_id"], job["download_url"], error, asset_id=job["id"])
                 print(f"Failed {job['id']}: {error}", flush=True)
-    return hashes
+    saved = {asset["id"]: asset for asset in manifest["assets"]}
+    standins = {}
+    for asset in manifest["assets"]:
+        primary = saved.get(asset.get("duplicate_of"))
+        if primary is not None and primary["sha256"] != asset["sha256"]:
+            standin = standins.setdefault(asset["sha256"], asset["id"])
+            if standin == asset["id"]:
+                del asset["duplicate_of"]
+            else:
+                asset["duplicate_of"] = standin
+    return {digest: hashes[digest] for digest in {asset["sha256"] for asset in manifest["assets"]}}
 
 
 def require_unique(jobs):
@@ -521,7 +549,7 @@ def main():
     collect_reference(manifest)
     keep_source_details(previous, manifest)
     require_unique(jobs)
-    hashes = fetch_all(manifest, jobs, cache, args.refresh, args.workers)
+    hashes = fetch_all(manifest, jobs, cache, args.refresh, args.workers, current)
     successes = Counter(asset["source_id"] for asset in manifest["assets"])
     failures = Counter(failure["source_id"] for failure in manifest["failures"])
     for source in manifest["sources"]:

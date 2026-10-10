@@ -44,7 +44,7 @@ IGNORED = {
     "download_sha1": "digest behind wiki_original_sha1_matches, which is shown when false",
     "wiki_original_size_matches": "false only with wiki_original_sha1_matches false (checked below), which is shown",
     "wiki_timestamp": "upload time on the wiki",
-    "wiki_extmetadata": "MediaWiki upload metadata (date, object name); no creator or licence fields",
+    "wiki_extmetadata": "MediaWiki upload metadata (date, object name); no creator or license fields",
     "related_pages": "wiki pages that use the file; the source page is shown",
     "mapping_method": "how the shown song titles were matched",
     "mapping_source": "where the shown song titles were matched from",

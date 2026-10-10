@@ -17,7 +17,7 @@ ROOT_ICONS = {
     "android-chrome-192x192.png", "apple-touch-icon.png", "favicon-16x16.png",
     "favicon-32x32.png", "favicon.ico", "mstile-150x150.png", "safari-pinned-tab.svg",
 }
-# Inherited from upstream but deliberately not redistributed: commercial fonts whose licences forbid
+# Inherited from upstream but deliberately not redistributed: commercial fonts whose licenses forbid
 # it (see NOTICE). They map to no destination and must not reappear at either path.
 WITHDRAWN = {
     "src/COPRGTL.ttf": "assets/site/fonts/COPRGTL.ttf",
