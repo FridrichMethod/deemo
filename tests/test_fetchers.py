@@ -186,6 +186,19 @@ class ArtistsTests(TempRoot):
         first.pop("fetched_at"), second.pop("fetched_at")
         self.assertEqual(first, second)
 
+    def test_lost_file_is_refetched_without_a_superseded_record(self):
+        self.seed()
+        (self.root / "assets/public/artists/snowegg/pixiv-1-p00.png").unlink()  # missing from the checkout
+        new = png("blue")
+        web = FakeWeb({**pixiv_routes([OLD_P0, OLD_P0.replace("_p0", "_p1")]), OLD_P0: new})
+        self.assertEqual(self.run_main(web), 0)
+        assets = self.read_manifest("artists")["assets"]
+        self.assertEqual([(a["id"], a["path"], a["sha256"], a.get("upstream_status")) for a in assets],
+                         [("artists:pixiv:1:p0", "assets/public/artists/snowegg/pixiv-1-p00.png", sha(new), None),
+                          ("artists:pixiv:1:p1", "assets/public/artists/snowegg/pixiv-1-p01.png", sha(self.old[1]), None)])
+        for asset in assets:
+            self.assertEqual(sha((self.root / asset["path"]).read_bytes()), asset["sha256"], asset["id"])
+
     def test_discovery_failure_keeps_previous_assets(self):
         self.seed()
         self.assertEqual(self.run_main(FakeWeb()), 1)
@@ -479,6 +492,34 @@ class ArchivesTests(TempRoot):
         assets = {a["id"]: a for a in self.read_manifest("archives")["assets"]}
         self.assertEqual(assets["archives:cover-art-archive:13"]["upstream_status"], "removed")
         self.assertNotIn("upstream_status", assets["archives:cover-art-archive:11"])
+
+    def test_lost_file_is_refetched_without_a_superseded_record(self):
+        url = f"https://coverartarchive.org/release/{archives.CAA_MBID}/11.jpg"
+        record = self.caa_record(11, png("red"))
+        (self.root / record["path"]).unlink()  # the archived file is missing from the checkout
+        self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [record], "failures": []})
+        web = FakeWeb({CAA_API: json.dumps({"images": [caa_image(11)]}), url: png("blue")})
+        self.assertEqual(self.run_main(web, self.caa_step()), 0)
+        self.assertEqual([(a["id"], a["path"], a["sha256"]) for a in self.read_manifest("archives")["assets"]],
+                         [(record["id"], record["path"], sha(png("blue")))])
+        with contextlib.redirect_stdout(io.StringIO()):
+            archives.verify()
+
+        # Green replaces blue, so blue is kept as superseded at 11.png. When 11.png is then lost and
+        # upstream serves red, red takes that path and the blue record, whose bytes are gone, is dropped.
+        web.routes[url] = png("green")
+        archives.reset()
+        self.assertEqual(self.run_main(web, self.caa_step()), 0)
+        (self.root / record["path"]).unlink()
+        web.routes[url] = png("red")
+        archives.reset()
+        self.assertEqual(self.run_main(web, self.caa_step()), 0)
+        green = f"assets/public/archives/cover-art-archive/11-{sha(png('green'))[:12]}.png"
+        self.assertEqual(sorted((a["id"], a["path"], a["sha256"]) for a in self.read_manifest("archives")["assets"]),
+                         [(record["id"], record["path"], sha(png("red"))),
+                          (f"{record['id']}:{sha(png('green'))[:12]}", green, sha(png("green")))])
+        with contextlib.redirect_stdout(io.StringIO()):
+            archives.verify()
 
     def test_reupload_supersedes_previous_version(self):
         old, new = png("red"), png("blue")

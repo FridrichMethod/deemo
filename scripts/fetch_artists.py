@@ -448,12 +448,17 @@ def carry_forward(previous, manifest):
     the old one stays as "<id>:<old sha256[:12]>" with upstream_status "superseded" and superseded_by
     naming the canonical id. When upstream reverts to an earlier version, the canonical record holds
     those bytes and that file again, so the superseded copy of it is not kept twice. Files are never
-    deleted; sources of kept records are kept too.
+    deleted; sources of kept records are kept too. The one record dropped is one whose file was
+    missing, so that this run stored other bytes at its path: its bytes are gone.
     """
     records = {row["id"]: row for row in manifest["assets"]}
+    held = {row["path"]: row["sha256"] for row in manifest["assets"]}
     failed_assets = {row["asset_id"] for row in manifest["failures"] if row.get("asset_id")}
     failed_sources = {row["source_id"] for row in manifest["failures"]}
     for old in previous.get("assets", []):
+        if held.get(old["path"], old["sha256"]) != old["sha256"]:
+            print(f"Dropped {old['id']}: its file {old['path']} was missing and now holds other bytes", flush=True)
+            continue
         new = records.get(old["id"])
         if new is not None:
             if new["sha256"] != old["sha256"]:
