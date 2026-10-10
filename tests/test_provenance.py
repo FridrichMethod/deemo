@@ -1,6 +1,7 @@
 """Offline checks that provenance reaches the pages: wiki art carries the composer of its mapped songs, copied from
 the song index by scripts/fetch_wikis.py and kept in the committed snapshot and manifest, and each slide carries the
-provenance class of the copy its caption credits, which the slideshow names next to the kind in both languages.
+provenance class of the copy its caption credits, which the slideshow names next to the kind in both languages. The
+archive viewer states a carried-forward record's upstream status and offers the newer version of a superseded one.
 
 Nothing touches the network: the fetcher runs against a temporary root and a fake web that serves canned bytes.
 """
@@ -315,6 +316,23 @@ class CommittedSlideshowTests(unittest.TestCase):
         credited = [slide for slide in self.slides if slide["data-source-id"].startswith("wikis:") and slide.get("data-composer")]
         self.assertGreater(len(credited), 400)
         self.assertIn("Sakuzyo", {slide["data-composer"] for slide in credited if slide["data-title"] == "Altale"})
+
+
+class ArchiveUpstreamTests(unittest.TestCase):
+    """The archive viewer states every upstream status and offers the newer version of a superseded record."""
+
+    def test_every_upstream_status_the_build_accepts_is_labelled(self):
+        for language, table in messages("src/i18n/archive.js").items():
+            with self.subTest(language=language):
+                self.assertEqual([status for status in build.UPSTREAM_STATUSES if f"upstream.{status}" not in table], [])
+                self.assertIn("{status}", table["provenance.upstream"])
+                self.assertEqual(set(re.findall(r"\{(\w+)\}", table["provenance.superseded_by"])), {"width", "height"})
+
+    def test_a_superseded_record_offers_its_newer_version(self):
+        script = (ROOT / "src/archive.js").read_text(encoding="utf-8")
+        self.assertRegex(script, r"record\.id === p\.superseded_by")
+        self.assertIn('t("provenance.superseded_by", {width: newer.width, height: newer.height})', script)
+        self.assertIn("show(newer)", script)
 
 
 if __name__ == "__main__":

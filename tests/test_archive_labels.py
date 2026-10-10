@@ -20,7 +20,7 @@ SHOWN = {
     "source_id", "source_name", "page_url", "download_url", "family", "kind", "title", "artist", "composer",
     "collection", "collection_scope", "collections", "collection_aliases", "song_titles", "internal_key", "notes", "quality", "provenance",
     "quality_notes", "source_dimensions", "source_dimensions_kind", "variant_note", "layout_note", "delivery_note", "rights", "rights_holder",
-    "wiki_original_sha1_matches", "upstream_status", "mapping_status", "title_status", "variants",
+    "wiki_original_sha1_matches", "upstream_status", "superseded_by", "mapping_status", "title_status", "variants",
     "path", "width", "height", "format", "bytes", "sha256", "fetched_at",
 }
 # Fields the page leaves out on purpose, with the reason. A new manifest field fails the test until it is added to one
@@ -51,7 +51,6 @@ IGNORED = {
     "download_attempt_failures": "failed attempts before the download that succeeded",
     "scan_types": "scan side, already part of the shown title",
     "tags": "Tumblr post tags the shown title was taken from",
-    "superseded_by": "id of the newer record; the superseded upstream status is shown",
 }
 
 
