@@ -398,6 +398,40 @@ class CollectionNameTests(unittest.TestCase):
         self.assertEqual(selected[0]["collections"], ["Etude Collection"])
 
 
+class CollectionAliasTests(FetcherRun):
+    def test_aliases_are_the_other_spellings_the_song_pages_use(self):
+        songs = [song("A", ["RAC Collection #1", "Etude Collection"]), song("B", ["RAC collection -1"], source="bwiki"),
+                 song("C", ["Etude collection"]), song("D", ["Sakuzyo collection"])]
+        candidates = [{"file_title": "1", "collections": ["RAC collection -1"]},
+                      {"file_title": "2", "collections": ["Etude Collection", "RAC Collection #1"], "collection_aliases": ["Old"]},
+                      {"file_title": "3", "collections": ["Sakuzyo collection", "Book of Alice"], "collection_aliases": ["Old"]}]
+        result = fetch.with_collection_aliases(candidates, songs)
+        self.assertEqual([row.get("collection_aliases") for row in result],
+                         [["RAC Collection #1"], ["Etude collection", "RAC collection -1"], None])
+        self.assertEqual([row["collections"] for row in result], [row["collections"] for row in candidates])
+        self.assertEqual(candidates[1]["collection_aliases"], ["Old"])  # the input is left as it was
+
+    def test_discovery_stores_the_aliases_with_the_snapshot(self):
+        candidate = self.offer("Art.png", png("red"), collections=["Etude Collection"])
+        with patch.object(fetch, "discover_fandom", return_value=([], [song("Art", ["Etude Collection"])], {})), \
+                patch.object(fetch, "discover_bwiki", return_value=([candidate], [song("Art", ["Etude collection"], "bwiki")], {})):
+            self.run_main("--metadata-only")
+        self.assertEqual(self.read(DISCOVERY)["candidates"][0]["collection_aliases"], ["Etude collection"])
+
+    def test_records_keep_the_snapshot_aliases_in_a_stable_place(self):
+        offered = self.offer("Art.png", png("red"), collections=["RAC Collection #1"], collection_aliases=["RAC collection -1"])
+        candidate = {**offered, "info": {**offered["info"], "sha1": "f" * 40}}  # a checksum caveat adds a delivery_note
+        first = self.resume(candidate)["assets"][0]
+        self.assertEqual(first["collection_aliases"], ["RAC collection -1"])
+        self.assertEqual(list(first)[-2:], ["collection_aliases", "delivery_note"])
+        calls = len(self.web.calls)
+        again = self.resume(candidate)["assets"][0]
+        self.assertEqual(len(self.web.calls), calls)  # verified from the file on disk, not downloaded again
+        self.assertEqual(list(again.items()), list(first.items()))
+        plain = {key: value for key, value in candidate.items() if key != "collection_aliases"}
+        self.assertNotIn("collection_aliases", self.resume(plain)["assets"][0])
+
+
 class OrderingTests(FetcherRun):
     # Discovers one BWIKI cover in a fresh interpreter, where set iteration order follows PYTHONHASHSEED.
     CHILD = """

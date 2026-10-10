@@ -171,6 +171,25 @@ def unique_collections(names):
     return sorted(chosen.values())
 
 
+def with_collection_aliases(candidates, songs):
+    """The candidates, each given the other spellings of its collections as collection_aliases.
+
+    A record lists one spelling per collection, so a search for another spelling ("RAC collection -1" for
+    "RAC Collection #1") would miss it. The aliases are every spelling that a song page of either wiki uses for one of
+    the candidate's collections; the archive searches them, but does not show them."""
+    spellings = defaultdict(set)
+    for song in songs:
+        for name in song["collections"]:
+            spellings[normalized(name) or name].add(name)
+    result = []
+    for candidate in candidates:
+        own = set(candidate["collections"])
+        aliases = sorted({alias for name in own for alias in spellings.get(normalized(name) or name, ())} - own)
+        rest = {key: value for key, value in candidate.items() if key != "collection_aliases"}
+        result.append({**rest, "collection_aliases": aliases} if aliases else rest)
+    return result
+
+
 def parameter(wikitext, name):
     match = re.search(r"\|\s*" + re.escape(name) + r"\s*=\s*([^|\n}]*)", wikitext, re.I)
     return re.sub(r"<!--.*?-->", "", match.group(1)).strip() if match else ""
@@ -338,11 +357,14 @@ def download(candidate, existing):
         path = ROOT / previous["path"]
         if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == previous["sha256"] and previous.get("wiki_sha1") == info.get("sha1"):
             download_sha1 = hashlib.sha1(path.read_bytes()).hexdigest()
-            current = {key: value for key, value in previous.items() if key not in UPSTREAM_FIELDS + ("delivery_note",)}
+            current = {key: value for key, value in previous.items()
+                       if key not in UPSTREAM_FIELDS + ("collection_aliases", "delivery_note")}
             record = {**current, "kind": candidate["kind"], "song_titles": candidate["song_titles"],
                       "collections": candidate["collections"], "related_pages": candidate["related_pages"],
                       "download_sha1": download_sha1, "wiki_original_size_matches": path.stat().st_size == info["size"],
                       "wiki_original_sha1_matches": download_sha1 == info.get("sha1")}
+            if candidate.get("collection_aliases"):
+                record["collection_aliases"] = candidate["collection_aliases"]
             note = delivery_note(previous.get("download_url", ""), record["wiki_original_size_matches"], record["wiki_original_sha1_matches"])
             if note:
                 record["delivery_note"] = note
@@ -408,6 +430,9 @@ def download(candidate, existing):
         record["wiki_extmetadata"] = info["extmetadata"]
     if attempted_failures:
         record["download_attempt_failures"] = attempted_failures
+    # Placed as a verified re-run places it, so a later --resume keeps the key order.
+    if candidate.get("collection_aliases"):
+        record["collection_aliases"] = candidate["collection_aliases"]
     note = delivery_note(url, record["wiki_original_size_matches"], record["wiki_original_sha1_matches"])
     if note:
         record["delivery_note"] = note
@@ -536,7 +561,7 @@ def main():
                                         "discovery": {**stats[source], "snapshot_fetched_at": discovered_at},
                                         "notes": "Only original DEEMO and its ports. DEEMO II categories, audio, charts, screenshots and unrelated UI are excluded."})
         write_json("data/sources/wiki-song-index.json", {"schema_version": 1, "fetched_at": now(), "songs": fandom_songs + bwiki_songs})
-        candidates = fandom + bwiki
+        candidates = with_collection_aliases(fandom + bwiki, fandom_songs + bwiki_songs)
         # The statistics travel with the snapshot, so a later --resume can describe the enumeration it resumes.
         write_json("data/sources/wiki-discovery.json", {"schema_version": 1, "fetched_at": discovered_at, "stats": stats,
                                                          "candidates": candidates})
