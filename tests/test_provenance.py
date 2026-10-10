@@ -65,6 +65,18 @@ def messages(relative):
     return json.loads(REGISTER.search((ROOT / relative).read_text(encoding="utf-8")).group(1))
 
 
+def function_body(source, name):
+    """The body of the JavaScript function declared as `function name(...)` in source. Braces are counted as they
+    come, which holds for the functions checked here: their strings and regular expressions keep braces balanced."""
+    start = source.index("{", re.search(rf"\bfunction {name}\(", source).end())
+    depth = 0
+    for index in range(start, len(source)):
+        depth += {"{": 1, "}": -1}.get(source[index], 0)
+        if not depth:
+            return source[start + 1:index]
+    raise AssertionError(f"function {name} is not closed")
+
+
 class Slides(HTMLParser):
     """The attributes of every slide <img> (class deemo-draw) in a rendered slideshow, in order."""
 
@@ -342,8 +354,15 @@ class CommittedSlideshowTests(unittest.TestCase):
         self.assertEqual(set(by_source["legacy"]) | set(by_source["artists"]), {None})
 
     def test_the_template_qualifies_the_kind(self):
-        template = (ROOT / "templates/slideshow.html").read_text(encoding="utf-8-sig")
-        self.assertIn('DEEMO_I18N.t("slideshow.provenance." + data.provenance)', template)
+        # No offline test runs the page, so the wiring is checked in the source: notesFor looks up the slide's class
+        # label, and when there is one it goes into the eyebrow as a notes-provenance span inside the notes-kind label.
+        notes = function_body((ROOT / "templates/slideshow.html").read_text(encoding="utf-8-sig"), "notesFor")
+        self.assertRegex(notes, r'var origin = data\.provenance && DEEMO_I18N\.has\("slideshow\.provenance\." \+ data\.provenance\)'
+                                r'\s*\? DEEMO_I18N\.t\("slideshow\.provenance\." \+ data\.provenance\) : "";')
+        self.assertRegex(notes, r'var label = element\("span", "notes-kind", kind\);'
+                                r'\s*if \(origin\) label\.append\(element\("span", "notes-provenance", [^;]*\+ origin\)\);'
+                                r'\s*eyebrow\.append\(label\);')
+        self.assertRegex(notes, r"notes\.append\(eyebrow, title\);")
 
     def test_wiki_art_is_credited_and_found_by_its_composer(self):
         records = [record for asset in self.catalog["assets"] for record in asset["provenance"]]
@@ -372,10 +391,20 @@ class ArchiveUpstreamTests(unittest.TestCase):
                 self.assertEqual(set(re.findall(r"\{(\w+)\}", table["provenance.superseded_by"])), {"width", "height"})
 
     def test_a_superseded_record_offers_its_newer_version(self):
+        # As for the slideshow, the wiring is checked in the source: the record's upstream notes end with a paragraph
+        # holding a button that shows the newer entry, and show() opens that entry, clearing filters that hide it.
         script = (ROOT / "src/archive.js").read_text(encoding="utf-8")
-        self.assertRegex(script, r"record\.id === p\.superseded_by")
-        self.assertIn('t("provenance.superseded_by", {width: newer.width, height: newer.height})', script)
-        self.assertIn("show(newer)", script)
+        self.assertRegex(function_body(script, "provenanceBlock"), r"if \(p\.upstream_status\) block\.append\(\.\.\.upstreamNotes\(p\)\);")
+        notes = function_body(script, "upstreamNotes")
+        self.assertRegex(notes, r"record\.id === p\.superseded_by")
+        self.assertIn('t("provenance.superseded_by", {width: newer.width, height: newer.height})', notes)
+        self.assertRegex(notes, r'button\.addEventListener\("click", \(\) => show\(newer\)\);')
+        self.assertRegex(notes, r"paragraph\.append\(button\);\s*notes\.push\(paragraph\);")
+        self.assertRegex(notes, r"return notes;\s*$")
+        show = function_body(script, "show")
+        self.assertRegex(show, r'if \(!filtered\.includes\(asset\)\) \{ \$\("filters"\)\.reset\(\); filter\(\); \}')
+        self.assertRegex(show, r"const index = filtered\.indexOf\(asset\);\s*if \(index < 0\) return;\s*open\(index\);")
+        self.assertRegex(show, r'\$\("viewer-title"\)\.focus\(\);\s*$')
 
 
 if __name__ == "__main__":
