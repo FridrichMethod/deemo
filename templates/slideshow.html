@@ -344,16 +344,25 @@ https://github.com/FridrichMethod/deemo
             // ("Classic01" for "Tristesse"): the songs are the headline and the key follows as a quiet file
             // reference. A title that looks like a file name names a song only when it is the song's name ("Cloud9",
             // "U7228"), never by containment ("Celia02forsis fc" for "For Sis", "Code11" for "Code : 11"). Any other
-            // title names a song when either contains the other, ignoring case, accents and punctuation ("Fur Alice",
-            // "Continuum (DEEMO Ver.)").
+            // title names a song when the two are the same ignoring case, accents, spacing and punctuation ("Fur Alice",
+            // "FallingEars"), or when the words of either run whole inside the other's ("Continuum" for "Continuum
+            // (DEEMO Ver.)", "Mirror Night" for "Reflection (Mirror Night)"). A key that only runs a song's letters
+            // into another word names none ("Samsaraaragami" for "Aragami", "Crossknotsway" for "Knots Way").
             var songs = data.songs ? data.songs.split("\n") : [];
-            var fold = function(text) { return text.normalize("NFKD").toLowerCase().replace(/[^\p{L}\p{N}]/gu, ""); };
-            var folded = fold(data.title);
+            var words = function(text) { return text.normalize("NFKD").toLowerCase().split(/[^\p{L}\p{N}\p{M}]+/u).map(function(word) { return word.replace(/\p{M}/gu, ""); }).filter(Boolean); };
+            var runsWithin = function(part, whole) {
+                for (var start = 0; part.length && start + part.length <= whole.length; start++) {
+                    if (part.every(function(word, i) { return word === whole[start + i]; })) return true;
+                }
+                return false;
+            };
+            var titleWords = words(data.title);
             var file = isFileName(data.title, data.id);
             var named = songs.some(function(song) {
                 if (file) return song.toLowerCase() === data.title.toLowerCase();
-                var name = fold(song);
-                return Boolean(name && folded) && (folded.indexOf(name) >= 0 || name.indexOf(folded) >= 0);
+                var songWords = words(song);
+                return Boolean(songWords.length && titleWords.length) && (songWords.join("") === titleWords.join("")
+                    || runsWithin(songWords, titleWords) || runsWithin(titleWords, songWords));
             });
             var fileKey = songs.length && !named && /^wikis:/.test(data.sourceId || "") ? data.title : "";
             var headline = fileKey ? songs.join(" / ") : data.title;

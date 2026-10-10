@@ -8,7 +8,9 @@ failures it causes itself (see Monitor)."""
 import argparse
 import hashlib
 import json
+import re
 import time
+import unicodedata
 import xml.etree.ElementTree as ET
 from collections import Counter
 from urllib.parse import quote, unquote, urljoin, urlparse
@@ -52,8 +54,29 @@ NOTES_CASES = {
     "wikis:fandom:082622a106c6977b": [["Code : 11", ""], ["Code11", "file"]],
     "wikis:fandom:7f71c166494b2ff8": [["Cloud9", ""]],
     "wikis:fandom:3a93b33265bbb130": [["Continuum", ""]],
+    # Keys that run the song's letters into another word name no song, however much of it they contain.
+    "wikis:fandom:14805c02b0032bb2": [["Aragami", ""], ["Samsaraaragami", "file"]],
+    "wikis:fandom:0da581d8432fcafe": [["Lost in the nowhere", "long"], ["Samsaralostinthenowhere", "file"]],
+    "wikis:fandom:c040224c93362520": [["Voice of Cell", ""], ["Samsaravoiceofcell", "file"]],
+    "wikis:fandom:c8dfb0e6211cccd3": [["The way home", ""], ["Samsarathewayhome", "file"]],
+    "wikis:fandom:cd7c10954e3a8712": [["Valle De Los Caidos", "long"], ["Samsaravalledeloscaidos", "file"]],
+    "wikis:fandom:07a098acfa802dd9": [["Knots Way", ""], ["Crossknotsway", "file"]],
 }
 NOTES_TITLES = "[...document.querySelectorAll('.slide-notes .notes-title')].map((title) => [title.textContent.replace(/\\u00a0/g, ' '), title.dataset.length || ''])"
+
+
+def title_words(text):
+    """A title's words as the liner notes compare them: case and accents folded, split at anything but a letter or digit."""
+    stripped = "".join(char for char in unicodedata.normalize("NFKD", text).lower() if not unicodedata.combining(char))
+    return re.findall(r"[^\W_]+", stripped)
+
+
+def names_song(title, song):
+    """Whether a title names a song: the same letters and digits, or the words of either running whole in the other's."""
+    def runs_within(part, whole):
+        return any(whole[start:start + len(part)] == part for start in range(len(whole) - len(part) + 1))
+    a, b = title_words(title), title_words(song)
+    return bool(a and b) and ("".join(a) == "".join(b) or runs_within(a, b) or runs_within(b, a))
 
 
 def mounted_url(relative, source=base):
@@ -753,10 +776,18 @@ def check_liner_notes(browser):
         navigate(page, "index.html?asset=" + quote(asset_id))
         page.wait_for_function(f"{SHOWN_ID} === {json.dumps(asset_id)} && document.querySelector('.slide-notes .notes-title') !== null")
         assert page.evaluate(NOTES_TITLES) == titles, (asset_id, page.evaluate(NOTES_TITLES))
-    # Across the whole show, no wiki slide with mapped songs gets a file-styled headline.
-    styled = page.evaluate("""() => [...imgTargets].filter((img) => img.dataset.songs && /^wikis:/.test(img.dataset.sourceId || ''))
-        .filter((img) => notesFor(img).querySelector('.notes-title').dataset.length === 'file').map((img) => img.dataset.id)""")
+    # Across the whole show, no wiki slide with mapped songs gets a file-styled headline, and a headline that is the
+    # slide's own title names one of its songs; otherwise the songs are the headline and the title follows as a key.
+    slides = page.evaluate("""() => [...imgTargets].filter((img) => img.dataset.songs && /^wikis:/.test(img.dataset.sourceId || ''))
+        .map((img) => [img.dataset.id, img.dataset.title, img.dataset.songs.split('\\n'),
+                       [...notesFor(img).querySelectorAll('.notes-title')].map((title) => [title.textContent.replace(/\\u00a0/g, ' '), title.dataset.length || ''])])""")
+    assert slides, "No wiki slides with mapped songs"
+    styled = [asset_id for asset_id, _, _, titles in slides if titles[0][1] == "file"]
     assert not styled, styled
+    wrong = [(asset_id, titles) for asset_id, title, songs, titles in slides
+             if not (len(titles) == 1 and titles[0][0] == title and any(names_song(title, song) for song in songs)
+                     or len(titles) == 2 and titles[0][0] == " / ".join(songs) and titles[1] == [title, "file"])]
+    assert not wrong, wrong
     finish(page)
     checks.append("liner notes headline the mapped song for a wiki file key")
 
