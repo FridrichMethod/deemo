@@ -168,6 +168,15 @@
   $("reset-filters").addEventListener("click", () => { $("filters").reset(); filter(); });
   $("more").addEventListener("click", more);
   $("close").addEventListener("click", () => $("viewer").close());
+  // The browser hands focus back to the card that opened the viewer; after Prev/Next that is the wrong card and may be
+  // far away, so focus the card of the image last shown instead (rendering cards up to it) and bring it into view.
+  $("viewer").addEventListener("close", () => {
+    if (!filtered[current]) return;
+    while (shown <= current) more();
+    const card = $("grid").children[current];
+    card.querySelector(".card-image").focus({preventScroll: true});
+    card.scrollIntoView({block: "nearest"});
+  });
   $("previous").addEventListener("click", () => open(current - 1));
   $("next").addEventListener("click", () => open(current + 1));
   document.addEventListener("keydown", (event) => {
@@ -220,7 +229,7 @@
       while (shown < Math.min(previous, filtered.length)) more();
       if (openId) {
         const index = filtered.findIndex((asset) => asset.id === openId);
-        if (index >= 0) open(index); else $("viewer").close();
+        if (index >= 0) open(index); else { current = -1; $("viewer").close(); }
       }
     } else {
       renderCount();
