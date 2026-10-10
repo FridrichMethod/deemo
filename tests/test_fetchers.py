@@ -249,7 +249,8 @@ class ArtistsTests(TempRoot):
     def test_download_refuses_other_hosts_and_redirects(self):
         job = {"id": "artists:pixiv:1:p0", "source_id": "artists:pixiv:1", "page_url": PAGE_URL}
         # urllib3 reads the backslash as the start of the path, so the second URL goes to 169.254.169.254.
-        for url in ("https://i.pximg.net.evil.example/1_p0.png", "https://169.254.169.254\\@i.pximg.net/img-original/1_p0.png"):
+        for url in ("https://i.pximg.net.evil.example/1_p0.png", "https://169.254.169.254\\@i.pximg.net/img-original/1_p0.png",
+                    "http://i.pximg.net/img-original/1_p0.png"):
             web = FakeWeb()
             with patch.object(artists.requests, "get", web), self.assertRaisesRegex(ValueError, "expected hosts"):
                 artists.download({**job, "download_url": url}, {}, False)
@@ -640,6 +641,85 @@ class ArchivesTests(TempRoot):
         self.assertIn("retained unchanged", archives.MANIFEST["sources"][0]["notes"])
 
 
+MIRROR = "https://rayarkmusic.tumblr.com"
+MIRROR_API = f"{MIRROR}/api/read/json?tagged=Deemo%20Songs&num=50&start=0"
+COVER_OK = "https://64.media.tumblr.com/a/tumblr_77_cover.png"
+COVER_MOVED = "https://64.media.tumblr.com/b/tumblr_77b_cover.png"
+IA_METADATA = "https://archive.org/metadata/deemo_ost-_202606"
+EXHIBITION_PDF = "https://rayark.promo/deemo_exhibition_en.pdf"
+BRAND_PDF = "https://rayark.promo/rayark_site/RAYARK_GameBrandAssets.pdf"
+
+
+class ArchiveSiteTests(TempRoot):
+    """tumblr_mirror, official and the Internet Archive lookup succeed offline, and off-host bait in
+    the pages, the API data or a redirect is never requested."""
+
+    def setUp(self):
+        super().setUp()
+        patcher = patch.object(archives, "ROOT", self.root)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        archives.reset()
+        self.addCleanup(archives.reset)
+
+    def run_steps(self, web, *names):
+        steps = [step for step in archives.STEPS if step[0].__name__ in names]
+        self.assertEqual(len(steps), len(names))
+        with patch.object(archives, "session", lambda: web), patch.object(archives, "STEPS", steps), \
+                contextlib.redirect_stdout(io.StringIO()):
+            code = archives.main()
+            archives.verify()
+        self.assertEqual([url for url in web.requested if "attacker.example" in url], [], "an off-host URL was requested")
+        return code, self.read_manifest("archives")
+
+    def web(self):
+        posts = [{"id": "77", "url-with-slug": f"{MIRROR}/post/77/song", "id3-title": "Song", "tags": ["deemo"]},
+                 {"id": "78", "url-with-slug": "https://attacker.example/post/78", "id3-title": "Bait"}]
+        return FakeWeb({
+            f"{MIRROR}/deemo": f'<a href="{MIRROR}/tagged/Deemo%20Songs">DEEMO</a><a href="{MIRROR}/tagged/Miscellaneous">misc</a>',
+            MIRROR_API: "var tumblr_api_read = " + json.dumps({"posts": posts, "posts-total": 2}) + ";",
+            # The off-host cover comes first, so letting it through would also renumber the real covers.
+            f"{MIRROR}/post/77/song": f'<img src="https://attacker.example/tumblr_x_cover.png"><img src="{COVER_OK}"><img src="{COVER_MOVED}">',
+            COVER_OK: png("red"),
+            COVER_MOVED: (302, b"", {"Location": "https://attacker.example/tumblr_77b_cover.png"}),
+            "https://deemo.com/": '<img src="/img/index_pic.png"><img src="https://attacker.example/about_pic.png"><img src="/img/logo.png">',
+            "https://deemo.com/img/index_pic.png": (301, b"", {"Location": "https://www.deemo.com/img/index_pic.png"}),
+            "https://www.deemo.com/img/index_pic.png": png("green"),
+            EXHIBITION_PDF: b"%PDF-1.4 exhibition",
+            BRAND_PDF: b"%PDF-1.4 brand assets",
+            IA_METADATA: json.dumps({"files": [{"format": "Flac"}, {"format": "PNG"}, {"format": "PNG"}]}),
+        })
+
+    def test_pages_images_and_pdfs_come_only_from_their_hosts(self):
+        code, manifest = self.run_steps(self.web(), "tumblr_mirror", "official", "catalog")
+        self.assertEqual(code, 1)
+        assets = {asset["id"]: asset for asset in manifest["assets"]}
+        self.assertEqual(sorted(assets), ["archives:deemo-exhibition:deemo-exhibition", "archives:official-deemo:index_pic",
+                                          "archives:rayark-brand-assets:rayark-brand-assets", "archives:rayarkmusic-tumblr:77-1"])
+        self.assertEqual(assets["archives:rayarkmusic-tumblr:77-1"]["resolved_url"], COVER_OK)
+        self.assertEqual(assets["archives:official-deemo:index_pic"]["resolved_url"], "https://www.deemo.com/img/index_pic.png")
+        self.assertEqual(assets["archives:deemo-exhibition:deemo-exhibition"]["format"], "PDF")
+        self.assertEqual(sorted((f["source_id"], f.get("asset_id", ""), f["url"]) for f in manifest["failures"]),
+                         [("archives:official-deemo", "archives:official-deemo:about_pic", "https://attacker.example/about_pic.png"),
+                          ("archives:rayarkmusic-tumblr", "", "https://attacker.example/post/78"),
+                          ("archives:rayarkmusic-tumblr", "archives:rayarkmusic-tumblr:77-2", COVER_MOVED)])
+        ia = next(row for row in manifest["sources"] if row["id"] == "archives:internet-archive-202606")
+        self.assertEqual(ia["file_formats"], {"Flac": 1, "PNG": 2})
+
+    def test_redirects_off_the_official_and_archive_hosts_are_refused(self):
+        web = self.web()
+        web.routes["https://deemo.com/"] = (302, b"", {"Location": "https://attacker.example/"})
+        web.routes[IA_METADATA] = (302, b"", {"Location": "https://attacker.example/metadata"})
+        code, manifest = self.run_steps(web, "official", "catalog")
+        self.assertEqual(code, 1)
+        failures = [(f["source_id"], f["url"]) for f in manifest["failures"]]
+        self.assertIn(("archives:official-deemo", "https://deemo.com/"), failures)
+        self.assertIn(("archives:internet-archive-202606", IA_METADATA), failures)
+        # The reference PDFs do not depend on the website page.
+        self.assertEqual(sorted(asset["id"] for asset in manifest["assets"]),
+                         ["archives:deemo-exhibition:deemo-exhibition", "archives:rayark-brand-assets:rayark-brand-assets"])
+
+
 class ConnectionHostTests(unittest.TestCase):
     """The allow-list must judge the host requests really connects to, read here from the real HTTPAdapter."""
 
@@ -650,6 +730,7 @@ class ConnectionHostTests(unittest.TestCase):
                "https://user:secret@64.media.tumblr.com/x_cover.png",
                "https://64.media.tumblr.com%2eattacker.example/x_cover.png",
                "https://64.media.tumblr.com:8443/x_cover.png",
+               "https://xmedia.tumblr.com/x_cover.png",
                "https:///x_cover.png")
     ACCEPTED = ("https://64.media.tumblr.com/x_cover.png", "HTTPS://64.MEDIA.TUMBLR.COM./x_cover.png",
                 "https://64.media.tumblr.com#@attacker.example/", "https://64.media.tumblr.com?@attacker.example/")
@@ -682,6 +763,17 @@ class ConnectionHostTests(unittest.TestCase):
             for url in self.ACCEPTED:
                 hosts = self.connection_hosts(lambda: fetch(url))
                 self.assertEqual([host.rstrip(".") for host in hosts], ["64.media.tumblr.com"], (name, url))
+
+    def test_hosts_match_whole_labels_over_https_only(self):
+        for module in (archives, artists):
+            self.assertFalse(module.host_allowed("https://evilarchive.org/x", ("archive.org",)), module.__name__)
+            self.assertTrue(module.host_allowed("https://ia800.us.archive.org/x", ("archive.org",)), module.__name__)
+            self.assertFalse(module.host_allowed("http://i.pximg.net/img-original/1_p0.png", ("i.pximg.net",)), module.__name__)
+
+    def test_only_the_scheme_is_upgraded_to_https(self):
+        self.assertEqual(archives.https("http://deemo.com/a.png"), "https://deemo.com/a.png")
+        for url in ("https://deemo.com/a?next=http://deemo.com/", "ftp://example.org/?http://deemo.com/"):
+            self.assertEqual(archives.https(url), url)
 
 
 class KeepFileTests(TempRoot):
