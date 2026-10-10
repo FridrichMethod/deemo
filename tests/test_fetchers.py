@@ -14,6 +14,7 @@ import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import urljoin
 
 import requests
 from PIL import Image
@@ -53,21 +54,30 @@ def response(url, status=200, body=b"", headers=None):
 
 
 class FakeWeb:
-    """Serves canned responses by exact URL; anything else fails like an unreachable host."""
+    """Serves canned responses by exact URL; anything else fails like an unreachable host.
+
+    Like requests, it follows redirects itself (with no host check) unless allow_redirects=False,
+    so a fetcher that stops passing allow_redirects=False fails the redirect tests.
+    """
 
     def __init__(self, routes=None):
         self.routes = dict(routes or {})
         self.requested = []
         self.lock = threading.Lock()
 
-    def __call__(self, url, **kwargs):
-        with self.lock:
-            self.requested.append(url)
-        route = self.routes.get(url)
-        if route is None:
-            raise requests.ConnectionError(f"offline test: {url}")
-        status, body, headers = route if isinstance(route, tuple) else (200, route, {})
-        return response(url, status, body, headers)
+    def __call__(self, url, allow_redirects=True, **kwargs):
+        for _ in range(10):
+            with self.lock:
+                self.requested.append(url)
+            route = self.routes.get(url)
+            if route is None:
+                raise requests.ConnectionError(f"offline test: {url}")
+            status, body, headers = route if isinstance(route, tuple) else (200, route, {})
+            result = response(url, status, body, headers)
+            if not (allow_redirects and result.is_redirect):
+                return result
+            url = urljoin(url, result.headers["location"])
+        raise requests.TooManyRedirects(url)
 
     get = __call__
 
