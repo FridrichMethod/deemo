@@ -139,6 +139,7 @@
     const block = element("section", null, "provenance-item");
     block.append(sourceLink(sourceName(p), p.page_url), element("p", p.title));
     if (p.artist) block.append(element("p", t("provenance.artist", {artist: textValue(p.artist)})));
+    if (p.composer) block.append(element("p", t("provenance.composer", {composer: textValue(p.composer)})));
     if (p.collection) {
       const collection = {collection: textValue(p.collection)};
       block.append(element("p", p.collection_scope === "source_post_grouping" ? t("provenance.post_grouping", collection) : t("provenance.collection", collection)));
