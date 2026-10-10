@@ -363,6 +363,12 @@ class ArtistsTests(TempRoot):
             with patch.object(artists.requests, "get", web), self.assertRaisesRegex(ValueError, "expected hosts"):
                 artists.download({**job, "download_url": NEW_P0}, {}, False)
             self.assertEqual(web.requested, [NEW_P0])
+        # A relative Location is resolved against the hop that sent it.
+        moved = "https://i.pximg.net/img-master/1_p0.png"
+        web = FakeWeb({NEW_P0: (302, b"", {"Location": "/img-master/1_p0.png"}), moved: png("red")})
+        with patch.object(artists.requests, "get", web):
+            self.assertEqual(artists.download({**job, "download_url": NEW_P0}, {}, False)[1], png("red"))
+        self.assertEqual(web.requested, [NEW_P0, moved])
 
 
 class TumblrArtistTests(unittest.TestCase):
@@ -817,10 +823,14 @@ class ArchivesTests(TempRoot):
     def test_get_checks_every_redirect_hop(self):
         start = "https://coverartarchive.org/release/x/1.jpg"
         web = FakeWeb({start: (307, b"", {"Location": "https://archive.org/download/x/1.jpg"}),
-                       "https://archive.org/download/x/1.jpg": (302, b"", {"Location": "https://ia800.us.archive.org/1.jpg"}),
+                       # A relative Location is resolved against the hop that sent it.
+                       "https://archive.org/download/x/1.jpg": (302, b"", {"Location": "/items/x/1.jpg"}),
+                       "https://archive.org/items/x/1.jpg": (302, b"", {"Location": "https://ia800.us.archive.org/1.jpg"}),
                        "https://ia800.us.archive.org/1.jpg": png("red")})
         with patch.object(archives, "session", lambda: web):
             self.assertEqual(archives.get(start, archives.CAA_HOSTS).url, "https://ia800.us.archive.org/1.jpg")
+            self.assertEqual(web.requested, [start, "https://archive.org/download/x/1.jpg",
+                                             "https://archive.org/items/x/1.jpg", "https://ia800.us.archive.org/1.jpg"])
             for location in ("https://attacker.example/1.jpg", "http://archive.org/1.jpg", "http://169.254.169.254/",
                              "https://attacker.example\\@archive.org/1.jpg"):
                 web.routes[start] = (302, b"", {"Location": location})
@@ -925,6 +935,30 @@ class ArchiveSiteTests(TempRoot):
         # The reference PDFs do not depend on the website page.
         self.assertEqual(sorted(asset["id"] for asset in manifest["assets"]),
                          ["archives:deemo-exhibition:deemo-exhibition", "archives:rayark-brand-assets:rayark-brand-assets"])
+
+    def test_a_final_server_error_fails_the_page_instead_of_reading_it_as_empty(self):
+        # The session hands back the last 429/5xx after its retries, so get() must raise on it;
+        # otherwise an empty error page would mark every archived record of the page "removed".
+        web = self.web()
+        previous = []
+        for sid, key, page, color in (("official-deemo", "index_pic", "https://deemo.com/", "green"),
+                                      ("rayarkmusic-tumblr", "77-1", f"{MIRROR}/deemo", "red")):
+            web.routes[page] = (503, b"", {})
+            data = png(color)
+            previous.append({"id": f"archives:{sid}:{key}", "source_id": f"archives:{sid}", "title": key, "kind": "illustration",
+                             "page_url": page, "download_url": f"{page}{key}.png", "path": self.put(f"assets/public/archives/{sid}/{key}.png", data),
+                             "width": 4, "height": 4, "format": "PNG", "bytes": len(data), "sha256": sha(data),
+                             "fetched_at": "2026-01-01T00:00:00+00:00", "game": "DEEMO"})
+        self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": previous, "failures": []})
+        code, manifest = self.run_steps(web, "tumblr_mirror", "official")
+        self.assertEqual(code, 1)
+        assets = {asset["id"]: asset for asset in manifest["assets"]}
+        self.assertEqual([assets[row["id"]].get("upstream_status") for row in previous], ["fetch_failed", "fetch_failed"])
+        self.assertEqual([(f["source_id"], f["url"]) for f in manifest["failures"]],
+                         [("archives:official-deemo", "https://deemo.com/"), ("archives:rayarkmusic-tumblr", f"{MIRROR}/deemo")])
+        self.assertTrue(all("503" in f["error"] for f in manifest["failures"]), manifest["failures"])
+        status = {row["id"]: row["status"] for row in manifest["sources"]}
+        self.assertEqual((status["archives:official-deemo"], status["archives:rayarkmusic-tumblr"]), ("failed", "failed"))
 
 
 class ConnectionHostTests(unittest.TestCase):
