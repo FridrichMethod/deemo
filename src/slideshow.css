@@ -618,8 +618,10 @@ canvas {
 .archive-link a { color: white; text-decoration: none; display: grid; place-items: center; height: 100%; font-family: sans-serif; }
 
 /* Language toggle: a round .bt control in the free top-right corner, clear of the bottom button row,
-   the caption, the side arrows and the loading spinner at every width. The 35px offsets mirror the
-   bottom-left camera button (.bt is translated by half its 70px size). */
+   the caption and the side arrows at every width. It clears the loading spinner too, except in the short
+   portrait tier below (max-height 600px), where the smaller, higher disc overlaps the spinner's rim by
+   about 3px while the page loads (cosmetic: the spinner takes no pointer events and hides within a second).
+   The 35px offsets mirror the bottom-left camera button (.bt is translated by half its 70px size). */
 .lang-toggle {
     top: 35px;
     right: 35px;
