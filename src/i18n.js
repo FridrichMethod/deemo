@@ -15,7 +15,12 @@
   function storedLang() {
     try { return normalize(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
   }
-  let lang = normalize(new URLSearchParams(location.search).get("lang")) || storedLang() || DEFAULT;
+  // An explicit ?lang= also becomes the stored choice: links and URL rewrites drop the parameter for English, so a
+  // stale stored zh-CN would otherwise win again on reload or on the other page.
+  const requested = normalize(new URLSearchParams(location.search).get("lang"));
+  if (requested) try { localStorage.setItem(STORAGE_KEY, requested); } catch { /* ?lang= still carries the choice */ }
+  let lang = requested || storedLang() || DEFAULT;
+  document.documentElement.lang = lang;
   const has = (key) => Object.hasOwn(messages[lang], key) || Object.hasOwn(messages[DEFAULT], key);
   function t(key, vars) {
     const text = messages[lang][key] ?? messages[DEFAULT][key] ?? key;
@@ -30,16 +35,18 @@
     const query = params.toString();
     return match[1] + (query ? `?${query}` : "") + (match[3] || "");
   }
+  // Runs again after each register(); keys whose table has not registered yet keep the page's static English text.
   function apply(root = document) {
     document.documentElement.lang = lang;
-    for (const node of root.querySelectorAll("[data-i18n]")) node.textContent = t(node.dataset.i18n);
+    for (const node of root.querySelectorAll("[data-i18n]")) if (has(node.dataset.i18n)) node.textContent = t(node.dataset.i18n);
     for (const node of root.querySelectorAll("[data-i18n-attr]")) {
       for (const pair of node.dataset.i18nAttr.split(";")) {
         const [attribute, key] = pair.split(":").map((part) => part.trim());
-        if (attribute && key) node.setAttribute(attribute, t(key));
+        if (attribute && key && has(key)) node.setAttribute(attribute, t(key));
       }
     }
     for (const link of root.querySelectorAll("a[data-lang-link]")) link.setAttribute("href", localizeHref(link.getAttribute("href")));
+    if (!has("lang.toggle")) return;
     for (const button of root.querySelectorAll("[data-lang-toggle]")) {
       // The label names the other language in that language, so only its span carries that language's tag;
       // the button inherits the page language, which its title is written in.
@@ -64,10 +71,15 @@
     const toggle = event.target instanceof Element && event.target.closest("[data-lang-toggle]");
     if (!toggle) return;
     event.preventDefault();
-    setLang(lang === DEFAULT ? ALTERNATE : DEFAULT);
+    // Go to the language the label names (its lang tag). Until src/i18n/common.js registers, the label is still the
+    // static one of the English page, which names zh-CN, so a zh-CN page stays put instead of doing the opposite.
+    const named = normalize(toggle.querySelector("[lang]")?.getAttribute("lang"));
+    setLang(named || (lang === DEFAULT ? ALTERNATE : DEFAULT));
   });
   function markReady() { ready = true; apply(); }
-  if (document.readyState === "complete") markReady(); else document.addEventListener("DOMContentLoaded", markReady);
+  // Deferred scripts run once the DOM is parsed ("interactive"), before DOMContentLoaded, which waits for every deferred
+  // script, including the archive's multi-megabyte catalog; each table then applies as soon as it registers.
+  if (document.readyState !== "loading") markReady(); else document.addEventListener("DOMContentLoaded", markReady);
   window.DEEMO_I18N = Object.freeze({
     defaultLang: DEFAULT,
     languages: [DEFAULT, ALTERNATE],

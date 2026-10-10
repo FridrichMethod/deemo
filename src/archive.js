@@ -14,11 +14,24 @@
   }
   const familyName = (family) => i18n.has(`family.${family}`) ? t(`family.${family}`) : family;
   const kindName = (kind) => i18n.has(`kind.${kind}`) ? t(`kind.${kind}`) : kind;
+  const qualityName = (quality) => i18n.has(`quality.${quality}`) ? t(`quality.${quality}`) : quality;
+  const statusName = (status) => i18n.has(`status.${status}`) ? t(`status.${status}`) : status;
+  const upstreamName = (status) => i18n.has(`upstream.${status}`) ? t(`upstream.${status}`) : status;
+  // Archives records carry a class token (community_repost, official_website, …); every wiki upload carries the same
+  // lineage caveat as prose, labelled as the "wiki" class. Without a label the recorded value is shown as it is.
+  function provenanceClass(p) {
+    const token = p.family === "wikis" ? "wiki" : p.provenance;
+    return i18n.has(`provenance.class.${token}`) ? t(`provenance.class.${token}`) : p.provenance;
+  }
   const sourceName = (record) => i18n.sourceName(record.source_id, record.source_name);
   const images = catalog.assets.filter((asset) => asset.gallery);
   const fields = ["query", "family", "kind", "minimum", "sort"];
   const initial = new URLSearchParams(location.search);
-  for (const field of fields) if (initial.has(field)) $(field).value = initial.get(field);
+  // A stale or hand-edited value that matches no option is ignored, so the select keeps showing the default it applies.
+  for (const field of fields) {
+    const value = initial.get(field), control = $(field);
+    if (value !== null && (!control.options || [...control.options].some((option) => option.value === value))) control.value = value;
+  }
   let filtered = [], shown = 0, current = -1;
   const size = (bytes) => bytes >= 1048576 ? `${(bytes / 1048576).toFixed(2)} MiB` : `${Math.round(bytes / 1024)} KiB`;
   const textValue = (value) => typeof value === "string" ? value : value == null ? "" : JSON.stringify(value);
@@ -26,6 +39,12 @@
     const node = document.createElement(tag);
     if (text != null) node.textContent = text;
     if (className) node.className = className;
+    return node;
+  }
+  // Maintainer notes in the manifests are English prose, shown verbatim; the tag keeps a zh-CN page from voicing them as Chinese.
+  function note(tag, text) {
+    const node = element(tag, textValue(text));
+    node.lang = "en";
     return node;
   }
   function sourceLink(text, href) {
@@ -39,11 +58,18 @@
     } catch { return element("span", text); }
     return node;
   }
+  // The index and the query share one fold: NFKC turns full-width and compatibility forms (Ｍａｇ, ：, ﾏﾄﾒ) into plain ones,
+  // toLowerCase() ignores the browser locale (toLocaleLowerCase() maps I to dotless ı under tr/az), katakana folds to
+  // hiragana, and every colon becomes ": " (one space after it, none before): "Re: the", "Re:the", "Re : the" and
+  // "Re：the" all read "re: the". The query is then split on whitespace, so a term keeps its colon ("L:" still matches
+  // only titles that have it) while the words after it stay separate terms ("L: Lower" finds "L: The Lower collection").
+  const fold = (text) => text.normalize("NFKC").toLowerCase()
+    .replace(/[\u30a1-\u30f6]/g, (kana) => String.fromCharCode(kana.charCodeAt(0) - 0x60)).replace(/\s*:\s*/g, ": ");
   // Search covers the verbatim source name and its localized display name, so the index is built per language.
   function searchable(asset) {
-    return [asset.title, asset.artist, asset.internal_key, ...asset.provenance.flatMap((p) =>
+    return fold([asset.title, asset.artist, asset.internal_key, ...asset.provenance.flatMap((p) =>
       [p.title, p.artist, p.composer, p.collection, p.collections, p.collection_aliases, p.song_titles, p.source_name, sourceName(p), p.page_url, p.internal_key])]
-      .map(textValue).join(" ").toLocaleLowerCase();
+      .map(textValue).join(" "));
   }
   const searchIndexes = new Map();
   function searchText() {
@@ -55,13 +81,17 @@
   }
   function filter() {
     const index = searchText();
-    const terms = $("query").value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    const terms = fold($("query").value).split(/\s+/).filter(Boolean);
     filtered = images.filter((asset) =>
       terms.every((term) => index.get(asset.id).includes(term)) &&
       (!$("family").value || asset.provenance.some((p) => p.family === $("family").value)) &&
       (!$("kind").value || asset.provenance.some((p) => p.kind === $("kind").value)) &&
       Math.max(asset.width, asset.height) >= Number($("minimum").value));
-    if ($("sort").value === "title") filtered.sort((a, b) => a.title.localeCompare(b.title));
+    // Numeric collation keeps "page 2" before "page 10"; the page language picks the collation.
+    if ($("sort").value === "title") {
+      const collator = new Intl.Collator(i18n.lang, {numeric: true});
+      filtered.sort((a, b) => collator.compare(a.title, b.title));
+    }
     if ($("sort").value === "resolution") filtered.sort((a, b) => b.width * b.height - a.width * a.height);
     renderCount();
     $("grid").replaceChildren();
@@ -108,27 +138,41 @@
     shown = stop;
     $("more").hidden = shown >= filtered.length;
   }
+  // source_dimensions_kind is "<token>; <maintainer prose>". A labelled token states the size the source advertises in the
+  // page language; without a label or a recorded size the value is shown as it is.
+  function dimensionsNote(p) {
+    const key = `provenance.dimensions_kind.${textValue(p.source_dimensions_kind).split(";")[0].trim()}`;
+    const [width, height] = Array.isArray(p.source_dimensions) ? p.source_dimensions : [];
+    return i18n.has(key) && width && height ? element("p", t(key, {width, height})) : note("p", p.source_dimensions_kind);
+  }
   function provenanceBlock(p) {
     const block = element("section", null, "provenance-item");
     block.append(sourceLink(sourceName(p), p.page_url), element("p", p.title));
     if (p.artist) block.append(element("p", t("provenance.artist", {artist: textValue(p.artist)})));
+    if (p.composer) block.append(element("p", t("provenance.composer", {composer: textValue(p.composer)})));
     if (p.collection) {
       const collection = {collection: textValue(p.collection)};
       block.append(element("p", p.collection_scope === "source_post_grouping" ? t("provenance.post_grouping", collection) : t("provenance.collection", collection)));
     }
     if (p.collections?.length) block.append(element("p", t("provenance.collections", {collections: p.collections.join(" / ")})));
     if (p.song_titles?.length) block.append(element("p", t("provenance.song_titles", {titles: p.song_titles.join(" / ")})));
-    if (p.notes) block.append(element("p", textValue(p.notes)));
-    for (const key of ["quality", "variant_note", "layout_note", "delivery_note"]) {
-      if (p[key]) block.append(element("p", textValue(p[key])));
+    if (p.notes) block.append(note("p", p.notes));
+    if (p.quality) block.append(element("p", t("provenance.quality", {quality: qualityName(p.quality)})));
+    if (typeof p.provenance === "string" && p.provenance) block.append(element("p", t("provenance.class", {label: provenanceClass(p)})));
+    for (const key of ["quality_notes", "source_dimensions_kind", "variant_note", "layout_note", "delivery_note", "rights"]) {
+      if (p[key]) block.append(key === "source_dimensions_kind" ? dimensionsNote(p) : note("p", p[key]));
     }
+    if (p.rights_holder) block.append(element("p", t("provenance.rights_holder", {holder: textValue(p.rights_holder)})));
     if (p.wiki_original_sha1_matches === false) block.append(element("p", t("provenance.checksum_mismatch")));
+    // A record a refetch kept although upstream no longer offers this file, offers a newer upload, or failed to re-serve it.
+    if (p.upstream_status) block.append(element("p", t("provenance.upstream", {status: upstreamName(p.upstream_status)})));
     if (p.mapping_status === "unmapped" || p.title_status === "unmapped" || p.title_status === "internal_key") block.append(element("p", t("provenance.unmapped")));
     if (p.download_url) block.append(sourceLink(t("provenance.remote"), p.download_url));
     for (const variant of p.variants || []) {
       const link = element("a", t("provenance.tiny", {width: variant.width, height: variant.height, size: size(variant.bytes)}), "legacy-variant-link");
       link.href = variant.url;
-      link.download = variant.path.split("/").pop();
+      // The copy shares its basename with the original, so its role goes into the saved name (magnolia-palette-quantized.png).
+      link.download = variant.path.split("/").pop().replace(/(\.[^.]+)?$/, (extension) => `-${(variant.role || "variant").replaceAll("_", "-")}${extension}`);
       const paragraph = element("p");
       paragraph.append(link);
       block.append(paragraph);
@@ -163,6 +207,15 @@
   $("reset-filters").addEventListener("click", () => { $("filters").reset(); filter(); });
   $("more").addEventListener("click", more);
   $("close").addEventListener("click", () => $("viewer").close());
+  // The browser hands focus back to the card that opened the viewer; after Prev/Next that is the wrong card and may be
+  // far away, so focus the card of the image last shown instead (rendering cards up to it) and bring it into view.
+  $("viewer").addEventListener("close", () => {
+    if (!filtered[current]) return;
+    while (shown <= current) more();
+    const card = $("grid").children[current];
+    card.querySelector(".card-image").focus({preventScroll: true});
+    card.scrollIntoView({block: "nearest"});
+  });
   $("previous").addEventListener("click", () => open(current - 1));
   $("next").addEventListener("click", () => open(current + 1));
   document.addEventListener("keydown", (event) => {
@@ -183,9 +236,10 @@
       return p;
     }));
     $("sources").replaceChildren(...catalog.sources.map((source) => {
-      const row = element("tr"), name = element("td");
+      const row = element("tr"), name = element("td"), status = element("td", `${statusName(source.status)} · `);
       name.append(sourceLink(i18n.sourceName(source.id, source.name), source.url));
-      row.append(name, element("td", counts.get(source.id) || 0), element("td", `${source.status} · ${textValue(source.notes)}`));
+      status.append(note("span", source.notes));
+      row.append(name, element("td", counts.get(source.id) || 0), status);
       return row;
     }));
     const wasOpen = $("failures").querySelector("details")?.open ?? false;
@@ -207,15 +261,16 @@
   filter();
   // Static [data-i18n] text is handled by the runtime; this re-renders the script-built text in place.
   // Filters, the number of cards shown and the open image stay as they are. A search query is matched
-  // again, because the index holds localized source names and so can match differently per language.
+  // again, because the index holds localized source names and so can match differently per language;
+  // a title sort is redone in the new language's collation.
   i18n.onChange(() => {
-    if ($("query").value.trim()) {
+    if ($("query").value.trim() || $("sort").value === "title") {
       const previous = shown, openId = $("viewer").open ? filtered[current]?.id : null;
       filter();
       while (shown < Math.min(previous, filtered.length)) more();
       if (openId) {
         const index = filtered.findIndex((asset) => asset.id === openId);
-        if (index >= 0) open(index); else $("viewer").close();
+        if (index >= 0) open(index); else { current = -1; $("viewer").close(); }
       }
     } else {
       renderCount();
