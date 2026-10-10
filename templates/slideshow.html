@@ -83,7 +83,7 @@ https://github.com/FridrichMethod/deemo
             <div class="asset-caption">
                 <div class="asset-heading"><span id="asset-title"></span><span class="asset-title-sep"> · </span><span id="asset-size"></span></div>
                 <!-- Each separator keeps to the end of its line (no-break space before it), so no line starts with a dot. -->
-                <a id="asset-source" target="_blank" rel="noopener noreferrer"><span data-i18n="slideshow.caption.source">Source</span></a>&nbsp;·
+                <a id="asset-source" target="_blank" rel="noopener noreferrer"><span data-i18n="slideshow.caption.source">Source</span></a><span id="asset-origin"></span>&nbsp;·
                 <a id="asset-original" download data-i18n="slideshow.caption.original">Original file</a>&nbsp;· <a href="archive.html" data-lang-link data-i18n="slideshow.caption.browse">Browse all / Search</a>
             </div>
         </section>
@@ -270,6 +270,17 @@ https://github.com/FridrichMethod/deemo
             document.getElementById("asset-source").textContent = DEEMO_I18N.sourceName(target.dataset.sourceId, target.dataset.source);
             document.getElementById("asset-source").href = target.dataset.page;
             document.getElementById("asset-original").href = target.dataset.src;
+            // A community copy (an unofficial repost, edit or scan) is named as such after its source, whose name can
+            // read like the official channel's ("Tunes of Rayark — DEEMO"), so it is said even where the notes' eyebrow
+            // is hidden (the smallest screens, Alice's dedication). Wiki and official sources say what they are by name.
+            var origin = document.getElementById("asset-origin");
+            var token = target.dataset.provenance || "";
+            origin.replaceChildren();
+            if (/^community_/.test(token) && DEEMO_I18N.has("slideshow.provenance." + token)) {
+                var label = element("span", null, DEEMO_I18N.t("slideshow.provenance." + token));
+                label.style.whiteSpace = "nowrap";
+                origin.append("\u00a0· ", label);
+            }
         }
 
         // While the notes are up the caption leaves out the title they already show (see src/slideshow.css).

@@ -386,6 +386,21 @@ class CommittedSlideshowTests(unittest.TestCase):
                                 r'\s*eyebrow\.append\(label\);')
         self.assertRegex(notes, r"notes\.append\(eyebrow, title\);")
 
+    def test_the_caption_names_a_community_copy(self):
+        # The eyebrow is hidden on the smallest screens and under Alice's dedication, so the caption's source line says
+        # it too for a community copy (#asset-origin after the source link), whose source can read as official.
+        template = (ROOT / "templates/slideshow.html").read_text(encoding="utf-8-sig")
+        markup = '<span data-i18n="slideshow.caption.source">Source</span></a><span id="asset-origin"></span>&nbsp;·'
+        self.assertIn(markup, template)
+        self.assertTrue(markup in (ROOT / "index.html").read_text(encoding="utf-8"), "Rebuild the catalog")
+        caption = function_body(template, "showCaption")
+        self.assertRegex(caption, r'origin\.replaceChildren\(\);\s*if \(/\^community_/\.test\(token\) && '
+                                  r'DEEMO_I18N\.has\("slideshow\.provenance\." \+ token\)\) \{')
+        self.assertRegex(caption, r'var label = element\("span", null, DEEMO_I18N\.t\("slideshow\.provenance\." \+ token\)\);')
+        self.assertRegex(caption, r'origin\.append\("\\u00a0· ", label\);')
+        self.assertTrue({"community_repost", "community_edit", "community_scan"} <= {
+            key.split(".", 2)[2] for key in self.messages["en"] if key.startswith("slideshow.provenance.")})
+
     def test_wiki_art_is_credited_and_found_by_its_composer(self):
         records = [record for asset in self.catalog["assets"] for record in asset["provenance"]]
         manifest = {record["id"]: record.get("composer") for record in read_json(MANIFEST)["assets"]}
