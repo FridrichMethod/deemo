@@ -110,7 +110,7 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
 .venv/bin/python -I scripts/fetch_archives.py --verify
 
 # Optional: with the local HTTP server above running, the browser acceptance check in an installed Chrome
-# (under a minute; it also fails on any console error or failed request)
+# (about a minute and a half; it also fails on any console error or failed request)
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -I tests/browser_smoke.py --base http://127.0.0.1:8765 --browser /usr/bin/google-chrome
 ```
