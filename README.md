@@ -8,7 +8,7 @@ The project originates from [mashirozx/deemo](https://github.com/mashirozx/deemo
 
 ## Browsing
 
-Online: [searchable gallery](https://fridrichmethod.github.io/deemo/archive.html) · [slideshow](https://fridrichmethod.github.io/deemo/). The repository, website and artwork are all public; no login is required.
+Online: [searchable Artwork Archive](https://fridrichmethod.github.io/deemo/archive.html) · [slideshow](https://fridrichmethod.github.io/deemo/). The repository, website and artwork are all public; no login is required.
 
 Start a static server that only listens on this machine:
 

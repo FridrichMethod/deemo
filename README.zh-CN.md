@@ -8,7 +8,7 @@
 
 ## 浏览
 
-在线访问：[可搜索图库](https://fridrichmethod.github.io/deemo/archive.html) · [幻灯片](https://fridrichmethod.github.io/deemo/)。仓库、网站和曲绘均公开，无需登录即可访问。
+在线访问：[可搜索的曲绘档案](https://fridrichmethod.github.io/deemo/archive.html) · [幻灯片](https://fridrichmethod.github.io/deemo/)。仓库、网站和曲绘均公开，无需登录即可访问。
 
 启动仅限本机的静态服务：
 
