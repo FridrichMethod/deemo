@@ -184,6 +184,26 @@ class BuildTests(Fixture):
         thumbs.build(self.root, prune=True)
         self.assertEqual({path: digest(self.root / path) for path in before}, before)
 
+    def test_exif_orientation_gives_an_upright_preview(self):
+        # Upright, the photo is a 600x1000 portrait with a red top band. It is stored rotated a quarter turn
+        # counter-clockwise, 1000x600, with EXIF Orientation 6 telling viewers to turn it clockwise.
+        upright = Image.new("RGB", (600, 1000), (0, 0, 255))
+        upright.paste((255, 0, 0), (0, 0, 600, 250))
+        exif = Image.Exif()
+        exif[0x0112] = 6
+        self.add_encoded("rotated.jpg", upright.transpose(Image.Transpose.ROTATE_90), "JPEG", quality=95, exif=exif)
+        self.write_manifest()
+        thumbs.build(self.root)
+        entry = self.manifest()["thumbnails"][self.sha("rotated.jpg")]
+        self.assertEqual((entry["width"], entry["height"]), (288, 480))
+        with Image.open(self.root / entry["path"]) as image:
+            self.assertEqual(image.size, (288, 480))
+            self.assertNotIn("exif", image.info)  # a kept Orientation tag would turn the upright preview again
+            top, bottom = image.convert("RGB").getpixel((144, 20)), image.convert("RGB").getpixel((144, 460))
+        self.assertTrue(top[0] > 200 and top[2] < 60, top)
+        self.assertTrue(bottom[2] > 200 and bottom[0] < 60, bottom)
+        self.assertEqual(thumbs.problems(self.root, reencode=True), [])
+
     def test_changed_encoder_settings_need_an_explicit_rebuild(self):
         thumbs.build(self.root)
         manifest = self.manifest()
@@ -264,17 +284,17 @@ class CheckTests(Fixture):
         thumbs.build(self.root)
         self.assertEqual(thumbs.problems(self.root), [])
 
-    def rewrite_entry(self, name, data):
-        """Replace a preview and record its new hash, so only the deeper checks can catch it."""
+    def rewrite_entry(self, name, data, **fields):
+        """Replace a preview and record its new hash (and any other fields), so only the deeper checks can catch it."""
         manifest = self.manifest()
         entry = manifest["thumbnails"][self.sha(name)]
         (self.root / entry["path"]).write_bytes(data)
-        entry.update(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
+        entry.update(bytes=len(data), sha256=hashlib.sha256(data).hexdigest(), **fields)
         (self.root / thumbs.MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
 
-    def webp(self, size, quality=75):
+    def webp(self, size, quality=75, format_name="WEBP", **options):
         buffer = io.BytesIO()
-        pattern(size, "RGB").save(buffer, "WEBP", quality=quality)
+        pattern(size, "RGB").save(buffer, format_name, quality=quality, **options)
         return buffer.getvalue()
 
     def assert_problem(self, pattern_text, reencode=False):
@@ -309,7 +329,29 @@ class CheckTests(Fixture):
 
     def test_wrong_dimensions_are_detected(self):
         self.rewrite_entry("wide.png", self.webp((400, 240)))
-        self.assert_problem("Dimension mismatch")
+        self.assert_problem(f"{thumbs.MANIFEST} says 480x288")
+
+    def test_preview_of_the_wrong_size_for_its_original_is_detected(self):
+        # The file and data/thumbs.json agree on 400x240, but a 1000x600 original needs a 480x288 preview.
+        self.rewrite_entry("wide.png", self.webp((400, 240)), width=400, height=240)
+        found = thumbs.problems(self.root)
+        self.assertFalse(any(" says " in problem for problem in found), found)
+        self.assert_problem("is 400x240, expected 480x288 for assets/public/artists/wide.png")
+
+    def test_preview_in_another_format_is_detected(self):
+        self.rewrite_entry("wide.png", self.webp((480, 288), format_name="PNG"))
+        self.assert_problem("is PNG, not WEBP")
+
+    def test_preview_with_exif_or_xmp_is_detected(self):
+        exif = Image.Exif()
+        exif[0x010E] = "leaked description"
+        xmp = b'<x:xmpmeta xmlns:x="adobe:ns:meta/"/>'
+        for options in ({"exif": exif.tobytes()}, {"xmp": xmp}):
+            with self.subTest(metadata=next(iter(options))):
+                # Same size as the real preview, valid WebP, hash recorded: only the metadata check can catch it.
+                self.rewrite_entry("wide.png", self.webp((480, 288), **options))
+                found = thumbs.problems(self.root)
+                self.assertEqual(found, [f"Thumbnail carries EXIF or XMP metadata: {thumbs.thumb_path(self.sha('wide.png'))}"])
 
     def test_changed_encoder_settings_are_detected(self):
         manifest = self.manifest()
