@@ -14,6 +14,8 @@ STYLESHEET = ROOT / "src/slideshow.css"
 MESSAGES = ROOT / "src/i18n/slideshow.js"
 REGISTER = re.compile(r"DEEMO_I18N\.register\((\{.*\})\);\s*$", re.DOTALL)
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+# The round controls of the bottom row, left to right on screen.
+BOTTOM_ROW = ["photo", "github", "archive-link", "iplayer", "random"]
 # Icon-only controls, found by their own or their container's class: whether each is a toggle (aria-pressed).
 ICON_BUTTONS = {"prev": False, "next": False, "photo": False, "random": True, "iplayer": True, "save": False, "close": False}
 
@@ -60,6 +62,25 @@ class Tree(HTMLParser):
             while node is not None:
                 node.text += data
                 node = node.parent
+
+
+def top_level_css(css):
+    """The stylesheet without its @media / @supports blocks."""
+    out, depth, index = [], 0, 0
+    for match in re.finditer(r"@(?:media|supports)[^{]*\{|\{|\}", css):
+        if depth == 0:
+            out.append(css[index:match.start()])
+        if match.group().startswith("@"):
+            depth += 1
+        elif depth and match.group() == "{":
+            depth += 1
+        elif depth and match.group() == "}":
+            depth -= 1
+        elif depth == 0:
+            out.append(match.group())
+        index = match.end()
+    out.append(css[index:] if depth == 0 else "")
+    return "".join(out)
 
 
 def i18n_attrs(node):
@@ -122,6 +143,17 @@ class SlideshowTemplateTests(unittest.TestCase):
                 for lang in ("en", "zh-CN"):
                     with self.subTest(control=text_key, lang=lang):
                         self.assertIn(self.messages[lang][text_key].casefold(), self.messages[lang][label_key].casefold())
+
+    def test_bottom_row_dom_order_follows_its_layout(self):
+        order = [cls for node in self.nodes if "bt" in node.classes for cls in node.classes if cls in BOTTOM_ROW]
+        self.assertEqual(order, BOTTOM_ROW, "Tab order should run left to right along the control row")
+        css = top_level_css(self.css)
+        offsets = {"photo": 0}
+        for name in BOTTOM_ROW[1:]:
+            match = re.search(r"(?m)^\." + re.escape(name) + r"\s*\{[^}]*?\bleft:\s*(\d+)px", css)
+            self.assertTrue(match, f"No base left offset for .{name}")
+            offsets[name] = int(match.group(1))
+        self.assertEqual([offsets[name] for name in BOTTOM_ROW], sorted(offsets.values()))
 
     def test_screenshot_overlay_does_not_live_in_the_url(self):
         self.assertNotIn(":target", self.css, "The overlay must not depend on the URL fragment")

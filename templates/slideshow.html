@@ -89,11 +89,20 @@ https://github.com/FridrichMethod/deemo
         </section>
         <div class="signature">DEEMO 1 · <a href="https://github.com/FridrichMethod" target="_blank" rel="noopener noreferrer">FridrichMethod</a></div>
 
+        <!-- The bottom control row in its on-screen order, left to right, so Tab follows it (see src/slideshow.css). -->
         <div class="photo bt">
             <button type="button" aria-label="Take a screenshot" data-i18n-attr="aria-label:slideshow.screenshot.take" onclick="screenshot()">
                 <span class="pop"><img src="assets/site/icons/camera.svg" alt="" class="css-1bgbwga" data-reactid="50"></span>
             </button>
         </div>
+
+        <div class="github bt">
+            <a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository" data-i18n-attr="aria-label:slideshow.github.label">
+                <div class="pop"><img src="assets/site/icons/github.svg" alt="" class="css-1bgbwga" data-reactid="50"></div>
+            </a>
+        </div>
+
+        <div class="archive-link bt"><a href="archive.html" data-lang-link title="Browse the Artwork Archive" data-i18n="slideshow.archive.text" data-i18n-attr="title:slideshow.archive.label">Gallery</a></div>
 
         <div class="iplayer bt">
             <button type="button" class="speaker" id="speaker" aria-label="Background music" aria-pressed="false" data-i18n-attr="aria-label:slideshow.music.label"></button>
@@ -105,14 +114,6 @@ https://github.com/FridrichMethod/deemo
                 <span class="pop"><img src="assets/site/icons/sand-clock.svg" alt="" class="sand-clock" data-reactid="50"></span>
             </button>
         </div>
-
-        <div class="github bt">
-            <a href="https://github.com/FridrichMethod/deemo" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository" data-i18n-attr="aria-label:slideshow.github.label">
-                <div class="pop"><img src="assets/site/icons/github.svg" alt="" class="css-1bgbwga" data-reactid="50"></div>
-            </a>
-        </div>
-
-        <div class="archive-link bt"><a href="archive.html" data-lang-link title="Browse the Artwork Archive" data-i18n="slideshow.archive.text" data-i18n-attr="title:slideshow.archive.label">Gallery</a></div>
 
         <!-- Opened by screenshot() with the is-open class, not the URL hash, so a reload, Back or a shared link never reopens it empty. -->
         <div id="screenshot" class="overlay" role="dialog" aria-modal="true" aria-label="Screenshot preview" data-i18n-attr="aria-label:slideshow.screenshot.dialog">
