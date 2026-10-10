@@ -7151,7 +7151,7 @@
       "source_id": "artists:tumblr:85916735720",
       "artist": "Blaze Wu",
       "title": "Mili Collection — page 1",
-      "collection": "Mili Collection",
+      "collection": "MILI collection",
       "kind": "contact_sheet",
       "page_url": "https://wublaze.tumblr.com/post/85916735720/deemo-mili%E6%AD%8C%E6%9B%B2%E5%8C%85-deemomili-song-pack",
       "download_url": "https://64.media.tumblr.com/69937c5e9ed07bfb83572a0abf7ad8d6/tumblr_n5o9exB8JN1qkm22do2_1280.jpg",
@@ -7172,6 +7172,9 @@
       "rights": "Artwork remains copyright of Rayark and/or the original artist; no redistribution license inferred.",
       "transformed": false,
       "family": "artists",
+      "collection_aliases": [
+        "Mili Collection"
+      ],
       "source_name": "Mili Collection",
       "provenance": [
         {
@@ -7179,7 +7182,7 @@
           "source_id": "artists:tumblr:85916735720",
           "artist": "Blaze Wu",
           "title": "Mili Collection — page 1",
-          "collection": "Mili Collection",
+          "collection": "MILI collection",
           "kind": "contact_sheet",
           "page_url": "https://wublaze.tumblr.com/post/85916735720/deemo-mili%E6%AD%8C%E6%9B%B2%E5%8C%85-deemomili-song-pack",
           "download_url": "https://64.media.tumblr.com/69937c5e9ed07bfb83572a0abf7ad8d6/tumblr_n5o9exB8JN1qkm22do2_1280.jpg",
@@ -7200,6 +7203,9 @@
           "rights": "Artwork remains copyright of Rayark and/or the original artist; no redistribution license inferred.",
           "transformed": false,
           "family": "artists",
+          "collection_aliases": [
+            "Mili Collection"
+          ],
           "source_name": "Mili Collection"
         }
       ],
@@ -96777,7 +96783,7 @@
       "internal_key": "AI01creamstew",
       "artist": null,
       "composer": "aioi feat. KAMATA JUNKO",
-      "collection": "Aioi collection",
+      "collection": "Aioi Collection",
       "song_titles": [
         "CREAM STEW (Deemo Ver.)"
       ],
@@ -96826,6 +96832,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Aioi collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -96835,7 +96844,7 @@
           "internal_key": "AI01creamstew",
           "artist": null,
           "composer": "aioi feat. KAMATA JUNKO",
-          "collection": "Aioi collection",
+          "collection": "Aioi Collection",
           "song_titles": [
             "CREAM STEW (Deemo Ver.)"
           ],
@@ -96884,6 +96893,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Aioi collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -96898,7 +96910,7 @@
       "internal_key": "AI02ienakunaru",
       "artist": null,
       "composer": "aioi feat. KAMATA JUNKO",
-      "collection": "Aioi collection",
+      "collection": "Aioi Collection",
       "song_titles": [
         "I can not say (Deemo Ver.)"
       ],
@@ -96947,6 +96959,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Aioi collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -96956,7 +96971,7 @@
           "internal_key": "AI02ienakunaru",
           "artist": null,
           "composer": "aioi feat. KAMATA JUNKO",
-          "collection": "Aioi collection",
+          "collection": "Aioi Collection",
           "song_titles": [
             "I can not say (Deemo Ver.)"
           ],
@@ -97005,6 +97020,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Aioi collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -97019,7 +97037,7 @@
       "internal_key": "AI03image",
       "artist": null,
       "composer": "aioi feat. KAMATA JUNKO",
-      "collection": "Aioi collection",
+      "collection": "Aioi Collection",
       "song_titles": [
         "Image (Deemo Ver.)"
       ],
@@ -97068,6 +97086,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Aioi collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -97077,7 +97098,7 @@
           "internal_key": "AI03image",
           "artist": null,
           "composer": "aioi feat. KAMATA JUNKO",
-          "collection": "Aioi collection",
+          "collection": "Aioi Collection",
           "song_titles": [
             "Image (Deemo Ver.)"
           ],
@@ -97126,6 +97147,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Aioi collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -97140,7 +97164,7 @@
       "internal_key": "AI04kireigoto",
       "artist": null,
       "composer": "aioi feat. KAMATA JUNKO",
-      "collection": "Aioi collection",
+      "collection": "Aioi Collection",
       "song_titles": [
         "kireigoto (Deemo Ver.)"
       ],
@@ -97189,6 +97213,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Aioi collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -97198,7 +97225,7 @@
           "internal_key": "AI04kireigoto",
           "artist": null,
           "composer": "aioi feat. KAMATA JUNKO",
-          "collection": "Aioi collection",
+          "collection": "Aioi Collection",
           "song_titles": [
             "kireigoto (Deemo Ver.)"
           ],
@@ -97247,6 +97274,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Aioi collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -97261,7 +97291,7 @@
       "internal_key": "AI05newworld",
       "artist": null,
       "composer": "aioi feat. KAMATA JUNKO",
-      "collection": "Aioi collection",
+      "collection": "Aioi Collection",
       "song_titles": [
         "NEW WORLD (Deemo Ver.)"
       ],
@@ -97310,6 +97340,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Aioi collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -97319,7 +97352,7 @@
           "internal_key": "AI05newworld",
           "artist": null,
           "composer": "aioi feat. KAMATA JUNKO",
-          "collection": "Aioi collection",
+          "collection": "Aioi Collection",
           "song_titles": [
             "NEW WORLD (Deemo Ver.)"
           ],
@@ -97368,6 +97401,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Aioi collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -98899,7 +98935,7 @@
       "internal_key": "NMST01farewell",
       "artist": null,
       "composer": "3R2",
-      "collection": "N.M.S.T. collection",
+      "collection": "N.M.S.T. Collection",
       "song_titles": [
         "Farewell"
       ],
@@ -98948,6 +98984,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "N.M.S.T. collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -98957,7 +98996,7 @@
           "internal_key": "NMST01farewell",
           "artist": null,
           "composer": "3R2",
-          "collection": "N.M.S.T. collection",
+          "collection": "N.M.S.T. Collection",
           "song_titles": [
             "Farewell"
           ],
@@ -99006,6 +99045,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "N.M.S.T. collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -99020,7 +99062,7 @@
       "internal_key": "NMST02winter",
       "artist": null,
       "composer": "3R2",
-      "collection": "N.M.S.T. collection",
+      "collection": "N.M.S.T. Collection",
       "song_titles": [
         "Winter (Deemo Ver.)"
       ],
@@ -99069,6 +99111,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "N.M.S.T. collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -99078,7 +99123,7 @@
           "internal_key": "NMST02winter",
           "artist": null,
           "composer": "3R2",
-          "collection": "N.M.S.T. collection",
+          "collection": "N.M.S.T. Collection",
           "song_titles": [
             "Winter (Deemo Ver.)"
           ],
@@ -99127,6 +99172,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "N.M.S.T. collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -99141,7 +99189,7 @@
       "internal_key": "NMST03fluffiepartie",
       "artist": null,
       "composer": "N.M.S.T.",
-      "collection": "N.M.S.T. collection",
+      "collection": "N.M.S.T. Collection",
       "song_titles": [
         "Fluffie Partie"
       ],
@@ -99190,6 +99238,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "N.M.S.T. collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -99199,7 +99250,7 @@
           "internal_key": "NMST03fluffiepartie",
           "artist": null,
           "composer": "N.M.S.T.",
-          "collection": "N.M.S.T. collection",
+          "collection": "N.M.S.T. Collection",
           "song_titles": [
             "Fluffie Partie"
           ],
@@ -99248,6 +99299,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "N.M.S.T. collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -99262,7 +99316,7 @@
       "internal_key": "NMST04snowflakes",
       "artist": null,
       "composer": "N.M.S.T.",
-      "collection": "N.M.S.T. collection",
+      "collection": "N.M.S.T. Collection",
       "song_titles": [
         "Snowflakes"
       ],
@@ -99311,6 +99365,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "N.M.S.T. collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -99320,7 +99377,7 @@
           "internal_key": "NMST04snowflakes",
           "artist": null,
           "composer": "N.M.S.T.",
-          "collection": "N.M.S.T. collection",
+          "collection": "N.M.S.T. Collection",
           "song_titles": [
             "Snowflakes"
           ],
@@ -99369,6 +99426,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "N.M.S.T. collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -99383,7 +99443,7 @@
       "internal_key": "NMST05kouyou",
       "artist": null,
       "composer": "Ice",
-      "collection": "N.M.S.T. collection",
+      "collection": "N.M.S.T. Collection",
       "song_titles": [
         "KOUYOU"
       ],
@@ -99432,6 +99492,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "N.M.S.T. collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -99441,7 +99504,7 @@
           "internal_key": "NMST05kouyou",
           "artist": null,
           "composer": "Ice",
-          "collection": "N.M.S.T. collection",
+          "collection": "N.M.S.T. Collection",
           "song_titles": [
             "KOUYOU"
           ],
@@ -99490,6 +99553,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "N.M.S.T. collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -99504,7 +99570,7 @@
       "internal_key": "Randall",
       "artist": null,
       "composer": "Hikoshi Hashimoto",
-      "collection": "Collaboration collection",
+      "collection": "Collaboration Collection",
       "song_titles": [
         "Randall"
       ],
@@ -99553,6 +99619,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Collaboration collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -99562,7 +99631,7 @@
           "internal_key": "Randall",
           "artist": null,
           "composer": "Hikoshi Hashimoto",
-          "collection": "Collaboration collection",
+          "collection": "Collaboration Collection",
           "song_titles": [
             "Randall"
           ],
@@ -99611,6 +99680,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Collaboration collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -99738,7 +99810,7 @@
       "internal_key": "adpiano01dedication",
       "artist": null,
       "composer": "void",
-      "collection": "AD:PIANO collection",
+      "collection": "AD:PIANO Collection",
       "song_titles": [
         "Dedication"
       ],
@@ -99787,6 +99859,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "AD:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -99796,7 +99871,7 @@
           "internal_key": "adpiano01dedication",
           "artist": null,
           "composer": "void",
-          "collection": "AD:PIANO collection",
+          "collection": "AD:PIANO Collection",
           "song_titles": [
             "Dedication"
           ],
@@ -99845,6 +99920,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "AD:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -99859,7 +99937,7 @@
       "internal_key": "adpiano01long_summer",
       "artist": null,
       "composer": "Chroma",
-      "collection": "AD:PIANO collection",
+      "collection": "AD:PIANO Collection",
       "song_titles": [
         "Long Summer"
       ],
@@ -99908,6 +99986,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "AD:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -99917,7 +99998,7 @@
           "internal_key": "adpiano01long_summer",
           "artist": null,
           "composer": "Chroma",
-          "collection": "AD:PIANO collection",
+          "collection": "AD:PIANO Collection",
           "song_titles": [
             "Long Summer"
           ],
@@ -99966,6 +100047,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "AD:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -99980,7 +100064,7 @@
       "internal_key": "adpiano01oceanus",
       "artist": null,
       "composer": "cosMo@bousou-P",
-      "collection": "AD:PIANO collection",
+      "collection": "AD:PIANO Collection",
       "song_titles": [
         "Oceanus"
       ],
@@ -100029,6 +100113,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "AD:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -100038,7 +100125,7 @@
           "internal_key": "adpiano01oceanus",
           "artist": null,
           "composer": "cosMo@bousou-P",
-          "collection": "AD:PIANO collection",
+          "collection": "AD:PIANO Collection",
           "song_titles": [
             "Oceanus"
           ],
@@ -100087,6 +100174,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "AD:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -100101,7 +100191,7 @@
       "internal_key": "adpiano01snowscape",
       "artist": null,
       "composer": "Yuta Murase",
-      "collection": "AD:PIANO collection",
+      "collection": "AD:PIANO Collection",
       "song_titles": [
         "Snowscape"
       ],
@@ -100150,6 +100240,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "AD:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -100159,7 +100252,7 @@
           "internal_key": "adpiano01snowscape",
           "artist": null,
           "composer": "Yuta Murase",
-          "collection": "AD:PIANO collection",
+          "collection": "AD:PIANO Collection",
           "song_titles": [
             "Snowscape"
           ],
@@ -100208,6 +100301,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "AD:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -100222,7 +100318,7 @@
       "internal_key": "adpiano01white_palette",
       "artist": null,
       "composer": "tigerlily",
-      "collection": "AD:PIANO collection",
+      "collection": "AD:PIANO Collection",
       "song_titles": [
         "White Palette"
       ],
@@ -100271,6 +100367,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "AD:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -100280,7 +100379,7 @@
           "internal_key": "adpiano01white_palette",
           "artist": null,
           "composer": "tigerlily",
-          "collection": "AD:PIANO collection",
+          "collection": "AD:PIANO Collection",
           "song_titles": [
             "White Palette"
           ],
@@ -100329,6 +100428,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "AD:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -100456,7 +100558,7 @@
       "internal_key": "angelicsphere",
       "artist": null,
       "composer": "3R2",
-      "collection": "Deemo's collection Vol.1B",
+      "collection": "Deemo's collection Vol. 1B",
       "song_titles": [
         "Angelic Sphere"
       ],
@@ -100505,6 +100607,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -100514,7 +100619,7 @@
           "internal_key": "angelicsphere",
           "artist": null,
           "composer": "3R2",
-          "collection": "Deemo's collection Vol.1B",
+          "collection": "Deemo's collection Vol. 1B",
           "song_titles": [
             "Angelic Sphere"
           ],
@@ -100563,6 +100668,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.1B"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -102393,7 +102501,7 @@
       "internal_key": "classic01",
       "artist": null,
       "composer": "Chopin",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Tristesse"
       ],
@@ -102442,6 +102550,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -102451,7 +102562,7 @@
           "internal_key": "classic01",
           "artist": null,
           "composer": "Chopin",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Tristesse"
           ],
@@ -102500,6 +102611,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -102514,7 +102628,7 @@
       "internal_key": "classic02",
       "artist": null,
       "composer": "Brahms",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Intermezzo in A Major"
       ],
@@ -102563,6 +102677,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -102572,7 +102689,7 @@
           "internal_key": "classic02",
           "artist": null,
           "composer": "Brahms",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Intermezzo in A Major"
           ],
@@ -102621,6 +102738,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -102635,7 +102755,7 @@
       "internal_key": "classic03",
       "artist": null,
       "composer": "Brahms",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Rhapsody in B minor"
       ],
@@ -102684,6 +102804,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -102693,7 +102816,7 @@
           "internal_key": "classic03",
           "artist": null,
           "composer": "Brahms",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Rhapsody in B minor"
           ],
@@ -102742,6 +102865,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -102756,7 +102882,7 @@
       "internal_key": "classic04",
       "artist": null,
       "composer": "Beethoven",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Pathetique"
       ],
@@ -102805,6 +102931,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -102814,7 +102943,7 @@
           "internal_key": "classic04",
           "artist": null,
           "composer": "Beethoven",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Pathetique"
           ],
@@ -102863,6 +102992,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -102877,7 +103009,7 @@
       "internal_key": "classic05",
       "artist": null,
       "composer": "Chopin",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Ballade No.1"
       ],
@@ -102926,6 +103058,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -102935,7 +103070,7 @@
           "internal_key": "classic05",
           "artist": null,
           "composer": "Chopin",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Ballade No.1"
           ],
@@ -102984,6 +103119,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -102998,7 +103136,7 @@
       "internal_key": "classic06",
       "artist": null,
       "composer": "J.S.Bach",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Invention No.1"
       ],
@@ -103047,6 +103185,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -103056,7 +103197,7 @@
           "internal_key": "classic06",
           "artist": null,
           "composer": "J.S.Bach",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Invention No.1"
           ],
@@ -103105,6 +103246,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -103119,7 +103263,7 @@
       "internal_key": "classic07",
       "artist": null,
       "composer": "Schumann",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Aufschwung"
       ],
@@ -103168,6 +103312,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -103177,7 +103324,7 @@
           "internal_key": "classic07",
           "artist": null,
           "composer": "Schumann",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Aufschwung"
           ],
@@ -103226,6 +103373,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -103240,7 +103390,7 @@
       "internal_key": "classic08",
       "artist": null,
       "composer": "Mozart",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Turkish March"
       ],
@@ -103289,6 +103439,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -103298,7 +103451,7 @@
           "internal_key": "classic08",
           "artist": null,
           "composer": "Mozart",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Turkish March"
           ],
@@ -103347,6 +103500,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -103361,7 +103517,7 @@
       "internal_key": "classic09",
       "artist": null,
       "composer": "Beethoven",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Moonlight"
       ],
@@ -103410,6 +103566,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -103419,7 +103578,7 @@
           "internal_key": "classic09",
           "artist": null,
           "composer": "Beethoven",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Moonlight"
           ],
@@ -103468,6 +103627,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -103482,7 +103644,7 @@
       "internal_key": "classic10",
       "artist": null,
       "composer": "Nikolai Rimsky-Korsakov",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Flight of the Bumblebee"
       ],
@@ -103531,6 +103693,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -103540,7 +103705,7 @@
           "internal_key": "classic10",
           "artist": null,
           "composer": "Nikolai Rimsky-Korsakov",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Flight of the Bumblebee"
           ],
@@ -103589,6 +103754,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -103603,7 +103771,7 @@
       "internal_key": "classic11",
       "artist": null,
       "composer": "Schubert",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Impromptu No.3"
       ],
@@ -103652,6 +103820,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -103661,7 +103832,7 @@
           "internal_key": "classic11",
           "artist": null,
           "composer": "Schubert",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Impromptu No.3"
           ],
@@ -103710,6 +103881,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -103724,7 +103898,7 @@
       "internal_key": "classic12",
       "artist": null,
       "composer": "Mendelssohn",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Venetian Gondellied"
       ],
@@ -103773,6 +103947,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -103782,7 +103959,7 @@
           "internal_key": "classic12",
           "artist": null,
           "composer": "Mendelssohn",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Venetian Gondellied"
           ],
@@ -103831,6 +104008,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -103845,7 +104025,7 @@
       "internal_key": "classic13",
       "artist": null,
       "composer": "Chopin",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Piano Sonata No.3"
       ],
@@ -103894,6 +104074,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -103903,7 +104086,7 @@
           "internal_key": "classic13",
           "artist": null,
           "composer": "Chopin",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Piano Sonata No.3"
           ],
@@ -103952,6 +104135,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -103966,7 +104152,7 @@
       "internal_key": "classic14",
       "artist": null,
       "composer": "Chopin",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "Waltz No.1"
       ],
@@ -104015,6 +104201,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -104024,7 +104213,7 @@
           "internal_key": "classic14",
           "artist": null,
           "composer": "Chopin",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "Waltz No.1"
           ],
@@ -104073,6 +104262,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -104087,7 +104279,7 @@
       "internal_key": "classic15",
       "artist": null,
       "composer": "Liszt",
-      "collection": "Etude collection",
+      "collection": "Etude Collection",
       "song_titles": [
         "La Campenella"
       ],
@@ -104136,6 +104328,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Etude collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -104145,7 +104340,7 @@
           "internal_key": "classic15",
           "artist": null,
           "composer": "Liszt",
-          "collection": "Etude collection",
+          "collection": "Etude Collection",
           "song_titles": [
             "La Campenella"
           ],
@@ -104194,6 +104389,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Etude collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -104208,7 +104406,7 @@
       "internal_key": "corsskiminonamae",
       "artist": null,
       "composer": "ZENTA",
-      "collection": "Collaboration collection",
+      "collection": "Collaboration Collection",
       "song_titles": [
         "Kimi no namae no kazegafuku"
       ],
@@ -104257,6 +104455,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Collaboration collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -104266,7 +104467,7 @@
           "internal_key": "corsskiminonamae",
           "artist": null,
           "composer": "ZENTA",
-          "collection": "Collaboration collection",
+          "collection": "Collaboration Collection",
           "song_titles": [
             "Kimi no namae no kazegafuku"
           ],
@@ -104315,6 +104516,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Collaboration collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -104329,7 +104533,7 @@
       "internal_key": "cranky14bunnies",
       "artist": null,
       "composer": "VILA",
-      "collection": "Cranky collection",
+      "collection": "Cranky Collection",
       "song_titles": [
         "The Bisque Doll and 14 Bunnies"
       ],
@@ -104378,6 +104582,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cranky collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -104387,7 +104594,7 @@
           "internal_key": "cranky14bunnies",
           "artist": null,
           "composer": "VILA",
-          "collection": "Cranky collection",
+          "collection": "Cranky Collection",
           "song_titles": [
             "The Bisque Doll and 14 Bunnies"
           ],
@@ -104436,6 +104643,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cranky collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -104450,7 +104660,7 @@
       "internal_key": "crankyanotherkatharsis",
       "artist": null,
       "composer": "VILA",
-      "collection": "Cranky collection",
+      "collection": "Cranky Collection",
       "song_titles": [
         "Another Katharsis"
       ],
@@ -104499,6 +104709,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cranky collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -104508,7 +104721,7 @@
           "internal_key": "crankyanotherkatharsis",
           "artist": null,
           "composer": "VILA",
-          "collection": "Cranky collection",
+          "collection": "Cranky Collection",
           "song_titles": [
             "Another Katharsis"
           ],
@@ -104557,6 +104770,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cranky collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -104684,7 +104900,7 @@
       "internal_key": "crankyconflict",
       "artist": null,
       "composer": "shiromaru + cranky",
-      "collection": "Cranky collection",
+      "collection": "Cranky Collection",
       "song_titles": [
         "Conflict (VILA Remix)"
       ],
@@ -104733,6 +104949,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cranky collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -104742,7 +104961,7 @@
           "internal_key": "crankyconflict",
           "artist": null,
           "composer": "shiromaru + cranky",
-          "collection": "Cranky collection",
+          "collection": "Cranky Collection",
           "song_titles": [
             "Conflict (VILA Remix)"
           ],
@@ -104791,6 +105010,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cranky collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -104805,7 +105027,7 @@
       "internal_key": "crankyeternity",
       "artist": null,
       "composer": "Cranky",
-      "collection": "Cranky collection",
+      "collection": "Cranky Collection",
       "song_titles": [
         "Eternity"
       ],
@@ -104854,6 +105076,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cranky collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -104863,7 +105088,7 @@
           "internal_key": "crankyeternity",
           "artist": null,
           "composer": "Cranky",
-          "collection": "Cranky collection",
+          "collection": "Cranky Collection",
           "song_titles": [
             "Eternity"
           ],
@@ -104912,6 +105137,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cranky collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -104926,7 +105154,7 @@
       "internal_key": "crankyrainofflowers",
       "artist": null,
       "composer": "VILA",
-      "collection": "Cranky collection",
+      "collection": "Cranky Collection",
       "song_titles": [
         "Rain of Flowers"
       ],
@@ -104975,6 +105203,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cranky collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -104984,7 +105215,7 @@
           "internal_key": "crankyrainofflowers",
           "artist": null,
           "composer": "VILA",
-          "collection": "Cranky collection",
+          "collection": "Cranky Collection",
           "song_titles": [
             "Rain of Flowers"
           ],
@@ -105033,6 +105264,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cranky collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -105160,7 +105394,7 @@
       "internal_key": "crosshyakkaryouran",
       "artist": null,
       "composer": "Kakumi Nishigomi",
-      "collection": "Collaboration collection",
+      "collection": "Collaboration Collection",
       "song_titles": [
         "HYAKKA RYOURAN"
       ],
@@ -105209,6 +105443,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Collaboration collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -105218,7 +105455,7 @@
           "internal_key": "crosshyakkaryouran",
           "artist": null,
           "composer": "Kakumi Nishigomi",
-          "collection": "Collaboration collection",
+          "collection": "Collaboration Collection",
           "song_titles": [
             "HYAKKA RYOURAN"
           ],
@@ -105267,6 +105504,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Collaboration collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -105281,7 +105521,7 @@
       "internal_key": "crossknotsway",
       "artist": null,
       "composer": "nicode. feat.Romelon",
-      "collection": "Collaboration collection",
+      "collection": "Collaboration Collection",
       "song_titles": [
         "Knots Way"
       ],
@@ -105330,6 +105570,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Collaboration collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -105339,7 +105582,7 @@
           "internal_key": "crossknotsway",
           "artist": null,
           "composer": "nicode. feat.Romelon",
-          "collection": "Collaboration collection",
+          "collection": "Collaboration Collection",
           "song_titles": [
             "Knots Way"
           ],
@@ -105388,6 +105631,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Collaboration collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -105854,7 +106100,7 @@
       "internal_key": "dreamofdreams",
       "artist": null,
       "composer": "Brian Crain",
-      "collection": "Brian Crain collection",
+      "collection": "Brian Crain Collection",
       "song_titles": [
         "Dream of Dreams"
       ],
@@ -105903,6 +106149,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Brian Crain collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -105912,7 +106161,7 @@
           "internal_key": "dreamofdreams",
           "artist": null,
           "composer": "Brian Crain",
-          "collection": "Brian Crain collection",
+          "collection": "Brian Crain Collection",
           "song_titles": [
             "Dream of Dreams"
           ],
@@ -105961,6 +106210,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Brian Crain collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -105975,7 +106227,7 @@
       "internal_key": "drg",
       "artist": null,
       "composer": "Ani",
-      "collection": "Cytus selection Vol.1",
+      "collection": "Cytus Selection Vol. 1",
       "song_titles": [
         "DRG"
       ],
@@ -106024,6 +106276,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -106033,7 +106288,7 @@
           "internal_key": "drg",
           "artist": null,
           "composer": "Ani",
-          "collection": "Cytus selection Vol.1",
+          "collection": "Cytus Selection Vol. 1",
           "song_titles": [
             "DRG"
           ],
@@ -106082,6 +106337,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -106209,7 +106467,7 @@
       "internal_key": "dspiano01caramelcustard",
       "artist": null,
       "composer": "xi",
-      "collection": "DS:PIANO collection",
+      "collection": "DS:PIANO Collection",
       "song_titles": [
         "Caramel Custard"
       ],
@@ -106258,6 +106516,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "DS:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -106267,7 +106528,7 @@
           "internal_key": "dspiano01caramelcustard",
           "artist": null,
           "composer": "xi",
-          "collection": "DS:PIANO collection",
+          "collection": "DS:PIANO Collection",
           "song_titles": [
             "Caramel Custard"
           ],
@@ -106316,6 +106577,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "DS:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -106330,7 +106594,7 @@
       "internal_key": "dspiano01eltina",
       "artist": null,
       "composer": "Feryquitous",
-      "collection": "DS:PIANO collection",
+      "collection": "DS:PIANO Collection",
       "song_titles": [
         "Eltina"
       ],
@@ -106379,6 +106643,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "DS:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -106388,7 +106655,7 @@
           "internal_key": "dspiano01eltina",
           "artist": null,
           "composer": "Feryquitous",
-          "collection": "DS:PIANO collection",
+          "collection": "DS:PIANO Collection",
           "song_titles": [
             "Eltina"
           ],
@@ -106437,6 +106704,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "DS:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -106451,7 +106721,7 @@
       "internal_key": "dspiano01hanomai",
       "artist": null,
       "composer": "b",
-      "collection": "DS:PIANO collection",
+      "collection": "DS:PIANO Collection",
       "song_titles": [
         "Hanomai"
       ],
@@ -106500,6 +106770,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "DS:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -106509,7 +106782,7 @@
           "internal_key": "dspiano01hanomai",
           "artist": null,
           "composer": "b",
-          "collection": "DS:PIANO collection",
+          "collection": "DS:PIANO Collection",
           "song_titles": [
             "Hanomai"
           ],
@@ -106558,6 +106831,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "DS:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -106572,7 +106848,7 @@
       "internal_key": "dspiano01noblesseoblige",
       "artist": null,
       "composer": "Powerless",
-      "collection": "DS:PIANO collection",
+      "collection": "DS:PIANO Collection",
       "song_titles": [
         "Noblesse Oblige"
       ],
@@ -106621,6 +106897,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "DS:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -106630,7 +106909,7 @@
           "internal_key": "dspiano01noblesseoblige",
           "artist": null,
           "composer": "Powerless",
-          "collection": "DS:PIANO collection",
+          "collection": "DS:PIANO Collection",
           "song_titles": [
             "Noblesse Oblige"
           ],
@@ -106679,6 +106958,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "DS:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -106693,7 +106975,7 @@
       "internal_key": "dspiano01samishigariyanogaisen",
       "artist": null,
       "composer": "b",
-      "collection": "DS:PIANO collection",
+      "collection": "DS:PIANO Collection",
       "song_titles": [
         "Samishigariya no gaisen"
       ],
@@ -106742,6 +107024,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "DS:PIANO collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -106751,7 +107036,7 @@
           "internal_key": "dspiano01samishigariyanogaisen",
           "artist": null,
           "composer": "b",
-          "collection": "DS:PIANO collection",
+          "collection": "DS:PIANO Collection",
           "song_titles": [
             "Samishigariya no gaisen"
           ],
@@ -106800,6 +107085,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "DS:PIANO collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -106927,7 +107215,7 @@
       "internal_key": "entrance",
       "artist": null,
       "composer": "Ice",
-      "collection": "Deemo's collection Vol.1B",
+      "collection": "Deemo's collection Vol. 1B",
       "song_titles": [
         "Entrance"
       ],
@@ -106976,6 +107264,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -106985,7 +107276,7 @@
           "internal_key": "entrance",
           "artist": null,
           "composer": "Ice",
-          "collection": "Deemo's collection Vol.1B",
+          "collection": "Deemo's collection Vol. 1B",
           "song_titles": [
             "Entrance"
           ],
@@ -107034,6 +107325,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.1B"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -107282,7 +107576,7 @@
       "internal_key": "evolution_era",
       "artist": null,
       "composer": "V.K",
-      "collection": "Deemo's collection Vol.1B",
+      "collection": "Deemo's collection Vol. 1B",
       "song_titles": [
         "Evolution Era"
       ],
@@ -107331,6 +107625,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -107340,7 +107637,7 @@
           "internal_key": "evolution_era",
           "artist": null,
           "composer": "V.K",
-          "collection": "Deemo's collection Vol.1B",
+          "collection": "Deemo's collection Vol. 1B",
           "song_titles": [
             "Evolution Era"
           ],
@@ -107389,6 +107686,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.1B"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -107524,7 +107824,7 @@
       "internal_key": "fallingears",
       "artist": null,
       "composer": "Eshen",
-      "collection": "Eshen Chen collection Vol.1 Transmission",
+      "collection": "Eshen Chen collection Vol.1：Transmission",
       "song_titles": [
         "Falling Ears"
       ],
@@ -107573,6 +107873,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Eshen Chen collection Vol.1 Transmission"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -107582,7 +107885,7 @@
           "internal_key": "fallingears",
           "artist": null,
           "composer": "Eshen",
-          "collection": "Eshen Chen collection Vol.1 Transmission",
+          "collection": "Eshen Chen collection Vol.1：Transmission",
           "song_titles": [
             "Falling Ears"
           ],
@@ -107631,6 +107934,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Eshen Chen collection Vol.1 Transmission"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -108323,7 +108629,7 @@
       "internal_key": "findinghome",
       "artist": null,
       "composer": "Brian Crain",
-      "collection": "Brian Crain collection",
+      "collection": "Brian Crain Collection",
       "song_titles": [
         "Finding Home"
       ],
@@ -108372,6 +108678,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Brian Crain collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -108381,7 +108690,7 @@
           "internal_key": "findinghome",
           "artist": null,
           "composer": "Brian Crain",
-          "collection": "Brian Crain collection",
+          "collection": "Brian Crain Collection",
           "song_titles": [
             "Finding Home"
           ],
@@ -108430,6 +108739,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Brian Crain collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -108444,7 +108756,7 @@
       "internal_key": "flowersaboveyourhead",
       "artist": null,
       "composer": "Eshen",
-      "collection": "Eshen Chen collection Vol.1 Transmission",
+      "collection": "Eshen Chen collection Vol.1：Transmission",
       "song_titles": [
         "Flowers Above Your Head"
       ],
@@ -108493,6 +108805,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Eshen Chen collection Vol.1 Transmission"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -108502,7 +108817,7 @@
           "internal_key": "flowersaboveyourhead",
           "artist": null,
           "composer": "Eshen",
-          "collection": "Eshen Chen collection Vol.1 Transmission",
+          "collection": "Eshen Chen collection Vol.1：Transmission",
           "song_titles": [
             "Flowers Above Your Head"
           ],
@@ -108551,6 +108866,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Eshen Chen collection Vol.1 Transmission"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -109243,7 +109561,7 @@
       "internal_key": "futureworld",
       "artist": null,
       "composer": "Killerblood",
-      "collection": "Cytus selection Vol.2",
+      "collection": "Cytus Selection Vol. 2",
       "song_titles": [
         "Future World"
       ],
@@ -109292,6 +109610,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -109301,7 +109622,7 @@
           "internal_key": "futureworld",
           "artist": null,
           "composer": "Killerblood",
-          "collection": "Cytus selection Vol.2",
+          "collection": "Cytus Selection Vol. 2",
           "song_titles": [
             "Future World"
           ],
@@ -109350,6 +109671,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -109485,7 +109809,7 @@
       "internal_key": "holyknight",
       "artist": null,
       "composer": "Eyemedia",
-      "collection": "Cytus selection Vol.2",
+      "collection": "Cytus Selection Vol. 2",
       "song_titles": [
         "Holy Knight"
       ],
@@ -109534,6 +109858,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -109543,7 +109870,7 @@
           "internal_key": "holyknight",
           "artist": null,
           "composer": "Eyemedia",
-          "collection": "Cytus selection Vol.2",
+          "collection": "Cytus Selection Vol. 2",
           "song_titles": [
             "Holy Knight"
           ],
@@ -109592,6 +109919,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -110397,7 +110727,7 @@
       "internal_key": "imagining",
       "artist": null,
       "composer": "Brian Crain",
-      "collection": "Brian Crain collection",
+      "collection": "Brian Crain Collection",
       "song_titles": [
         "Imagining"
       ],
@@ -110446,6 +110776,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Brian Crain collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -110455,7 +110788,7 @@
           "internal_key": "imagining",
           "artist": null,
           "composer": "Brian Crain",
-          "collection": "Brian Crain collection",
+          "collection": "Brian Crain Collection",
           "song_titles": [
             "Imagining"
           ],
@@ -110504,6 +110837,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Brian Crain collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -110744,7 +111080,7 @@
       "internal_key": "k01thewaywewere",
       "artist": null,
       "composer": "NICODE",
-      "collection": "Knight Iris collection",
+      "collection": "Knight Iris Collection",
       "song_titles": [
         "The Way We Were"
       ],
@@ -110793,6 +111129,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Iris collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -110802,7 +111141,7 @@
           "internal_key": "k01thewaywewere",
           "artist": null,
           "composer": "NICODE",
-          "collection": "Knight Iris collection",
+          "collection": "Knight Iris Collection",
           "song_titles": [
             "The Way We Were"
           ],
@@ -110851,6 +111190,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Iris collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -110865,7 +111207,7 @@
       "internal_key": "k02thesanctuary",
       "artist": null,
       "composer": "Eye AC",
-      "collection": "Knight Iris collection",
+      "collection": "Knight Iris Collection",
       "song_titles": [
         "The Sanctuary"
       ],
@@ -110914,6 +111256,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Iris collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -110923,7 +111268,7 @@
           "internal_key": "k02thesanctuary",
           "artist": null,
           "composer": "Eye AC",
-          "collection": "Knight Iris collection",
+          "collection": "Knight Iris Collection",
           "song_titles": [
             "The Sanctuary"
           ],
@@ -110972,6 +111317,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Iris collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -110986,7 +111334,7 @@
       "internal_key": "k03theredcoronation",
       "artist": null,
       "composer": "Eye RH",
-      "collection": "Knight Iris collection",
+      "collection": "Knight Iris Collection",
       "song_titles": [
         "The Red Coronation"
       ],
@@ -111035,6 +111383,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Iris collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -111044,7 +111395,7 @@
           "internal_key": "k03theredcoronation",
           "artist": null,
           "composer": "Eye RH",
-          "collection": "Knight Iris collection",
+          "collection": "Knight Iris Collection",
           "song_titles": [
             "The Red Coronation"
           ],
@@ -111093,6 +111444,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Iris collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -111107,7 +111461,7 @@
       "internal_key": "k04forbiddencodex",
       "artist": null,
       "composer": "Hoskey",
-      "collection": "Knight Iris collection",
+      "collection": "Knight Iris Collection",
       "song_titles": [
         "Forbidden Codex"
       ],
@@ -111156,6 +111510,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Iris collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -111165,7 +111522,7 @@
           "internal_key": "k04forbiddencodex",
           "artist": null,
           "composer": "Hoskey",
-          "collection": "Knight Iris collection",
+          "collection": "Knight Iris Collection",
           "song_titles": [
             "Forbidden Codex"
           ],
@@ -111214,6 +111571,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Iris collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -111228,7 +111588,7 @@
       "internal_key": "k05knightoffirmament",
       "artist": null,
       "composer": "Eye XY feat.Yoneko",
-      "collection": "Knight Iris collection",
+      "collection": "Knight Iris Collection",
       "song_titles": [
         "Knight Of Firmament"
       ],
@@ -111277,6 +111637,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Iris collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -111286,7 +111649,7 @@
           "internal_key": "k05knightoffirmament",
           "artist": null,
           "composer": "Eye XY feat.Yoneko",
-          "collection": "Knight Iris collection",
+          "collection": "Knight Iris Collection",
           "song_titles": [
             "Knight Of Firmament"
           ],
@@ -111335,6 +111698,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Iris collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -111349,7 +111715,7 @@
       "internal_key": "k06lordofcrimsonrose",
       "artist": null,
       "composer": "Eye DT feat. Searlait",
-      "collection": "Knight Rosabell collection",
+      "collection": "Knight Rosabell Collection",
       "song_titles": [
         "Lord Of Crimson Rose"
       ],
@@ -111398,6 +111764,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -111407,7 +111776,7 @@
           "internal_key": "k06lordofcrimsonrose",
           "artist": null,
           "composer": "Eye DT feat. Searlait",
-          "collection": "Knight Rosabell collection",
+          "collection": "Knight Rosabell Collection",
           "song_titles": [
             "Lord Of Crimson Rose"
           ],
@@ -111456,6 +111825,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Rosabell collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -111470,7 +111842,7 @@
       "internal_key": "k07predawn",
       "artist": null,
       "composer": "Nicode",
-      "collection": "Knight Rosabell collection",
+      "collection": "Knight Rosabell Collection",
       "song_titles": [
         "Predawn"
       ],
@@ -111519,6 +111891,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -111528,7 +111903,7 @@
           "internal_key": "k07predawn",
           "artist": null,
           "composer": "Nicode",
-          "collection": "Knight Rosabell collection",
+          "collection": "Knight Rosabell Collection",
           "song_titles": [
             "Predawn"
           ],
@@ -111577,6 +111952,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Rosabell collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -111591,7 +111969,7 @@
       "internal_key": "k08thefallenbloom",
       "artist": null,
       "composer": "Hoskey",
-      "collection": "Knight Rosabell collection",
+      "collection": "Knight Rosabell Collection",
       "song_titles": [
         "The Fallen Bloom"
       ],
@@ -111640,6 +112018,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -111649,7 +112030,7 @@
           "internal_key": "k08thefallenbloom",
           "artist": null,
           "composer": "Hoskey",
-          "collection": "Knight Rosabell collection",
+          "collection": "Knight Rosabell Collection",
           "song_titles": [
             "The Fallen Bloom"
           ],
@@ -111698,6 +112079,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Rosabell collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -111712,7 +112096,7 @@
       "internal_key": "k09whereyouarenot",
       "artist": null,
       "composer": "Nicode",
-      "collection": "Knight Rosabell collection",
+      "collection": "Knight Rosabell Collection",
       "song_titles": [
         "Where You Are Not"
       ],
@@ -111761,6 +112145,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -111770,7 +112157,7 @@
           "internal_key": "k09whereyouarenot",
           "artist": null,
           "composer": "Nicode",
-          "collection": "Knight Rosabell collection",
+          "collection": "Knight Rosabell Collection",
           "song_titles": [
             "Where You Are Not"
           ],
@@ -111819,6 +112206,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Rosabell collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -111833,7 +112223,7 @@
       "internal_key": "k10music",
       "artist": null,
       "composer": "Mai Aoyagi",
-      "collection": "Knight Rosabell collection",
+      "collection": "Knight Rosabell Collection",
       "song_titles": [
         "Music"
       ],
@@ -111882,6 +112272,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -111891,7 +112284,7 @@
           "internal_key": "k10music",
           "artist": null,
           "composer": "Mai Aoyagi",
-          "collection": "Knight Rosabell collection",
+          "collection": "Knight Rosabell Collection",
           "song_titles": [
             "Music"
           ],
@@ -111940,6 +112333,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Knight Rosabell collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -112075,7 +112471,7 @@
       "internal_key": "leviathan",
       "artist": null,
       "composer": "NeLiME",
-      "collection": "Deemo's collection Vol.1B",
+      "collection": "Deemo's collection Vol. 1B",
       "song_titles": [
         "Leviathan"
       ],
@@ -112124,6 +112520,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -112133,7 +112532,7 @@
           "internal_key": "leviathan",
           "artist": null,
           "composer": "NeLiME",
-          "collection": "Deemo's collection Vol.1B",
+          "collection": "Deemo's collection Vol. 1B",
           "song_titles": [
             "Leviathan"
           ],
@@ -112182,6 +112581,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.1B"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -112196,7 +112598,7 @@
       "internal_key": "liberame",
       "artist": null,
       "composer": "Cranky",
-      "collection": "Cytus selection Vol.1",
+      "collection": "Cytus Selection Vol. 1",
       "song_titles": [
         "Libera me"
       ],
@@ -112245,6 +112647,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -112254,7 +112659,7 @@
           "internal_key": "liberame",
           "artist": null,
           "composer": "Cranky",
-          "collection": "Cytus selection Vol.1",
+          "collection": "Cytus Selection Vol. 1",
           "song_titles": [
             "Libera me"
           ],
@@ -112303,6 +112708,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -112543,7 +112951,7 @@
       "internal_key": "littlecorgisdream",
       "artist": null,
       "composer": "KillerBlood",
-      "collection": "Rayark selection Vol.3",
+      "collection": "Rayark Selection Vol. 3",
       "song_titles": [
         "Little Corgi's Dream"
       ],
@@ -112592,6 +113000,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -112601,7 +113012,7 @@
           "internal_key": "littlecorgisdream",
           "artist": null,
           "composer": "KillerBlood",
-          "collection": "Rayark selection Vol.3",
+          "collection": "Rayark Selection Vol. 3",
           "song_titles": [
             "Little Corgi's Dream"
           ],
@@ -112650,6 +113061,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Rayark selection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -112664,7 +113078,7 @@
       "internal_key": "livingintheone",
       "artist": null,
       "composer": "Edmund Fu",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "Living In The One"
       ],
@@ -112713,6 +113127,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -112722,7 +113139,7 @@
           "internal_key": "livingintheone",
           "artist": null,
           "composer": "Edmund Fu",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "Living In The One"
           ],
@@ -112771,6 +113188,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -112898,7 +113318,7 @@
       "internal_key": "llowlapse",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Lower collection",
+      "collection": "L: The Lower Collection",
       "song_titles": [
         "L5: Lapse"
       ],
@@ -112947,6 +113367,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Lower collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -112956,7 +113379,7 @@
           "internal_key": "llowlapse",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Lower collection",
+          "collection": "L: The Lower Collection",
           "song_titles": [
             "L5: Lapse"
           ],
@@ -113005,6 +113428,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Lower collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -113019,7 +113445,7 @@
       "internal_key": "llowlatent",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Lower collection",
+      "collection": "L: The Lower Collection",
       "song_titles": [
         "L4: Latent"
       ],
@@ -113068,6 +113494,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Lower collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -113077,7 +113506,7 @@
           "internal_key": "llowlatent",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Lower collection",
+          "collection": "L: The Lower Collection",
           "song_titles": [
             "L4: Latent"
           ],
@@ -113126,6 +113555,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Lower collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -113140,7 +113572,7 @@
       "internal_key": "llowleverage",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Lower collection",
+      "collection": "L: The Lower Collection",
       "song_titles": [
         "L3: Leverage"
       ],
@@ -113189,6 +113621,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Lower collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -113198,7 +113633,7 @@
           "internal_key": "llowleverage",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Lower collection",
+          "collection": "L: The Lower Collection",
           "song_titles": [
             "L3: Leverage"
           ],
@@ -113247,6 +113682,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Lower collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -113261,7 +113699,7 @@
       "internal_key": "llowliberation",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Lower collection",
+      "collection": "L: The Lower Collection",
       "song_titles": [
         "L2: Liberation"
       ],
@@ -113310,6 +113748,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Lower collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -113319,7 +113760,7 @@
           "internal_key": "llowliberation",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Lower collection",
+          "collection": "L: The Lower Collection",
           "song_titles": [
             "L2: Liberation"
           ],
@@ -113368,6 +113809,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Lower collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -113382,7 +113826,7 @@
       "internal_key": "llowloneliness",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Lower collection",
+      "collection": "L: The Lower Collection",
       "song_titles": [
         "L1: Loneliness"
       ],
@@ -113431,6 +113875,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Lower collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -113440,7 +113887,7 @@
           "internal_key": "llowloneliness",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Lower collection",
+          "collection": "L: The Lower Collection",
           "song_titles": [
             "L1: Loneliness"
           ],
@@ -113489,6 +113936,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Lower collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -113616,7 +114066,7 @@
       "internal_key": "luplament",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Upper collection",
+      "collection": "L: The Upper Collection",
       "song_titles": [
         "L9: Lament"
       ],
@@ -113665,6 +114115,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Upper collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -113674,7 +114127,7 @@
           "internal_key": "luplament",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Upper collection",
+          "collection": "L: The Upper Collection",
           "song_titles": [
             "L9: Lament"
           ],
@@ -113723,6 +114176,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Upper collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -113737,7 +114193,7 @@
       "internal_key": "luplargo",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Upper collection",
+      "collection": "L: The Upper Collection",
       "song_titles": [
         "L10: Largo"
       ],
@@ -113786,6 +114242,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Upper collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -113795,7 +114254,7 @@
           "internal_key": "luplargo",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Upper collection",
+          "collection": "L: The Upper Collection",
           "song_titles": [
             "L10: Largo"
           ],
@@ -113844,6 +114303,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Upper collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -113858,7 +114320,7 @@
       "internal_key": "luplegion",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Upper collection",
+      "collection": "L: The Upper Collection",
       "song_titles": [
         "L7: Legion"
       ],
@@ -113907,6 +114369,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Upper collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -113916,7 +114381,7 @@
           "internal_key": "luplegion",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Upper collection",
+          "collection": "L: The Upper Collection",
           "song_titles": [
             "L7: Legion"
           ],
@@ -113965,6 +114430,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Upper collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -113979,7 +114447,7 @@
       "internal_key": "luplost",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Upper collection",
+      "collection": "L: The Upper Collection",
       "song_titles": [
         "L8: Lost"
       ],
@@ -114028,6 +114496,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Upper collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -114037,7 +114508,7 @@
           "internal_key": "luplost",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Upper collection",
+          "collection": "L: The Upper Collection",
           "song_titles": [
             "L8: Lost"
           ],
@@ -114086,6 +114557,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Upper collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -114100,7 +114574,7 @@
       "internal_key": "luplunatic",
       "artist": null,
       "composer": "Ice",
-      "collection": "L: The Upper collection",
+      "collection": "L: The Upper Collection",
       "song_titles": [
         "L6: Lunatic"
       ],
@@ -114149,6 +114623,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "L: The Upper collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -114158,7 +114635,7 @@
           "internal_key": "luplunatic",
           "artist": null,
           "composer": "Ice",
-          "collection": "L: The Upper collection",
+          "collection": "L: The Upper Collection",
           "song_titles": [
             "L6: Lunatic"
           ],
@@ -114207,6 +114684,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "L: The Upper collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -114334,7 +114814,7 @@
       "internal_key": "magnolia",
       "artist": null,
       "composer": "M2U Vocal by Guriri",
-      "collection": "Deemo's collection Vol.1B",
+      "collection": "Deemo's collection Vol. 1B",
       "song_titles": [
         "Magnolia"
       ],
@@ -114383,6 +114863,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -114392,7 +114875,7 @@
           "internal_key": "magnolia",
           "artist": null,
           "composer": "M2U Vocal by Guriri",
-          "collection": "Deemo's collection Vol.1B",
+          "collection": "Deemo's collection Vol. 1B",
           "song_titles": [
             "Magnolia"
           ],
@@ -114441,6 +114924,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.1B"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -114689,7 +115175,7 @@
       "internal_key": "mili02aturtlesheart",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.2",
+      "collection": "Mili Collection Vol. 2",
       "song_titles": [
         "A Turtle's Heart"
       ],
@@ -114738,6 +115224,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -114747,7 +115236,7 @@
           "internal_key": "mili02aturtlesheart",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.2",
+          "collection": "Mili Collection Vol. 2",
           "song_titles": [
             "A Turtle's Heart"
           ],
@@ -114796,6 +115285,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -114923,7 +115415,7 @@
       "internal_key": "mili02cerebrite",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.2",
+      "collection": "Mili Collection Vol. 2",
       "song_titles": [
         "Cerebrite"
       ],
@@ -114972,6 +115464,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -114981,7 +115476,7 @@
           "internal_key": "mili02cerebrite",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.2",
+          "collection": "Mili Collection Vol. 2",
           "song_titles": [
             "Cerebrite"
           ],
@@ -115030,6 +115525,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -115044,7 +115542,7 @@
       "internal_key": "mili02imaginedflight",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.2",
+      "collection": "Mili Collection Vol. 2",
       "song_titles": [
         "Imagined Flight"
       ],
@@ -115093,6 +115591,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -115102,7 +115603,7 @@
           "internal_key": "mili02imaginedflight",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.2",
+          "collection": "Mili Collection Vol. 2",
           "song_titles": [
             "Imagined Flight"
           ],
@@ -115151,6 +115652,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -115165,7 +115669,7 @@
       "internal_key": "mili02spacecolony",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.2",
+      "collection": "Mili Collection Vol. 2",
       "song_titles": [
         "Space Colony"
       ],
@@ -115214,6 +115718,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -115223,7 +115730,7 @@
           "internal_key": "mili02spacecolony",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.2",
+          "collection": "Mili Collection Vol. 2",
           "song_titles": [
             "Space Colony"
           ],
@@ -115272,6 +115779,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -115286,7 +115796,7 @@
       "internal_key": "mili02ufo",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.2",
+      "collection": "Mili Collection Vol. 2",
       "song_titles": [
         "UFO"
       ],
@@ -115335,6 +115845,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -115344,7 +115857,7 @@
           "internal_key": "mili02ufo",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.2",
+          "collection": "Mili Collection Vol. 2",
           "song_titles": [
             "UFO"
           ],
@@ -115393,6 +115906,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -115407,7 +115923,7 @@
       "internal_key": "mili03bathtubmermaid",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.3",
+      "collection": "Mili Collection Vol. 3",
       "song_titles": [
         "Bathtub Mermaid"
       ],
@@ -115456,6 +115972,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -115465,7 +115984,7 @@
           "internal_key": "mili03bathtubmermaid",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.3",
+          "collection": "Mili Collection Vol. 3",
           "song_titles": [
             "Bathtub Mermaid"
           ],
@@ -115514,6 +116033,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -115641,7 +116163,7 @@
       "internal_key": "mili03dk",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.3",
+      "collection": "Mili Collection Vol. 3",
       "song_titles": [
         "DK"
       ],
@@ -115690,6 +116212,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -115699,7 +116224,7 @@
           "internal_key": "mili03dk",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.3",
+          "collection": "Mili Collection Vol. 3",
           "song_titles": [
             "DK"
           ],
@@ -115748,6 +116273,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -115762,7 +116290,7 @@
       "internal_key": "mili03ga1ahad",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.3",
+      "collection": "Mili Collection Vol. 3",
       "song_titles": [
         "Ga1ahad and Scientific Witchery"
       ],
@@ -115811,6 +116339,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -115820,7 +116351,7 @@
           "internal_key": "mili03ga1ahad",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.3",
+          "collection": "Mili Collection Vol. 3",
           "song_titles": [
             "Ga1ahad and Scientific Witchery"
           ],
@@ -115869,6 +116400,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -115883,7 +116417,7 @@
       "internal_key": "mili03ikutoshitsuki",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.3",
+      "collection": "Mili Collection Vol. 3",
       "song_titles": [
         "Ikutoshitsuki"
       ],
@@ -115932,6 +116466,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -115941,7 +116478,7 @@
           "internal_key": "mili03ikutoshitsuki",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.3",
+          "collection": "Mili Collection Vol. 3",
           "song_titles": [
             "Ikutoshitsuki"
           ],
@@ -115990,6 +116527,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -116004,7 +116544,7 @@
       "internal_key": "mili03milk",
       "artist": null,
       "composer": "Mili",
-      "collection": "MILI collection Vol.3",
+      "collection": "Mili Collection Vol. 3",
       "song_titles": [
         "Milk"
       ],
@@ -116053,6 +116593,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "MILI collection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -116062,7 +116605,7 @@
           "internal_key": "mili03milk",
           "artist": null,
           "composer": "Mili",
-          "collection": "MILI collection Vol.3",
+          "collection": "Mili Collection Vol. 3",
           "song_titles": [
             "Milk"
           ],
@@ -116111,6 +116654,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "MILI collection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -116351,7 +116897,7 @@
       "internal_key": "morningdrops",
       "artist": null,
       "composer": "KIVA",
-      "collection": "Rayark selection Vol.3",
+      "collection": "Rayark Selection Vol. 3",
       "song_titles": [
         "Morning Drops"
       ],
@@ -116400,6 +116946,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -116409,7 +116958,7 @@
           "internal_key": "morningdrops",
           "artist": null,
           "composer": "KIVA",
-          "collection": "Rayark selection Vol.3",
+          "collection": "Rayark Selection Vol. 3",
           "song_titles": [
             "Morning Drops"
           ],
@@ -116458,6 +117007,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Rayark selection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -116472,7 +117024,7 @@
       "internal_key": "niflheimr",
       "artist": null,
       "composer": "xi",
-      "collection": "Cytus selection Vol.2",
+      "collection": "Cytus Selection Vol. 2",
       "song_titles": [
         "Niflheimr"
       ],
@@ -116521,6 +117073,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -116530,7 +117085,7 @@
           "internal_key": "niflheimr",
           "artist": null,
           "composer": "xi",
-          "collection": "Cytus selection Vol.2",
+          "collection": "Cytus Selection Vol. 2",
           "song_titles": [
             "Niflheimr"
           ],
@@ -116579,6 +117134,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -116940,7 +117498,7 @@
       "internal_key": "parousia",
       "artist": null,
       "composer": "xi",
-      "collection": "Cytus selection Vol.2",
+      "collection": "Cytus Selection Vol. 2",
       "song_titles": [
         "Parousia"
       ],
@@ -116989,6 +117547,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -116998,7 +117559,7 @@
           "internal_key": "parousia",
           "artist": null,
           "composer": "xi",
-          "collection": "Cytus selection Vol.2",
+          "collection": "Cytus Selection Vol. 2",
           "song_titles": [
             "Parousia"
           ],
@@ -117047,6 +117608,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -117408,7 +117972,7 @@
       "internal_key": "precipitation",
       "artist": null,
       "composer": "Ice",
-      "collection": "Cytus selection Vol.1",
+      "collection": "Cytus Selection Vol. 1",
       "song_titles": [
         "Precipitation"
       ],
@@ -117457,6 +118021,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -117466,7 +118033,7 @@
           "internal_key": "precipitation",
           "artist": null,
           "composer": "Ice",
-          "collection": "Cytus selection Vol.1",
+          "collection": "Cytus Selection Vol. 1",
           "song_titles": [
             "Precipitation"
           ],
@@ -117515,6 +118082,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -117529,7 +118099,7 @@
       "internal_key": "pulse",
       "artist": null,
       "composer": "Sta feat. A",
-      "collection": "Deemo's collection Vol.1B",
+      "collection": "Deemo's collection Vol. 1B",
       "song_titles": [
         "Pulses"
       ],
@@ -117578,6 +118148,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -117587,7 +118160,7 @@
           "internal_key": "pulse",
           "artist": null,
           "composer": "Sta feat. A",
-          "collection": "Deemo's collection Vol.1B",
+          "collection": "Deemo's collection Vol. 1B",
           "song_titles": [
             "Pulses"
           ],
@@ -117636,6 +118209,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.1B"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -118489,7 +119065,7 @@
       "internal_key": "rac01aciculignosa",
       "artist": null,
       "composer": "Kaneko Chiharu",
-      "collection": "RAC collection #1",
+      "collection": "RAC Collection #1",
       "song_titles": [
         "AciculignosA"
       ],
@@ -118538,6 +119114,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -118547,7 +119126,7 @@
           "internal_key": "rac01aciculignosa",
           "artist": null,
           "composer": "Kaneko Chiharu",
-          "collection": "RAC collection #1",
+          "collection": "RAC Collection #1",
           "song_titles": [
             "AciculignosA"
           ],
@@ -118596,6 +119175,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -118610,7 +119192,7 @@
       "internal_key": "rac01bloomingspring",
       "artist": null,
       "composer": "Go raibh maith agat Orchestra",
-      "collection": "RAC collection #1",
+      "collection": "RAC Collection #1",
       "song_titles": [
         "blooming spring"
       ],
@@ -118659,6 +119241,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -118668,7 +119253,7 @@
           "internal_key": "rac01bloomingspring",
           "artist": null,
           "composer": "Go raibh maith agat Orchestra",
-          "collection": "RAC collection #1",
+          "collection": "RAC Collection #1",
           "song_titles": [
             "blooming spring"
           ],
@@ -118717,6 +119302,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -118844,7 +119432,7 @@
       "internal_key": "rac01lifill",
       "artist": null,
       "composer": "Feryquitous feat. Sennzai",
-      "collection": "RAC collection #1",
+      "collection": "RAC Collection #1",
       "song_titles": [
         "Lifill"
       ],
@@ -118893,6 +119481,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -118902,7 +119493,7 @@
           "internal_key": "rac01lifill",
           "artist": null,
           "composer": "Feryquitous feat. Sennzai",
-          "collection": "RAC collection #1",
+          "collection": "RAC Collection #1",
           "song_titles": [
             "Lifill"
           ],
@@ -118951,6 +119542,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -118965,7 +119559,7 @@
       "internal_key": "rac01rethefullmoonworld",
       "artist": null,
       "composer": "Ayatsugu Otowa",
-      "collection": "RAC collection #1",
+      "collection": "RAC Collection #1",
       "song_titles": [
         "Re: the Full moon World."
       ],
@@ -119014,6 +119608,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -119023,7 +119620,7 @@
           "internal_key": "rac01rethefullmoonworld",
           "artist": null,
           "composer": "Ayatsugu Otowa",
-          "collection": "RAC collection #1",
+          "collection": "RAC Collection #1",
           "song_titles": [
             "Re: the Full moon World."
           ],
@@ -119072,6 +119669,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -119086,7 +119686,7 @@
       "internal_key": "rac01toysetude",
       "artist": null,
       "composer": "soyomogi",
-      "collection": "RAC collection #1",
+      "collection": "RAC Collection #1",
       "song_titles": [
         "Toys Etude"
       ],
@@ -119135,6 +119735,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -119144,7 +119747,7 @@
           "internal_key": "rac01toysetude",
           "artist": null,
           "composer": "soyomogi",
-          "collection": "RAC collection #1",
+          "collection": "RAC Collection #1",
           "song_titles": [
             "Toys Etude"
           ],
@@ -119193,6 +119796,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -119207,7 +119813,7 @@
       "internal_key": "rac02aliceinsecretcircus",
       "artist": null,
       "composer": "Kaname Shigeyoshi",
-      "collection": "RAC collection #2",
+      "collection": "RAC Collection #2",
       "song_titles": [
         "Alice in Secret Circus"
       ],
@@ -119256,6 +119862,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -119265,7 +119874,7 @@
           "internal_key": "rac02aliceinsecretcircus",
           "artist": null,
           "composer": "Kaname Shigeyoshi",
-          "collection": "RAC collection #2",
+          "collection": "RAC Collection #2",
           "song_titles": [
             "Alice in Secret Circus"
           ],
@@ -119314,6 +119923,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -119328,7 +119940,7 @@
       "internal_key": "rac02anticipation",
       "artist": null,
       "composer": "Shi Kuang Lee",
-      "collection": "RAC collection #2",
+      "collection": "RAC Collection #2",
       "song_titles": [
         "Anticipation"
       ],
@@ -119377,6 +119989,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -119386,7 +120001,7 @@
           "internal_key": "rac02anticipation",
           "artist": null,
           "composer": "Shi Kuang Lee",
-          "collection": "RAC collection #2",
+          "collection": "RAC Collection #2",
           "song_titles": [
             "Anticipation"
           ],
@@ -119435,6 +120050,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -119562,7 +120180,7 @@
       "internal_key": "rac02graduationsong",
       "artist": null,
       "composer": "Kitkit Lu",
-      "collection": "RAC collection #2",
+      "collection": "RAC Collection #2",
       "song_titles": [
         "Graduation Song"
       ],
@@ -119611,6 +120229,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -119620,7 +120241,7 @@
           "internal_key": "rac02graduationsong",
           "artist": null,
           "composer": "Kitkit Lu",
-          "collection": "RAC collection #2",
+          "collection": "RAC Collection #2",
           "song_titles": [
             "Graduation Song"
           ],
@@ -119669,6 +120290,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -119683,7 +120307,7 @@
       "internal_key": "rac02lili",
       "artist": null,
       "composer": "Rigel Theatre",
-      "collection": "RAC collection #2",
+      "collection": "RAC Collection #2",
       "song_titles": [
         "LILI"
       ],
@@ -119732,6 +120356,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -119741,7 +120368,7 @@
           "internal_key": "rac02lili",
           "artist": null,
           "composer": "Rigel Theatre",
-          "collection": "RAC collection #2",
+          "collection": "RAC Collection #2",
           "song_titles": [
             "LILI"
           ],
@@ -119790,6 +120417,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -119804,7 +120434,7 @@
       "internal_key": "rac02sprout",
       "artist": null,
       "composer": "HALLPBESTUDIO",
-      "collection": "RAC collection #2",
+      "collection": "RAC Collection #2",
       "song_titles": [
         "Sprout"
       ],
@@ -119853,6 +120483,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -119862,7 +120495,7 @@
           "internal_key": "rac02sprout",
           "artist": null,
           "composer": "HALLPBESTUDIO",
-          "collection": "RAC collection #2",
+          "collection": "RAC Collection #2",
           "song_titles": [
             "Sprout"
           ],
@@ -119911,6 +120544,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -120038,7 +120674,7 @@
       "internal_key": "rac03levelzero",
       "artist": null,
       "composer": "I.O",
-      "collection": "RAC collection #3",
+      "collection": "RAC Collection #3",
       "song_titles": [
         "Level Zero"
       ],
@@ -120087,6 +120723,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -120096,7 +120735,7 @@
           "internal_key": "rac03levelzero",
           "artist": null,
           "composer": "I.O",
-          "collection": "RAC collection #3",
+          "collection": "RAC Collection #3",
           "song_titles": [
             "Level Zero"
           ],
@@ -120145,6 +120784,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -120159,7 +120801,7 @@
       "internal_key": "rac03memoryofskyblue",
       "artist": null,
       "composer": "Ujico*",
-      "collection": "RAC collection #3",
+      "collection": "RAC Collection #3",
       "song_titles": [
         "Memory of Skyblue"
       ],
@@ -120208,6 +120850,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -120217,7 +120862,7 @@
           "internal_key": "rac03memoryofskyblue",
           "artist": null,
           "composer": "Ujico*",
-          "collection": "RAC collection #3",
+          "collection": "RAC Collection #3",
           "song_titles": [
             "Memory of Skyblue"
           ],
@@ -120266,6 +120911,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -120280,7 +120928,7 @@
       "internal_key": "rac03pupa",
       "artist": null,
       "composer": "Morimori Atsushi",
-      "collection": "RAC collection #3",
+      "collection": "RAC Collection #3",
       "song_titles": [
         "PUPA"
       ],
@@ -120329,6 +120977,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -120338,7 +120989,7 @@
           "internal_key": "rac03pupa",
           "artist": null,
           "composer": "Morimori Atsushi",
-          "collection": "RAC collection #3",
+          "collection": "RAC Collection #3",
           "song_titles": [
             "PUPA"
           ],
@@ -120387,6 +121038,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -120401,7 +121055,7 @@
       "internal_key": "rac03ragnarok",
       "artist": null,
       "composer": "FIG",
-      "collection": "RAC collection #3",
+      "collection": "RAC Collection #3",
       "song_titles": [
         "Ragnarok"
       ],
@@ -120450,6 +121104,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -120459,7 +121116,7 @@
           "internal_key": "rac03ragnarok",
           "artist": null,
           "composer": "FIG",
-          "collection": "RAC collection #3",
+          "collection": "RAC Collection #3",
           "song_titles": [
             "Ragnarok"
           ],
@@ -120508,6 +121165,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -120522,7 +121182,7 @@
       "internal_key": "rac03tonextpage",
       "artist": null,
       "composer": "kamome sano",
-      "collection": "RAC collection #3",
+      "collection": "RAC Collection #3",
       "song_titles": [
         "To next page"
       ],
@@ -120571,6 +121231,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -120580,7 +121243,7 @@
           "internal_key": "rac03tonextpage",
           "artist": null,
           "composer": "kamome sano",
-          "collection": "RAC collection #3",
+          "collection": "RAC Collection #3",
           "song_titles": [
             "To next page"
           ],
@@ -120629,6 +121292,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -120756,7 +121422,7 @@
       "internal_key": "rac04butterfly",
       "artist": null,
       "composer": "Shi Kuang Lee & Pico",
-      "collection": "RAC collection #4",
+      "collection": "RAC Collection #4",
       "song_titles": [
         "Butterfly"
       ],
@@ -120805,6 +121471,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #4"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -120814,7 +121483,7 @@
           "internal_key": "rac04butterfly",
           "artist": null,
           "composer": "Shi Kuang Lee & Pico",
-          "collection": "RAC collection #4",
+          "collection": "RAC Collection #4",
           "song_titles": [
             "Butterfly"
           ],
@@ -120863,6 +121532,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #4"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -120877,7 +121549,7 @@
       "internal_key": "rac04diary",
       "artist": null,
       "composer": "Xiaoming",
-      "collection": "RAC collection #4",
+      "collection": "RAC Collection #4",
       "song_titles": [
         "DIARY"
       ],
@@ -120926,6 +121598,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #4"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -120935,7 +121610,7 @@
           "internal_key": "rac04diary",
           "artist": null,
           "composer": "Xiaoming",
-          "collection": "RAC collection #4",
+          "collection": "RAC Collection #4",
           "song_titles": [
             "DIARY"
           ],
@@ -120984,6 +121659,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #4"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -120998,7 +121676,7 @@
       "internal_key": "rac04fissure",
       "artist": null,
       "composer": "Triodust",
-      "collection": "RAC collection #4",
+      "collection": "RAC Collection #4",
       "song_titles": [
         "Fis-sure"
       ],
@@ -121047,6 +121725,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #4"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -121056,7 +121737,7 @@
           "internal_key": "rac04fissure",
           "artist": null,
           "composer": "Triodust",
-          "collection": "RAC collection #4",
+          "collection": "RAC Collection #4",
           "song_titles": [
             "Fis-sure"
           ],
@@ -121105,6 +121786,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #4"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -121119,7 +121803,7 @@
       "internal_key": "rac04theyseemlikeblossomsyet",
       "artist": null,
       "composer": "Air Carrier",
-      "collection": "RAC collection #4",
+      "collection": "RAC Collection #4",
       "song_titles": [
         "They seem like blossoms yet ..."
       ],
@@ -121168,6 +121852,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #4"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -121177,7 +121864,7 @@
           "internal_key": "rac04theyseemlikeblossomsyet",
           "artist": null,
           "composer": "Air Carrier",
-          "collection": "RAC collection #4",
+          "collection": "RAC Collection #4",
           "song_titles": [
             "They seem like blossoms yet ..."
           ],
@@ -121226,6 +121913,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #4"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -121240,7 +121930,7 @@
       "internal_key": "rac04wishuponashootingstar",
       "artist": null,
       "composer": "SUi",
-      "collection": "RAC collection #4",
+      "collection": "RAC Collection #4",
       "song_titles": [
         "Wish upon a shooting star"
       ],
@@ -121289,6 +121979,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #4"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -121298,7 +121991,7 @@
           "internal_key": "rac04wishuponashootingstar",
           "artist": null,
           "composer": "SUi",
-          "collection": "RAC collection #4",
+          "collection": "RAC Collection #4",
           "song_titles": [
             "Wish upon a shooting star"
           ],
@@ -121347,6 +122040,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #4"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -121474,7 +122170,7 @@
       "internal_key": "rac05finalrush",
       "artist": null,
       "composer": "ReZister",
-      "collection": "RAC collection #5",
+      "collection": "RAC Collection #5",
       "song_titles": [
         "Final Rush"
       ],
@@ -121523,6 +122219,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #5"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -121532,7 +122231,7 @@
           "internal_key": "rac05finalrush",
           "artist": null,
           "composer": "ReZister",
-          "collection": "RAC collection #5",
+          "collection": "RAC Collection #5",
           "song_titles": [
             "Final Rush"
           ],
@@ -121581,6 +122280,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #5"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -121595,7 +122297,7 @@
       "internal_key": "rac05likeasianspirit",
       "artist": null,
       "composer": "Valunava",
-      "collection": "RAC collection #5",
+      "collection": "RAC Collection #5",
       "song_titles": [
         "Like Asian Spirit"
       ],
@@ -121644,6 +122346,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #5"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -121653,7 +122358,7 @@
           "internal_key": "rac05likeasianspirit",
           "artist": null,
           "composer": "Valunava",
-          "collection": "RAC collection #5",
+          "collection": "RAC Collection #5",
           "song_titles": [
             "Like Asian Spirit"
           ],
@@ -121702,6 +122407,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #5"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -121716,7 +122424,7 @@
       "internal_key": "rac05paraline",
       "artist": null,
       "composer": "Yuta Murase",
-      "collection": "RAC collection #5",
+      "collection": "RAC Collection #5",
       "song_titles": [
         "Paraline"
       ],
@@ -121765,6 +122473,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #5"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -121774,7 +122485,7 @@
           "internal_key": "rac05paraline",
           "artist": null,
           "composer": "Yuta Murase",
-          "collection": "RAC collection #5",
+          "collection": "RAC Collection #5",
           "song_titles": [
             "Paraline"
           ],
@@ -121823,6 +122534,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #5"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -121837,7 +122551,7 @@
       "internal_key": "rac05scherzo",
       "artist": null,
       "composer": "gondayu",
-      "collection": "RAC collection #5",
+      "collection": "RAC Collection #5",
       "song_titles": [
         "Scherzo"
       ],
@@ -121886,6 +122600,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #5"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -121895,7 +122612,7 @@
           "internal_key": "rac05scherzo",
           "artist": null,
           "composer": "gondayu",
-          "collection": "RAC collection #5",
+          "collection": "RAC Collection #5",
           "song_titles": [
             "Scherzo"
           ],
@@ -121944,6 +122661,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #5"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -121958,7 +122678,7 @@
       "internal_key": "rac05yoakeomatsukiminouta",
       "artist": null,
       "composer": "TAKU1175",
-      "collection": "RAC collection #5",
+      "collection": "RAC Collection #5",
       "song_titles": [
         "Yoake o matsu kimi no uta"
       ],
@@ -122007,6 +122727,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "RAC collection #5"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -122016,7 +122739,7 @@
           "internal_key": "rac05yoakeomatsukiminouta",
           "artist": null,
           "composer": "TAKU1175",
-          "collection": "RAC collection #5",
+          "collection": "RAC Collection #5",
           "song_titles": [
             "Yoake o matsu kimi no uta"
           ],
@@ -122065,6 +122788,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "RAC collection #5"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -122910,7 +123636,7 @@
       "internal_key": "recollections",
       "artist": null,
       "composer": "Yamajet",
-      "collection": "Cytus selection Vol.2",
+      "collection": "Cytus Selection Vol. 2",
       "song_titles": [
         "Recollections"
       ],
@@ -122959,6 +123685,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -122968,7 +123697,7 @@
           "internal_key": "recollections",
           "artist": null,
           "composer": "Yamajet",
-          "collection": "Cytus selection Vol.2",
+          "collection": "Cytus Selection Vol. 2",
           "song_titles": [
             "Recollections"
           ],
@@ -123017,6 +123746,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -123265,7 +123997,7 @@
       "internal_key": "runawayrun",
       "artist": null,
       "composer": "Eshen",
-      "collection": "Eshen Chen collection Vol.1 Transmission",
+      "collection": "Eshen Chen collection Vol.1：Transmission",
       "song_titles": [
         "Run Away Run"
       ],
@@ -123314,6 +124046,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Eshen Chen collection Vol.1 Transmission"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -123323,7 +124058,7 @@
           "internal_key": "runawayrun",
           "artist": null,
           "composer": "Eshen",
-          "collection": "Eshen Chen collection Vol.1 Transmission",
+          "collection": "Eshen Chen collection Vol.1：Transmission",
           "song_titles": [
             "Run Away Run"
           ],
@@ -123372,6 +124107,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Eshen Chen collection Vol.1 Transmission"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -123386,7 +124124,7 @@
       "internal_key": "sacred",
       "artist": null,
       "composer": "Rabpit",
-      "collection": "Cytus selection Vol.1",
+      "collection": "Cytus Selection Vol. 1",
       "song_titles": [
         "Sacred"
       ],
@@ -123435,6 +124173,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -123444,7 +124185,7 @@
           "internal_key": "sacred",
           "artist": null,
           "composer": "Rabpit",
-          "collection": "Cytus selection Vol.1",
+          "collection": "Cytus Selection Vol. 1",
           "song_titles": [
             "Sacred"
           ],
@@ -123493,6 +124234,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -123620,7 +124364,7 @@
       "internal_key": "sairai",
       "artist": null,
       "composer": "Shinichi Kobayashi",
-      "collection": "Deemo's collection Vol.1B",
+      "collection": "Deemo's collection Vol. 1B",
       "song_titles": [
         "Sairai"
       ],
@@ -123669,6 +124413,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -123678,7 +124425,7 @@
           "internal_key": "sairai",
           "artist": null,
           "composer": "Shinichi Kobayashi",
-          "collection": "Deemo's collection Vol.1B",
+          "collection": "Deemo's collection Vol. 1B",
           "song_titles": [
             "Sairai"
           ],
@@ -123727,6 +124474,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.1B"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -124459,7 +125209,7 @@
       "internal_key": "samsara105",
       "artist": null,
       "composer": "Pianoboy",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "The 105th Days"
       ],
@@ -124508,6 +125258,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -124517,7 +125270,7 @@
           "internal_key": "samsara105",
           "artist": null,
           "composer": "Pianoboy",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "The 105th Days"
           ],
@@ -124566,6 +125319,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -124701,7 +125457,7 @@
       "internal_key": "samsaraamberwishes",
       "artist": null,
       "composer": "Ice",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "Amber Wishes (Deemo edit)"
       ],
@@ -124750,6 +125506,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -124759,7 +125518,7 @@
           "internal_key": "samsaraamberwishes",
           "artist": null,
           "composer": "Ice",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "Amber Wishes (Deemo edit)"
           ],
@@ -124808,6 +125567,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -124822,7 +125584,7 @@
       "internal_key": "samsaraaragami",
       "artist": null,
       "composer": "xi",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "Aragami"
       ],
@@ -124871,6 +125633,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -124880,7 +125645,7 @@
           "internal_key": "samsaraaragami",
           "artist": null,
           "composer": "xi",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "Aragami"
           ],
@@ -124929,6 +125694,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -125056,7 +125824,7 @@
       "internal_key": "samsaralostinthenowhere",
       "artist": null,
       "composer": "Rave Cyanide",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "Lost in the nowhere"
       ],
@@ -125105,6 +125873,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -125114,7 +125885,7 @@
           "internal_key": "samsaralostinthenowhere",
           "artist": null,
           "composer": "Rave Cyanide",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "Lost in the nowhere"
           ],
@@ -125163,6 +125934,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -125177,7 +125951,7 @@
       "internal_key": "samsaramarigold",
       "artist": null,
       "composer": "M2U",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "Marigold"
       ],
@@ -125226,6 +126000,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -125235,7 +126012,7 @@
           "internal_key": "samsaramarigold",
           "artist": null,
           "composer": "M2U",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "Marigold"
           ],
@@ -125284,6 +126061,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -125298,7 +126078,7 @@
       "internal_key": "samsaraparodiasonatina",
       "artist": null,
       "composer": "Ice",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "Parodia Sonatina Var.II"
       ],
@@ -125347,6 +126127,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -125356,7 +126139,7 @@
           "internal_key": "samsaraparodiasonatina",
           "artist": null,
           "composer": "Ice",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "Parodia Sonatina Var.II"
           ],
@@ -125405,6 +126188,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -125419,7 +126205,7 @@
       "internal_key": "samsarareverence",
       "artist": null,
       "composer": "vospi",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "Reverence (Deemo ver)"
       ],
@@ -125468,6 +126254,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -125477,7 +126266,7 @@
           "internal_key": "samsarareverence",
           "artist": null,
           "composer": "vospi",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "Reverence (Deemo ver)"
           ],
@@ -125526,6 +126315,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -125540,7 +126332,7 @@
       "internal_key": "samsarathewayhome",
       "artist": null,
       "composer": "Kiva",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "The way home"
       ],
@@ -125589,6 +126381,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -125598,7 +126393,7 @@
           "internal_key": "samsarathewayhome",
           "artist": null,
           "composer": "Kiva",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "The way home"
           ],
@@ -125647,6 +126442,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -125661,7 +126459,7 @@
       "internal_key": "samsaravalledeloscaidos",
       "artist": null,
       "composer": "Triodust",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "Valle De Los Cados"
       ],
@@ -125710,6 +126508,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -125719,7 +126520,7 @@
           "internal_key": "samsaravalledeloscaidos",
           "artist": null,
           "composer": "Triodust",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "Valle De Los Cados"
           ],
@@ -125768,6 +126569,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -125782,7 +126586,7 @@
       "internal_key": "samsaravoiceofcell",
       "artist": null,
       "composer": "Michiru Oshima",
-      "collection": "Samsara collection",
+      "collection": "Samsara Collection",
       "song_titles": [
         "Voice of Cell"
       ],
@@ -125831,6 +126635,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Samsara collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -125840,7 +126647,7 @@
           "internal_key": "samsaravoiceofcell",
           "artist": null,
           "composer": "Michiru Oshima",
-          "collection": "Samsara collection",
+          "collection": "Samsara Collection",
           "song_titles": [
             "Voice of Cell"
           ],
@@ -125889,6 +126696,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Samsara collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -126694,7 +127504,7 @@
       "internal_key": "seasideroad",
       "artist": null,
       "composer": "Eshen",
-      "collection": "Eshen Chen collection Vol.1 Transmission",
+      "collection": "Eshen Chen collection Vol.1：Transmission",
       "song_titles": [
         "Sea Side Road"
       ],
@@ -126743,6 +127553,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Eshen Chen collection Vol.1 Transmission"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -126752,7 +127565,7 @@
           "internal_key": "seasideroad",
           "artist": null,
           "composer": "Eshen",
-          "collection": "Eshen Chen collection Vol.1 Transmission",
+          "collection": "Eshen Chen collection Vol.1：Transmission",
           "song_titles": [
             "Sea Side Road"
           ],
@@ -126801,6 +127614,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Eshen Chen collection Vol.1 Transmission"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -127041,7 +127857,7 @@
       "internal_key": "suspenseful_third_day",
       "artist": null,
       "composer": "Kaeru Underground",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "Suspenseful Third Day"
       ],
@@ -127090,6 +127906,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -127099,7 +127918,7 @@
           "internal_key": "suspenseful_third_day",
           "artist": null,
           "composer": "Kaeru Underground",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "Suspenseful Third Day"
           ],
@@ -127148,6 +127967,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -127275,7 +128097,7 @@
       "internal_key": "theblackcase",
       "artist": null,
       "composer": "KillerBlood",
-      "collection": "Cytus selection Vol.1",
+      "collection": "Cytus Selection Vol. 1",
       "song_titles": [
         "The Black Case"
       ],
@@ -127324,6 +128146,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Cytus selection Vol.1"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -127333,7 +128158,7 @@
           "internal_key": "theblackcase",
           "artist": null,
           "composer": "KillerBlood",
-          "collection": "Cytus selection Vol.1",
+          "collection": "Cytus Selection Vol. 1",
           "song_titles": [
             "The Black Case"
           ],
@@ -127382,6 +128207,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Cytus selection Vol.1"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -127396,7 +128224,7 @@
       "internal_key": "theletter",
       "artist": null,
       "composer": "KIVA",
-      "collection": "Rayark selection Vol.3",
+      "collection": "Rayark Selection Vol. 3",
       "song_titles": [
         "The Letter"
       ],
@@ -127445,6 +128273,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -127454,7 +128285,7 @@
           "internal_key": "theletter",
           "artist": null,
           "composer": "KIVA",
-          "collection": "Rayark selection Vol.3",
+          "collection": "Rayark Selection Vol. 3",
           "song_titles": [
             "The Letter"
           ],
@@ -127503,6 +128334,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Rayark selection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -127517,7 +128351,7 @@
       "internal_key": "thetruththatyouleave",
       "artist": null,
       "composer": "Pianoboy",
-      "collection": "Rayark selection Vol.3",
+      "collection": "Rayark Selection Vol. 3",
       "song_titles": [
         "The Truth That You Leave"
       ],
@@ -127566,6 +128400,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -127575,7 +128412,7 @@
           "internal_key": "thetruththatyouleave",
           "artist": null,
           "composer": "Pianoboy",
-          "collection": "Rayark selection Vol.3",
+          "collection": "Rayark Selection Vol. 3",
           "song_titles": [
             "The Truth That You Leave"
           ],
@@ -127624,6 +128461,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Rayark selection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -127638,7 +128478,7 @@
       "internal_key": "timeforgotten",
       "artist": null,
       "composer": "Brian Crain",
-      "collection": "Brian Crain collection",
+      "collection": "Brian Crain Collection",
       "song_titles": [
         "Time Forgotten"
       ],
@@ -127687,6 +128527,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Brian Crain collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -127696,7 +128539,7 @@
           "internal_key": "timeforgotten",
           "artist": null,
           "composer": "Brian Crain",
-          "collection": "Brian Crain collection",
+          "collection": "Brian Crain Collection",
           "song_titles": [
             "Time Forgotten"
           ],
@@ -127745,6 +128588,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Brian Crain collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -127759,7 +128605,7 @@
       "internal_key": "timeline01anewhome",
       "artist": null,
       "composer": "Video Game Orchestra",
-      "collection": "Timeline collection",
+      "collection": "Timeline Collection",
       "song_titles": [
         "A New Home"
       ],
@@ -127808,6 +128654,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Timeline collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -127817,7 +128666,7 @@
           "internal_key": "timeline01anewhome",
           "artist": null,
           "composer": "Video Game Orchestra",
-          "collection": "Timeline collection",
+          "collection": "Timeline Collection",
           "song_titles": [
             "A New Home"
           ],
@@ -127866,6 +128715,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Timeline collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -127993,7 +128845,7 @@
       "internal_key": "timeline01moneymoney",
       "artist": null,
       "composer": "Video Game Orchestra",
-      "collection": "Timeline collection",
+      "collection": "Timeline Collection",
       "song_titles": [
         "Money & Money"
       ],
@@ -128042,6 +128894,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Timeline collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -128051,7 +128906,7 @@
           "internal_key": "timeline01moneymoney",
           "artist": null,
           "composer": "Video Game Orchestra",
-          "collection": "Timeline collection",
+          "collection": "Timeline Collection",
           "song_titles": [
             "Money & Money"
           ],
@@ -128100,6 +128955,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Timeline collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -128114,7 +128972,7 @@
       "internal_key": "timeline01penglaimovement",
       "artist": null,
       "composer": "Video Game Orchestra",
-      "collection": "Timeline collection",
+      "collection": "Timeline Collection",
       "song_titles": [
         "Penglai Movement"
       ],
@@ -128163,6 +129021,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Timeline collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -128172,7 +129033,7 @@
           "internal_key": "timeline01penglaimovement",
           "artist": null,
           "composer": "Video Game Orchestra",
-          "collection": "Timeline collection",
+          "collection": "Timeline Collection",
           "song_titles": [
             "Penglai Movement"
           ],
@@ -128221,6 +129082,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Timeline collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -128235,7 +129099,7 @@
       "internal_key": "timeline01phubbing",
       "artist": null,
       "composer": "Video Game Orchestra",
-      "collection": "Timeline collection",
+      "collection": "Timeline Collection",
       "song_titles": [
         "Phubbing"
       ],
@@ -128284,6 +129148,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Timeline collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -128293,7 +129160,7 @@
           "internal_key": "timeline01phubbing",
           "artist": null,
           "composer": "Video Game Orchestra",
-          "collection": "Timeline collection",
+          "collection": "Timeline Collection",
           "song_titles": [
             "Phubbing"
           ],
@@ -128342,6 +129209,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Timeline collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -128356,7 +129226,7 @@
       "internal_key": "timeline01protest",
       "artist": null,
       "composer": "Video Game Orchestra",
-      "collection": "Timeline collection",
+      "collection": "Timeline Collection",
       "song_titles": [
         "Protest"
       ],
@@ -128405,6 +129275,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Timeline collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -128414,7 +129287,7 @@
           "internal_key": "timeline01protest",
           "artist": null,
           "composer": "Video Game Orchestra",
-          "collection": "Timeline collection",
+          "collection": "Timeline Collection",
           "song_titles": [
             "Protest"
           ],
@@ -128463,6 +129336,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Timeline collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -128703,7 +129579,7 @@
       "internal_key": "v20anima",
       "artist": null,
       "composer": "xi",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "ANiMA"
       ],
@@ -128752,6 +129628,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -128761,7 +129640,7 @@
           "internal_key": "v20anima",
           "artist": null,
           "composer": "xi",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "ANiMA"
           ],
@@ -128810,6 +129689,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -128824,7 +129706,7 @@
       "internal_key": "v20fluquor",
       "artist": null,
       "composer": "onoken / Vocal: Rin",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "Fluquor"
       ],
@@ -128873,6 +129755,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -128882,7 +129767,7 @@
           "internal_key": "v20fluquor",
           "artist": null,
           "composer": "onoken / Vocal: Rin",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "Fluquor"
           ],
@@ -128931,6 +129816,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -129066,7 +129954,7 @@
       "internal_key": "v20lapromesse",
       "artist": null,
       "composer": "cranky",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "La Promesse"
       ],
@@ -129115,6 +130003,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -129124,7 +130015,7 @@
           "internal_key": "v20lapromesse",
           "artist": null,
           "composer": "cranky",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "La Promesse"
           ],
@@ -129173,6 +130064,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -129187,7 +130081,7 @@
       "internal_key": "v20legacy",
       "artist": null,
       "composer": "switchworks",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "Legacy"
       ],
@@ -129236,6 +130130,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -129245,7 +130142,7 @@
           "internal_key": "v20legacy",
           "artist": null,
           "composer": "switchworks",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "Legacy"
           ],
@@ -129294,6 +130191,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -129308,7 +130208,7 @@
       "internal_key": "v20myosotis",
       "artist": null,
       "composer": "M2U / Arranger: M2U & NICODE / Vocal: Guriri & Lucy",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "Myosotis"
       ],
@@ -129357,6 +130257,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -129366,7 +130269,7 @@
           "internal_key": "v20myosotis",
           "artist": null,
           "composer": "M2U / Arranger: M2U & NICODE / Vocal: Guriri & Lucy",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "Myosotis"
           ],
@@ -129415,6 +130318,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -129429,7 +130335,7 @@
       "internal_key": "v20sakuraironoyume",
       "artist": null,
       "composer": "Baba Band",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "Sakura iro no yume"
       ],
@@ -129478,6 +130384,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -129487,7 +130396,7 @@
           "internal_key": "v20sakuraironoyume",
           "artist": null,
           "composer": "Baba Band",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "Sakura iro no yume"
           ],
@@ -129536,6 +130445,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -129663,7 +130575,7 @@
       "internal_key": "v20sunset",
       "artist": null,
       "composer": "Alex Vourtsanis",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "Sunset"
       ],
@@ -129712,6 +130624,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -129721,7 +130636,7 @@
           "internal_key": "v20sunset",
           "artist": null,
           "composer": "Alex Vourtsanis",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "Sunset"
           ],
@@ -129770,6 +130685,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -129784,7 +130702,7 @@
       "internal_key": "v20thebeautifulmonnlight",
       "artist": null,
       "composer": "Mai Aoyagi",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "The Beautiful Moonlight"
       ],
@@ -129833,6 +130751,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -129842,7 +130763,7 @@
           "internal_key": "v20thebeautifulmonnlight",
           "artist": null,
           "composer": "Mai Aoyagi",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "The Beautiful Moonlight"
           ],
@@ -129891,6 +130812,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -129905,7 +130829,7 @@
       "internal_key": "v21altale",
       "artist": null,
       "composer": "Sakuzyo",
-      "collection": "Deemo's collection Vol.2",
+      "collection": "Deemo's Collection Vol.2",
       "song_titles": [
         "Altale"
       ],
@@ -129954,6 +130878,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.2"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -129963,7 +130890,7 @@
           "internal_key": "v21altale",
           "artist": null,
           "composer": "Sakuzyo",
-          "collection": "Deemo's collection Vol.2",
+          "collection": "Deemo's Collection Vol.2",
           "song_titles": [
             "Altale"
           ],
@@ -130012,6 +130939,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.2"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -133140,7 +134070,7 @@
       "internal_key": "veritas",
       "artist": null,
       "composer": "Presti",
-      "collection": "Rayark selection Vol.3",
+      "collection": "Rayark Selection Vol. 3",
       "song_titles": [
         "Veritas"
       ],
@@ -133189,6 +134119,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -133198,7 +134131,7 @@
           "internal_key": "veritas",
           "artist": null,
           "composer": "Presti",
-          "collection": "Rayark selection Vol.3",
+          "collection": "Rayark Selection Vol. 3",
           "song_titles": [
             "Veritas"
           ],
@@ -133247,6 +134180,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Rayark selection Vol.3"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -133495,7 +134431,7 @@
       "internal_key": "will",
       "artist": null,
       "composer": "Hikoshi Hashimoto",
-      "collection": "Collaboration collection",
+      "collection": "Collaboration Collection",
       "song_titles": [
         "Will"
       ],
@@ -133544,6 +134480,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Collaboration collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -133553,7 +134492,7 @@
           "internal_key": "will",
           "artist": null,
           "composer": "Hikoshi Hashimoto",
-          "collection": "Collaboration collection",
+          "collection": "Collaboration Collection",
           "song_titles": [
             "Will"
           ],
@@ -133602,6 +134541,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Collaboration collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -133858,7 +134800,7 @@
       "internal_key": "yamajetamidelicious",
       "artist": null,
       "composer": "Yamajet feat. Amane(COOL&CREATE) & Godspeed",
-      "collection": "Yamajet collection",
+      "collection": "Yamajet Collection",
       "song_titles": [
         "Am I delicious"
       ],
@@ -133907,6 +134849,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Yamajet collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -133916,7 +134861,7 @@
           "internal_key": "yamajetamidelicious",
           "artist": null,
           "composer": "Yamajet feat. Amane(COOL&CREATE) & Godspeed",
-          "collection": "Yamajet collection",
+          "collection": "Yamajet Collection",
           "song_titles": [
             "Am I delicious"
           ],
@@ -133965,6 +134910,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Yamajet collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -134092,7 +135040,7 @@
       "internal_key": "yamajetmerrygoroundgirl",
       "artist": null,
       "composer": "Yamajet",
-      "collection": "Yamajet collection",
+      "collection": "Yamajet Collection",
       "song_titles": [
         "Merry go round girl"
       ],
@@ -134141,6 +135089,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Yamajet collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -134150,7 +135101,7 @@
           "internal_key": "yamajetmerrygoroundgirl",
           "artist": null,
           "composer": "Yamajet",
-          "collection": "Yamajet collection",
+          "collection": "Yamajet Collection",
           "song_titles": [
             "Merry go round girl"
           ],
@@ -134199,6 +135150,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Yamajet collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -134213,7 +135167,7 @@
       "internal_key": "yamajetmonokuronokaze",
       "artist": null,
       "composer": "Yamajet feat. TEA & Godspeed",
-      "collection": "Yamajet collection",
+      "collection": "Yamajet Collection",
       "song_titles": [
         "Monokuro no kaze"
       ],
@@ -134262,6 +135216,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Yamajet collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -134271,7 +135228,7 @@
           "internal_key": "yamajetmonokuronokaze",
           "artist": null,
           "composer": "Yamajet feat. TEA & Godspeed",
-          "collection": "Yamajet collection",
+          "collection": "Yamajet Collection",
           "song_titles": [
             "Monokuro no kaze"
           ],
@@ -134320,6 +135277,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Yamajet collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -134334,7 +135294,7 @@
       "internal_key": "yamajetorca",
       "artist": null,
       "composer": "Yamajet",
-      "collection": "Yamajet collection",
+      "collection": "Yamajet Collection",
       "song_titles": [
         "Orca"
       ],
@@ -134383,6 +135343,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Yamajet collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -134392,7 +135355,7 @@
           "internal_key": "yamajetorca",
           "artist": null,
           "composer": "Yamajet",
-          "collection": "Yamajet collection",
+          "collection": "Yamajet Collection",
           "song_titles": [
             "Orca"
           ],
@@ -134441,6 +135404,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Yamajet collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -134455,7 +135421,7 @@
       "internal_key": "yamajetsincerity",
       "artist": null,
       "composer": "Yamajet",
-      "collection": "Yamajet collection",
+      "collection": "Yamajet Collection",
       "song_titles": [
         "Sincerity"
       ],
@@ -134504,6 +135470,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Yamajet collection"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -134513,7 +135482,7 @@
           "internal_key": "yamajetsincerity",
           "artist": null,
           "composer": "Yamajet",
-          "collection": "Yamajet collection",
+          "collection": "Yamajet Collection",
           "song_titles": [
             "Sincerity"
           ],
@@ -134562,6 +135531,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Yamajet collection"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
@@ -134576,7 +135548,7 @@
       "internal_key": "yubikiri_genman",
       "artist": null,
       "composer": "Mili",
-      "collection": "Deemo's collection Vol.1A",
+      "collection": "Deemo's Collection Vol. 1A",
       "song_titles": [
         "YUBIKIRI-GENMAN"
       ],
@@ -134625,6 +135597,9 @@
         }
       ],
       "family": "legacy",
+      "collection_aliases": [
+        "Deemo's collection Vol.1A"
+      ],
       "source_name": "Original repository · game textures",
       "provenance": [
         {
@@ -134634,7 +135609,7 @@
           "internal_key": "yubikiri_genman",
           "artist": null,
           "composer": "Mili",
-          "collection": "Deemo's collection Vol.1A",
+          "collection": "Deemo's Collection Vol. 1A",
           "song_titles": [
             "YUBIKIRI-GENMAN"
           ],
@@ -134683,6 +135658,9 @@
             }
           ],
           "family": "legacy",
+          "collection_aliases": [
+            "Deemo's collection Vol.1A"
+          ],
           "source_name": "Original repository · game textures"
         }
       ],
