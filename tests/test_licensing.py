@@ -1,4 +1,4 @@
-"""Check third-party licence texts, inherited-media provenance and attribution statements."""
+"""Check third-party license texts, inherited-media provenance and attribution statements."""
 
 import json
 import re
@@ -11,13 +11,13 @@ INVENTORY = ROOT / "data/legacy-inventory.json"
 LICENSE_INDEXES = ("licenses/README.md", "licenses/README.zh-CN.md")
 MIT_GRANT = "Permission is hereby granted, free of charge, to any person"
 MIT_DISCLAIMER = 'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND'
-# Components bundled in src/vendor/legacy-ui.js: licence file -> (its copyright line, a marker in the bundle).
+# Components bundled in src/vendor/legacy-ui.js: license file -> (its copyright line, a marker in the bundle).
 VENDOR_LICENSES = {
     "licenses/html2canvas-MIT.txt": ("Copyright (c) 2012 Niklas von Hertzen", b"html2canvas 0.5.0-beta3"),
     "licenses/punycode-MIT.txt": ("Copyright Mathias Bynens", b'version:"1.2.4"'),
     "licenses/pace-MIT.txt": ("Copyright (c) 2013 HubSpot, Inc.", b"/*! pace 1.0.0 */"),
 }
-# Commercial fonts inherited from upstream whose licences forbid redistribution (see NOTICE).
+# Commercial fonts inherited from upstream whose licenses forbid redistribution (see NOTICE).
 REMOVED_FONTS = {"COPRGTL.ttf", "RocknRoll_Typo_bold.ttf"}
 # CSS family names the slideshow still uses; the removed faces resolve only to fonts installed locally.
 LOCAL_ONLY_FAMILIES = {"Coprhtl", "COPRGTL", "RocknRoll"}
@@ -87,13 +87,13 @@ class VendorLicenseTests(unittest.TestCase):
             with self.subTest(license=relative):
                 self.assertIn(marker, bundle, "The bundle no longer contains this component; update the table")
                 path = ROOT / relative
-                self.assertTrue(path.is_file(), f"Missing MIT licence text: {relative}")
+                self.assertTrue(path.is_file(), f"Missing MIT license text: {relative}")
                 text = path.read_text(encoding="utf-8")
                 self.assertTrue(text.startswith(copyright_line))
                 self.assertIn(MIT_GRANT, words(text))
                 self.assertIn(MIT_DISCLAIMER, words(text))
 
-    def test_licence_texts_are_named_in_the_index_and_notice(self):
+    def test_license_texts_are_named_in_the_index_and_notice(self):
         for document in (*LICENSE_INDEXES, "NOTICE"):
             text = (ROOT / document).read_text(encoding="utf-8")
             for relative in VENDOR_LICENSES:
