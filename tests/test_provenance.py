@@ -14,6 +14,7 @@ import re
 import sys
 import tempfile
 import unittest
+from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import Path
 from unittest.mock import patch
@@ -201,14 +202,38 @@ class ComposerRecordTests(unittest.TestCase):
         self.assertEqual(dropped, {key: value for key, value in first.items() if key != "composer"})
 
 
+def instant(stamp):
+    """A fetched_at timestamp as a datetime (now() leaves out the fraction when it is zero, so strings do not sort)."""
+    return datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+
+
+def composer_drift(manifest, snapshot):
+    """Ids of the manifest's records whose composer differs from their candidate's in the snapshot, in manifest order.
+
+    Only a manifest resumed from this snapshot answers to it. The source-check workflow commits a newer snapshot and
+    song index on their own (fetch_wikis.py --metadata-only), and the manifest takes their composers at the --resume
+    run after that merge; until then it is older than the snapshot, or names an earlier snapshot_fetched_at."""
+    if instant(manifest["fetched_at"]) < instant(snapshot["fetched_at"]):
+        return []
+    earlier = {source["id"] for source in manifest["sources"]
+               if (source.get("discovery") or {}).get("snapshot_fetched_at") not in (None, snapshot["fetched_at"])}
+    by_id = {fetch.candidate_id(row): row for row in snapshot["candidates"]}
+    # A carried-forward record (upstream_status) keeps what it had.
+    return [record["id"] for record in manifest["assets"]
+            if record["id"] in by_id and record["source_id"] not in earlier and not record.get("upstream_status")
+            and record.get("composer") != by_id[record["id"]].get("composer")]
+
+
 class CommittedWikiDataTests(unittest.TestCase):
     """The committed snapshot and manifest hold what the fetcher's own join gives for the committed song index."""
 
     @classmethod
     def setUpClass(cls):
         cls.songs = read_json(SONG_INDEX)["songs"]
-        cls.candidates = read_json(DISCOVERY)["candidates"]
-        cls.assets = read_json(MANIFEST)["assets"]
+        cls.snapshot = read_json(DISCOVERY)
+        cls.candidates = cls.snapshot["candidates"]
+        cls.manifest = read_json(MANIFEST)
+        cls.assets = cls.manifest["assets"]
 
     def test_the_snapshot_holds_the_join_of_the_song_index(self):
         expected = fetch.with_composers(self.candidates, self.songs)
@@ -217,16 +242,34 @@ class CommittedWikiDataTests(unittest.TestCase):
         self.assertGreater(sum("composer" in row for row in self.candidates), 400)
 
     def test_records_carry_their_candidates_composer(self):
-        by_id = {fetch.candidate_id(row): row for row in self.candidates}
-        for record in self.assets:
-            row = by_id.get(record["id"])
-            if row is None or record.get("upstream_status"):
-                continue  # a carried-forward record keeps what it had
-            with self.subTest(record=record["id"]):
-                self.assertEqual(record.get("composer"), row.get("composer"))
-                if "composer" in record:
-                    tail = [key for key in record if key in ("composer", "collection_aliases", "delivery_note")]
-                    self.assertEqual(list(record)[-len(tail):], tail, "composer sits where a verified re-run puts it")
+        self.assertEqual(composer_drift(self.manifest, self.snapshot), [], "Run fetch_wikis.py --resume")
+
+    def test_composers_sit_on_song_art_where_a_verified_rerun_puts_them(self):
+        for row in self.candidates + self.assets:
+            if "composer" in row:
+                with self.subTest(row=row.get("id") or row["file_title"]):
+                    self.assertEqual(row["kind"], "song_art")
+                    if "id" in row:
+                        tail = [key for key in row if key in ("composer", "collection_aliases", "delivery_note")]
+                        self.assertEqual(list(row)[-len(tail):], tail, "composer sits where a verified re-run puts it")
+
+    def test_a_newer_snapshot_does_not_hold_back_the_manifest(self):
+        # The source-check workflow's pull request: upstream credits BWIKI Magnolia differently, discovery rewrites the
+        # song index and the snapshot, and the manifest keeps the earlier credit until the --resume after the merge.
+        art = candidate(["Magnolia"], composer="M2U feat. Guriri")
+        record = {"id": fetch.candidate_id(art), "source_id": "wikis:bwiki", "kind": "song_art", "composer": "M2U feat. Guriri"}
+        manifest = {"fetched_at": "2026-10-08T11:50:01.560814Z", "sources": [{"id": "wikis:bwiki"}], "assets": [record]}
+        resumed = {"fetched_at": "2026-10-08T11:40:06.359430Z",
+                   "candidates": fetch.with_composers([art], [song("Magnolia", "M2U feat. Guriri (arr. someone)", "bwiki")])}
+        self.assertEqual(composer_drift(manifest, resumed), [record["id"]])  # resumed from this snapshot: held to it
+        self.assertEqual(composer_drift({**manifest, "assets": [{**record, "upstream_status": "removed"}]}, resumed), [])
+        newer = {**resumed, "fetched_at": "2026-10-15T03:00:00Z"}
+        self.assertEqual(composer_drift(manifest, newer), [])
+        # A manifest that names the snapshot it was resumed from answers to that one only.
+        named = {**manifest, "fetched_at": "2026-10-16T00:00:00Z",
+                 "sources": [{"id": "wikis:bwiki", "discovery": {"snapshot_fetched_at": resumed["fetched_at"]}}]}
+        self.assertEqual(composer_drift(named, newer), [])
+        self.assertEqual(composer_drift(named, resumed), [record["id"]])
 
     def test_altale_carries_its_composer_on_both_wikis(self):
         altale = {record["source_id"]: record.get("composer") for record in self.assets
