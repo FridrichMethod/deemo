@@ -155,6 +155,16 @@ class SlideshowTemplateTests(unittest.TestCase):
             offsets[name] = int(match.group(1))
         self.assertEqual([offsets[name] for name in BOTTOM_ROW], sorted(offsets.values()))
 
+    def test_only_the_current_slide_takes_hits_and_reaches_assistive_tech(self):
+        """Hidden slides stack over the shown one; opacity alone leaves them hit-testable and in the AX tree."""
+        rule = lambda selector: re.search(r"(?m)^" + re.escape(selector) + r" \{(.*?)\n\}", self.css, re.DOTALL).group(1)
+        self.assertRegex(rule(".mySlides"), r"pointer-events:\s*none")
+        self.assertRegex(rule(".mySlides"), r"visibility:\s*hidden")
+        self.assertRegex(rule(".mySlides.is-current"), r"pointer-events:\s*auto")
+        self.assertRegex(rule(".mySlides.is-current"), r"visibility:\s*visible")
+        self.assertIn('classList.add("is-current")', self.html)
+        self.assertIn('classList.remove("is-current")', self.html)
+
     def test_slides_crossfade_without_a_keyframe_fade(self):
         """A keyframe animation would override the inline opacity that hides the previous slide."""
         self.assertNotRegex(self.css, r"@(?:-webkit-)?keyframes\s+fade\b")

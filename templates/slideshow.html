@@ -238,15 +238,19 @@ https://github.com/FridrichMethod/deemo
             slideShown = true;
             // load
             lazyload(slideIndex - 1);
-            // hide
+            // hide (see .is-current in src/slideshow.css)
             for (i = 0; i < slides.length; i++) {
                 slides[i].style.opacity = 0;
+                slides[i].classList.remove("is-current");
             }
             // check load condition
             var displayedIndex = slideIndex - 1;
             imgLoad(displayedIndex, function() {
                 // display
-                if (slideIndex - 1 === displayedIndex) slides[displayedIndex].style.opacity = 1;
+                if (slideIndex - 1 === displayedIndex) {
+                    slides[displayedIndex].style.opacity = 1;
+                    slides[displayedIndex].classList.add("is-current");
+                }
             });
             // preload
             //if (slideIndex < imgTargets.length) {

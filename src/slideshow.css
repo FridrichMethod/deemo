@@ -285,10 +285,21 @@ body {
     overflow: hidden;
     filter: drop-shadow(0 14px 22px rgba(52, 40, 28, .16));
     opacity: 1;
-    -webkit-transition: opacity 1s; /* Safari */
+    /* A slide that is not shown takes no clicks or long-presses and, once it has faded out, leaves the
+       accessibility tree; only the current one (showSlides()) is visible to both. */
+    visibility: hidden;
+    pointer-events: none;
+    -webkit-transition: opacity 1s, visibility 0s 1s; /* Safari */
     -webkit-transition-timing-function: linear; /* Safari */
-    transition: opacity 1s;
+    transition: opacity 1s, visibility 0s 1s;
     transition-timing-function: linear;
+}
+
+.mySlides.is-current {
+    visibility: visible;
+    pointer-events: auto;
+    -webkit-transition: opacity 1s; /* Safari */
+    transition: opacity 1s;
 }
 
 img {
@@ -1038,6 +1049,7 @@ canvas {
 
 @media (prefers-reduced-motion: reduce) {
     .mySlides,
+    .mySlides.is-current,
     .liner-text > *,
     .liner-text.is-dedication .slide-notes,
     .liner-text:not(.is-dedication) .dear-alice,
