@@ -552,6 +552,17 @@ https://github.com/FridrichMethod/deemo
         var audiostatus = 'off';
         var speaker = document.getElementById("speaker");
 
+        // play() is rejected when a pause interrupts it or the browser will not play; if the music did not start,
+        // the control shows it as off instead of leaving an unhandled rejection.
+        function playMusic() {
+            var playing = getaudio.play();
+            if (playing) playing.catch(function() {
+                if (!getaudio.paused) return;
+                removeClass(speaker, 'speakerplay');
+                speaker.setAttribute("aria-pressed", "false");
+            });
+        }
+
         speaker.addEventListener("click", function() {
             // on touchend?
 
@@ -559,11 +570,11 @@ https://github.com/FridrichMethod/deemo
                 if (audiostatus == 'off') {
                     addClass(speaker, 'speakerplay');
                     getaudio.load();
-                    getaudio.play();
+                    playMusic();
                     audiostatus = 'on';
                 } else if (audiostatus == 'on') {
                     addClass(speaker, 'speakerplay');
-                    getaudio.play()
+                    playMusic();
                 }
             } else if (hasClass(speaker, "speakerplay")) {
                 getaudio.pause();
