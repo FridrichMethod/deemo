@@ -357,9 +357,10 @@ def main(argv: list[str] | None = None) -> None:
     }
     for path, content in outputs.items():
         if args.check:
-            # No newline translation, so a stray CR is never read back as LF. The outputs themselves never contain
-            # a CR (attr() and JSON escape it), so folding CRLF only accepts a Windows core.autocrlf checkout.
-            if not path.is_file() or path.read_text(encoding="utf-8", newline="").replace("\r\n", "\n") != content:
+            # Decode the raw bytes: no newline translation (read_text only takes newline= from Python 3.13), so a
+            # stray CR is never read back as LF. The outputs themselves never contain a CR (attr() and JSON escape
+            # it), so folding CRLF only accepts a Windows core.autocrlf checkout.
+            if not path.is_file() or path.read_bytes().decode("utf-8").replace("\r\n", "\n") != content:
                 raise SystemExit(f"Out-of-date generated file: {path.relative_to(ROOT).as_posix()}")
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
