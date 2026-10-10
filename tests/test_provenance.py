@@ -147,6 +147,14 @@ class ComposerJoinTests(unittest.TestCase):
                                          candidate(["Matricaria -Pazs-", "Matricaria ~Pazs~"])], songs),
                          ["Rabpit / Nicode", 'NOMA & Apo11o"1.62"program ft.Yuki Shizaki'])
 
+    def test_names_held_apart_by_a_run_of_spaces_are_split(self):
+        # The song index keeps a page's line break between names as a run of spaces, which HTML collapses into one.
+        songs = [song("Moon without the stars", "Jerry Barnes  Quiana", "bwiki"), song("Hey Boy", " Jerry Barnes ", "bwiki"),
+                 song("Magnolia", "M2U  Vocal by Guriri"), song("Altale", "Sakuzyo", "bwiki")]
+        self.assertEqual(self.composers([candidate(["Moon without the stars", "Hey Boy"]), candidate(["Magnolia"], "fandom"),
+                                         candidate(["Altale"])], songs),
+                         ["Jerry Barnes / Quiana", "M2U / Vocal by Guriri", "Sakuzyo"])
+
     def test_covers_and_unmatched_art_get_none_and_a_stale_composer_goes(self):
         songs = [song("AM 05:25", "Ice"), song("Daylife", "Ice")]
         rows = [candidate(["AM 05:25", "Daylife"], "fandom", kind="collection_cover"),

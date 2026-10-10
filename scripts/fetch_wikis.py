@@ -199,7 +199,9 @@ def with_composers(candidates, songs):
     candidate's own wiki answers first, since its titles come from that wiki's pages; the other wiki's page of the same
     title answers only when none of the own wiki's pages names a composer (the wikis credit some songs differently).
     Several composers are joined with " / " in song-title order, and spellings that differ only in case, spacing or
-    punctuation count once. A composer taken from the other wiki also gets composer_source, that wiki's source id:
+    punctuation count once. A page's credit that holds several names apart only by a run of spaces (all the song index
+    kept of a line break: "Jerry Barnes  Quiana") is split into those names, which HTML would otherwise run together
+    into one. A composer taken from the other wiki also gets composer_source, that wiki's source id:
     otherwise the credit would read as the candidate's own wiki's. Collection covers get none: a cover is not one
     song's artwork."""
     by_title = defaultdict(list)
@@ -215,7 +217,8 @@ def with_composers(candidates, songs):
             credits = [song for song in matched if song["source_id"] == own] or matched
         composers = {}
         for song in credits:
-            composers.setdefault(normalized(song["composer"]) or song["composer"], song["composer"])
+            for name in re.split(r"\s{2,}", song["composer"].strip()):
+                composers.setdefault(normalized(name) or name, name)
         other = " / ".join(dict.fromkeys(song["source_id"] for song in credits if song["source_id"] != own))
         credit = {"composer": " / ".join(composers.values())} if composers else {}
         result.append({**rest, **credit, **({"composer_source": other} if other else {})})
