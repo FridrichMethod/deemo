@@ -10,6 +10,7 @@ import hashlib
 import json
 import time
 import xml.etree.ElementTree as ET
+from collections import Counter
 from urllib.parse import quote, unquote, urljoin, urlparse
 
 from playwright.sync_api import sync_playwright
@@ -22,6 +23,9 @@ assert urlparse(args.base).hostname in {"127.0.0.1", "localhost"}, "Use a local 
 base = args.base.rstrip("/") + "/"
 mount_path = urlparse(base).path
 checks = []
+HAS_HAN = "(text) => /[\\u3400-\\u9fff]/.test(text)"
+IMAGE_SHOWN = "(() => { const img = document.getElementById('full-image'); return img.complete && img.naturalWidth > 0; })()"
+PARAGRAPHS = "[...document.querySelectorAll('#provenance p')].map((p) => p.textContent)"
 
 
 def mounted_url(relative, source=base):
@@ -196,7 +200,9 @@ def check_archive(page):
     assert variant_link.is_visible()
     variant_href = variant_link.get_attribute("href")
     assert "assets/legacy/tiny/" in unquote(variant_href)
-    assert variant_link.get_attribute("download") is not None
+    # The copy shares its basename with the original, so its role goes into the saved name.
+    assert variant_link.get_attribute("download") == "magnolia-palette-quantized.png"
+    assert page.locator("#download").get_attribute("download") == "magnolia.png"
     variant = page.evaluate("window.DEEMO_CATALOG.assets.flatMap(a => a.provenance.flatMap(p => p.variants || [])).find(v => v.id === 'legacy:tiny:magnolia')")
     assert variant
     assert urlparse(mounted_url(variant_href)).path == urlparse(mounted_url(variant["url"])).path
@@ -205,7 +211,7 @@ def check_archive(page):
     assert len(response.body()) == variant["bytes"]
     assert hashlib.sha256(response.body()).hexdigest() == variant["sha256"]
     page.keyboard.press("Escape")
-    checks.extend(["legacy variant download/hash", "modal"])
+    checks.extend(["legacy variant download/hash/name", "modal"])
     page.locator("#reset-filters").click()
     page.set_viewport_size({"width": 390, "height": 844})
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
@@ -272,6 +278,209 @@ def check_language(browser):
     checks.append("language toggle, persistence and localized source names")
 
 
+def check_language_before_catalog(browser):
+    """Translations apply once the DOM is parsed, not after the multi-megabyte catalog script (held back here)."""
+    page = new_page(browser)
+    held = []
+    page.route("**/data/catalog.js", lambda route: held.append(route))
+    page.goto(mounted_url("archive.html?lang=zh-CN"), wait_until="commit")
+    page.wait_for_function(f"({HAS_HAN})(document.querySelector('h1')?.textContent || '')", timeout=5000)
+    assert page.evaluate("window.DEEMO_CATALOG === undefined"), "data/catalog.js is still held back"
+    assert page.locator("[data-lang-toggle]").inner_text() == "English"
+    page.locator("[data-lang-toggle]").click()
+    assert page.evaluate("[DEEMO_I18N.lang, document.documentElement.lang]") == ["en", "en"], "The toggle goes where its label points"
+    for route in held:
+        route.continue_()
+    page.wait_for_selector(".card")
+    assert page.evaluate(f"!({HAS_HAN})(document.querySelector('h1').textContent)")
+    finish(page)
+    # Until src/i18n/common.js registers, the toggle keeps the English page's static label, which names zh-CN.
+    page = new_page(browser)
+    held = []
+    page.route("**/src/i18n/common.js", lambda route: held.append(route))
+    page.goto(mounted_url("archive.html?lang=zh-CN"), wait_until="commit")
+    page.wait_for_function("window.DEEMO_I18N && document.readyState !== 'loading'", timeout=5000)
+    assert page.locator("[data-lang-toggle]").inner_text() == "中文"
+    page.locator("[data-lang-toggle]").click()
+    assert page.evaluate("DEEMO_I18N.lang") == "zh-CN", "A click on the static 中文 label keeps Chinese"
+    for route in held:
+        route.continue_()
+    page.wait_for_selector(".card")
+    assert page.locator("[data-lang-toggle]").inner_text() == "English"
+    finish(page)
+    checks.append("translations before the catalog loads; toggle follows its label")
+
+
+def check_explicit_language_persists(browser):
+    """An explicit ?lang=en replaces a stored zh-CN, so the reload (which drops ?lang= for English) and the
+    slideshow stay English."""
+    page = new_page(browser)
+    navigate(page, "archive.html")
+    page.wait_for_selector(".card")
+    page.locator("[data-lang-toggle]").click()
+    assert page.evaluate("localStorage.getItem('deemo-lang')") == "zh-CN"
+    navigate(page, "archive.html?lang=en")
+    page.wait_for_selector(".card")
+    assert page.evaluate("document.documentElement.lang") == "en"
+    monitor.leave(page)
+    page.reload(wait_until="load")
+    page.wait_for_selector(".card")
+    assert "lang=" not in page.url and page.evaluate("document.documentElement.lang") == "en"
+    monitor.leave(page)
+    with page.expect_navigation(wait_until="load"):
+        page.locator("nav a[data-lang-link]").click()
+    assert urlparse(page.url).path.endswith("/index.html")
+    assert page.evaluate("document.documentElement.lang") == "en"
+    finish(page)
+    checks.append("?lang=en persists over a stored zh-CN")
+
+
+def check_search_folding(browser):
+    """Full-width, half-width katakana and full-width colon queries find what their plain forms find, and case
+    folding ignores the browser locale (Turkish lowercases I to a dotless i)."""
+    counts = {}
+    folded = [("magnolia", "Ｍａｇｎｏｌｉａ"), ("まとめ", "マトメ"), ("まとめ", "ﾏﾄﾒ"), ("Re: the Full moon", "Re：the Full moon"), ("AD:PIANO", "AD：PIANO")]
+    cased = ["ice collection", "ICE COLLECTION", "In a cradle"]
+    for locale in ("en-US", "tr-TR"):
+        page = new_page(browser, locale=locale)
+        navigate(page, "archive.html")
+        page.wait_for_selector(".card")
+        if locale == "tr-TR":
+            # (V8 lowercases a short ASCII string without the locale; the kana sends this one through it.)
+            assert page.evaluate("'Ice ころ'.toLocaleLowerCase()") == "ıce ころ", "The Turkish context lowercases I to a dotless i"
+        for query in [query for pair in folded for query in pair] + cased:
+            page.locator("#query").fill(query)
+            counts[locale, query] = shown_count(page)
+        finish(page)
+    for plain, variant in folded:
+        assert counts["en-US", plain] == counts["en-US", variant] > 0, (plain, variant, counts)
+    for query in cased:
+        assert counts["tr-TR", query] == counts["en-US", query] > 0, (query, counts)
+    checks.append("search folds full-width, kana and colon forms in any locale")
+
+
+def check_viewer_scroll_and_focus(browser):
+    """The page stays put under the open viewer, and closing it focuses the card of the image last shown."""
+    page = new_page(browser, 1440, 900)
+    navigate(page, "archive.html")
+    page.wait_for_selector(".card")
+    focus = """() => { const cards = [...document.querySelectorAll('.card-image')], box = document.activeElement.getBoundingClientRect();
+        return [cards.indexOf(document.activeElement), box.bottom > 0 && box.top < innerHeight]; }"""
+
+    def close_viewer():
+        # The dialog's close event, which moves the focus, follows the key press as a separate task.
+        page.keyboard.press("Escape")
+        page.wait_for_function("!document.getElementById('viewer').open")
+        page.wait_for_timeout(100)
+        return page.evaluate(focus)
+
+    page.locator(".card-image").nth(5).click()
+    page.wait_for_function(IMAGE_SHOWN)
+    before = page.evaluate("scrollY")
+    box = page.locator(".viewer-image").bounding_box()
+    page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+    for _ in range(3):
+        page.mouse.wheel(0, 800)
+    page.mouse.move(4, 450)
+    for _ in range(3):
+        page.mouse.wheel(0, 800)
+    page.locator("#close").focus()
+    page.keyboard.press("PageDown")
+    page.keyboard.press("End")
+    page.wait_for_timeout(400)
+    assert page.evaluate("scrollY") == before, "The page behind the viewer scrolled"
+    assert close_viewer() == [5, True]
+    # Past the 60 cards drawn so far: closing draws up to the image shown and focuses its card.
+    page.locator(".card-image").nth(59).click()
+    page.wait_for_function(IMAGE_SHOWN)
+    for _ in range(2):
+        page.locator("#next").click()
+        page.wait_for_function(IMAGE_SHOWN)
+    assert page.locator("#position").inner_text().startswith("62 / ")
+    assert close_viewer() == [61, True]
+    finish(page)
+    checks.append("viewer scroll lock and focus return")
+
+
+def check_deep_link_filters(browser):
+    page = new_page(browser)
+    # Values that match no option are ignored, so each select keeps showing the default it applies.
+    navigate(page, "archive.html?minimum=4000&sort=bogus&family=nope&kind=x")
+    page.wait_for_selector(".card")
+    state = page.evaluate("Object.fromEntries(['minimum', 'sort', 'family', 'kind'].map((id) => [id, [document.getElementById(id).value, document.getElementById(id).selectedIndex]]))")
+    assert state == {"minimum": ["0", 0], "sort": ["source", 0], "family": ["", 0], "kind": ["", 0]}, state
+    assert shown_count(page) == catalog_count(page, "() => true")
+    # Title sort compares numbers as numbers: page 2 before page 10.
+    prefix = "AD:PIANO Collection 2 — page "
+    navigate(page, "archive.html?sort=title&query=" + quote(prefix.split(" — ")[0]))
+    page.wait_for_selector(".card")
+    pages = [int(title[len(prefix):]) for title in page.locator(".card h2").all_inner_texts() if title.startswith(prefix)]
+    assert len(pages) == catalog_count(page, f"(a) => a.title.startsWith({json.dumps(prefix)})") >= 10, pages
+    assert pages == sorted(pages), pages
+    finish(page)
+    checks.extend(["invalid deep-link filters ignored", "numeric title sort"])
+
+
+def viewer_record(page):
+    """The asset the viewer shows (by its file path) and what its provenance block should say in the page language."""
+    return page.evaluate("""() => {
+        const {t} = window.DEEMO_I18N, path = document.getElementById('file-info').textContent.split('\\n')[0];
+        const asset = window.DEEMO_CATALOG.assets.find((a) => a.path === path), expected = [];
+        for (const p of asset.provenance) {
+            if (p.composer) expected.push(['composer', t('provenance.composer', {composer: p.composer})]);
+            // Every wiki upload carries the same lineage caveat, labelled as the "wiki" class.
+            const token = p.family === 'wikis' ? 'wiki' : p.provenance;
+            if (typeof p.provenance === 'string' && p.provenance) expected.push([`class ${token}`, t('provenance.class', {label: t(`provenance.class.${token}`)})]);
+        }
+        return {id: asset.id, expected, shown: [...document.querySelectorAll('#provenance p')].map((p) => p.textContent)};
+    }""")
+
+
+def check_viewer_provenance(browser):
+    """The viewer states each record's composer and provenance class in the page language; a record a refetch kept
+    with an upstream_status gets a localized line for it."""
+    page = new_page(browser)
+    navigate(page, "archive.html")
+    page.wait_for_selector(".card")
+    # "Altale" has a legacy texture (with its composer), wiki uploads and a community repost.
+    page.locator("#query").fill("Altale")
+    page.locator(".card-image").first.click()
+    seen = set()
+    for _ in range(shown_count(page)):
+        page.wait_for_function(IMAGE_SHOWN)
+        for lang in ("en", "zh-CN"):
+            # The modal viewer covers the toggle; a language change redraws the open viewer.
+            page.evaluate("(lang) => DEEMO_I18N.setLang(lang)", lang)
+            record = viewer_record(page)
+            for label, text in record["expected"]:
+                assert text in record["shown"], (lang, record)
+                assert lang == "en" or page.evaluate(HAS_HAN, text), (lang, text)
+                seen.add(label.split(" ")[0] if label == "composer" else "wiki class" if label == "class wiki" else "other class")
+        page.locator("#next").click()
+    assert seen == {"composer", "wiki class", "other class"}, seen
+    page.keyboard.press("Escape")
+    # No committed record has an upstream_status yet, so give the first gallery image one and compare its block.
+    page.locator("#reset-filters").click()
+    page.locator(".card-image").first.click()
+    page.wait_for_function(IMAGE_SHOWN)
+    target = "window.DEEMO_CATALOG.assets.find((a) => a.gallery).provenance[0]"
+    blocks = {}
+    for status in (None, "removed"):
+        page.evaluate(f"(status) => {{ if (status) {target}.upstream_status = status; else delete {target}.upstream_status; }}", status)
+        for lang in ("zh-CN", "en"):
+            page.evaluate("(lang) => DEEMO_I18N.setLang(lang)", lang)
+            blocks[status, lang] = page.evaluate(PARAGRAPHS)
+    for lang in ("en", "zh-CN"):
+        added = list((Counter(blocks["removed", lang]) - Counter(blocks[None, lang])).elements())
+        assert added and not Counter(blocks[None, lang]) - Counter(blocks["removed", lang]), (lang, blocks)
+        for text in added:
+            assert "removed" != text.strip() and "upstream_status" not in text, text
+            assert lang == "en" or page.evaluate(HAS_HAN, text), text
+    page.keyboard.press("Escape")
+    finish(page)
+    checks.append("viewer composer, provenance class and upstream status, in both languages")
+
+
 def check_site_icons(page):
     manifest_url = mounted_url("site.webmanifest")
     manifest_response = page.request.get(manifest_url)
@@ -298,6 +507,12 @@ with sync_playwright() as p:
     total = check_archive(page)
     check_slideshow_deep_links(page)
     check_language(browser)
+    check_language_before_catalog(browser)
+    check_explicit_language_persists(browser)
+    check_search_folding(browser)
+    check_viewer_scroll_and_focus(browser)
+    check_deep_link_filters(browser)
+    check_viewer_provenance(browser)
     check_site_icons(page)
     finish(page)
     external = monitor.verdict()
