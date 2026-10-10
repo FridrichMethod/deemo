@@ -52,6 +52,6 @@ python -I scripts/fetch_wikis.py --resume --workers 4
 
 ## 本次访问限制
 
-2026-09-05 的初次运行读取了 BWIKI 的 480 项 `allimages` 与 182 个歌页；后续刷新 API 遇到 EdgeOne HTTP 567，继续下载使用先前保存的候选快照。该列表并不完整：2026-10-08 来源检查的枚举又返回了 57 个曲包封面候选，均于 2021 年上传。2026-10-08 的快照没有记录统计信息，因此在下一次发现运行之前，`wikis.json` 中的 `discovery`（480 项、40 个 `excluded_large_images`）描述的仍是 2026-09-05 的枚举。最终清单不宣称包含该站每一项未经核对的图片。源列表 `discovery.excluded_large_images` 保留未能明确映射的大图名和尺寸。
+2026-09-05 的初次运行读取了 BWIKI 的 480 项 `allimages` 与 182 个歌页；后续刷新 API 遇到 EdgeOne HTTP 567，继续下载使用先前保存的候选快照。该列表并不完整：2026-10-08 来源检查的枚举又返回了 57 个曲包封面候选，均于 2021 年上传。2026-10-08 的快照没有记录统计信息，因此在导入更新的发现结果之前，`wikis.json` 中的 `discovery`（480 项、40 个 `excluded_large_images`）描述的仍是 2026-09-05 的枚举。最终清单不宣称包含该站每一项未经核对的图片。源列表 `discovery.excluded_large_images` 保留未能明确映射的大图名和尺寸。
 
 [日本 DEEMO Wiki 的画师目录](https://wikiwiki.jp/deemo/アーティスト別リスト2)最初返回 Cloudflare 403，在下载完成后的正常索引请求中恢复 200，已保存索引。没有绕过挑战或使用登录凭据。实际成败以 `wikis.json` 为准。
