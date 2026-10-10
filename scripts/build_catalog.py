@@ -271,6 +271,15 @@ def art_layout(root: Path, asset: dict) -> dict:
     return fields
 
 
+def slide_kind(asset: dict) -> str:
+    """The kind the slide's eyebrow names. An unmapped legacy texture is "illustration" in the catalog only as the
+    archive's "Illustration / unmapped" catch-all, and most of them are song textures, so its slide says "unmapped",
+    a kind with no label: the eyebrow then names no kind rather than call it an illustration."""
+    if asset.get("family") == "legacy" and asset.get("title_status") == "internal_key" and asset["kind"] == "illustration":
+        return "unmapped"
+    return asset["kind"]
+
+
 def render_slideshow(root: Path, catalog: dict) -> str:
     template = (root / "templates/slideshow.html").read_text(encoding="utf-8-sig")
     assets = [asset for asset in catalog["assets"] if asset["gallery"] and asset["kind"] != "reference"]
@@ -284,7 +293,7 @@ def render_slideshow(root: Path, catalog: dict) -> str:
             "data-id": asset["id"], "data-title": asset["title"],
             "data-source": asset["source_name"], "data-source-id": asset["source_id"],
             "data-page": asset["page_url"],
-            "data-size": f"{asset['width']} × {asset['height']}", "data-kind": asset["kind"],
+            "data-size": f"{asset['width']} × {asset['height']}", "data-kind": slide_kind(asset),
             **layout, **slide_notes(asset), "alt": asset["title"],
         }
         attributes = " ".join(f'{key}="{attr(value)}"' for key, value in fields.items())

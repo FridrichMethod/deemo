@@ -9,6 +9,7 @@ import io
 import json
 import tempfile
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 from unittest.mock import patch
 
@@ -17,6 +18,20 @@ from PIL import Image
 spec = importlib.util.spec_from_file_location("build_catalog", Path(__file__).resolve().parents[1] / "scripts/build_catalog.py")
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)
+
+
+class ImgTags(HTMLParser):
+    """The attributes of every <img>, as parsed (names and character references resolved), in order."""
+
+    def __init__(self, markup):
+        super().__init__()
+        self.images = []
+        self.feed(markup)
+        self.close()
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "img":
+            self.images.append(attrs)
 
 
 class CatalogTests(unittest.TestCase):
@@ -50,12 +65,20 @@ class CatalogTests(unittest.TestCase):
         content = {"sources": [{"id": asset["source_id"], "name": family, "url": asset["page_url"]}], "assets": [asset]}
         (self.root / f"data/sources/{family}.json").write_text(json.dumps(content), encoding="utf-8")
 
-    def run_main(self, *args):
-        """Run the command line against this test's root; returns the SystemExit message, or None on success."""
+    def template(self):
         (self.root / "templates").mkdir(exist_ok=True)
         template = self.root / "templates/slideshow.html"
         if not template.exists():
             template.write_text("<main>\n@python-work-area\n</main>\n", encoding="utf-8")
+
+    def slides(self, catalog):
+        """Each rendered slide's <img> attributes as a dict."""
+        self.template()
+        return [dict(attrs) for attrs in ImgTags(build.render_slideshow(self.root, catalog)).images]
+
+    def run_main(self, *args):
+        """Run the command line against this test's root; returns the SystemExit message, or None on success."""
+        self.template()
         with patch.object(build, "ROOT", self.root), contextlib.redirect_stdout(io.StringIO()):
             try:
                 build.main(list(args))
@@ -64,10 +87,12 @@ class CatalogTests(unittest.TestCase):
         return None
 
     def legacy_pair(self, key="magnolia"):
+        # A colour from the key keeps each texture's bytes distinct, so the catalog does not merge them.
+        colour = tuple(hashlib.sha256(key.encode()).digest()[:3])
         for variant in ("trans", "tiny"):
             path = self.root / f"assets/legacy/{variant}/{key}.png"
             path.parent.mkdir(parents=True, exist_ok=True)
-            image = Image.new("RGB", (4, 4), "white")
+            image = Image.new("RGB", (4, 4), colour)
             if variant == "tiny":
                 image = image.quantize(colors=256)
             image.save(path)
@@ -141,6 +166,19 @@ class CatalogTests(unittest.TestCase):
             "MN2_booksprites": "collection_cover", "deemo1": "illustration", "deemo1ab": "illustration",
             "walkingbythesea": "illustration",
         })
+
+    def test_slideshow_names_no_kind_for_an_unmapped_legacy_texture(self):
+        # "illustration" is only the archive's "Illustration / unmapped" catch-all for these; the slideshow eyebrow
+        # must not assert it. Mapped textures and cover keys keep their kind.
+        for key in ("walkingbythesea", "magnolia", "booksprites_0"):
+            self.legacy_pair(key)
+        mapping = {"source_url": "https://example.com/mapping", "data": {"songs": {"magnolia": {"name": "Magnolia"}}, "books": []}}
+        (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping), encoding="utf-8")
+        catalog = build.combine(self.root, verify=True)
+        self.assertEqual({asset["internal_key"]: asset["kind"] for asset in catalog["assets"]},
+                         {"walkingbythesea": "illustration", "magnolia": "song_art", "booksprites_0": "collection_cover"})
+        kinds = {slide["data-id"]: slide["data-kind"] for slide in self.slides(catalog)}
+        self.assertEqual(kinds, {"legacy:walkingbythesea": "unmapped", "legacy:magnolia": "song_art", "legacy:booksprites_0": "collection_cover"})
 
     def test_quantized_legacy_file_is_a_verified_variant_not_an_extra_slide(self):
         self.legacy_pair()
