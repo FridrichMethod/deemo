@@ -13,7 +13,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test:
+    # The same checks as on every push and pull request; nothing is deployed unless they all pass.
+    name: Test
+    uses: ./.github/workflows/tests.yml
+    permissions:
+      contents: read
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -25,7 +33,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
       - name: Test publication boundary
@@ -33,12 +41,12 @@ jobs:
       - name: Stage allowlisted public website files
         run: python3 -I scripts/prepare_pages.py --output "$RUNNER_TEMP/deemo-site"
       - name: Configure Pages
-        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - name: Upload website artifact only
-        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: ${{ runner.temp }}/deemo-site
           retention-days: 1
       - name: Deploy website
         id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
