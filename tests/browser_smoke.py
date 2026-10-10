@@ -365,10 +365,12 @@ def check_explicit_language_persists(browser):
 
 def check_search_folding(browser):
     """Full-width, half-width katakana and full-width colon queries find what their plain forms find, and case
-    folding ignores the browser locale (Turkish lowercases I to a dotless i)."""
+    folding ignores the browser locale (Turkish lowercases I to a dotless i). A colon stays in its term, so a colon
+    prefix finds fewer images than the bare word, while the words after it stay separate terms."""
     counts = {}
     folded = [("magnolia", "Ｍａｇｎｏｌｉａ"), ("まとめ", "マトメ"), ("まとめ", "ﾏﾄﾒ"), ("Re: the Full moon", "Re：the Full moon"), ("AD:PIANO", "AD：PIANO")]
     cased = ["ice collection", "ICE COLLECTION", "In a cradle"]
+    colon = ["Re", "Re:", "L", "L:", "Re: the", "Re:the", "Re : the", "Re: Full moon", "L: The Lower", "L: Lower"]
     for locale in ("en-US", "tr-TR"):
         page = new_page(browser, locale=locale)
         navigate(page, "archive.html")
@@ -376,7 +378,7 @@ def check_search_folding(browser):
         if locale == "tr-TR":
             # (V8 lowercases a short ASCII string without the locale; the kana sends this one through it.)
             assert page.evaluate("'Ice ころ'.toLocaleLowerCase()") == "ıce ころ", "The Turkish context lowercases I to a dotless i"
-        for query in [query for pair in folded for query in pair] + cased:
+        for query in [query for pair in folded for query in pair] + cased + (colon if locale == "en-US" else []):
             page.locator("#query").fill(query)
             counts[locale, query] = shown_count(page)
         finish(page)
@@ -384,7 +386,13 @@ def check_search_folding(browser):
         assert counts["en-US", plain] == counts["en-US", variant] > 0, (plain, variant, counts)
     for query in cased:
         assert counts["tr-TR", query] == counts["en-US", query] > 0, (query, counts)
-    checks.append("search folds full-width, kana and colon forms in any locale")
+    count = {query: counts["en-US", query] for query in colon + ["Re: the Full moon"]}
+    # Every term must match, so a colon prefix can only narrow the bare word, and here it must ("Re:" is not every
+    # "re"); leaving out a word can only widen a query ("Re: Full moon" still finds "Re: the Full moon").
+    assert 0 < count["Re:"] < count["Re"] and 0 < count["L:"] < count["L"], count
+    assert count["Re: Full moon"] >= count["Re: the Full moon"] > 0 and count["L: Lower"] >= count["L: The Lower"] > 0, count
+    assert count["Re:the"] == count["Re : the"] == count["Re: the"] > 0, count
+    checks.append("search folds full-width, kana and colon forms in any locale; colon terms")
 
 
 def check_viewer_scroll_and_focus(browser):
