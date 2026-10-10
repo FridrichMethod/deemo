@@ -322,7 +322,10 @@
         "https://wiki.biligame.com/deemo/Alice_in_Secret_Circus"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -2"
+      ]
     },
     {
       "id": "wikis:bwiki:01a4468d931de3b9",
@@ -429,7 +432,10 @@
         "https://wiki.biligame.com/deemo/Blooming_spring"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:bwiki:06d9eb2ff52b016e",
@@ -467,7 +473,10 @@
         "https://wiki.biligame.com/deemo/Walking_by_the_sea"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:072d50fb18829f42",
@@ -714,7 +723,10 @@
         "https://wiki.biligame.com/deemo/Pilot"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:bwiki:0e1ab15c6c5cbb98",
@@ -789,7 +801,11 @@
         "https://wiki.biligame.com/deemo/Undo"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:bwiki:11c41c2a7461385f",
@@ -859,7 +875,10 @@
         "https://wiki.biligame.com/deemo/Starry_Night"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Mirai's selection"
+      ]
     },
     {
       "id": "wikis:bwiki:14a5ca231bc5e7c0",
@@ -925,7 +944,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/RAC%20collection%20-3"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "RAC Collection #3"
+      ]
     },
     {
       "id": "wikis:bwiki:1889ba550f2bd604",
@@ -1024,7 +1046,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Etude%20collection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Etude Collection"
+      ]
     },
     {
       "id": "wikis:bwiki:19fcaccabf083c20",
@@ -1057,7 +1082,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Collaboration%20collection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Collaboration Collection"
+      ]
     },
     {
       "id": "wikis:bwiki:1d64aa4469c2dac5",
@@ -1094,7 +1122,10 @@
         "https://wiki.biligame.com/deemo/Level_Zero"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:bwiki:1dace1c432b548ea",
@@ -1239,7 +1270,10 @@
         "https://wiki.biligame.com/deemo/Knots_Way"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:bwiki:237983af599e1800",
@@ -1276,7 +1310,10 @@
         "https://wiki.biligame.com/deemo/Kimi_no_namae_no_kazegafuku"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:bwiki:2454c4f665f49211",
@@ -1387,7 +1424,10 @@
         "https://wiki.biligame.com/deemo/Hey_Boy"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:bwiki:2706ffa5a6311dc3",
@@ -1424,7 +1464,10 @@
         "https://wiki.biligame.com/deemo/Intermezzo_in_A_Major"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:276dd050de8101e0",
@@ -1462,7 +1505,10 @@
         "https://wiki.biligame.com/deemo/Beyond_The_Stratus"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:2a66818523890840",
@@ -1499,7 +1545,11 @@
         "https://wiki.biligame.com/deemo/Myosotis"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:2d0fa59ae38052bb",
@@ -1536,7 +1586,10 @@
         "https://wiki.biligame.com/deemo/Ballade_No.1"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:2d6b475e8797fee6",
@@ -1607,7 +1660,10 @@
         "https://wiki.biligame.com/deemo/Amber_Wishes_(Deemo_edit)"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:2fa6171ee80fc5a8",
@@ -1681,7 +1737,10 @@
         "https://wiki.biligame.com/deemo/Turkish_March"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:300f9292c98c7da6",
@@ -1718,7 +1777,10 @@
         "https://wiki.biligame.com/deemo/Flight_of_the_Bumblebee"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:33d462659b558064",
@@ -1755,7 +1817,10 @@
         "https://wiki.biligame.com/deemo/Vivere_la_vita"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:bwiki:33e09060a8ef809d",
@@ -1891,7 +1956,10 @@
         "https://wiki.biligame.com/deemo/Metal_Hypnotized"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:bwiki:37ce13ca7dc9b0ac",
@@ -1928,7 +1996,10 @@
         "https://wiki.biligame.com/deemo/Pathetique"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:38107548e4edf5b2",
@@ -1966,7 +2037,11 @@
         "https://wiki.biligame.com/deemo/Reflection_(Mirror_Night)"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:bwiki:3940fa29350e828f",
@@ -2073,7 +2148,10 @@
         "https://wiki.biligame.com/deemo/Randall"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:bwiki:3cb372ea8ad63481",
@@ -2110,7 +2188,10 @@
         "https://wiki.biligame.com/deemo/Rainy_Memory"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:bwiki:3cc151c397dc5ced",
@@ -2149,7 +2230,11 @@
         "https://wiki.biligame.com/deemo/YUBIKIRI-GENMAN"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:bwiki:3ec810d22e8b5f61",
@@ -2186,7 +2271,10 @@
         "https://wiki.biligame.com/deemo/La_Campanella"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:3f4a382a84bf3147",
@@ -2260,7 +2348,10 @@
         "https://wiki.biligame.com/deemo/Sprout"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -2"
+      ]
     },
     {
       "id": "wikis:bwiki:420d23ed0c04aed7",
@@ -2363,7 +2454,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Rayark%20selection%20Vol.1"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Rayark selection Vol. 1"
+      ]
     },
     {
       "id": "wikis:bwiki:46df82deddf15af8",
@@ -2396,7 +2490,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Mili%20Collection%20Vol.%203"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Mili Collection Vol.3"
+      ]
     },
     {
       "id": "wikis:bwiki:46eddf69044daff5",
@@ -2471,7 +2568,10 @@
         "https://wiki.biligame.com/deemo/Invention_No.1"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:4b601f9859bd19a9",
@@ -2545,7 +2645,11 @@
         "https://wiki.biligame.com/deemo/La_Promesse"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:4cb01f6759841759",
@@ -2583,7 +2687,10 @@
         "https://wiki.biligame.com/deemo/Electron"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:4d52b72ba5573414",
@@ -2621,7 +2728,11 @@
         "https://wiki.biligame.com/deemo/Platinum"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:bwiki:4d7651dee60a836c",
@@ -2765,7 +2876,11 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Deemo%27s%20collection%20Vol.1A"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:bwiki:5006028cf65cf614",
@@ -2872,7 +2987,10 @@
         "https://wiki.biligame.com/deemo/Reverence_(DEEMO_ver)"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:54299412f550bd61",
@@ -2979,7 +3097,10 @@
         "https://wiki.biligame.com/deemo/Tristesse"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:56c75434cfb44ac7",
@@ -3017,7 +3138,10 @@
         "https://wiki.biligame.com/deemo/Run_Go_Run"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:5706e974f4345d54",
@@ -3054,7 +3178,11 @@
         "https://wiki.biligame.com/deemo/Wings_of_piano"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:bwiki:57b1c9d7e0e21cce",
@@ -3091,7 +3219,10 @@
         "https://wiki.biligame.com/deemo/A_Collection_of_Names"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Hundotte collection"
+      ]
     },
     {
       "id": "wikis:bwiki:58dfbbf09bd76ad5",
@@ -3161,7 +3292,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/RAC%20collection%20-1"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "RAC Collection #1"
+      ]
     },
     {
       "id": "wikis:bwiki:5b4c87af465cd79e",
@@ -3227,7 +3361,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Rayark%20selection%20Vol.3"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Rayark Selection Vol. 3"
+      ]
     },
     {
       "id": "wikis:bwiki:5c76386797cff524",
@@ -3265,7 +3402,11 @@
         "https://wiki.biligame.com/deemo/Starting_Wind"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:5db8bc375fdb96c9",
@@ -3302,7 +3443,10 @@
         "https://wiki.biligame.com/deemo/The_Letter"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:bwiki:5dba20e7b975fc24",
@@ -3335,7 +3479,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Aioi%20Collection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Aioi collection"
+      ]
     },
     {
       "id": "wikis:bwiki:5f5dbeb3a46f3fc6",
@@ -3405,7 +3552,10 @@
         "https://wiki.biligame.com/deemo/The_Story_Unfolds"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration Collection"
+      ]
     },
     {
       "id": "wikis:bwiki:5fa21c7c6e4bff6a",
@@ -3442,7 +3592,10 @@
         "https://wiki.biligame.com/deemo/Veritas"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:bwiki:61395997e9bba54e",
@@ -3480,7 +3633,11 @@
         "https://wiki.biligame.com/deemo/Jumpy_star"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:bwiki:65b320ac3b83a8f4",
@@ -3587,7 +3744,10 @@
         "https://wiki.biligame.com/deemo/Three_Years_Diary"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Mirai's selection"
+      ]
     },
     {
       "id": "wikis:bwiki:6751971311b0863e",
@@ -3625,7 +3785,10 @@
         "https://wiki.biligame.com/deemo/Re%EF%BC%9Athe_Full_moon_World."
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:bwiki:67d3b0e42653d769",
@@ -3695,7 +3858,10 @@
         "https://wiki.biligame.com/deemo/Land_of_Giants"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:bwiki:6a8768d468ce9d19",
@@ -3732,7 +3898,10 @@
         "https://wiki.biligame.com/deemo/Lost_in_the_nowhere"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:6c164f61f44e888d",
@@ -3876,7 +4045,10 @@
         "https://wiki.biligame.com/deemo/Doll_eyes"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Mirai's selection"
+      ]
     },
     {
       "id": "wikis:bwiki:713cbff59c5703b0",
@@ -3914,7 +4086,10 @@
         "https://wiki.biligame.com/deemo/Untitled2"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:73fb050b0621232c",
@@ -3951,7 +4126,11 @@
         "https://wiki.biligame.com/deemo/Living_In_The_One"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:73ff50bae51d79ec",
@@ -3988,7 +4167,10 @@
         "https://wiki.biligame.com/deemo/Moonlight"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:7722a1ea0ab03e5b",
@@ -4021,7 +4203,11 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Deemo%27s%20collection%20Vol.2"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Deemo's Collection Vol.2",
+        "Deemo's collection Vol. 2"
+      ]
     },
     {
       "id": "wikis:bwiki:78146b11da969110",
@@ -4129,7 +4315,10 @@
         "https://wiki.biligame.com/deemo/Invite"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:7988542189ced286",
@@ -4162,7 +4351,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/RAC%20collection%20-4"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "RAC Collection #4"
+      ]
     },
     {
       "id": "wikis:bwiki:79d37e4bce0550aa",
@@ -4195,7 +4387,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Samsara%20collection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Samsara Collection"
+      ]
     },
     {
       "id": "wikis:bwiki:7a38eb0bccf3b896",
@@ -4270,7 +4465,10 @@
         "https://wiki.biligame.com/deemo/Magnolia"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:7b7999e3a657a969",
@@ -4307,7 +4505,10 @@
         "https://wiki.biligame.com/deemo/Girl_Meets_World"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Mirai's selection"
+      ]
     },
     {
       "id": "wikis:bwiki:7b8989e37d57c9d7",
@@ -4344,7 +4545,10 @@
         "https://wiki.biligame.com/deemo/Evolution_Era"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:7b9b3089ebd365ca",
@@ -4377,7 +4581,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Knight%20Rosabell%20Collection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ]
     },
     {
       "id": "wikis:bwiki:7d25341ad517e681",
@@ -4414,7 +4621,10 @@
         "https://wiki.biligame.com/deemo/Piano_Sonata_No.3"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:7f2c62c0ff21ce8b",
@@ -4488,7 +4698,11 @@
         "https://wiki.biligame.com/deemo/Legacy"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:80e08ccf1cc32283",
@@ -4525,7 +4739,10 @@
         "https://wiki.biligame.com/deemo/Rhapsody_on_a_Theme_of_Aud_Be%27af"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Hundotte collection"
+      ]
     },
     {
       "id": "wikis:bwiki:813cccd77be394b1",
@@ -4562,7 +4779,10 @@
         "https://wiki.biligame.com/deemo/Yawning_Lion"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:8151f15ce985c76f",
@@ -4599,7 +4819,10 @@
         "https://wiki.biligame.com/deemo/Will"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:bwiki:82584a23c5effea7",
@@ -4703,7 +4926,11 @@
         "https://wiki.biligame.com/deemo/Dream"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:bwiki:83fe53ac2d1d1452",
@@ -4778,7 +5005,10 @@
         "https://wiki.biligame.com/deemo/Re%EF%BC%9Athe_Full_moon_World."
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:bwiki:84ffe95f04dceffe",
@@ -4848,7 +5078,11 @@
         "https://wiki.biligame.com/deemo/Suspenseful_Third_Day"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:86f76b422afdbb37",
@@ -4885,7 +5119,10 @@
         "https://wiki.biligame.com/deemo/Peach_Lady"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:bwiki:87e75add16b64d5a",
@@ -4918,7 +5155,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Ice%20Collection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Ice collection"
+      ]
     },
     {
       "id": "wikis:bwiki:888622799856b3b2",
@@ -5058,7 +5298,10 @@
         "https://wiki.biligame.com/deemo/Memory_of_Skyblue"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:bwiki:8d53b0a7d5dc39f7",
@@ -5306,7 +5549,11 @@
         "https://wiki.biligame.com/deemo/Light_pollution"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:bwiki:97bc267a6cf7bec8",
@@ -5380,7 +5627,10 @@
         "https://wiki.biligame.com/deemo/Sonatina_for_Bygone_Piano"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Hundotte collection"
+      ]
     },
     {
       "id": "wikis:bwiki:99165c7c400478f4",
@@ -5450,7 +5700,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Feryquitous%20collection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Feryquitous Collection"
+      ]
     },
     {
       "id": "wikis:bwiki:9ab96dc17d892e2c",
@@ -5488,7 +5741,11 @@
         "https://wiki.biligame.com/deemo/Ark_of_Desire"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:9b0c0d2d6c48bc88",
@@ -5562,7 +5819,10 @@
         "https://wiki.biligame.com/deemo/Locum_)-(_Janus"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Hundotte collection"
+      ]
     },
     {
       "id": "wikis:bwiki:9f6277cbe766b2d1",
@@ -5595,7 +5855,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Deemo%27s%20collection%20Vol.1B"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Deemo's collection Vol. 1B"
+      ]
     },
     {
       "id": "wikis:bwiki:9faf2aaeb45f2580",
@@ -5669,7 +5932,11 @@
         "https://wiki.biligame.com/deemo/Sunset"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:a2ee76e4b454c2d4",
@@ -5739,7 +6006,10 @@
         "https://wiki.biligame.com/deemo/The_Truth_That_You_Leave"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:bwiki:a3f50bd3897c8770",
@@ -5776,7 +6046,10 @@
         "https://wiki.biligame.com/deemo/LILI"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -2"
+      ]
     },
     {
       "id": "wikis:bwiki:a541b8cd09c63111",
@@ -5812,7 +6085,10 @@
         "https://wiki.biligame.com/deemo/Go_Adventure!"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration Collection"
+      ]
     },
     {
       "id": "wikis:bwiki:a6373521f4454af1",
@@ -5849,7 +6125,10 @@
         "https://wiki.biligame.com/deemo/U7228"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Hundotte collection"
+      ]
     },
     {
       "id": "wikis:bwiki:a671fa28908be75e",
@@ -5886,7 +6165,10 @@
         "https://wiki.biligame.com/deemo/Morning_Drops"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:bwiki:a940ed76d22b86f1",
@@ -5924,7 +6206,10 @@
         "https://wiki.biligame.com/deemo/Leviathan"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:a99f402957b04e42",
@@ -6031,7 +6316,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Mili%20Collection%20Vol.%202"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Mili collection Vol. 2"
+      ]
     },
     {
       "id": "wikis:bwiki:b0935baf88ba19d5",
@@ -6138,7 +6426,11 @@
         "https://wiki.biligame.com/deemo/Altale"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol.2",
+        "Deemo's collection Vol. 2"
+      ]
     },
     {
       "id": "wikis:bwiki:b24b83d640adb342",
@@ -6321,7 +6613,10 @@
         "https://wiki.biligame.com/deemo/Parodia_Sonatina_Var.II"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:b76df12404928d73",
@@ -6358,7 +6653,11 @@
         "https://wiki.biligame.com/deemo/Fluquor"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:b7fce8bb3d2fb6c3",
@@ -6428,7 +6727,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Mirai%27s%20Selection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Mirai's selection"
+      ]
     },
     {
       "id": "wikis:bwiki:b8d261a7a5a788c3",
@@ -6498,7 +6800,10 @@
         "https://wiki.biligame.com/deemo/Aragami"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:b9f7f727010a0550",
@@ -6535,7 +6840,11 @@
         "https://wiki.biligame.com/deemo/Sakura_iro_no_yume"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol.2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:bb338793129827a9",
@@ -6675,7 +6984,10 @@
         "https://wiki.biligame.com/deemo/AciculignosA"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:bwiki:c0bc7a6226108eaf",
@@ -6712,7 +7024,10 @@
         "https://wiki.biligame.com/deemo/Impromptu_No.3"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:c0f20b1c696b7f30",
@@ -6749,7 +7064,10 @@
         "https://wiki.biligame.com/deemo/Hesitant_Blade"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:bwiki:c2259255ac328823",
@@ -6787,7 +7105,10 @@
         "https://wiki.biligame.com/deemo/Sairai"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:c279384932fffc65",
@@ -6857,7 +7178,11 @@
         "https://wiki.biligame.com/deemo/ANiMA"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:c3d0150b8d60f760",
@@ -6968,7 +7293,10 @@
         "https://wiki.biligame.com/deemo/Valle_De_Los_Caidos"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:c9524a46e1ea94e7",
@@ -7108,7 +7436,10 @@
         "https://wiki.biligame.com/deemo/Naughty_Cats"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Mirai's selection"
+      ]
     },
     {
       "id": "wikis:bwiki:ce0fd2c576177d49",
@@ -7183,7 +7514,11 @@
         "https://wiki.biligame.com/deemo/Reverse_-_Parallel_Universe"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:bwiki:d14cdab2e4ca72d8",
@@ -7220,7 +7555,11 @@
         "https://wiki.biligame.com/deemo/The_Beautiful_Moonlight"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:bwiki:d20f20e743dd7ad9",
@@ -7360,7 +7699,10 @@
         "https://wiki.biligame.com/deemo/PUPA"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:bwiki:d436fa5793f7d549",
@@ -7397,7 +7739,10 @@
         "https://wiki.biligame.com/deemo/To_next_page"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:bwiki:d589f3f17edffe23",
@@ -7434,7 +7779,10 @@
         "https://wiki.biligame.com/deemo/Voice_of_Cell"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:d61c6e65677505ea",
@@ -7472,7 +7820,11 @@
         "https://wiki.biligame.com/deemo/I_hate_to_tell_you"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:bwiki:d66223992607b9a0",
@@ -7584,7 +7936,10 @@
         "https://wiki.biligame.com/deemo/The_way_home"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:d7548c1d43f8bbf6",
@@ -7621,7 +7976,10 @@
         "https://wiki.biligame.com/deemo/Graduation_Song"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -2"
+      ]
     },
     {
       "id": "wikis:bwiki:d7f16ed0303703b9",
@@ -7762,7 +8120,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/Hundotte%20Collection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Hundotte collection"
+      ]
     },
     {
       "id": "wikis:bwiki:db79f79c4be6c958",
@@ -7799,7 +8160,10 @@
         "https://wiki.biligame.com/deemo/The_105th_Day"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:dbcf803e87bbd50d",
@@ -7838,7 +8202,11 @@
         "https://wiki.biligame.com/deemo/Utopiosphere"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:bwiki:dcf775bebdbd176a",
@@ -7912,7 +8280,10 @@
         "https://wiki.biligame.com/deemo/Little_Corgi%27s_Dream"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:bwiki:de3943d0890ae0fb",
@@ -7949,7 +8320,10 @@
         "https://wiki.biligame.com/deemo/Toys_Etude"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:bwiki:df332d0925489231",
@@ -8024,7 +8398,10 @@
         "https://wiki.biligame.com/deemo/Angelic_Sphere"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:e2a1ed5395019053",
@@ -8062,7 +8439,11 @@
         "https://wiki.biligame.com/deemo/Saika"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:bwiki:e2d34287e436b1d0",
@@ -8101,7 +8482,11 @@
         "https://wiki.biligame.com/deemo/Nine_point_eight"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:bwiki:e339d70947111b67",
@@ -8212,7 +8597,10 @@
         "https://wiki.biligame.com/deemo/Aufschwung"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:e6493528f2213b5d",
@@ -8250,7 +8638,10 @@
         "https://wiki.biligame.com/deemo/Pulses"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:bwiki:e73a6ddf1faed0d3",
@@ -8320,7 +8711,10 @@
         "https://wiki.biligame.com/deemo/Ragnarok"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:bwiki:e7d8694f587c910c",
@@ -8390,7 +8784,10 @@
         "https://wiki.biligame.com/deemo/Rayark_7th_Main_Theme"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:bwiki:e9f7f5efbbe0320f",
@@ -8460,7 +8857,10 @@
         "https://wiki.biligame.com/deemo/Lifill"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:bwiki:eaf15aef48626b5a",
@@ -8538,7 +8938,10 @@
         "https://wiki.biligame.com/deemo/Entrance"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Deemo's collection Vol. 1B"
+      ]
     },
     {
       "id": "wikis:bwiki:ec671d57dd384233",
@@ -8604,7 +9007,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/RAC%20collection%20-2"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "RAC Collection #2"
+      ]
     },
     {
       "id": "wikis:bwiki:ef22314e638e3760",
@@ -8814,7 +9220,10 @@
       "related_pages": [
         "https://wiki.biligame.com/deemo/MILI%20collection"
       ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
+      "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+      "collection_aliases": [
+        "Mili collection"
+      ]
     },
     {
       "id": "wikis:bwiki:f305b52bdf175b97",
@@ -8851,7 +9260,10 @@
         "https://wiki.biligame.com/deemo/Marigold"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:bwiki:f32e0ca147116984",
@@ -8999,7 +9411,10 @@
         "https://wiki.biligame.com/deemo/Rhapsody_in_B_minor"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:f6b3dd91f1a80056",
@@ -9069,7 +9484,10 @@
         "https://wiki.biligame.com/deemo/Venetian_Gondellied"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:f8a9383f1053bb99",
@@ -9106,7 +9524,10 @@
         "https://wiki.biligame.com/deemo/HYAKKA_RYOURAN"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:bwiki:faac31f8688bde23",
@@ -9143,7 +9564,10 @@
         "https://wiki.biligame.com/deemo/Anticipation"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "RAC collection -2"
+      ]
     },
     {
       "id": "wikis:bwiki:fd2ac020f3e25e71",
@@ -9180,7 +9604,10 @@
         "https://wiki.biligame.com/deemo/Waltz_No.1"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
-      "mapping_method": "Exact normalized song title / image filename match"
+      "mapping_method": "Exact normalized song title / image filename match",
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:bwiki:fd6727a30b26fe4c",
@@ -9443,7 +9870,10 @@
           "value": "Yawning Lion",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:03332f81353077cd",
@@ -9676,7 +10106,10 @@
           "value": "Three Years Diary",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "Mirai's Selection"
+      ]
     },
     {
       "id": "wikis:fandom:0570769450099a84",
@@ -9815,7 +10248,11 @@
       },
       "download_sha1": "362227d56c95879f3542c3f2186616409fcafa2d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:fandom:06bf1b64def1fca9",
@@ -10030,7 +10467,10 @@
       },
       "download_sha1": "a670c07fe2fc9863aec18ef341bf3f5869a9475d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:fandom:077796f948cc827e",
@@ -10123,7 +10563,10 @@
       },
       "download_sha1": "4264d323d97c9aefbcdc49d1acfa4f430ba628cc",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:fandom:07ff74ffb86cab20",
@@ -10215,7 +10658,10 @@
       },
       "download_sha1": "a41b92feef05520ea5fb61456a413a2e1e980852",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:082622a106c6977b",
@@ -10476,7 +10922,10 @@
           "value": "Past The Stargazing Season",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "MILI collection"
+      ]
     },
     {
       "id": "wikis:fandom:0b7d0596d675d1d8",
@@ -10737,7 +11186,10 @@
       },
       "download_sha1": "174eb4ac7774b300996e11ebc4162f4a0e44a051",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Aioi collection"
+      ]
     },
     {
       "id": "wikis:fandom:0c9eec69d49a5c4d",
@@ -10906,7 +11358,11 @@
       },
       "download_sha1": "b356b517b036d22e4e7496d30efc77ed8ebe5e4d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:0d8621373b49a3d5",
@@ -10998,7 +11454,10 @@
       },
       "download_sha1": "9e460e9a720c018b2665388f586da31f256006a4",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:0e627b97f68806f2",
@@ -11397,7 +11856,10 @@
       },
       "download_sha1": "fc7661abed276b946d8dbaf65966d06092c6b7e1",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Feryquitous collection"
+      ]
     },
     {
       "id": "wikis:fandom:12b1e864c75de81f",
@@ -11935,7 +12397,10 @@
       },
       "download_sha1": "dafd1663a7aabb6f76f1eea3d9665c7681a26340",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:1493f8a3422ea782",
@@ -11981,7 +12446,10 @@
       },
       "download_sha1": "0253dd45f5accb6c88a227c6bec4cb9d6454b76d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration Collection"
+      ]
     },
     {
       "id": "wikis:fandom:14da61cab185014d",
@@ -12442,7 +12910,10 @@
       },
       "download_sha1": "0a24204a43c38faf577e185aa609c988a9307302",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:fandom:197e9fdd9e34d97a",
@@ -12489,7 +12960,11 @@
       },
       "download_sha1": "72a76dcc994a904b8542ec44f86f65417e1fe850",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:1a2005ee27043426",
@@ -12799,7 +13274,10 @@
       },
       "download_sha1": "e201299b91bdad7f94464b9115babfd4c81cf921",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 1B"
+      ]
     },
     {
       "id": "wikis:fandom:1d03b13c37d5b8cc",
@@ -12891,7 +13369,10 @@
       },
       "download_sha1": "9c75c16a209c55707d3bab268698567dd6c4178c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:fandom:1d59fbb12d23310f",
@@ -13305,7 +13786,10 @@
       },
       "download_sha1": "3f541fd8be3346af17a26237a300c1dc0fe3f8aa",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection -2"
+      ]
     },
     {
       "id": "wikis:fandom:23f05e7e06b3adfe",
@@ -13353,7 +13837,10 @@
       },
       "download_sha1": "a830c69ef7800cdad9fdb9c0371368950b48c1a9",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili collection"
+      ]
     },
     {
       "id": "wikis:fandom:24734e0dab214f60",
@@ -13614,7 +14101,10 @@
       },
       "download_sha1": "9b382b464812d626071b7c4564304431c7646bdc",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mirai's Selection"
+      ]
     },
     {
       "id": "wikis:fandom:25a24003eb38d710",
@@ -13706,7 +14196,10 @@
       },
       "download_sha1": "5935ffc46cd2022bca8a072e0aaae18c412905d9",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection #4"
+      ]
     },
     {
       "id": "wikis:fandom:26b1edf8676501dc",
@@ -13753,7 +14246,10 @@
       },
       "download_sha1": "901425b3fd66e41549fb93b813d8fdcb5ce35c5e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:26b86f25a7a330a4",
@@ -13799,7 +14295,10 @@
       },
       "download_sha1": "09c5e9aff4731a906c0bad6ce59e5a2e0521e683",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:26da092a2ec50614",
@@ -13984,7 +14483,11 @@
       },
       "download_sha1": "8f96cf8fc30032bab3ed3c6d4dba128198a0b069",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:fandom:280633dd684234d5",
@@ -14123,7 +14626,10 @@
       },
       "download_sha1": "6812d15fb0c111fe55265b7be52059572bdc77f3",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:fandom:288a0a6cd488c5f2",
@@ -14169,7 +14675,10 @@
       },
       "download_sha1": "a21f9f315bbb90c54f0a8341952eabe67ce8f1ae",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:fandom:28c3e7ba59e80445",
@@ -14385,7 +14894,10 @@
       },
       "download_sha1": "5c4cee725829a2c5441753c9193d587c91e233d5",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration Collection"
+      ]
     },
     {
       "id": "wikis:fandom:2926dcfe5a39cead",
@@ -14554,7 +15066,10 @@
       },
       "download_sha1": "d492c116433def4d4f4736084010dddaa8eb452d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:fandom:296ededcd74b636e",
@@ -14601,7 +15116,10 @@
       },
       "download_sha1": "dd8c756c8b273bcdec47346f31d1f07818c39fd5",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:29b98e5e7a1574fa",
@@ -14653,6 +15171,9 @@
           "url": "https://static.wikia.nocookie.net/deemo/images/8/86/LILI.png/revision/latest?cb=20160507082853&format=original",
           "error": "503 Server Error: Backend fetch failed for url: https://static.wikia.nocookie.net/deemo/images/8/86/LILI.png/revision/latest?cb=20160507082853&format=original"
         }
+      ],
+      "collection_aliases": [
+        "RAC collection -2"
       ]
     },
     {
@@ -14745,7 +15266,10 @@
       },
       "download_sha1": "17733963a4182508ad5a2d952e10d26c96300612",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Aioi collection"
+      ]
     },
     {
       "id": "wikis:fandom:2a86d06aeb9493bb",
@@ -14884,7 +15408,11 @@
       },
       "download_sha1": "d52d548a8fec82d788d2b13f37df26219301cc70",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:fandom:2adcac6476739f74",
@@ -15023,7 +15551,11 @@
       },
       "download_sha1": "9f1ac8faaa8540193f87d6fdd1bcbec86608c242",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:fandom:2c9debefef8f10a0",
@@ -15301,7 +15833,11 @@
       },
       "download_sha1": "f67b17ca860f29e70d04060823d3a692c694647e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:2d9c964db350d68b",
@@ -15441,7 +15977,10 @@
       },
       "download_sha1": "fa484845e94f43a09ff1b501c9aa9545fe028b94",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:2e7e5a6654a68296",
@@ -16104,7 +16643,11 @@
       },
       "download_sha1": "06333d3e95788dad7c398dd4a069ce8f0710241a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:325fd180e5b7998b",
@@ -16150,7 +16693,10 @@
       },
       "download_sha1": "6453264ebfd3f2b22da7ab7d4a28f5b457bcb15f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:fandom:3327b1d3881e3eed",
@@ -16872,7 +17418,10 @@
       },
       "download_sha1": "4a984500fb94866679c45967b453b13e56ad28be",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili Collection Vol. 2"
+      ]
     },
     {
       "id": "wikis:fandom:3a93b33265bbb130",
@@ -17148,7 +17697,10 @@
       },
       "download_sha1": "d0da828ad90ca42551105dee2f6411596eeb04f6",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection #4"
+      ]
     },
     {
       "id": "wikis:fandom:3db45070ceb40672",
@@ -17332,7 +17884,10 @@
       },
       "download_sha1": "373d2ff1114fb5bdef4aa0d140d064168c1f4978",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:3ef7ded419761552",
@@ -17716,7 +18271,10 @@
       },
       "download_sha1": "0eafb9edbae50eb37dadcdf1516cacd4b6e1dc88",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:40c099f46fa7100e",
@@ -18301,7 +18859,10 @@
       },
       "download_sha1": "84c0f88e0c0ba70070d473c111b2001d5aa7dd45",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mirai's Selection"
+      ]
     },
     {
       "id": "wikis:fandom:47125ced698286b5",
@@ -18393,7 +18954,11 @@
       },
       "download_sha1": "8c35ffb986755f2cdc9062893f641da35feca9ef",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:4833614daa3af1c1",
@@ -18608,7 +19173,10 @@
       },
       "download_sha1": "025a8a447c54b69249768cf055fe331e113153a7",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:49000d7a0cb53c9f",
@@ -18869,7 +19437,10 @@
       },
       "download_sha1": "6bcd637e3273cb4911274d291929e2c527f759e5",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:49a47dad9c01312b",
@@ -19010,7 +19581,11 @@
       },
       "download_sha1": "e4da1053fc6345108e727e3c3d04d7f8124a6b11",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:fandom:4b225a4119795e96",
@@ -19179,7 +19754,10 @@
       },
       "download_sha1": "78c110cb7d0fd38c3b7276f216e2ef639827643f",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili Collection Vol.3"
+      ]
     },
     {
       "id": "wikis:fandom:4cd4d1b8514413eb",
@@ -19271,7 +19849,10 @@
       },
       "download_sha1": "943e3040c983b8e5922715502f4c20f1158fc382",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:4e919a352df19fc3",
@@ -19580,7 +20161,11 @@
       },
       "download_sha1": "9d3828ede7aa572c2d47a83110a73ea56ec914cd",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:fandom:5221628fcb29bf72",
@@ -19872,7 +20457,10 @@
       },
       "download_sha1": "a8df244ce7beec1a5b44b6556a33b3cfc81d0605",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection -2"
+      ]
     },
     {
       "id": "wikis:fandom:5349c5f05c40a9b3",
@@ -20242,7 +20830,10 @@
       },
       "download_sha1": "180d1ffdee0891fe5524c61808ec2807ddd80314",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:5615e2a92e20e787",
@@ -20288,7 +20879,10 @@
       },
       "download_sha1": "10e67d2d0d9a910df2af205043308f1c1daeebea",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:564f3ef6a54a3be7",
@@ -20657,7 +21251,10 @@
       },
       "download_sha1": "73beebff60c4fce779e9f91f2342f7712cdb4b47",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili collection Vol. 2"
+      ]
     },
     {
       "id": "wikis:fandom:59190ad08a41ae39",
@@ -20704,7 +21301,10 @@
       },
       "download_sha1": "9b459ddde87c53f229c6405e92b73472b79d7a4d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "MILI collection"
+      ]
     },
     {
       "id": "wikis:fandom:59bac0a6e4074cb9",
@@ -20845,7 +21445,10 @@
       },
       "download_sha1": "56e6b1d92ed7d843bb4cf043b3cfe09d5f711d4d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:5c62ffef71569191",
@@ -20938,7 +21541,10 @@
       },
       "download_sha1": "82c9db1e2172a09d47d7066a803aa4b0f6510264",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Aioi collection"
+      ]
     },
     {
       "id": "wikis:fandom:5e2ed560fa896dbf",
@@ -21215,7 +21821,10 @@
       },
       "download_sha1": "084d4ad64c3a64f651f74c4edb0ad75aad191e17",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:fandom:610b192df7eeea2a",
@@ -21353,7 +21962,10 @@
       },
       "download_sha1": "399c4464e4f67245ddeb1e82fc30ff9a05f57441",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Hundotte Collection"
+      ]
     },
     {
       "id": "wikis:fandom:621660e1c3908462",
@@ -21585,7 +22197,10 @@
       },
       "download_sha1": "2364697baa49286dc0c491c5194b43eff0f7266a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:64ddeb4ce0e83863",
@@ -21679,7 +22294,10 @@
       },
       "download_sha1": "ca1f77a5b18fbb9b2d74bd062efb088dea15559c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili Collection Vol. 2"
+      ]
     },
     {
       "id": "wikis:fandom:660a95c32575193a",
@@ -21894,7 +22512,10 @@
       },
       "download_sha1": "a93476dec4da278803f4fa742a59fb01e98bc351",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ]
     },
     {
       "id": "wikis:fandom:66b779884bd451ca",
@@ -21941,7 +22562,11 @@
       },
       "download_sha1": "edd3e66ca730f7541315078d748fb5d2debce7f7",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:670cafeb9a3bbd2f",
@@ -22033,7 +22658,10 @@
           "value": "Level Zero",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:fandom:679fba272ef2c2a5",
@@ -22079,7 +22707,10 @@
       },
       "download_sha1": "be3499f55107bb6804678d38e72f9b46f2a2723d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:fandom:6817edd9a1d38fc8",
@@ -23185,7 +23816,10 @@
       },
       "download_sha1": "848385bb5a1d379dc93897f491baa0cb77ceea6d",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:6f8c61fba99fe224",
@@ -23323,7 +23957,10 @@
       },
       "download_sha1": "7ccf73b99ddad46bc15ae93da42dce5c13996f0b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:70ecca6cfa5a2443",
@@ -23554,7 +24191,10 @@
       },
       "download_sha1": "fca573c6843ff4e135222480019cda0354e7320c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Hundotte Collection"
+      ]
     },
     {
       "id": "wikis:fandom:73ad1ea442b53f82",
@@ -23985,7 +24625,10 @@
       },
       "download_sha1": "380f05eff20abb3d62a49fa55df90ad17c982345",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:fandom:76fa56007c81b79a",
@@ -24323,7 +24966,10 @@
       },
       "download_sha1": "6dec4cf45f66f34ee43651b52ff1f5a0a3f1ce31",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ]
     },
     {
       "id": "wikis:fandom:79f677b24cab3711",
@@ -24507,7 +25153,10 @@
       },
       "download_sha1": "7bd7427a71b0f2ee53aaaa4f800364015dfd6b57",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "MILI collection"
+      ]
     },
     {
       "id": "wikis:fandom:7b058e6015d09d44",
@@ -24691,7 +25340,10 @@
       },
       "download_sha1": "2e8dd15db75b3014ca3dac462f2c8c68896beb11",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:7be0cbb60c8b94c3",
@@ -24860,7 +25512,10 @@
       },
       "download_sha1": "bdb7f23a65e71115f11ae611b5d48c84e747e409",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:7c8ffc381bcbcb06",
@@ -25075,7 +25730,10 @@
           "value": "Sprout",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "RAC collection -2"
+      ]
     },
     {
       "id": "wikis:fandom:7f037e0c93777ae6",
@@ -25123,7 +25781,10 @@
       },
       "download_sha1": "7a21fed4151fe73a2d97b8ad97622ab443789508",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:7f285fe2fbb63a07",
@@ -25169,7 +25830,11 @@
       },
       "download_sha1": "7884feee985ab2d8fce12b4e9d6e1c7b4232bb18",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol.2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:7f71c166494b2ff8",
@@ -25263,7 +25928,11 @@
       },
       "download_sha1": "c720cf0a603648b48d763cb9b3eb586adf9f6fb0",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:fandom:7ff4b3994f7e5971",
@@ -25309,7 +25978,10 @@
       },
       "download_sha1": "1abb03eb15624e93e6fb448dea7762bccea19113",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection #4"
+      ]
     },
     {
       "id": "wikis:fandom:7ff563bd8387a211",
@@ -25447,7 +26119,10 @@
       },
       "download_sha1": "aefd28189c3d2eaab9716e44766d13df9fcceb12",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili Collection Vol.3"
+      ]
     },
     {
       "id": "wikis:fandom:815d4bf812258276",
@@ -25709,7 +26384,11 @@
       },
       "download_sha1": "a1b03d15d0b734bf91151d9ad20d5c4d0556eb39",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:82836bdcb9b48c5e",
@@ -25924,7 +26603,10 @@
       },
       "download_sha1": "7a7a5a41d6fd36d9ec5df340f65a57ed69818833",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Ice Collection"
+      ]
     },
     {
       "id": "wikis:fandom:84c780ee3f8c3b86",
@@ -26094,7 +26776,10 @@
       },
       "download_sha1": "760ae216000679536bec4a3b0e40ae6058c7bd66",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:84fbe929c209d5a8",
@@ -26310,7 +26995,11 @@
       },
       "download_sha1": "7586de9b8ced9e22064ff2317660116c9c41e214",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:fandom:8517951c8a646c23",
@@ -26496,6 +27185,9 @@
           "source": "mediawiki-metadata"
         }
       },
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ],
       "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
@@ -26804,7 +27496,10 @@
       },
       "download_sha1": "10e618fdddfea6324d6d85ce4eb9468005e3ceb6",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:88593d535b8d6c17",
@@ -26851,7 +27546,10 @@
       },
       "download_sha1": "35397cb09295d96e99bf83e8a6d9bb9002502633",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:888bc90112c85157",
@@ -26898,7 +27596,11 @@
           "value": "Altale",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "Deemo's Collection Vol.2",
+        "Deemo's collection Vol. 2"
+      ]
     },
     {
       "id": "wikis:fandom:889f08cee95a2ccb",
@@ -27328,7 +28030,10 @@
       },
       "download_sha1": "aafdf1f1b9d1dd37cc6d6d7e4852ca1eb017377a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:89dd182e7db868d6",
@@ -27374,7 +28079,10 @@
           "value": "Veritas",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:fandom:8a51884a5fcd5580",
@@ -27559,7 +28267,10 @@
       },
       "download_sha1": "2f7c2cdd6bd33ff3ab891628b3452d0f59729bdd",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili Collection Vol.3"
+      ]
     },
     {
       "id": "wikis:fandom:8c214a863de45f1f",
@@ -27959,7 +28670,10 @@
       },
       "download_sha1": "a1350ff2868d03a534ea5c575008c4031ae5c56c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "MILI collection"
+      ]
     },
     {
       "id": "wikis:fandom:8ee25d60de7c7744",
@@ -28006,7 +28720,10 @@
       },
       "download_sha1": "6b66c84c12f6922c56b18ea92300bdcd724dc7cb",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:fandom:9070f8cdbe4ed0bb",
@@ -28098,7 +28815,10 @@
       },
       "download_sha1": "11e505d3cbbd0cbfa17714ca4e9bb05b2bc0cc7b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Aioi Collection"
+      ]
     },
     {
       "id": "wikis:fandom:91a790c155913d99",
@@ -28239,7 +28959,10 @@
       },
       "download_sha1": "9e3eb319da1334b6c0819fac90a043962b458007",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:934593c44daacdb3",
@@ -28287,7 +29010,11 @@
       },
       "download_sha1": "c75c7609a16cc8509f0b242b87cf439c48393a17",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:9360c39720092be5",
@@ -28380,6 +29107,9 @@
           "source": "mediawiki-metadata"
         }
       },
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ],
       "delivery_note": "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki original upload. Downloaded bytes preserved unchanged."
     },
     {
@@ -28427,7 +29157,10 @@
       },
       "download_sha1": "2f4d4f38e49b98278e539f01fd49977862675307",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:94a6bfde37c19829",
@@ -28566,7 +29299,10 @@
           "value": "Rac01rethefullmoonworld",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:fandom:95e5be15ba323b76",
@@ -28613,7 +29349,10 @@
       },
       "download_sha1": "71959e5d50be18d6347fb580f29f60fac560942c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili collection Vol. 2"
+      ]
     },
     {
       "id": "wikis:fandom:963629463eb8db6a",
@@ -28920,7 +29659,10 @@
       },
       "download_sha1": "165c56cc30e0215c8cdad11d137a1f7f48879287",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Hundotte Collection"
+      ]
     },
     {
       "id": "wikis:fandom:981cca5163cb09c8",
@@ -29058,7 +29800,10 @@
       },
       "download_sha1": "84a50470ef611f500cf99b529ad14196d54da586",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:fandom:9a28be023934a7c8",
@@ -29197,7 +29942,10 @@
       },
       "download_sha1": "3fb73a11ab3fa39febd868955651989876ade9d7",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:fandom:9ac11d962507b665",
@@ -29243,7 +29991,10 @@
       },
       "download_sha1": "f9a076df3e9a658328b446c3de9209f1d7e0c3ad",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:9b22911e9943bab3",
@@ -29597,7 +30348,11 @@
       },
       "download_sha1": "de7d2623a17ed2b09108209a27087238c201e59e",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:9d8067357ebd6adf",
@@ -29969,7 +30724,10 @@
       },
       "download_sha1": "ea0de7dd1ce25224bbc70b77de0badc84cf70567",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Feryquitous collection"
+      ]
     },
     {
       "id": "wikis:fandom:9fd16ca0ca68c3da",
@@ -30307,7 +31065,10 @@
       },
       "download_sha1": "23b88dfee860537367410bcc6d9532c43b94e54a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:a29dfbb19adf504e",
@@ -30401,6 +31162,10 @@
           "source": "mediawiki-metadata"
         }
       },
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ],
       "delivery_note": "Full-size public CDN file matches published dimensions but differs from the wiki original upload checksum/size; downloaded bytes preserved unchanged."
     },
     {
@@ -30447,7 +31212,10 @@
       },
       "download_sha1": "576111942d9078e4e9f87b0c64468a5e7cc55ddb",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:fandom:a598d3970f7236a0",
@@ -30632,7 +31400,10 @@
       },
       "download_sha1": "6a1fb93c68172d95a4147f14284bdcc504d936db",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:fandom:a611b2321795c643",
@@ -30770,7 +31541,10 @@
       },
       "download_sha1": "da26b4cd3535cd5d5f3b3d5ee59224b4bb2f7a32",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:a893508c4b41c9bc",
@@ -31185,7 +31959,10 @@
       },
       "download_sha1": "11932248206d4d87bf938efc8f5355c922221662",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Etude collection"
+      ]
     },
     {
       "id": "wikis:fandom:aace55bd104f84e9",
@@ -31416,7 +32193,10 @@
       },
       "download_sha1": "43c0db16a740f71a54264d1bda84d6591c7c0deb",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:ac5f992f706a593d",
@@ -32154,7 +32934,10 @@
       },
       "download_sha1": "0966bf61cd1adff5a79e5f8375df55f151e78adc",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection #4"
+      ]
     },
     {
       "id": "wikis:fandom:b0fda799b2805464",
@@ -32200,7 +32983,10 @@
           "value": "Graduation Song",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "RAC collection -2"
+      ]
     },
     {
       "id": "wikis:fandom:b23d0de554b78ec2",
@@ -32246,7 +33032,10 @@
           "value": "Rac01bloomingspring",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "RAC collection -1"
+      ]
     },
     {
       "id": "wikis:fandom:b39f8991c5d8e20d",
@@ -32415,7 +33204,10 @@
       },
       "download_sha1": "6f12025173fe998e5d7287957b6f911f84d03f39",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Aioi collection"
+      ]
     },
     {
       "id": "wikis:fandom:b4563f4358a70f65",
@@ -33429,7 +34221,10 @@
           "value": "Starry Night",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "Mirai's Selection"
+      ]
     },
     {
       "id": "wikis:fandom:ba7c82f9b00895d5",
@@ -34090,7 +34885,11 @@
       },
       "download_sha1": "8cb92fa746bac504db5689d70160ac76a38a01db",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol.2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:bf6e0ab77e9a4fe1",
@@ -34182,7 +34981,10 @@
       },
       "download_sha1": "21a808274a43848c9de57d9303c065b53250c36c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mirai's Selection"
+      ]
     },
     {
       "id": "wikis:fandom:c040224c93362520",
@@ -34228,7 +35030,10 @@
       },
       "download_sha1": "bc66f5c35decd242d8d35174770bf0cca5421c15",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:c14fe5169baa0d56",
@@ -34443,7 +35248,10 @@
       },
       "download_sha1": "009d0675e4ebe476e00dbe27aa6fe31876df32ab",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ]
     },
     {
       "id": "wikis:fandom:c1b38c28c71ffe18",
@@ -34535,7 +35343,10 @@
       },
       "download_sha1": "29ebe482a236183e3887146398b9ccd7ddade112",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:fandom:c23b0dd35bfa3cc9",
@@ -34627,7 +35438,11 @@
           "value": "Wings Of Piano",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:fandom:c2bcfa158571ce3b",
@@ -35058,7 +35873,10 @@
       },
       "download_sha1": "caafe5a34170530dda4547ebf86e38f2bae8f8ad",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Ice collection"
+      ]
     },
     {
       "id": "wikis:fandom:c7768810f4b219ee",
@@ -35202,6 +36020,10 @@
           "source": "mediawiki-metadata"
         }
       },
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ],
       "delivery_note": "Full-size public CDN file matches published dimensions but differs from the wiki original upload checksum/size; downloaded bytes preserved unchanged."
     },
     {
@@ -35248,7 +36070,10 @@
       },
       "download_sha1": "519d4f0ba2eab9f272a159094fd2bbf4891d1f98",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:c8f6e4d1b707c52e",
@@ -35295,7 +36120,10 @@
       },
       "download_sha1": "0d4f79cccaf891c3d062538c4ff608f444ad9c9b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:c9124d3b1539e816",
@@ -35341,7 +36169,10 @@
       },
       "download_sha1": "9bdc61f1a5b0ed5906a05e993a44eb9853d5f188",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Knight Rosabell Collection"
+      ]
     },
     {
       "id": "wikis:fandom:c9b9735042d1a824",
@@ -35755,7 +36586,10 @@
       },
       "download_sha1": "80d0b3344ee70df21fb12aa0bd6b5405e2075799",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Knight Rosabell collection"
+      ]
     },
     {
       "id": "wikis:fandom:cc776d859a4828de",
@@ -35939,7 +36773,10 @@
       },
       "download_sha1": "da7653b43b09a99a186aff2f3cb0070551eb129b",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Samsara collection"
+      ]
     },
     {
       "id": "wikis:fandom:cdb8250aba351b40",
@@ -36077,7 +36914,10 @@
       },
       "download_sha1": "9136707ddcceaef2c142fd3b36a72144cab33f7a",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Ice collection"
+      ]
     },
     {
       "id": "wikis:fandom:cfa935a1aaf58dce",
@@ -36123,7 +36963,10 @@
       },
       "download_sha1": "c296e49dfcfaabf403d9b70e924e3a2311252baa",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Feryquitous collection"
+      ]
     },
     {
       "id": "wikis:fandom:cfbb46e31f7be75f",
@@ -36461,7 +37304,10 @@
       },
       "download_sha1": "76e9b48c6ad4e90b23b2ac06bf014703499075b3",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:fandom:d2fc1a8c2a875072",
@@ -36768,7 +37614,10 @@
       },
       "download_sha1": "7a4489d0864d1ec4af7a24c2fa67393f4a860098",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Hundotte Collection"
+      ]
     },
     {
       "id": "wikis:fandom:d59b7d22e9d66e37",
@@ -36814,7 +37663,10 @@
       },
       "download_sha1": "dcd428475cfe7f39d284c2baadfba74ba7d3492c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection #4"
+      ]
     },
     {
       "id": "wikis:fandom:d643dc91d51b9409",
@@ -36860,7 +37712,11 @@
           "value": "Suspenseful Third Day",
           "source": "mediawiki-metadata"
         }
-      }
+      },
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:d6740dc1adb828ac",
@@ -36954,7 +37810,10 @@
       },
       "download_sha1": "d4214e4e3c6e37070a6f9c5c99f31370a655e9a8",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:d70222baaf66e07f",
@@ -37046,7 +37905,10 @@
       },
       "download_sha1": "21b53b565b4f7c8f766649456638cea4217cbac9",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Feryquitous collection"
+      ]
     },
     {
       "id": "wikis:fandom:d7fe910f6e158e70",
@@ -37094,7 +37956,11 @@
       },
       "download_sha1": "4898372385e3555074991c2c7ab7d3890040517c",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:fandom:d88e2030767c1e2d",
@@ -37355,7 +38221,10 @@
       },
       "download_sha1": "00e2fb28b0872beebf386c24be7f5eb87ce2aecf",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:fandom:dbae395494662326",
@@ -37616,7 +38485,10 @@
       },
       "download_sha1": "ee14edefaf7e8f8f15365dee04a2b887e60d6705",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Rayark selection Vol.1"
+      ]
     },
     {
       "id": "wikis:fandom:dbf87d621e41e6e8",
@@ -37755,7 +38627,11 @@
       },
       "download_sha1": "34b73d8c3996d884d3e212453b67fc2f2e9fe6f1",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:dd26fe738845a2c4",
@@ -38277,7 +39153,10 @@
       },
       "download_sha1": "873ca73df5f6da4a8e8ada553f8e3165f6998b92",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili Collection Vol. 3"
+      ]
     },
     {
       "id": "wikis:fandom:e1f7f58a1cffb6ff",
@@ -38324,7 +39203,11 @@
       },
       "download_sha1": "a014a41a31df105a27886c0eae57732939742a53",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol.1A"
+      ]
     },
     {
       "id": "wikis:fandom:e28a65c7d77b35ac",
@@ -38370,7 +39253,10 @@
       },
       "download_sha1": "06d7c4076556737b4680da0371ea6424d73c4393",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:fandom:e353d294797d0a3c",
@@ -39038,7 +39924,10 @@
       },
       "download_sha1": "960a982ff69abffe4eda67fbe7eead7b1c149dca",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili Collection Vol. 2"
+      ]
     },
     {
       "id": "wikis:fandom:e87dd6d74ab9e983",
@@ -39422,7 +40311,10 @@
       },
       "download_sha1": "569217384506ca9d6fcf919290c6719fc055bb92",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "RAC collection -3"
+      ]
     },
     {
       "id": "wikis:fandom:eaef36ed1239fb7e",
@@ -39592,7 +40484,10 @@
       },
       "download_sha1": "81bc409c83be8efdb2261e59cb46190489744a29",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol.1B"
+      ]
     },
     {
       "id": "wikis:fandom:eb684e747511907f",
@@ -39638,7 +40533,10 @@
       },
       "download_sha1": "3f4bb6a739734567170a5d0d1dab041e1b534d02",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Ice collection"
+      ]
     },
     {
       "id": "wikis:fandom:ed2d190ca2f81059",
@@ -39824,7 +40722,11 @@
       },
       "download_sha1": "683c928f681882312a39853aeb567f1583e39902",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:fandom:f01942bedec8b700",
@@ -39919,7 +40821,10 @@
       },
       "download_sha1": "079631d68706f320eb3c48f15eeea1afb742dee2",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Ice collection"
+      ]
     },
     {
       "id": "wikis:fandom:f19b9d41f2631747",
@@ -39965,7 +40870,10 @@
       },
       "download_sha1": "e3047b74d3a2a664980d4bcc0f7eb6ac7e066609",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Hundotte Collection"
+      ]
     },
     {
       "id": "wikis:fandom:f29446376ae7a76d",
@@ -40011,7 +40919,11 @@
       },
       "download_sha1": "493465e5441cc15741b52e641dfa09009d9131a0",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's collection Vol. 2",
+        "Deemo's collection Vol.2"
+      ]
     },
     {
       "id": "wikis:fandom:f4eea8cfb3f1b813",
@@ -40103,7 +41015,10 @@
       },
       "download_sha1": "68743026c7911e142466c28cfa66eda1d8cfc2eb",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Mili Collection Vol.3"
+      ]
     },
     {
       "id": "wikis:fandom:f5e15cc507584aeb",
@@ -40151,7 +41066,11 @@
       },
       "download_sha1": "b5a29ea8f8412ca759ceb64a4d601f5cba0fa476",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Deemo's Collection Vol. 1A",
+        "Deemo's collection Vol. 1A"
+      ]
     },
     {
       "id": "wikis:fandom:f60c80628ba9efca",
@@ -40198,7 +41117,10 @@
       },
       "download_sha1": "c12a5a7249f5566167a5f1bfc916cc94a7bbe1f2",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Collaboration collection"
+      ]
     },
     {
       "id": "wikis:fandom:f6b344e8e5d77ae5",
@@ -40291,7 +41213,10 @@
       },
       "download_sha1": "eb0d1dbf4bb0af681327c94574fb5435661fd9dd",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Rayark selection Vol.3"
+      ]
     },
     {
       "id": "wikis:fandom:f7cd7612aa8a869f",
@@ -40721,7 +41646,10 @@
       },
       "download_sha1": "16dc54c86d6e79b1ef025f20d47dcee59394d7b1",
       "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true
+      "wiki_original_sha1_matches": true,
+      "collection_aliases": [
+        "Feryquitous collection"
+      ]
     },
     {
       "id": "wikis:fandom:ffea6ef628dd979d",
