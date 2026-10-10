@@ -103,6 +103,9 @@ class TempRoot(unittest.TestCase):
     def read_manifest(self, name):
         return json.loads((self.root / f"data/sources/{name}.json").read_text(encoding="utf-8"))
 
+    def archived_files(self):
+        return {path.relative_to(self.root).as_posix() for path in (self.root / "assets").rglob("*") if path.is_file()}
+
 
 # ---------------------------------------------------------------- fetch_artists
 
@@ -215,6 +218,30 @@ class ArtistsTests(TempRoot):
                           ("artists:pixiv:1:p1", "assets/public/artists/snowegg/pixiv-1-p01.png", sha(self.old[1]))])
         for asset in assets:
             self.assertEqual(sha((self.root / asset["path"]).read_bytes()), asset["sha256"], asset["id"])
+
+    def test_lost_superseded_file_leaves_the_canonical_record_on_its_copy(self):
+        self.seed()
+        p1_url = OLD_P0.replace("_p0", "_p1")
+        web = FakeWeb({**pixiv_routes([NEW_P0, p1_url]), NEW_P0: png("blue"), p1_url: self.old[1]})
+        self.assertEqual(self.run_main(web), 0)
+
+        def summary():
+            return [(a["id"], a["path"], a["sha256"], a.get("upstream_status")) for a in self.read_manifest("artists")["assets"]]
+
+        before = summary()
+        lost = "assets/public/artists/snowegg/pixiv-1-p00.png"
+        self.assertEqual([row[:2] for row in before],
+                         [("artists:pixiv:1:p0", f"assets/public/artists/snowegg/pixiv-1-p00-{sha(png('blue'))[:12]}.png"),
+                          (f"artists:pixiv:1:p0:{sha(self.old[0])[:12]}", lost),
+                          ("artists:pixiv:1:p1", "assets/public/artists/snowegg/pixiv-1-p01.png")])
+        # The superseded red file is lost and upstream still serves blue, from the cache or downloaded
+        # again: nothing moves, so no copy is left without a record.
+        (self.root / lost).unlink()
+        for flags in ((), ("--refresh",)):
+            self.assertEqual(self.run_main(web, *flags), 0)
+            self.assertEqual(summary(), before, flags)
+            self.assertFalse((self.root / lost).exists(), "a second copy of blue was written")
+            self.assertEqual({row[1] for row in before} - {lost}, self.archived_files(), flags)
 
     def test_revert_deduplicated_to_another_page_keeps_every_file_referenced(self):
         red, blue = png("red"), png("blue")
@@ -658,17 +685,47 @@ class ArchivesTests(TempRoot):
         with contextlib.redirect_stdout(io.StringIO()):
             archives.verify()
 
-        # 11.png is lost once more and upstream reverts to green, which is stored at 11.png. The
-        # superseded green record keeps the suffixed copy referenced instead of leaving it orphaned.
+        # 11.png is lost once more and upstream reverts to green, which is already stored beside it.
+        # The canonical record moves onto that copy rather than a second one at 11.png, and the red
+        # record stays listed as superseded: --verify reports its missing file until it is restored.
         (self.root / record["path"]).unlink()
         web.routes[url] = png("green")
         archives.reset()
         self.assertEqual(self.run_main(web, self.caa_step()), 0)
         assets = self.read_manifest("archives")["assets"]
-        self.assertEqual(sorted((a["id"], a["path"]) for a in assets),
-                         [(record["id"], record["path"]), (f"{record['id']}:{sha(png('green'))[:12]}", green)])
-        files = {path.relative_to(self.root).as_posix() for path in (self.root / "assets").rglob("*") if path.is_file()}
-        self.assertEqual({a["path"] for a in assets}, files, "an archived file is no longer referenced")
+        self.assertEqual(sorted((a["id"], a["path"], a.get("upstream_status")) for a in assets),
+                         [(record["id"], green, None),
+                          (f"{record['id']}:{sha(png('red'))[:12]}", record["path"], "superseded")])
+        self.assertFalse((self.root / record["path"]).exists(), "a second copy of green was written")
+        with self.assertRaises(FileNotFoundError), contextlib.redirect_stdout(io.StringIO()):
+            archives.verify()
+        self.put(record["path"], png("red"))  # restored from git
+        self.assertEqual({a["path"] for a in assets}, self.archived_files(), "an archived file is no longer referenced")
+        with contextlib.redirect_stdout(io.StringIO()):
+            archives.verify()
+
+    def test_lost_superseded_file_leaves_the_canonical_record_on_its_copy(self):
+        url = f"https://coverartarchive.org/release/{archives.CAA_MBID}/11.jpg"
+        record = self.caa_record(11, png("red"))
+        self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [record], "failures": []})
+        web = FakeWeb({CAA_API: json.dumps({"images": [caa_image(11)]}), url: png("blue")})
+        self.assertEqual(self.run_main(web, self.caa_step()), 0)
+        before = self.read_manifest("archives")["assets"]
+        self.assertEqual(sorted((a["id"], a["path"]) for a in before),
+                         [(record["id"], f"assets/public/archives/cover-art-archive/11-{sha(png('blue'))[:12]}.png"),
+                          (f"{record['id']}:{sha(png('red'))[:12]}", record["path"])])
+
+        # The superseded red file is lost and upstream still serves blue: nothing moves, so no copy is
+        # left without a record, and --verify reports the lost file until it is restored.
+        (self.root / record["path"]).unlink()
+        archives.reset()
+        self.assertEqual(self.run_main(web, self.caa_step()), 0)
+        self.assertEqual(self.read_manifest("archives")["assets"], before)
+        self.assertFalse((self.root / record["path"]).exists(), "a second copy of blue was written")
+        with self.assertRaises(FileNotFoundError), contextlib.redirect_stdout(io.StringIO()):
+            archives.verify()
+        self.put(record["path"], png("red"))  # restored from git
+        self.assertEqual({a["path"] for a in before}, self.archived_files(), "an archived file is no longer referenced")
         with contextlib.redirect_stdout(io.StringIO()):
             archives.verify()
 

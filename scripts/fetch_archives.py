@@ -127,12 +127,16 @@ def download(sid, key, title, page, url, kind, hosts, **extra):
                 raise ValueError(f"Unsupported original format: {fmt}")
         digest = hashlib.sha256(blob).hexdigest()
         filename = re.sub(r"[^a-zA-Z0-9_-]", "-", str(key)).strip("-") + ext
-        path = Path("assets/public/archives") / sid / filename
-        target = ROOT / path
-        if target.exists() and hashlib.sha256(target.read_bytes()).hexdigest() != digest:
+        base = Path("assets/public/archives") / sid / filename
+        beside = base.with_name(base.stem + "-" + digest[:12] + ext)
+        if (ROOT / base).exists():
             # Preserve the previous remote version if the source changes.
-            path = path.with_name(path.stem + "-" + digest[:12] + ext)
-            target = ROOT / path
+            path = base if holds(ROOT / base, digest) else beside
+        else:
+            # The base file is missing. An earlier run may have stored these bytes beside it; keep
+            # using that copy, because a second copy at the base path would leave it unreferenced.
+            path = beside if holds(ROOT / beside, digest) else base
+        target = ROOT / path
         keep_file(target, blob, digest)
         row = {"id": f"archives:{sid}:{key}", "source_id": "archives:" + sid, "title": title,
                "kind": kind, "page_url": page, "download_url": url,
@@ -444,6 +448,11 @@ def replace_file(path, data):
         os.replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
+
+
+def holds(path, digest):
+    """True when path is a file whose SHA-256 is digest."""
+    return path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == digest
 
 
 def keep_file(path, blob, digest):

@@ -368,6 +368,11 @@ def replace_file(path, data):
         temporary.unlink(missing_ok=True)
 
 
+def holds(path, digest):
+    """True when path is a file whose SHA-256 is digest."""
+    return path.is_file() and sha256(path.read_bytes()).hexdigest() == digest
+
+
 def keep_file(path, data, digest):
     """Store data at path; an identical file is left alone and different bytes are never overwritten."""
     if path.exists():
@@ -396,12 +401,16 @@ def save_asset(job, data, fetched_at, hashes):
     if digest in hashes:
         relative, duplicate_of = hashes[digest]
     else:
-        path = ROOT / relative
-        if path.exists() and sha256(path.read_bytes()).hexdigest() != digest:
+        beside = f"assets/public/artists/{job['directory']}/{job['stem']}-{digest[:12]}{extension}"
+        if (ROOT / relative).exists():
             # Upstream bytes changed: keep the archived file and store the new version beside it.
-            relative = f"assets/public/artists/{job['directory']}/{job['stem']}-{digest[:12]}{extension}"
-            path = ROOT / relative
-        keep_file(path, data, digest)
+            if not holds(ROOT / relative, digest):
+                relative = beside
+        elif holds(ROOT / beside, digest):
+            # The base file is missing, but an earlier run stored these bytes beside it; keep using
+            # that copy, because a second copy at the base path would leave it unreferenced.
+            relative = beside
+        keep_file(ROOT / relative, data, digest)
         hashes[digest] = (relative, job["id"])
     asset = {key: value for key, value in job.items() if key not in ("directory", "stem")}
     asset.update({"path": relative, "width": width, "height": height, "format": fmt,
