@@ -342,12 +342,34 @@ def render_slideshow(root: Path, catalog: dict) -> str:
     return template.replace("@python-work-area", "\n".join(slides))
 
 
+def attach_thumbnails(root: Path, catalog: dict, verify: bool = False) -> None:
+    """Add `thumb`, the derived grid preview listed in data/thumbs.json (scripts/build_thumbnails.py), to gallery
+    entries. Previews are not archive files: `url` stays the original, and entries without a preview get no field."""
+    manifest = root / "data" / "thumbs.json"
+    if not manifest.exists():
+        return
+    thumbnails = json.loads(manifest.read_text(encoding="utf-8"))["thumbnails"]
+    for entry in catalog["assets"]:
+        thumb = thumbnails.get(entry["sha256"]) if entry["gallery"] else None
+        if not thumb:
+            continue
+        if not thumb["path"].startswith("assets/thumbs/"):
+            raise ValueError(f"Thumbnail outside assets/thumbs/: {thumb['path']}")
+        path = safe_path(root, thumb["path"])
+        if not path.is_file() or path.stat().st_size != thumb["bytes"]:
+            raise ValueError(f"Missing or stale thumbnail {thumb['path']}: run scripts/build_thumbnails.py")
+        if verify and hashlib.sha256(path.read_bytes()).hexdigest() != thumb["sha256"]:
+            raise ValueError(f"Thumbnail SHA-256 mismatch: {thumb['path']}")
+        entry["thumb"] = quote(thumb["path"], safe="/")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify", action="store_true", help="Verify every hash, image header and format, and that every tracked file under assets/public and assets/legacy is referenced")
     parser.add_argument("--check", action="store_true", help="Check generated files without writing")
     args = parser.parse_args(argv)
     catalog = combine(ROOT, args.verify)
+    attach_thumbnails(ROOT, catalog, args.verify)
     encoded = json.dumps(catalog, ensure_ascii=False, indent=2) + "\n"
     script = "window.DEEMO_CATALOG = " + json.dumps(catalog, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029") + ";\n"
     outputs = {

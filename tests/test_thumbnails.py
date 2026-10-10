@@ -1,4 +1,4 @@
-"""Derived grid thumbnails: deterministic output, drift detection and pruning."""
+"""Derived grid thumbnails: deterministic output, drift detection, pruning and the catalog hook."""
 
 import contextlib
 import hashlib
@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from urllib.parse import quote
 
 from PIL import Image, ImageCms
 
@@ -23,6 +24,7 @@ def load(name):
 
 
 thumbs = load("build_thumbnails")
+catalog_builder = load("build_catalog")
 
 
 def pattern(size, mode):
@@ -266,6 +268,75 @@ class PruneTests(Fixture):
         self.assertFalse(gone.exists())
         self.assertEqual(self.files(), kept)
         self.assertEqual(thumbs.problems(self.root), [])
+
+
+class CatalogHookTests(Fixture):
+    def catalog(self, verify=False):
+        result = catalog_builder.combine(self.root, verify=True)
+        catalog_builder.attach_thumbnails(self.root, result, verify)
+        return {Path(entry["path"]).name: entry for entry in result["assets"]}
+
+    def test_without_thumbnails_the_catalog_is_unchanged(self):
+        for entry in self.catalog(verify=True).values():
+            self.assertNotIn("thumb", entry)
+
+    def test_gallery_entries_point_at_their_preview_and_keep_the_original(self):
+        thumbs.build(self.root)
+        entries = self.catalog(verify=True)
+        manifest = self.manifest()["thumbnails"]
+        for name in ("wide.png", "cutout.png", "photo.jpg"):
+            with self.subTest(name=name):
+                entry = entries[name]
+                self.assertEqual(entry["thumb"], quote(manifest[entry["sha256"]]["path"], safe="/"))
+                self.assertEqual(entry["url"], f"assets/public/artists/{name}")
+                self.assertTrue(all("thumb" not in record for record in entry["provenance"]))
+        self.assertNotIn("thumb", entries["small.png"])
+        self.assertNotIn("thumb", entries["booklet.pdf"])
+
+    def test_missing_or_tampered_preview_fails_the_catalog_build(self):
+        thumbs.build(self.root)
+        path = self.root / self.manifest()["thumbnails"][self.sha("cutout.png")]["path"]
+        raw = bytearray(path.read_bytes())
+        raw[-1] ^= 1
+        path.write_bytes(raw)
+        self.catalog(verify=False)  # same size: only --verify hashes previews
+        with self.assertRaisesRegex(ValueError, "Thumbnail SHA-256 mismatch"):
+            self.catalog(verify=True)
+        path.unlink()
+        with self.assertRaisesRegex(ValueError, "build_thumbnails"):
+            self.catalog()
+
+    def test_previews_must_live_under_assets_thumbs(self):
+        thumbs.build(self.root)
+        manifest = self.manifest()
+        manifest["thumbnails"][self.sha("wide.png")]["path"] = "assets/public/artists/wide.png"
+        (self.root / thumbs.MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "assets/thumbs/"):
+            self.catalog()
+
+
+class RepositoryTests(unittest.TestCase):
+    """The committed previews, data/thumbs.json and the generated catalog agree with the archived originals."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.manifest = json.loads((ROOT / thumbs.MANIFEST).read_text(encoding="utf-8"))["thumbnails"]
+        catalog = json.loads((ROOT / "data/catalog.json").read_text(encoding="utf-8"))
+        cls.gallery = [asset for asset in catalog["assets"] if asset["gallery"]]
+
+    def test_committed_thumbnails_are_current(self):
+        self.assertEqual(thumbs.problems(ROOT), [])
+
+    def test_catalog_grid_entries_use_the_committed_previews(self):
+        wrong = [asset["id"] for asset in self.gallery if asset.get("thumb") != (
+            quote(self.manifest[asset["sha256"]]["path"], safe="/") if asset["sha256"] in self.manifest else None)]
+        self.assertEqual(wrong, [], f"{len(wrong)} catalog entries disagree with {thumbs.MANIFEST}: run scripts/build_catalog.py")
+
+    def test_first_page_of_the_grid_stays_light(self):
+        # archive.js renders 60 cards per page in catalog order by default; before previews this was about 82 MB.
+        first_page = self.gallery[:60]
+        grid_bytes = sum(self.manifest[asset["sha256"]]["bytes"] if asset["sha256"] in self.manifest else asset["bytes"] for asset in first_page)
+        self.assertLess(grid_bytes, 4_000_000)
 
 
 if __name__ == "__main__":
