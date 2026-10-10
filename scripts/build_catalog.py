@@ -21,6 +21,9 @@ SOURCE_MANIFESTS = ("artists", "wikis", "archives")
 # Legacy keys that name a collection cover: the book sprites, and deemo1a/deemo1b, the Deemo's Collection Vol.1A/1B
 # covers (the same files are covers on Fandom; see the cover pattern in scripts/fetch_wikis.py).
 COVER_KEY = re.compile(r"booksprite|bookcover|^deemo1[ab]$", re.IGNORECASE)
+# Optional fields on a record the fetchers carried forward rather than dropped: its upstream file was removed, was
+# superseded by a newer upload (superseded_by names the record with the canonical id), or failed to re-download.
+UPSTREAM_STATUSES = ("removed", "superseded", "fetch_failed")
 # Every tracked file here must be a record's or a variant's path (assets/thumbs/ has its own check).
 ORPHAN_CHECK_DIRECTORIES = ("assets/public", "assets/legacy")
 
@@ -147,6 +150,11 @@ def validate_asset(root: Path, asset: dict, verify: bool = False) -> None:
     page_url = urlsplit(asset["page_url"])
     if page_url.scheme not in {"https", "http"} or not page_url.netloc:
         raise ValueError(f"Unsafe source URL: {asset['page_url']}")
+    status = asset.get("upstream_status")
+    if status is not None and status not in UPSTREAM_STATUSES:
+        raise ValueError(f"Unknown upstream_status {status!r}: {asset['id']}")
+    if (status == "superseded") != (asset.get("superseded_by") is not None):
+        raise ValueError(f"superseded_by goes with upstream_status 'superseded', and only with it: {asset['id']}")
     path = safe_path(root, asset["path"])
     if path.stat().st_size != asset["bytes"]:
         raise ValueError(f"Byte count mismatch: {path}")
@@ -208,6 +216,10 @@ def combine(root: Path, verify: bool = False) -> dict:
             by_hash[asset["sha256"]] = {
                 **asset, "source_name": source["name"], "provenance": [provenance],
             }
+    for asset in assets:
+        successor = asset.get("superseded_by")
+        if successor is not None and (successor == asset["id"] or successor not in seen_ids):
+            raise ValueError(f"superseded_by names no other asset: {asset['id']} -> {successor}")
     if verify:
         referenced = {Path(record["path"]).as_posix() for asset in assets for record in (asset, *asset.get("variants", []))}
         orphans = [name for name in tracked_files(root, ORPHAN_CHECK_DIRECTORIES) or [] if name not in referenced]

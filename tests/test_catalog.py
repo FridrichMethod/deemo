@@ -247,6 +247,43 @@ class CatalogTests(unittest.TestCase):
         nested.mkdir()
         self.assertIsNone(build.tracked_files(nested, build.ORPHAN_CHECK_DIRECTORIES))
 
+    def test_carried_forward_records_keep_their_upstream_status(self):
+        sources = [{"id": "wiki", "name": "Wiki", "url": "https://example.com/wiki"}]
+        records = [
+            self.image("assets/public/wikis/art--new.png", "black", id="wiki:art", source_id="wiki"),
+            self.image("assets/public/wikis/art--old.png", "gray", id="wiki:art--old", source_id="wiki",
+                       upstream_status="superseded", superseded_by="wiki:art"),
+            self.image("assets/public/wikis/gone.png", "red", id="wiki:gone", source_id="wiki", upstream_status="removed"),
+            self.image("assets/public/wikis/retry.png", "blue", id="wiki:retry", source_id="wiki", upstream_status="fetch_failed"),
+        ]
+
+        def write(assets):
+            (self.root / "data/sources/wikis.json").write_text(json.dumps({"sources": sources, "assets": assets}), encoding="utf-8")
+
+        write(records)
+        catalog = {asset["id"]: asset for asset in build.combine(self.root, verify=True)["assets"]}
+        self.assertEqual(len(catalog), 4)
+        self.assertNotIn("upstream_status", catalog["wiki:art"])
+        self.assertEqual((catalog["wiki:art--old"]["upstream_status"], catalog["wiki:art--old"]["superseded_by"]), ("superseded", "wiki:art"))
+        self.assertEqual(catalog["wiki:art--old"]["provenance"][0]["superseded_by"], "wiki:art")
+        self.assertEqual(catalog["wiki:gone"]["upstream_status"], "removed")
+        self.assertEqual(catalog["wiki:retry"]["provenance"][0]["upstream_status"], "fetch_failed")
+        old = records[1]
+        for message, change in {
+            "Unknown upstream_status": {"upstream_status": "deleted"},
+            "superseded_by": {"superseded_by": None},
+            "superseded_by names no other asset": {"superseded_by": "wiki:missing"},
+            "superseded_by names no other asset: wiki:art--old": {"superseded_by": "wiki:art--old"},
+        }.items():
+            with self.subTest(message):
+                write([records[0], {**old, **change}])
+                with self.assertRaisesRegex(ValueError, message):
+                    build.combine(self.root, verify=True)
+        with self.subTest("superseded_by without superseded"):
+            write([records[0], {**records[2], "superseded_by": "wiki:art"}])
+            with self.assertRaisesRegex(ValueError, "superseded_by"):
+                build.combine(self.root, verify=True)
+
     def test_check_reports_each_stale_or_missing_output_without_writing(self):
         self.manifest("artists", self.asset)
         self.assertIsNone(self.run_main("--verify"))
