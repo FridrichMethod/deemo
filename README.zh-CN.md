@@ -64,6 +64,7 @@ assets/
   public/{artists,wikis,archives}/  新增公开素材与参考资料
   legacy/trans/                    原仓库未量化的透明 PNG
   legacy/tiny/                     配对的历史量化副本
+  thumbs/                          派生的 WebP 网格预览图（不是存档文件）
   site/{icons,fonts,images,audio}/  图标、字体、背景/截图、音频
 src/                               页面 JS/CSS；vendor/ 为原第三方 bundle
 src/i18n.js / src/i18n/            语言切换脚本与中英文界面文案
@@ -93,6 +94,7 @@ python -m venv .venv
 .venv/bin/python -I scripts/fetch_artists.py --workers 4
 .venv/bin/python -I scripts/fetch_wikis.py --resume --workers 4
 .venv/bin/python -I scripts/fetch_archives.py
+.venv/bin/python -I scripts/build_thumbnails.py --prune
 .venv/bin/python scripts/build_catalog.py --verify
 ```
 
@@ -114,6 +116,21 @@ python -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -I tests/browser_smoke.py --browser /usr/bin/google-chrome
 ```
+
+## 网格预览图
+
+图库网格显示较小的派生预览图，而不是完整原图，因此首屏只加载不到 1 MB 的图片，而不是数十 MB。`scripts/build_thumbnails.py` 为长边超过 480 px 的每张图库图片生成一张 WebP 预览图（长边 480 px、质量 75、不含 EXIF 和 XMP，保留内嵌的 ICC 色彩配置文件），写入 `assets/thumbs/`，以原图 SHA-256 的前 16 位十六进制命名，并记录在 `data/thumbs.json` 中；随后 `scripts/build_catalog.py` 把预览图作为 `thumb` 字段写入对应的目录条目。预览图只是显示用的副本，不是存档文件：原图保持字节不变，查看器、下载链接和原图链接始终使用原图。较小的图片和 PDF 没有预览图；预览图加载失败时，卡片会改用原图。预览图（约 33 MB）随网站一起发布，计入 950 MB 的 Pages 上限。
+
+增删原图后，先重建预览图，再构建目录，然后检查：
+
+```sh
+.venv/bin/python -I scripts/build_thumbnails.py --prune
+.venv/bin/python scripts/build_catalog.py --verify
+.venv/bin/python -I scripts/build_thumbnails.py --check
+.venv/bin/python -I tests/test_thumbnails.py
+```
+
+使用 `requirements.txt` 中固定的 Pillow 版本时，重建会写出逐字节相同的文件；`--verify` 会从原图重新编码每张预览图并加以确认。`--check`（`tests/test_thumbnails.py` 也会运行）确认每张较大的图库图片都有预览图，且每张预览图存在、可解码、尺寸和哈希符合记录，也没有孤立文件。`--prune` 删除原图已不在图库中的预览图。脚本不会混用不同的编码设置或 Pillow 版本；`--rebuild` 会重新编码全部预览图。
 
 ## 署名
 

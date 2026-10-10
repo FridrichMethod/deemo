@@ -64,6 +64,7 @@ assets/
   public/{artists,wikis,archives}/  newly added public material and references
   legacy/trans/                    original repository's unquantized transparent PNGs
   legacy/tiny/                     paired historical palette-quantized copies
+  thumbs/                          derived WebP grid previews (not archive files)
   site/{icons,fonts,images,audio}/  icons, fonts, backgrounds/screenshots, audio
 src/                               page JS/CSS; vendor/ holds the original third-party bundle
 src/i18n.js / src/i18n/            language switch script and English/Chinese UI strings
@@ -93,6 +94,7 @@ Refresh the public sources as needed, or resume the saved wiki candidates:
 .venv/bin/python -I scripts/fetch_artists.py --workers 4
 .venv/bin/python -I scripts/fetch_wikis.py --resume --workers 4
 .venv/bin/python -I scripts/fetch_archives.py
+.venv/bin/python -I scripts/build_thumbnails.py --prune
 .venv/bin/python scripts/build_catalog.py --verify
 ```
 
@@ -114,6 +116,21 @@ Offline verification and browser acceptance checks:
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -I tests/browser_smoke.py --browser /usr/bin/google-chrome
 ```
+
+## Grid previews
+
+The gallery grid shows small derived previews instead of the full originals, so the first view loads well under 1 MB of images instead of tens of megabytes. `scripts/build_thumbnails.py` writes one WebP preview for each gallery image whose long edge exceeds 480 px (long edge 480 px, quality 75, no EXIF or XMP; an embedded ICC colour profile is kept) to `assets/thumbs/`, named by the first 16 hex digits of the original's SHA-256, and lists them in `data/thumbs.json`; `scripts/build_catalog.py` then adds each preview to its catalog entry as `thumb`. The previews are display copies, not archive files: the originals stay byte-identical, and the viewer, the download link and the link to the original file always serve the original. Smaller images and the PDFs get no preview, and a card falls back to the original if its preview fails to load. The previews (about 33 MB) are published with the site and count toward the 950 MB Pages budget.
+
+After originals are added or removed, rebuild the previews before the catalog, then check them:
+
+```sh
+.venv/bin/python -I scripts/build_thumbnails.py --prune
+.venv/bin/python scripts/build_catalog.py --verify
+.venv/bin/python -I scripts/build_thumbnails.py --check
+.venv/bin/python -I tests/test_thumbnails.py
+```
+
+With the Pillow version pinned in `requirements.txt`, a rebuild writes byte-identical files, and `--verify` re-encodes every preview from its original to confirm it. `--check`, which `tests/test_thumbnails.py` also runs, confirms that every larger gallery image has a preview and that each preview exists, decodes, and has the expected size and hash, with no orphaned files. `--prune` deletes previews whose original has left the gallery. The script will not mix encoder settings or Pillow versions; `--rebuild` re-encodes every preview.
 
 ## Attribution
 
