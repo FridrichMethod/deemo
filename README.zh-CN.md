@@ -103,18 +103,16 @@ python -m venv .venv
 离线校验与浏览器验收：
 
 ```sh
-.venv/bin/python -I tests/test_catalog.py
-.venv/bin/python -I tests/test_layout.py
-.venv/bin/python -I tests/test_pages.py
-.venv/bin/python -I tests/test_i18n.py
-.venv/bin/python -I tests/test_check_sources.py
+# 与 CI 相同，运行全部离线测试文件
+for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done
 .venv/bin/python scripts/build_catalog.py --verify --check
 .venv/bin/python scripts/build_legacy_inventory.py
 .venv/bin/python -I scripts/fetch_archives.py --verify
 
-# 可选：本机 HTTP 服务运行时，使用已安装的 Chrome 做浏览器验收
+# 可选：上文的本机 HTTP 服务运行时，使用已安装的 Chrome 做浏览器验收
+# （不到一分钟；出现任何控制台错误或失败的请求也会判为失败）
 .venv/bin/python -m pip install -r requirements-dev.txt
-.venv/bin/python -I tests/browser_smoke.py --browser /usr/bin/google-chrome
+.venv/bin/python -I tests/browser_smoke.py --base http://127.0.0.1:8765 --browser /usr/bin/google-chrome
 ```
 
 ## 网格预览图
