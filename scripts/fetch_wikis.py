@@ -483,8 +483,10 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
     records verified or downloaded in this run, and failed_ids are candidates whose download failed. A previous record
     whose candidate left the snapshot stays as upstream_status "removed"; one whose re-download failed stays as
     "fetch_failed". When a re-uploaded file was downloaded, the new bytes keep the canonical id (deep links stay stable)
-    and the previous version keeps its file and record under "<id>:<sha256[:12]>" as "superseded". Files are never
-    deleted. Candidates without an outcome yet keep their previous record unchanged.
+    and the previous version keeps its file and record under "<id>:<sha256[:12]>" as "superseded". When upstream reverts
+    to an earlier version, the canonical record holds that version's file again, so its superseded record (the same
+    path and bytes) is not kept as well. Files are never deleted. Candidates without an outcome yet keep their previous
+    record unchanged.
     """
     merged = {}
     for asset_id, previous in existing.items():
@@ -500,7 +502,13 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
         else:
             merged[asset_id] = {**previous, "upstream_status": "removed"}
     merged.update(results)
-    return [merged[asset_id] for asset_id in sorted(merged)]
+
+    def restored(record):
+        canonical = merged.get(record.get("superseded_by"))
+        return (record.get("upstream_status") == "superseded" and canonical is not None
+                and (canonical["sha256"], canonical["path"]) == (record["sha256"], record["path"]))
+
+    return [merged[asset_id] for asset_id in sorted(merged) if not restored(merged[asset_id])]
 
 
 def resumed_sources(sources, snapshot):

@@ -191,6 +191,24 @@ class CarryForwardTests(FetcherRun):
         # Resuming the same snapshot again changes nothing.
         self.assertEqual(self.resume(new)["assets"], manifest["assets"])
 
+    def test_revert_to_an_earlier_upload_keeps_one_record_of_its_file(self):
+        first = self.resume(self.offer("Art.png", png("red")))["assets"][0]
+        green = self.resume(self.offer("Art.png", png("green")))["assets"][0]
+        # Upstream reverts to the first upload: the canonical record holds its file again, and only the green version
+        # stays superseded; the red one is not also kept as "superseded by" a record of the same file.
+        manifest = self.resume(self.offer("Art.png", png("red")))
+        records = {record["id"]: record for record in manifest["assets"]}
+        green_id = first["id"] + ":" + green["sha256"][:12]
+        self.assertEqual(sorted(records), [first["id"], green_id])
+        self.assertEqual((records[first["id"]]["path"], records[first["id"]]["sha256"]), (first["path"], first["sha256"]))
+        self.assertNotIn("upstream_status", records[first["id"]])
+        self.assertEqual({**records[green_id], "fetched_at": None}, {**green, "fetched_at": None, "id": green_id,
+                                                                     "upstream_status": "superseded", "superseded_by": first["id"]})
+        files = {path.relative_to(self.root).as_posix() for path in (self.root / "assets").rglob("*") if path.is_file()}
+        self.assertEqual(sorted(record["path"] for record in records.values()), sorted(files))
+        # Resuming the reverted snapshot again changes nothing.
+        self.assertEqual(self.resume(self.offer("Art.png", png("red")))["assets"], manifest["assets"])
+
     def test_failed_redownload_keeps_the_verified_record(self):
         old = self.offer("Art.png", png("red"))
         first = self.resume(old)["assets"][0]
