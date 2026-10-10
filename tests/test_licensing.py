@@ -3,6 +3,7 @@
 import json
 import re
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +24,9 @@ LOCAL_ONLY_FAMILIES = {"Coprhtl", "COPRGTL", "RocknRoll"}
 FONT_FACE = re.compile(r"@font-face\s*\{([^}]*)\}")
 DECLARATION = re.compile(r"([\w-]+)\s*:\s*([^;]+);")
 FONT_URL = re.compile(r"""url\(\s*["']?([^"')]+\.(?:ttf|otf|woff2?))["']?\s*\)""", re.IGNORECASE)
+VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+# GitHub renders NOTICE; Pages would serve the extensionless file as a download.
+NOTICE_URL = "https://github.com/FridrichMethod/deemo/blob/main/NOTICE"
 # Upstream (mashirozx/deemo) files changed here, Apache-2.0 section 4(b): current path -> upstream name.
 MODIFIED_UPSTREAM = {
     "templates/slideshow.html": "test.html",
@@ -31,6 +35,40 @@ MODIFIED_UPSTREAM = {
 }
 # Changed upstream files that cannot carry a comment, or that were replaced outright; NOTICE names them.
 NOTED_IN_NOTICE = ("index.html", "site.webmanifest", ".gitattributes", "README.md", "html.py", "scripts/build_catalog.py")
+
+
+class Links(HTMLParser):
+    """Collect the links inside one element (e.g. footer or noscript), with the language of each."""
+
+    def __init__(self, container):
+        super().__init__(convert_charrefs=True)
+        self.container, self.depth, self.languages = container, 0, []
+        self.links, self.text = [], []
+
+    def handle_starttag(self, tag, attrs):
+        attributes = dict(attrs)
+        if tag == self.container:
+            self.depth += 1
+        if self.depth and tag not in VOID:
+            self.languages.append(attributes.get("lang") or (self.languages[-1] if self.languages else "en"))
+            if tag == "a":
+                self.links.append((attributes.get("href"), attributes.get("data-i18n"), self.languages[-1]))
+
+    def handle_endtag(self, tag):
+        if self.depth and tag not in VOID:
+            self.languages.pop()
+        if tag == self.container:
+            self.depth -= 1
+
+    def handle_data(self, data):
+        if self.depth:
+            self.text.append(data)
+
+
+def links_in(relative, container):
+    parser = Links(container)
+    parser.feed((ROOT / relative).read_text(encoding="utf-8-sig"))
+    return parser
 
 
 def words(text):
@@ -139,6 +177,11 @@ class AttributionTests(unittest.TestCase):
         for relative in (*MODIFIED_UPSTREAM, *NOTED_IN_NOTICE):
             with self.subTest(file=relative):
                 self.assertIn(relative, notice)
+
+    def test_archive_attribution_link_opens_the_rendered_notice(self):
+        footer = links_in("archive.html", "footer")
+        targets = [href for href, key, _ in footer.links if key == "footer.attribution"]
+        self.assertEqual(targets, [NOTICE_URL])
 
 
 if __name__ == "__main__":
