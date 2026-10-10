@@ -1,5 +1,5 @@
-"""Every catalog token the archive page labels (source status, file quality, provenance class) has an English and a
-Chinese label."""
+"""Every catalog token the archive page labels (source status, file quality, provenance class, upstream status) has an
+English and a Chinese label, and every provenance-record field is either shown by the page or deliberately left out."""
 
 import json
 import re
@@ -12,6 +12,48 @@ REGISTER = re.compile(r"DEEMO_I18N\.register\((\{.*\})\);\s*$", re.DOTALL)
 # catalog (a run with failures marks its source partial or failed), so they are labelled before they first appear.
 FETCHER_STATUSES = {"complete", "partial", "failed", "unavailable", "discovered", "pending", "reference_only",
                     "fetched", "no_assets_fetched"}
+# Marks a refetch puts on a record it keeps although upstream changed (removed, re-uploaded, or not re-downloadable).
+UPSTREAM_STATUSES = {"removed", "superseded", "fetch_failed"}
+# Provenance-record fields src/archive.js shows (viewer, card or search). File facts (path, size, digest, fetch time)
+# are shown once per asset from the asset's own fields, which every record of a byte-identical file shares.
+SHOWN = {
+    "source_id", "source_name", "page_url", "download_url", "family", "kind", "title", "artist", "composer",
+    "collection", "collection_scope", "collections", "song_titles", "internal_key", "notes", "quality", "provenance",
+    "quality_notes", "source_dimensions_kind", "variant_note", "layout_note", "delivery_note", "rights", "rights_holder",
+    "wiki_original_sha1_matches", "upstream_status", "mapping_status", "title_status", "variants",
+    "path", "width", "height", "format", "bytes", "sha256", "fetched_at",
+}
+# Fields the page leaves out on purpose, with the reason. A new manifest field fails the test until it is added to one
+# of the two lists, so a caveat cannot be dropped silently.
+IGNORED = {
+    "id": "record id; links use the asset id",
+    "game": "always DEEMO, the catalog's scope",
+    "mode": "Pillow image mode, a technical detail of the file",
+    "transformed": "false for every record (checked below): files are kept as downloaded",
+    "api_approved": "Cover Art Archive approval, true for every scan (checked below)",
+    "published_at": "post date; the source link leads to the post",
+    "source_page_index": "position of the image in its source post",
+    "source_dimensions": "size the source page states; the file's own size is shown",
+    "source_caption": "the artist's caption the shown title was mapped from",
+    "advertised_lightbox_url": "lightbox URL behind source_dimensions_kind, which is shown",
+    "resolved_url": "redirect target of the shown download URL",
+    "resolved_download_url": "redirect target of the shown download URL",
+    "wiki_original_url": "the wiki's original-file URL; the URL actually downloaded is shown",
+    "content_type": "MIME type; the file format is shown",
+    "wiki_mime": "MIME type; the file format is shown",
+    "wiki_sha1": "digest behind wiki_original_sha1_matches, which is shown when false",
+    "download_sha1": "digest behind wiki_original_sha1_matches, which is shown when false",
+    "wiki_original_size_matches": "false only with wiki_original_sha1_matches false (checked below), which is shown",
+    "wiki_timestamp": "upload time on the wiki",
+    "wiki_extmetadata": "MediaWiki upload metadata (date, object name); no creator or licence fields",
+    "related_pages": "wiki pages that use the file; the source page is shown",
+    "mapping_method": "how the shown song titles were matched",
+    "mapping_source": "where the shown song titles were matched from",
+    "download_attempt_failures": "failed attempts before the download that succeeded",
+    "scan_types": "scan side, already part of the shown title",
+    "tags": "Tumblr post tags the shown title was taken from",
+    "superseded_by": "id of the newer record; the superseded upstream status is shown",
+}
 
 
 def message_tables():
@@ -42,6 +84,31 @@ class ArchiveLabelTests(unittest.TestCase):
         classes = {"wiki" if record["family"] == "wikis" else record["provenance"]
                    for record in self.records if isinstance(record.get("provenance"), str)}
         self.assert_labelled("provenance.class", classes)
+
+    def test_upstream_statuses_are_labelled(self):
+        found = {record["upstream_status"] for record in self.records if record.get("upstream_status")}
+        self.assert_labelled("upstream", found | UPSTREAM_STATUSES)
+
+    def test_every_provenance_field_is_shown_or_ignored(self):
+        self.assertEqual(SHOWN & set(IGNORED), set())
+        families = {}
+        for record in self.records:
+            families.setdefault(record["family"], set()).update(record)
+        for family, keys in sorted(families.items()):
+            with self.subTest(family=family):
+                self.assertEqual(sorted(keys - SHOWN - set(IGNORED)), [],
+                                 "Show these fields in src/archive.js or list them in IGNORED with the reason")
+
+    def test_shown_fields_are_read_by_the_page(self):
+        script = (ROOT / "src/archive.js").read_text(encoding="utf-8")
+        unread = sorted(key for key in SHOWN if not re.search(rf'\.{key}\b|"{key}"', script))
+        self.assertEqual(unread, [], "src/archive.js no longer reads these SHOWN fields")
+
+    def test_ignored_caveats_stay_harmless(self):
+        self.assertFalse([record["id"] for record in self.records if record.get("transformed")], "transformed files")
+        self.assertFalse([record["id"] for record in self.records if record.get("api_approved") is False], "unapproved scans")
+        self.assertFalse([record["id"] for record in self.records if record.get("wiki_original_size_matches") is False
+                          and record.get("wiki_original_sha1_matches") is not False], "size mismatch with a matching digest")
 
 
 if __name__ == "__main__":

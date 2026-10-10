@@ -101,6 +101,10 @@ DEEMO_I18N.register({
     "provenance.class.official_reference": "official reference document",
     "provenance.class.wiki": "public community wiki upload; the original creator and upload lineage are not independently established",
     "provenance.rights_holder": "Rights holder: {holder}",
+    "provenance.upstream": "Upstream: {status}",
+    "upstream.removed": "no longer offered by the source; the copy fetched earlier is kept",
+    "upstream.superseded": "replaced at the source by a newer upload; this is the earlier version",
+    "upstream.fetch_failed": "the latest re-download failed; this is the copy verified earlier",
     "provenance.tiny": "Old palette-quantized copy (tiny) · {width} × {height} · {size}"
   },
   "zh-CN": {
@@ -204,6 +208,10 @@ DEEMO_I18N.register({
     "provenance.class.official_reference": "官方参考文档",
     "provenance.class.wiki": "公开社区 Wiki 上传；原作者与上传来源未经独立核实",
     "provenance.rights_holder": "权利人：{holder}",
+    "provenance.upstream": "上游状态：{status}",
+    "upstream.removed": "来源已不再提供此文件；保留此前获取的副本",
+    "upstream.superseded": "来源已上传更新的版本取代此文件；此为较早版本",
+    "upstream.fetch_failed": "最近一次重新下载失败；此为此前已验证的副本",
     "provenance.tiny": "旧量化版本（tiny） · {width} × {height} · {size}"
   }
 });

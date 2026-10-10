@@ -16,6 +16,7 @@
   const kindName = (kind) => i18n.has(`kind.${kind}`) ? t(`kind.${kind}`) : kind;
   const qualityName = (quality) => i18n.has(`quality.${quality}`) ? t(`quality.${quality}`) : quality;
   const statusName = (status) => i18n.has(`status.${status}`) ? t(`status.${status}`) : status;
+  const upstreamName = (status) => i18n.has(`upstream.${status}`) ? t(`upstream.${status}`) : status;
   // Archives records carry a class token (community_repost, official_website, …); every wiki upload carries the same
   // lineage caveat as prose, labelled as the "wiki" class. Without a label the recorded value is shown as it is.
   function provenanceClass(p) {
@@ -150,11 +151,13 @@
     if (p.notes) block.append(note("p", p.notes));
     if (p.quality) block.append(element("p", t("provenance.quality", {quality: qualityName(p.quality)})));
     if (typeof p.provenance === "string" && p.provenance) block.append(element("p", t("provenance.class", {label: provenanceClass(p)})));
-    for (const key of ["quality_notes", "variant_note", "layout_note", "delivery_note"]) {
+    for (const key of ["quality_notes", "source_dimensions_kind", "variant_note", "layout_note", "delivery_note", "rights"]) {
       if (p[key]) block.append(note("p", p[key]));
     }
     if (p.rights_holder) block.append(element("p", t("provenance.rights_holder", {holder: textValue(p.rights_holder)})));
     if (p.wiki_original_sha1_matches === false) block.append(element("p", t("provenance.checksum_mismatch")));
+    // A record a refetch kept although upstream no longer offers this file, offers a newer upload, or failed to re-serve it.
+    if (p.upstream_status) block.append(element("p", t("provenance.upstream", {status: upstreamName(p.upstream_status)})));
     if (p.mapping_status === "unmapped" || p.title_status === "unmapped" || p.title_status === "internal_key") block.append(element("p", t("provenance.unmapped")));
     if (p.download_url) block.append(sourceLink(t("provenance.remote"), p.download_url));
     for (const variant of p.variants || []) {
