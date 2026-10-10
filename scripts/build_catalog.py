@@ -211,8 +211,9 @@ def combine(root: Path, verify: bool = False) -> dict:
 
 def slide_notes(asset: dict) -> dict:
     """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated.
-    A collection name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out."""
-    found = {"composer": [], "artist": [], "collection": []}
+    A collection name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out.
+    data-songs lists the mapped song titles, which the notes headline when the title is only a wiki file key."""
+    found = {"songs": [], "composer": [], "artist": [], "collection": []}
     seen = {key: set() for key in found}
 
     def fold(text: str) -> str:
@@ -230,6 +231,8 @@ def slide_notes(asset: dict) -> dict:
             found[key].append(text)
 
     for record in asset.get("provenance") or [asset]:
+        for value in record.get("song_titles") or []:
+            add("songs", value)
         add("composer", record.get("composer"))
         add("artist", record.get("artist"))
         add("collection", record.get("collection"))

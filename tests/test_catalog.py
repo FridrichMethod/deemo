@@ -180,6 +180,19 @@ class CatalogTests(unittest.TestCase):
         kinds = {slide["data-id"]: slide["data-kind"] for slide in self.slides(catalog)}
         self.assertEqual(kinds, {"legacy:walkingbythesea": "unmapped", "legacy:magnolia": "song_art", "legacy:booksprites_0": "collection_cover"})
 
+    def test_slides_carry_their_mapped_song_titles(self):
+        # The liner notes headline the song when a wiki title is only a file key ("Classic01" for "Tristesse").
+        self.manifest("artists", {**self.asset, "title": "Classic01", "song_titles": ["Tristesse"]})
+        self.manifest("wikis", {**self.asset, "id": "wiki:sample", "source_id": "wiki", "song_titles": ["tristesse", "Ballade No.1"]})
+        path = self.root / "assets/public/artists/other.png"
+        Image.new("RGB", (8, 12), "black").save(path)
+        raw = path.read_bytes()
+        self.manifest("archives", {**self.asset, "id": "archive:other", "source_id": "archive", "path": path.relative_to(self.root).as_posix(),
+                                   "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
+        slides = {slide["data-id"]: slide for slide in self.slides(build.combine(self.root, verify=True))}
+        self.assertEqual(slides["artist:sample"]["data-songs"], "Tristesse\nBallade No.1")
+        self.assertNotIn("data-songs", slides["archive:other"])
+
     def test_quantized_legacy_file_is_a_verified_variant_not_an_extra_slide(self):
         self.legacy_pair()
         catalog = build.combine(self.root, verify=True)
