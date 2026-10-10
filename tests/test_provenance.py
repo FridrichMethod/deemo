@@ -104,6 +104,19 @@ def png(color, width=64, height=48):
     return buffer.getvalue()
 
 
+# The keys a download or a verified re-run writes at the end of a wiki record, in this order, when it has them.
+TAIL = (*fetch.SONG_INDEX_FIELDS, "delivery_note")
+
+
+def record_tail(record):
+    """(the last keys of a wiki record, the TAIL keys it holds in record order): equal when those keys end the record
+    in the order download() writes them. merge_assets() carries a record forward as {**previous, upstream fields}, so
+    upstream_status and superseded_by follow them and are left out."""
+    keys = [key for key in record if key not in fetch.UPSTREAM_FIELDS]
+    tail = [key for key in keys if key in TAIL]
+    return keys[len(keys) - len(tail):], tail
+
+
 class ComposerJoinTests(unittest.TestCase):
     def composers(self, candidates, songs):
         return [row.get("composer") for row in fetch.with_composers(candidates, songs)]
@@ -228,6 +241,35 @@ class ComposerRecordTests(unittest.TestCase):
         self.assertEqual(self.resume(dropped)["assets"][0],
                          {key: value for key, value in first.items() if key not in ("composer", "composer_source")})
 
+    def test_carried_forward_records_keep_the_composer_in_place(self):
+        # The manifest carry-forward: a failed re-download, a re-upload and a file gone from the snapshot keep their
+        # composer-bearing record, with the upstream fields after the TAIL keys, which record_tail() accepts.
+        offered = self.offer("Altale.png", png("red"), collection_aliases=["Etude collection"], composer="Sakuzyo",
+                             composer_source="wikis:fandom")
+        art = {**offered, "info": {**offered["info"], "sha1": "f" * 40}}
+        first = self.resume(art)["assets"][0]
+        unreachable = {**art, "info": {**art["info"], "sha1": "e" * 40, "url": "https://images.example.test/gone/Altale.png"}}
+        failed = self.resume(unreachable)["assets"]
+        reupload = self.offer("Altale.png", png("blue"), collection_aliases=["Etude collection"], composer="Sakuzyo",
+                              composer_source="wikis:fandom")
+        superseded = self.resume({**reupload, "info": {**reupload["info"], "sha1": "d" * 40}})["assets"]
+        removed = self.resume()["assets"]
+        statuses = {"fetch_failed": failed, "superseded": superseded, "removed": removed}
+        self.assertEqual({status: [row.get("upstream_status") for row in rows] for status, rows in statuses.items()},
+                         {"fetch_failed": ["fetch_failed"], "superseded": [None, "superseded"],
+                          "removed": ["removed", "superseded"]})
+        for status, rows in statuses.items():
+            for row in rows:
+                with self.subTest(status=status, row=row["id"]):
+                    self.assertEqual(row["composer"], "Sakuzyo")
+                    self.assertEqual(record_tail(row)[1], list(TAIL))
+                    self.assertEqual(*record_tail(row))
+        self.assertEqual(list(superseded[1])[-2:], ["upstream_status", "superseded_by"])
+        self.assertEqual(list(failed[0])[:-1], list(first))
+        # Out of place, the composer is still caught.
+        moved = {"composer": first["composer"], **{key: value for key, value in first.items() if key != "composer"}}
+        self.assertNotEqual(*record_tail({**moved, "upstream_status": "removed"}))
+
 
 def instant(stamp):
     """A fetched_at timestamp as a datetime (now() leaves out the fraction when it is zero, so strings do not sort)."""
@@ -283,8 +325,8 @@ class CommittedWikiDataTests(unittest.TestCase):
                         own = row.get("source_id") or fetch.SOURCES[row["source"]]["id"]
                         self.assertLessEqual(set(row["composer_source"].split(" / ")), wikis - {own})
                     if "id" in row:
-                        tail = [key for key in row if key in ("composer", "composer_source", "collection_aliases", "delivery_note")]
-                        self.assertEqual(list(row)[-len(tail):], tail, "composer sits where a verified re-run puts it")
+                        ending, tail = record_tail(row)
+                        self.assertEqual(ending, tail, "composer sits where a verified re-run puts it")
 
     def test_a_newer_snapshot_does_not_hold_back_the_manifest(self):
         # The source-check workflow's pull request: upstream credits BWIKI Magnolia differently, discovery rewrites the
