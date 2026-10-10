@@ -23,6 +23,14 @@ LOCAL_ONLY_FAMILIES = {"Coprhtl", "COPRGTL", "RocknRoll"}
 FONT_FACE = re.compile(r"@font-face\s*\{([^}]*)\}")
 DECLARATION = re.compile(r"([\w-]+)\s*:\s*([^;]+);")
 FONT_URL = re.compile(r"""url\(\s*["']?([^"')]+\.(?:ttf|otf|woff2?))["']?\s*\)""", re.IGNORECASE)
+# Upstream (mashirozx/deemo) files changed here, Apache-2.0 section 4(b): current path -> upstream name.
+MODIFIED_UPSTREAM = {
+    "templates/slideshow.html": "test.html",
+    "src/slideshow.css": "style.css",
+    "browserconfig.xml": "browserconfig.xml",
+}
+# Changed upstream files that cannot carry a comment, or that were replaced outright; NOTICE names them.
+NOTED_IN_NOTICE = ("index.html", "site.webmanifest", ".gitattributes", "README.md", "html.py", "scripts/build_catalog.py")
 
 
 def words(text):
@@ -118,6 +126,19 @@ class AttributionTests(unittest.TestCase):
         self.assertIn("Rayark Inc. and the respective creators", header)
         self.assertIn("雷亞遊戲（Rayark Inc.）与各自的创作者", header)
         self.assertIn("NOTICE", header)
+
+    def test_modified_upstream_files_carry_change_notices(self):
+        for relative, upstream in MODIFIED_UPSTREAM.items():
+            with self.subTest(file=relative):
+                head = words((ROOT / relative).read_text(encoding="utf-8-sig")[:1500])
+                self.assertIn(f"Derived from mashirozx/deemo {upstream} (Apache-2.0", head)
+                self.assertIn("modified by FridrichMethod, 2026", head)
+
+    def test_notice_lists_every_modified_upstream_file(self):
+        notice = words((ROOT / "NOTICE").read_text(encoding="utf-8"))
+        for relative in (*MODIFIED_UPSTREAM, *NOTED_IN_NOTICE):
+            with self.subTest(file=relative):
+                self.assertIn(relative, notice)
 
 
 if __name__ == "__main__":

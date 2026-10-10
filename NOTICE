@@ -7,6 +7,12 @@ https://github.com/mashirozx/deemo
 The upstream history (86 commits through c0f999a) was squashed into a single
 root snapshot; the Apache-2.0 license is retained.
 The gallery, metadata, fetching tools, and documentation were adapted in 2026.
+Upstream files changed in 2026 say so in a notice at their top:
+templates/slideshow.html (from test.html; the generated index.html copies
+its header), src/slideshow.css (from style.css) and browserconfig.xml.
+site.webmanifest (JSON, which allows no comments) and .gitattributes were
+also changed. scripts/build_catalog.py replaces the upstream html.py, and
+README.md replaces the upstream README.
 
 DEEMO artwork and game assets belong to Rayark Inc. and their respective
 creators. The software license does not grant a license to the artwork,
