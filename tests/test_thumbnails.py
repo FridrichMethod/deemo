@@ -442,6 +442,43 @@ class CatalogHookTests(Fixture):
             self.catalog()
 
 
+def function_body(source, name):
+    """The body of `function name(...) { ... }` in a script, found by matching braces."""
+    start = re.search(rf"\bfunction {name}\(", source)
+    if not start:
+        raise AssertionError(f"function {name}() not found")
+    opening = source.index("{", start.end())
+    depth = 0
+    for index in range(opening, len(source)):
+        depth += {"{": 1, "}": -1}.get(source[index], 0)
+        if depth == 0:
+            return source[opening + 1:index]
+    raise AssertionError(f"function {name}() is not closed")
+
+
+class ArchiveScriptTests(unittest.TestCase):
+    """src/archive.js uses previews for grid cards only; the viewer, download and original links serve the original.
+    The browser smoke test loads the page; this offline guard fails as soon as the script stops using previews."""
+
+    @classmethod
+    def setUpClass(cls):
+        source = (ROOT / "src/archive.js").read_text(encoding="utf-8")
+        cls.cards, cls.viewer = function_body(source, "more"), function_body(source, "open")
+
+    def test_grid_cards_load_the_preview_when_there_is_one(self):
+        self.assertRegex(self.cards, r"\bimage\.src\s*=\s*asset\.thumb\s*\|\|\s*asset\.url\s*;")
+
+    def test_a_failed_preview_falls_back_to_the_original_once(self):
+        self.assertRegex(self.cards, r"\bimage\.addEventListener\(\s*[\"']error[\"']\s*,\s*\(\)\s*=>\s*\{?\s*"
+                                     r"image\.src\s*=\s*asset\.url\s*;?\s*\}?\s*,\s*\{\s*once\s*:\s*true\s*\}\s*\)")
+
+    def test_viewer_download_and_original_links_use_the_original(self):
+        for target in ('$("full-image").src', '$("download").href', '$("original").href'):
+            with self.subTest(target=target):
+                self.assertRegex(self.viewer, re.escape(target) + r"\s*=\s*asset\.url\s*;")
+        self.assertNotIn("thumb", self.viewer)
+
+
 class RepositoryTests(unittest.TestCase):
     """The committed previews, data/thumbs.json and the generated catalog agree with the archived originals."""
 
