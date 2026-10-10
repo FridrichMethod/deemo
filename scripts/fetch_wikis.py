@@ -11,9 +11,11 @@ import argparse
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 import hashlib
 from io import BytesIO
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -45,6 +47,10 @@ SOURCES = {
     },
 }
 HEADERS = {"User-Agent": "DEEMO-Public-Art-Archive/1.0 (personal research; 4 workers max)"}
+# Transient statuses worth another attempt; 567 is BWIKI's EdgeOne rate limiting.
+RETRY_STATUSES = {429, 500, 502, 503, 504, 567}
+ATTEMPTS = 3
+MAX_RETRY_AFTER = 30  # seconds; a longer Retry-After is capped so a run stays bounded
 RASTER = re.compile(r"\.(png|jpe?g|webp|gif)$", re.I)
 UI = re.compile(r"^(arrow|bbook|ac-icon|fc-icon|logo|wikilogo)(\.|$)|titletab|screenshot|^\d{8} |DEEMO[ _]II", re.I)
 # Shortest edge of a collection cover; anything smaller is a UI tab or icon (the smallest real cover is 142 px).
@@ -57,18 +63,36 @@ def now():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def retry_delay(error, attempt):
+    """Seconds to wait before the next attempt: the server's Retry-After (seconds or an HTTP date), capped at
+    MAX_RETRY_AFTER, or else exponential backoff."""
+    response = getattr(error, "response", None)
+    value = response.headers.get("Retry-After") if response is not None else None
+    if value:
+        try:
+            seconds = float(value)
+        except ValueError:
+            try:
+                seconds = (parsedate_to_datetime(value) - datetime.now(timezone.utc)).total_seconds()
+            except (TypeError, ValueError):
+                seconds = math.nan
+        if not math.isnan(seconds):
+            return min(max(seconds, 0.0), MAX_RETRY_AFTER)
+    return min(2 ** attempt, 8)
+
+
 def get(url, *, params=None, headers=None):
-    for attempt in range(3):
+    for attempt in range(ATTEMPTS):
         try:
             response = requests.get(url, params=params, headers={**HEADERS, **(headers or {})}, timeout=(10, 25))
             response.raise_for_status()
             return response
         except requests.RequestException as error:
-            if isinstance(error, requests.HTTPError) and error.response.status_code not in {429, 500, 502, 503, 504}:
+            if isinstance(error, requests.HTTPError) and error.response.status_code not in RETRY_STATUSES:
                 raise
-            if attempt == 2:
+            if attempt == ATTEMPTS - 1:
                 raise
-            time.sleep(min(2 ** attempt, 8))
+            time.sleep(retry_delay(error, attempt))
 
 
 def api(source, **params):

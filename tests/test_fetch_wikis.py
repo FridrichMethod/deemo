@@ -4,6 +4,7 @@ Nothing touches the network: requests.get is replaced by a fake that serves cann
 temporary directory, so the repository's own manifests are never read or written.
 """
 
+import email.utils
 import hashlib
 import importlib.util
 import io
@@ -13,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -235,6 +237,38 @@ class ModeTests(FetcherRun):
     def test_full_discovery_still_refreshes_song_keys(self):
         self.discover().assert_called_once_with()
         self.assertEqual([record["title"] for record in self.read(MANIFEST)["assets"]], ["Art"])
+
+
+class RetryTests(FetcherRun):
+    URL = "https://wiki.biligame.com/deemo/api.php"
+
+    def test_bwiki_edgeone_567_is_retried(self):
+        self.web.routes[self.URL] = [(567, b"", {}), (200, b"{}", {})]
+        self.assertEqual(fetch.get(self.URL).content, b"{}")
+        self.assertEqual((len(self.web.calls), self.sleeps), (2, [1]))
+
+    def test_retry_after_is_honoured_up_to_a_cap(self):
+        self.web.routes[self.URL] = [(429, b"", {"Retry-After": "7"}), (429, b"", {"Retry-After": "86400"}), (200, b"", {})]
+        fetch.get(self.URL)
+        self.assertEqual(self.sleeps, [7, fetch.MAX_RETRY_AFTER])
+
+    def test_retry_after_may_be_an_http_date(self):
+        when = email.utils.format_datetime(datetime.now(timezone.utc) + timedelta(seconds=12), usegmt=True)
+        self.web.routes[self.URL] = [(503, b"", {"Retry-After": when}), (200, b"", {})]
+        fetch.get(self.URL)
+        self.assertTrue(10 <= self.sleeps[0] <= 12, self.sleeps)
+
+    def test_attempts_are_bounded_and_client_errors_fail_at_once(self):
+        self.web.routes[self.URL] = (567, b"", {})
+        with self.assertRaises(requests.HTTPError):
+            fetch.get(self.URL)
+        self.assertEqual((len(self.web.calls), len(self.sleeps)), (3, 2))
+        self.web.calls.clear()
+        self.sleeps.clear()
+        self.web.routes[self.URL] = (404, b"", {})
+        with self.assertRaises(requests.HTTPError):
+            fetch.get(self.URL)
+        self.assertEqual((len(self.web.calls), self.sleeps), (1, []))
 
 
 class DiscoveryFilterTests(unittest.TestCase):
