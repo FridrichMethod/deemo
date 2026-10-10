@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 from collections import Counter
 from urllib.parse import quote, unquote, urljoin, urlparse
 
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -394,11 +395,14 @@ def check_viewer_scroll_and_focus(browser):
     focus = """() => { const cards = [...document.querySelectorAll('.card-image')], box = document.activeElement.getBoundingClientRect();
         return [cards.indexOf(document.activeElement), box.bottom > 0 && box.top < innerHeight]; }"""
 
-    def close_viewer():
-        # The dialog's close event, which moves the focus, follows the key press as a separate task.
+    def close_viewer(card):
+        # Closing first hands the focus back to the card that opened the viewer; the page's close handler, a task
+        # later, moves it to the card of the image last shown.
         page.keyboard.press("Escape")
-        page.wait_for_function("!document.getElementById('viewer').open")
-        page.wait_for_timeout(100)
+        try:
+            page.wait_for_function(f"({focus})()[0] === {card}", timeout=2000)
+        except PlaywrightTimeoutError:
+            pass  # reported below
         return page.evaluate(focus)
 
     page.locator(".card-image").nth(5).click()
@@ -416,7 +420,7 @@ def check_viewer_scroll_and_focus(browser):
     page.keyboard.press("End")
     page.wait_for_timeout(400)
     assert page.evaluate("scrollY") == before, "The page behind the viewer scrolled"
-    assert close_viewer() == [5, True]
+    assert close_viewer(5) == [5, True]
     # Past the 60 cards drawn so far: closing draws up to the image shown and focuses its card.
     page.locator(".card-image").nth(59).click()
     page.wait_for_function(IMAGE_SHOWN)
@@ -424,7 +428,7 @@ def check_viewer_scroll_and_focus(browser):
         page.locator("#next").click()
         page.wait_for_function(IMAGE_SHOWN)
     assert page.locator("#position").inner_text().startswith("62 / ")
-    assert close_viewer() == [61, True]
+    assert close_viewer(61) == [61, True]
     finish(page)
     checks.append("viewer scroll lock and focus return")
 
@@ -482,7 +486,7 @@ def check_viewer_provenance(browser):
             for label, text in record["expected"]:
                 assert text in record["shown"], (lang, record)
                 assert lang == "en" or page.evaluate(HAS_HAN, text), (lang, text)
-                seen.add(label.split(" ")[0] if label == "composer" else "wiki class" if label == "class wiki" else "other class")
+                seen.add("composer" if label == "composer" else "wiki class" if label == "class wiki" else "other class")
         page.locator("#next").click()
     assert seen == {"composer", "wiki class", "other class"}, seen
     page.keyboard.press("Escape")
@@ -492,6 +496,7 @@ def check_viewer_provenance(browser):
     page.wait_for_function(IMAGE_SHOWN)
     target = "window.DEEMO_CATALOG.assets.find((a) => a.gallery).provenance[0]"
     blocks = {}
+    # The language alternates, so every read follows a redraw of the open viewer (or its first drawing).
     for status in (None, "removed"):
         page.evaluate(f"(status) => {{ if (status) {target}.upstream_status = status; else delete {target}.upstream_status; }}", status)
         for lang in ("zh-CN", "en"):
