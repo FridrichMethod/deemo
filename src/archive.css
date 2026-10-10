@@ -37,6 +37,7 @@ select:hover { border-color: var(--ink); }
 .card p { color: var(--muted); font-size: 12px; margin: 3px 0; }
 .card .tag { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
 .more { display: block; margin: 32px auto; padding: 10px 40px; }
+.noscript { margin: 0 0 20px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 5px; }
 [hidden] { display: none !important; }
 .source-inventory { border-top: 1px solid var(--border); margin-top: 32px; padding-top: 20px; }
 summary { cursor: pointer; }

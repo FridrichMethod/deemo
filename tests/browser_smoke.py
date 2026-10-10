@@ -558,6 +558,19 @@ def check_inventory_table(browser):
     checks.append("source inventory fits 375 and 1440 px wide in both languages")
 
 
+def check_without_javascript(browser):
+    """With JavaScript off, a phone's first screen explains it, in both languages, and no status line claims that the
+    catalog is loading."""
+    page = new_page(browser, 375, 667, java_script_enabled=False)
+    navigate(page, "archive.html")
+    notice = page.locator(".noscript")
+    assert notice.is_visible() and notice.bounding_box()["y"] + notice.bounding_box()["height"] <= 667, notice.bounding_box()
+    assert "JavaScript" in notice.inner_text() and "需要 JavaScript" in notice.inner_text()
+    assert not page.locator("#count").is_visible() and not page.get_by_text("Loading local catalog").is_visible()
+    finish(page)
+    checks.append("without JavaScript the notice is on a phone's first screen and nothing claims to load")
+
+
 def check_viewer_provenance(browser):
     """The viewer states each record's composer and provenance class in the page language; a record a refetch kept
     with an upstream_status gets a localized line for it."""
@@ -929,6 +942,7 @@ with sync_playwright() as p:
     check_card_tags(browser)
     check_no_repeated_names(browser)
     check_inventory_table(browser)
+    check_without_javascript(browser)
     check_previews(browser)
     check_attribution(browser)
     check_slideshow_controls(browser)
