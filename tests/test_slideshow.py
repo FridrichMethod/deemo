@@ -1,6 +1,8 @@
-"""Offline checks of the slideshow template and stylesheet: named, keyboard-operable controls in both
-languages and a screenshot overlay that does not live in the URL.
-Runtime behaviour (hit-testing, focus, layout) is covered by tests/browser_smoke.py."""
+"""Offline guards for the slideshow template and stylesheet: named, keyboard-operable controls in both
+languages, a bottom row whose DOM order follows its layout, a screenshot overlay that does not live in the URL,
+slides that crossfade without a keyframe fade and take no hits while hidden, an artist credit that no tier
+drops, and the visible attribution link. They read the sources only; hit-testing, focus and layout need a
+browser."""
 
 import json
 import re
