@@ -37,7 +37,10 @@ def session():
     if not hasattr(LOCAL, "session"):
         s = requests.Session()
         s.headers["User-Agent"] = "DEEMO-public-art-archive/1.0 (personal collection; public images only)"
-        s.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=0.7, status_forcelist=[429, 500, 502, 503, 504])))
+        # raise_on_status=False: after the retries, hand back the last 429/5xx response instead of
+        # raising RetryError, so callers can record the real status code.
+        s.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=0.7, status_forcelist=[429, 500, 502, 503, 504],
+                                                          raise_on_status=False)))
         LOCAL.session = s
     return LOCAL.session
 
@@ -210,42 +213,46 @@ def official():
         download(key, key, title, url, url, "reference", provenance="official_reference")
 
 
-def catalog():
-    entries = [
-        ("kadokawa-artbook", "DEEMO Visual Collection", "https://www.kadokawa.co.jp/product/322109001023/", "purchase_required", "Official 400+ artwork book; not downloaded because user excludes purchases."),
-        ("bookwalker-artbook", "DEEMO Visual Collection — BookWalker", "https://bookwalker.jp/deebf58ee2-8a3a-4e18-bdc2-6f75f704dd7a/", "purchase_required", "Paid DRM ebook; no purchase, preview extraction, or DRM bypass attempted."),
-        ("reddit-34", "DEEMO 3.4 extracted OST thread", "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/", "index_only", "Historical soundtrack bundle; earlier source audit attributes artwork to Wikia. No audio downloaded."),
-        ("reddit-4x", "DEEMO 4.x extracted OST thread", "https://www.reddit.com/r/TrueDeemo/comments/mzq53n/deemo_4x_extracted_ost/", "historical_unavailable", "Earlier search found reports of dead links; uploader mentions image scaling, so not native-resolution masters."),
-        ("reddit-5x", "DEEMO 5.x extracted OST + Artwork thread", "https://www.reddit.com/r/TrueDeemo/comments/sgcr9r/deemo_5x_extracted_ost_artwork/", "historical_unavailable", "Earlier search found MEGA takedown reports. Uploader describes Wikia WebP converted to PNG. Not an independent master-art source."),
-        ("reddit-art-database", "DEEMO in-game art database discussion", "https://www.reddit.com/r/TrueDeemo/comments/ssnzv6/", "index_only", "Discussion, not a verified downloadable higher-resolution archive."),
-        ("original-extraction-blog", "Original repository extraction provenance", "https://2heng.xin/2018/04/05/python-pil/", "index_only", "Original repo author's explanation of Unity extraction and PIL processing. Attribution retained as provenance."),
-        ("baidu-original", "Original extraction Baidu share", "https://pan.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA", "unverified_download", "Original repo-era Unity assets. Web share alone does not supply anonymous raw files; not evidence of higher-quality art."),
-        ("baidu-tools", "Original extraction tools Baidu share", "https://pan.baidu.com/s/1eIyEgsc1WOJo6piwjgH-pQ", "out_of_scope", "Tools linked in extraction blog, not song-art masters."),
-        ("dropbox-historical", "Historical Dropbox artwork share", "https://www.dropbox.com/sh/qdzxn3menwuk5he/AAAL2v6303lMlAf1ma54tJjga?dl=0", "historical_unavailable", "Checked shared-folder URL returns a Dropbox Error page despite HTTP 200; no public files available."),
-        ("zerochan", "Zerochan DEEMO index", "https://www.zerochan.net/Deemo", "mixed_content_index", "Mixed official art, fanart, crops, and potential upscales; no verified new source singled out. Artist originals are handled separately."),
-        ("safebooru", "Safebooru DEEMO tag", "https://safebooru.org/index.php?page=post&s=list&tags=deemo", "mixed_content_index", "Mixed third-party image board; no independently verified new official song art. Not batch imported as masters."),
-        ("tumgik-blazewu", "Tumgik mirror of Blaze Wu", "https://www.tumgik.com/wublaze", "mirror_index", "Third-party mirror; fetch author Tumblr through the artist-source importer instead."),
-        ("blazewu-tumblr", "Blaze Wu MILI Collection Vol.2", "https://wublaze.tumblr.com/post/129276170315/deemomili-collection-vol2songs-illustration", "delegated", "Author's original upload; handled by the separate artist-source importer to avoid duplicate ownership."),
-        ("bilibili-video-search", "Bilibili DEEMO artwork videos", "https://search.bilibili.com/all?keyword=DEEMO%20%E6%9B%B2%E7%BB%98", "index_only", "Video search leads are recompressed frames, not loose native artwork; no videos/audio downloaded."),
-        ("steam-reborn", "DEEMO -Reborn-", "https://store.steampowered.com/app/1282210/DEEMO_Reborn/", "purchase_required", "Paid game not available in this workspace; no game download. Shared original-game songs are only a subset."),
-        ("steamdb-reborn", "DEEMO -Reborn- songcover bundle index", "https://steamdb.info/depot/1282212/", "index_only", "Lists Unity songcover bundles, not publicly downloadable image files. Actual texture dimensions remain unverified."),
-        ("illustrator-directory", "Japanese DEEMO illustrator directory", "https://wikiwiki.jp/deemo/%E3%82%A2%E3%83%BC%E3%83%86%E3%82%A3%E3%82%B9%E3%83%88%E5%88%A5%E3%83%AA%E3%82%B9%E3%83%882", "index_only", "Artist-account routing directory; source artwork is fetched by the artist importer."),
-    ]
+CATALOG_ENTRIES = [
+    ("kadokawa-artbook", "DEEMO Visual Collection", "https://www.kadokawa.co.jp/product/322109001023/", "purchase_required", "Official 400+ artwork book; not downloaded because user excludes purchases."),
+    ("bookwalker-artbook", "DEEMO Visual Collection — BookWalker", "https://bookwalker.jp/deebf58ee2-8a3a-4e18-bdc2-6f75f704dd7a/", "purchase_required", "Paid DRM ebook; no purchase, preview extraction, or DRM bypass attempted."),
+    ("reddit-34", "DEEMO 3.4 extracted OST thread", "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/", "index_only", "Historical soundtrack bundle; earlier source audit attributes artwork to Wikia. No audio downloaded."),
+    ("reddit-4x", "DEEMO 4.x extracted OST thread", "https://www.reddit.com/r/TrueDeemo/comments/mzq53n/deemo_4x_extracted_ost/", "historical_unavailable", "Earlier search found reports of dead links; uploader mentions image scaling, so not native-resolution masters."),
+    ("reddit-5x", "DEEMO 5.x extracted OST + Artwork thread", "https://www.reddit.com/r/TrueDeemo/comments/sgcr9r/deemo_5x_extracted_ost_artwork/", "historical_unavailable", "Earlier search found MEGA takedown reports. Uploader describes Wikia WebP converted to PNG. Not an independent master-art source."),
+    ("reddit-art-database", "DEEMO in-game art database discussion", "https://www.reddit.com/r/TrueDeemo/comments/ssnzv6/", "index_only", "Discussion, not a verified downloadable higher-resolution archive."),
+    ("original-extraction-blog", "Original repository extraction provenance", "https://2heng.xin/2018/04/05/python-pil/", "index_only", "Original repo author's explanation of Unity extraction and PIL processing. Attribution retained as provenance."),
+    ("baidu-original", "Original extraction Baidu share", "https://pan.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA", "unverified_download", "Original repo-era Unity assets. Web share alone does not supply anonymous raw files; not evidence of higher-quality art."),
+    ("baidu-tools", "Original extraction tools Baidu share", "https://pan.baidu.com/s/1eIyEgsc1WOJo6piwjgH-pQ", "out_of_scope", "Tools linked in extraction blog, not song-art masters."),
+    ("dropbox-historical", "Historical Dropbox artwork share", "https://www.dropbox.com/sh/qdzxn3menwuk5he/AAAL2v6303lMlAf1ma54tJjga?dl=0", "historical_unavailable", "Checked shared-folder URL returns a Dropbox Error page despite HTTP 200; no public files available."),
+    ("zerochan", "Zerochan DEEMO index", "https://www.zerochan.net/Deemo", "mixed_content_index", "Mixed official art, fanart, crops, and potential upscales; no verified new source singled out. Artist originals are handled separately."),
+    ("safebooru", "Safebooru DEEMO tag", "https://safebooru.org/index.php?page=post&s=list&tags=deemo", "mixed_content_index", "Mixed third-party image board; no independently verified new official song art. Not batch imported as masters."),
+    ("tumgik-blazewu", "Tumgik mirror of Blaze Wu", "https://www.tumgik.com/wublaze", "mirror_index", "Third-party mirror; fetch author Tumblr through the artist-source importer instead."),
+    ("blazewu-tumblr", "Blaze Wu MILI Collection Vol.2", "https://wublaze.tumblr.com/post/129276170315/deemomili-collection-vol2songs-illustration", "delegated", "Author's original upload; handled by the separate artist-source importer to avoid duplicate ownership."),
+    ("bilibili-video-search", "Bilibili DEEMO artwork videos", "https://search.bilibili.com/all?keyword=DEEMO%20%E6%9B%B2%E7%BB%98", "index_only", "Video search leads are recompressed frames, not loose native artwork; no videos/audio downloaded."),
+    ("steam-reborn", "DEEMO -Reborn-", "https://store.steampowered.com/app/1282210/DEEMO_Reborn/", "purchase_required", "Paid game not available in this workspace; no game download. Shared original-game songs are only a subset."),
+    ("steamdb-reborn", "DEEMO -Reborn- songcover bundle index", "https://steamdb.info/depot/1282212/", "index_only", "Lists Unity songcover bundles, not publicly downloadable image files. Actual texture dimensions remain unverified."),
+    ("illustrator-directory", "Japanese DEEMO illustrator directory", "https://wikiwiki.jp/deemo/%E3%82%A2%E3%83%BC%E3%83%86%E3%82%A3%E3%82%B9%E3%83%88%E5%88%A5%E3%83%AA%E3%82%B9%E3%83%882", "index_only", "Artist-account routing directory; source artwork is fetched by the artist importer."),
+]
 
-    def check(entry):
-        sid, name, url, status, notes = entry
-        row = source(sid, name, url, status, notes)
-        try:
-            r = session().get(url, timeout=(12, 35))
-            row.update(http_status=r.status_code, resolved_url=r.url, checked_at=STAMP)
-            if r.status_code >= 400:
-                row["access_status"] = "blocked" if r.status_code in (401, 403, 429) else "http_error"
-            else:
-                row["access_status"] = "page_reachable"
-        except requests.RequestException as exc:
-            row["access_status"] = "request_failed"
-            row["access_error"] = str(exc)
-    pool(check, entries, 5)
+
+def check_entry(entry):
+    sid, name, url, status, notes = entry
+    row = source(sid, name, url, status, notes)
+    try:
+        r = session().get(url, timeout=(12, 35))
+        row.update(http_status=r.status_code, resolved_url=r.url, checked_at=STAMP)
+        if r.status_code >= 400:
+            row["access_status"] = "blocked" if r.status_code in (401, 403, 429) else "http_error"
+        else:
+            row["access_status"] = "page_reachable"
+    except requests.RequestException as exc:
+        row["access_status"] = "request_failed"
+        row["access_error"] = str(exc)
+    return row
+
+
+def catalog():
+    pool(check_entry, CATALOG_ENTRIES, 5)
     sid = "internet-archive-202606"
     row = source(sid, "Internet Archive DEEMO OST 202606", "https://archive.org/details/deemo_ost-_202606", "excluded_audio_derivatives",
                  "Metadata examined without downloading audio. PNG files derived from FLAC and spectrograms are audio visualizations, not original loose cover art. Audio metadata itself attributes embedded pictures to DEEMO Wiki.")
