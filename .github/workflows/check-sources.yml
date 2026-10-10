@@ -36,6 +36,13 @@ jobs:
     outputs:
       changed: ${{ steps.compare.outputs.changed }}
     steps:
+      - name: Refuse refs other than main
+        # The snapshot is compared with the checked-out commit and its pull request targets main, so a run
+        # from another branch would put that branch's commits into the pull request.
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Run this workflow from main, not $GITHUB_REF."
+          exit 1
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -92,6 +99,9 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+          # Commits of every branch (no file contents) to inspect the snapshot branch before overwriting it.
+          fetch-depth: 0
+          filter: blob:none
           sparse-checkout: |
             data/sources
             scripts
@@ -115,6 +125,17 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           title="$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["title"])' "$RUNNER_TEMP/summary.json")"
+          # Never overwrite commits that someone else added to the snapshot branch; the lease also stops the
+          # push if the branch moves after this check. An empty lease means the branch must not exist yet.
+          if lease="$(git rev-parse --verify --quiet "refs/remotes/origin/$SNAPSHOT_BRANCH^{commit}")"; then
+            others="$(git log --format='%ae%x09%ce%x09%h %an <%ae>: %s' "HEAD..$lease" \
+              | awk -F '\t' -v bot="$BOT_EMAIL" '$1 != bot || $2 != bot { print $3 }')"
+            if [ -n "$others" ]; then
+              echo "::error::$SNAPSHOT_BRANCH has commits not made by github-actions[bot]; not overwriting them. Merge or move them, then delete the branch."
+              printf '%s\n' "$others"
+              exit 1
+            fi
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "$BOT_EMAIL"
           git checkout -B "$SNAPSHOT_BRANCH"
@@ -123,7 +144,7 @@ jobs:
           git commit -m "chore: refresh wiki discovery snapshot" -m "$title" -m "Metadata only; no images downloaded. $RUN_URL"
           GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="http.https://github.com/.extraheader" \
             GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
-            git push --force origin "HEAD:refs/heads/$SNAPSHOT_BRANCH"
+            git push --force-with-lease="refs/heads/$SNAPSHOT_BRANCH:$lease" origin "HEAD:refs/heads/$SNAPSHOT_BRANCH"
           printf '\n---\nSource · 来源: %s\n' "$RUN_URL" >> "$RUNNER_TEMP/report.md"
           number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open \
             --json number,isCrossRepository,author --jq "$BOT_PR_QUERY")"
@@ -133,3 +154,27 @@ jobs:
           else
             gh pr create --base main --head "$SNAPSHOT_BRANCH" --title "$title" --body-file "$RUNNER_TEMP/report.md"
           fi
+
+  close-stale:
+    # The wikis match main's snapshot again, so an open snapshot pull request is outdated: merging it would
+    # put a wrong baseline on main.
+    needs: discover
+    if: needs.discover.outputs.changed == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Close an outdated snapshot pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open \
+            --json number,isCrossRepository,author --jq "$BOT_PR_QUERY")"
+          if [ -z "$number" ]; then
+            echo "No open snapshot pull request."
+            exit 0
+          fi
+          gh pr close "$number" --comment "The latest check found no differences from the snapshot on main, so this snapshot is outdated; closing it. The next run that finds changes opens a new pull request. · 最新检查未发现与 main 上快照的差异，此快照已过时，现关闭；之后的运行发现变化时会创建新的 PR。 $RUN_URL"
