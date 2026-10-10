@@ -208,7 +208,8 @@ def discover_fandom():
     song_pages = [p for p in song_pages if not any("DEEMO II Songs" in c["title"] for c in p.get("categories", []))]
     songs = [song_metadata("fandom", page) for page in song_pages]
     candidates = {}
-    for page, song in zip(song_pages, songs):
+    # Merge in title order, so the lists and artist of an image shared by several pages do not depend on API order.
+    for page, song in sorted(zip(song_pages, songs), key=lambda pair: pair[1]["title"]):
         content = wikitext(page)
         primary = normalized(parameter(content, "img") or page["title"])
         for image in page.get("images", []):
@@ -220,7 +221,7 @@ def discover_fandom():
             entry = candidates.setdefault(image["title"], {"kind": kind, "song_titles": [], "related_pages": [], "collections": []})
             if song["title"] not in entry["song_titles"]:
                 entry["song_titles"].append(song["title"])
-            entry["related_pages"].append(song["page_url"])
+            entry["related_pages"] = sorted(set(entry["related_pages"] + [song["page_url"]]))
             entry["collections"] = unique_collections(entry["collections"] + song["collections"])
             if normalized(stem) != primary:
                 entry["variant_note"] = "Additional raster image referenced by the song page; may be alternate artwork or a composite."
@@ -265,7 +266,7 @@ def discover_bwiki(fandom_songs):
     for song in songs + fandom_songs:
         lookup[normalized(song["title"])].append(song)
     collection_names = {collection for song in songs + fandom_songs for collection in song["collections"]}
-    collection_lookup = {normalized(name): name for name in collection_names}
+    collection_lookup = {normalized(name): name for name in unique_collections(collection_names)}
     inventory = allimages("bwiki")
     selected = []
     excluded_large = []
@@ -403,6 +404,10 @@ def download(candidate, existing):
     if note:
         record["delivery_note"] = note
     return record
+
+
+def failure_key(failure):
+    return tuple(str(failure.get(field) or "") for field in ("source_id", "title", "url", "stage", "error"))
 
 
 def merge_assets(existing, candidate_ids, results, failed_ids):
@@ -557,6 +562,7 @@ def main():
                 print(f"Downloaded/verified {index}/{len(candidates)}; failures={len(manifest['failures'])}", flush=True)
                 # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest.
                 manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
+                manifest["failures"].sort(key=failure_key)  # completion order varies between runs
                 write_json("data/sources/wikis.json", manifest)
     manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
     for source in manifest["sources"]:
@@ -566,6 +572,7 @@ def main():
     fetch_illustrator_index(manifest)
     manifest["fetched_at"] = now()
     manifest["assets"].sort(key=lambda row: row["id"])
+    manifest["failures"].sort(key=failure_key)
     write_json("data/sources/wikis.json", manifest)
     print(json.dumps({"assets": len(manifest["assets"]), "failures": len(manifest["failures"]),
                       "bytes": sum(x["bytes"] for x in manifest["assets"]),

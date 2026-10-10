@@ -4,6 +4,7 @@ Nothing touches the network: requests.get is replaced by a fake that serves cann
 temporary directory, so the repository's own manifests are never read or written.
 """
 
+import concurrent.futures
 import email.utils
 import hashlib
 import importlib.util
@@ -365,6 +366,54 @@ class CollectionNameTests(unittest.TestCase):
                                           fandom_page("Song B", "{{Return|Etude Collection}}", "File:Shared.png")],
                                          {"File:Shared.png": image_info(1024, 1024)})
         self.assertEqual(selected[0]["collections"], ["Etude Collection"])
+
+
+class OrderingTests(FetcherRun):
+    # Discovers one BWIKI cover in a fresh interpreter, where set iteration order follows PYTHONHASHSEED.
+    CHILD = """
+import importlib.util, json, sys
+spec = importlib.util.spec_from_file_location("fetch_wikis", sys.argv[1])
+fetch = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(fetch)
+fetch.category = lambda source, title: []
+fetch.pages = lambda source, titles: []
+fetch.allimages = lambda source: [{"name": "Aioi_collection.png", "title": "Aioi collection.png", "width": 180, "height": 180, "mime": "image/png"}]
+songs = [{"title": "A", "page_url": "a", "collections": ["Aioi collection"]}, {"title": "B", "page_url": "b", "collections": ["Aioi Collection"]}]
+cover = fetch.discover_bwiki(songs)[0][0]
+print(json.dumps(cover["collections"] + cover["related_pages"]))
+"""
+
+    def test_failures_are_sorted_whatever_the_completion_order(self):
+        candidates = [self.offer(name, png("red")) for name in ("Alpha.png", "Beta.png", "Gamma.png", "Delta.png")]
+        self.web.routes.clear()  # every download fails
+
+        def reverse_completion(futures):
+            futures = list(futures)
+            concurrent.futures.wait(futures)
+            return reversed(futures)
+
+        with patch.object(fetch, "as_completed", reverse_completion):
+            failures = self.resume(*candidates, workers=4)["failures"]
+        self.assertEqual([failure["title"] for failure in failures],
+                         ["文件:Alpha.png", "文件:Beta.png", "文件:Delta.png", "文件:Gamma.png"])
+
+    def test_cover_collection_spelling_does_not_depend_on_hash_order(self):
+        outputs = set()
+        with tempfile.TemporaryDirectory() as empty:
+            for seed in range(12):
+                result = subprocess.run([sys.executable, "-s", "-c", self.CHILD, str(SCRIPT)], cwd=empty, capture_output=True,
+                                        env={"PATH": os.environ.get("PATH", ""), "PYTHONHASHSEED": str(seed)}, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr[-600:])
+                outputs.add(result.stdout)
+        self.assertEqual([json.loads(output) for output in outputs],
+                         [["Aioi Collection", "https://wiki.biligame.com/deemo/Aioi%20Collection"]])
+
+    def test_fandom_candidate_lists_do_not_depend_on_page_order(self):
+        pages = [fandom_page("Song B", "", "File:Shared.png"), fandom_page("Song A", "", "File:Shared.png")]
+        infos = {"File:Shared.png": image_info(1024, 1024)}
+        forward, backward = discover_fandom(pages, infos)[0][0], discover_fandom(pages[::-1], infos)[0][0]
+        self.assertEqual(forward, backward)
+        self.assertEqual(forward["song_titles"], ["Song A", "Song B"])
 
 
 class DiscoveryFilterTests(unittest.TestCase):
