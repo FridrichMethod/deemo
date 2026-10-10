@@ -538,6 +538,26 @@ def check_no_repeated_names(browser):
     checks.append("no artist or reference title shown twice, in both languages")
 
 
+def check_inventory_table(browser):
+    """The source inventory fits a phone and a desktop window in both languages: the record-count header keeps to one
+    line, no cell overflows (long notes and names wrap in their column), and the notes keep a readable measure."""
+    for lang in ("en", "zh-CN"):
+        for width, height in ((375, 667), (1440, 900)):
+            page = new_page(browser, width, height)
+            navigate(page, f"archive.html?lang={lang}")
+            page.wait_for_selector(".card")
+            page.locator(".source-inventory summary").first.click()
+            table = page.evaluate("""() => {
+                const lines = (node) => { const range = document.createRange(); range.selectNodeContents(node); return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size; };
+                const scroll = document.querySelector('.table-scroll'), headers = [...document.querySelectorAll('.source-inventory th')];
+                return {records: lines(headers[1]), notes: Math.round(headers[2].getBoundingClientRect().width), scroll: [scroll.scrollWidth, scroll.clientWidth],
+                        overflowing: [...document.querySelectorAll('.source-inventory th, .source-inventory td')].filter((cell) => cell.scrollWidth > cell.clientWidth + 1).map((cell) => cell.textContent.slice(0, 40))}; }""")
+            assert table["records"] == 1 and table["scroll"][0] <= table["scroll"][1] and not table["overflowing"], (lang, width, table)
+            assert table["notes"] >= min(width / 3, 300), (lang, width, table)
+            finish(page)
+    checks.append("source inventory fits 375 and 1440 px wide in both languages")
+
+
 def check_viewer_provenance(browser):
     """The viewer states each record's composer and provenance class in the page language; a record a refetch kept
     with an upstream_status gets a localized line for it."""
@@ -908,6 +928,7 @@ with sync_playwright() as p:
     check_viewer_provenance(browser)
     check_card_tags(browser)
     check_no_repeated_names(browser)
+    check_inventory_table(browser)
     check_previews(browser)
     check_attribution(browser)
     check_slideshow_controls(browser)

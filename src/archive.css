@@ -44,7 +44,10 @@ summary { cursor: pointer; }
 table { border-collapse: collapse; width: 100%; font-size: 12px; margin: 15px 0; }
 th, td { text-align: left; vertical-align: top; padding: 10px; border-bottom: 1px solid var(--border); }
 th:first-child, td:first-child { min-width: 180px; }
-td:nth-child(2) { white-space: nowrap; }
+/* The record count and its header stay on one line (a narrow column stacked "文件记录" a character per line), and long
+   notes that name paths (assets/legacy/trans/) wrap inside their column rather than widen the table past a phone. */
+th:nth-child(2), td:nth-child(2) { white-space: nowrap; }
+td:nth-child(3) { overflow-wrap: anywhere; }
 footer { border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
 dialog { width: min(1400px, 95vw); height: min(900px, 93vh); padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--paper); color: var(--ink); }
 dialog[open] { display: grid; grid-template-columns: minmax(0, 1fr) 360px; }
@@ -84,6 +87,11 @@ dialog, .viewer-image, .viewer-info { overscroll-behavior: contain; }
   .filters select { width: 100%; min-width: 0; }
   dialog[open] { grid-template-columns: 1fr; grid-template-rows: minmax(180px, 48vh) 1fr; }
   .viewer-info { padding: 20px; }
+  /* The inventory's three columns share a phone's width by fixed shares, so the wrapping notes keep a readable measure
+     instead of being squeezed beside a 180px source column. */
+  table { table-layout: fixed; }
+  th:first-child, td:first-child { min-width: 0; width: 34%; overflow-wrap: anywhere; }
+  th:nth-child(2) { width: 7.5em; }
 }
 /* High-contrast modes repaint the page; give them back the native arrow, which follows the system colours. */
 @media (forced-colors: active) {
