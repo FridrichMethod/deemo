@@ -211,27 +211,44 @@ def collect_pixiv(manifest, jobs):
                 record_failure(manifest, source_id, page, error)
 
 
-def collect_jimdo(manifest, jobs):
+def jimdo_image_id(url):
+    """Jimdo's stable image id, the `/image/i<hex>/` segment of a CDN URL, or None."""
+    match = re.search(r"/image/(i[0-9a-f]+)/", urlsplit(url or "").path)
+    return match.group(1) if match else None
+
+
+def collect_jimdo(manifest, jobs, previous_assets=()):
     source_id = "artists:jimdo:kolokolsan"
     source = {"id": source_id, "name": "ころころさん / 鳩紫ぽっぽ — 仕事の制作物",
               "url": JIMDO_URL, "status": "pending", "platform": "Jimdo",
               "artist": "ころころさん / 鳩紫ぽっぽ", "access": "public_without_login"}
     manifest["sources"].append(source)
+    # Images already in the manifest keep their ids and file names (the first five used the bare
+    # title slug); new ones are keyed by the Jimdo image id, prefixed with the slug when it is not empty.
+    known = {jimdo_image_id(asset["download_url"]): asset["id"] for asset in previous_assets
+             if asset["source_id"] == source_id}
     try:
         soup = BeautifulSoup(request(JIMDO_URL).text, "html.parser")
         images = [i for i in soup.find_all("img") if "「Deemo」" in i.get("alt", "")]
         if not images:
             raise ValueError("No explicitly labelled DEEMO images found")
+        found, seen = [], set()
         for img in images:
             caption = img["alt"]
             title = re.search(r"楽曲「([^」]+)」", caption).group(1)
             lightbox = img.find_parent("a").get("data-href")
-            if not lightbox or "image.jimcdn.com/app/cms/image/transf/" not in lightbox:
+            key = jimdo_image_id(lightbox)
+            if (not key or not host_allowed(lightbox, DOWNLOAD_HOSTS["jimdo"])
+                    or not urlsplit(lightbox).path.startswith("/app/cms/image/transf/")):
                 raise ValueError(f"Missing public lightbox URL for {title}")
+            if key in seen:
+                raise ValueError(f"Duplicate Jimdo image {key} for {title}")
+            seen.add(key)
+            asset_id = known.get(key) or f"{source_id}:{slug(title) or 'jimdo'}-{key}"
             original = re.sub(r"/transf/[^/]+/", "/transf/none/", lightbox)
-            jobs.append({"id": f"{source_id}:{slug(title)}", "source_id": source_id,
+            found.append({"id": asset_id, "source_id": source_id,
                          "artist": source["artist"], "directory": "kolokolsan",
-                         "stem": slug(title), "title": title, "song_titles": [title],
+                         "stem": asset_id.rsplit(":", 1)[1], "title": title, "song_titles": [title],
                          "kind": "song_art", "page_url": JIMDO_URL,
                          "download_url": original, "mapping_status": "source_caption",
                          "advertised_lightbox_url": lightbox,
@@ -239,6 +256,7 @@ def collect_jimdo(manifest, jobs):
                          "source_dimensions": [int(img["data-orig-width"]), int(img["data-orig-height"])],
                          "source_dimensions_kind": "advertised_lightbox_metadata; untransformed originals may be larger",
                          "quality": "artist_original_upload"})
+        jobs.extend(found)
         source.update({"status": "discovered", "page_count": len(images),
                        "notes": "Only images explicitly labelled Deemo; public Jimdo transf/none URLs retain originals. The PNG originals are larger than the advertised 2048px lightbox metadata."})
     except Exception as error:
@@ -382,6 +400,15 @@ def save_asset(job, data, fetched_at, hashes):
     return asset
 
 
+def require_unique(jobs):
+    """Stop before any download when two jobs would share an asset id or a file stem."""
+    for label, keys in (("asset id", [job["id"] for job in jobs]),
+                        ("file stem", [f"{job['directory']}/{job['stem']}" for job in jobs])):
+        duplicates = sorted(key for key, count in Counter(keys).items() if count > 1)
+        if duplicates:
+            raise SystemExit(f"Duplicate {label}: {', '.join(duplicates)}")
+
+
 def carry_forward(previous, manifest):
     """Merge the previous manifest into this run's result so no verified record is dropped.
 
@@ -438,10 +465,11 @@ def main():
                 "excluded": "Paid artbooks; DEEMO II; unrelated games, unrelated fanart and cross-game anniversary posts; credentials and login walls"}
     jobs = []
     collect_pixiv(manifest, jobs)
-    collect_jimdo(manifest, jobs)
+    collect_jimdo(manifest, jobs, current)
     collect_tumblr(manifest, jobs)
     collect_reference(manifest)
     keep_source_details(previous, manifest)
+    require_unique(jobs)
     hashes = {}
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {pool.submit(download, job, cache, args.refresh): job for job in jobs}
