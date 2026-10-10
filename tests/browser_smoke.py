@@ -34,6 +34,10 @@ SHOWN_ID = "imgTargets[slideIndex - 1].dataset.id"
 SLIDE_SHOWN = "imgTargets[slideIndex - 1].naturalWidth > 0 && imgTargets[slideIndex - 1].closest('.mySlides').classList.contains('is-current')"
 # The slideshow's round controls along the bottom, left to right on screen.
 BOTTOM_ROW = ["photo", "github", "archive-link", "iplayer", "random"]
+# Viewports (width, height) of phones held sideways, where the next arrow shares its column with the language toggle,
+# and of short portrait phones (browser toolbars included, as the page never scrolls them away).
+SHORT_LANDSCAPE = [(568, 320), (480, 320), (667, 325), (740, 320), (812, 330)]
+SHORT_PORTRAIT = [(375, 553), (360, 568), (320, 454)]
 # Controls by role and the message key of their accessible name.
 NAMED_CONTROLS = [
     ("button", "slideshow.nav.prev"), ("button", "slideshow.nav.next"), ("button", "slideshow.screenshot.take"),
@@ -695,17 +699,30 @@ def check_slide_hit_testing(browser):
     checks.append("only the shown slide takes taps")
 
 
-def check_small_screens(browser):
-    # A short landscape phone: the next arrow shares its column with the language toggle and takes every tap.
-    page = open_slideshow(browser, "asset=artists%3Apixiv%3A47910628%3Ap0", 568, 320)
-    assert page.locator(".lang-toggle").is_visible()
-    misses = page.locator(".next").evaluate("""(arrow) => { const box = arrow.getBoundingClientRect(), radius = box.width / 2 - 1, misses = [];
+def disc_misses(page, selector):
+    """What takes a tap instead, for each point of the element's round disc (sampled every 4px) that misses it."""
+    return page.locator(selector).evaluate("""(disc) => { const box = disc.getBoundingClientRect(), radius = box.width / 2 - 1, misses = [];
         for (let dx = -radius; dx <= radius; dx += 4) for (let dy = -radius; dy <= radius; dy += 4) {
             const point = document.elementFromPoint((box.left + box.right) / 2 + dx, (box.top + box.bottom) / 2 + dy);
-            if (dx * dx + dy * dy <= radius * radius && !arrow.contains(point)) misses.push(point && point.className);
+            if (dx * dx + dy * dy <= radius * radius && !disc.contains(point)) misses.push(point && point.className);
         }
         return misses; }""")
-    assert not misses, misses
+
+
+def check_small_screens(browser):
+    # Short landscape phones: the next arrow shares its column with the language toggle; both arrows take every tap.
+    # No script on the page reads the viewport (the layout is CSS alone), so one page resized to each size stands in
+    # for a fresh load at it.
+    page = open_slideshow(browser, "asset=artists%3Apixiv%3A47910628%3Ap0", *SHORT_LANDSCAPE[0])
+    for width, height in SHORT_LANDSCAPE:
+        page.set_viewport_size({"width": width, "height": height})
+        assert page.locator(".lang-toggle").is_visible(), (width, height)
+        for arrow in (".next", ".prev"):
+            assert page.locator(arrow).bounding_box()["width"] >= 40, (width, height, arrow)
+            misses = disc_misses(page, arrow)
+            assert not misses, (width, height, arrow, misses)
+    width, height = SHORT_LANDSCAPE[0]
+    page.set_viewport_size({"width": width, "height": height})
     start = page.evaluate("slideIndex")
     page.locator(".next").click(timeout=5000)
     assert page.evaluate("slideIndex") == start + 1
@@ -718,13 +735,16 @@ def check_small_screens(browser):
         return {text: dd.textContent, artist: imgTargets[slideIndex - 1].dataset.artist.replace(/\\n/g, ''), top: box.top, bottom: box.bottom, row}; }""", BOTTOM_ROW)
     assert credit["text"] == credit["artist"] and 0 <= credit["top"] and credit["bottom"] <= credit["row"], credit
     finish(page)
-    # A short portrait phone keeps the artwork at least as tall as the notes and caption below it.
-    page = open_slideshow(browser, "asset=artists%3Apixiv%3A47910628%3Ap0", 375, 553)
-    sizes = page.evaluate("""() => { const art = imgTargets[slideIndex - 1].getBoundingClientRect(), notes = document.querySelector('.liner-text').getBoundingClientRect();
-        return {art: art.height, text: document.querySelector('.asset-caption').getBoundingClientRect().bottom - notes.top}; }""")
-    assert sizes["art"] >= sizes["text"], sizes
+    # Short portrait phones keep the artwork at least as tall as the notes and caption below it.
+    page = open_slideshow(browser, "asset=artists%3Apixiv%3A47910628%3Ap0", *SHORT_PORTRAIT[0])
+    for width, height in SHORT_PORTRAIT:
+        page.set_viewport_size({"width": width, "height": height})
+        sizes = page.evaluate("""() => { const art = imgTargets[slideIndex - 1].getBoundingClientRect(), notes = document.querySelector('.liner-text').getBoundingClientRect();
+            return {art: art.height, text: document.querySelector('.asset-caption').getBoundingClientRect().bottom - notes.top}; }""")
+        assert sizes["art"] >= sizes["text"] > 0, (width, height, sizes)
     finish(page)
-    checks.extend(["next arrow clear of the toggle at 568x320", "artist credit at 844x390", "artwork dominant at 375x553"])
+    landscape, portrait = (", ".join(f"{width}x{height}" for width, height in viewports) for viewports in (SHORT_LANDSCAPE, SHORT_PORTRAIT))
+    checks.extend([f"both arrows clear of the toggle at {landscape}", "artist credit at 844x390", f"artwork dominant at {portrait}"])
 
 
 def check_liner_notes(browser):
