@@ -60,10 +60,11 @@
   }
   // The index and the query share one fold: NFKC turns full-width and compatibility forms (Ｍａｇ, ：, ﾏﾄﾒ) into plain ones,
   // toLowerCase() ignores the browser locale (toLocaleLowerCase() maps I to dotless ı under tr/az), katakana folds to
-  // hiragana, and spaces around a colon are dropped: "Re: the", "Re:the" and "Re：the" become one term that keeps its
-  // colon, so a short prefix such as "L:" still matches only titles that have it.
+  // hiragana, and every colon becomes ": " (one space after it, none before): "Re: the", "Re:the", "Re : the" and
+  // "Re：the" all read "re: the". The query is then split on whitespace, so a term keeps its colon ("L:" still matches
+  // only titles that have it) while the words after it stay separate terms ("L: Lower" finds "L: The Lower collection").
   const fold = (text) => text.normalize("NFKC").toLowerCase()
-    .replace(/[\u30a1-\u30f6]/g, (kana) => String.fromCharCode(kana.charCodeAt(0) - 0x60)).replace(/\s*:\s*/g, ":");
+    .replace(/[\u30a1-\u30f6]/g, (kana) => String.fromCharCode(kana.charCodeAt(0) - 0x60)).replace(/\s*:\s*/g, ": ");
   // Search covers the verbatim source name and its localized display name, so the index is built per language.
   function searchable(asset) {
     return fold([asset.title, asset.artist, asset.internal_key, ...asset.provenance.flatMap((p) =>
