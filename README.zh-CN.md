@@ -24,15 +24,19 @@ python -I -m http.server 8765 --bind 127.0.0.1
 
 ## 网站部署
 
-推送到 `main` 后，[Pages 工作流](.github/workflows/pages.yml) 自动发布。`scripts/prepare_pages.py` 只复制 Git 跟踪的 `assets/`、`data/`、`src/`、`docs/`、`licenses/` 和明确列出的根目录网页、配置、署名文件；不会发布 `.git/`、工作流、抓取脚本、测试或未跟踪文件。上传目标仅为独立生成的站点目录，不是仓库根目录。白名单只限定网站发布范围，不是敏感内容检测器；仓库本身公开，提交任何文件前仍需检查内容。
+推送到 `main` 后，[Pages 工作流](.github/workflows/pages.yml) 自动发布，但必须先在同一次运行中通过[测试工作流](.github/workflows/tests.yml)；任何检查失败都不会部署，现有线上版本不变。测试工作流也在每次推送和每个 PR（无论目标分支）上运行：安装 `requirements.txt` 后运行所有 `tests/test_*.py`、`scripts/build_catalog.py --verify --check`（`index.html` 或目录过期即失败）、`scripts/build_legacy_inventory.py` 和 `scripts/fetch_archives.py --verify`；另一个任务用运行器自带的 Chrome 对本地服务运行 `tests/browser_smoke.py`。`.gitattributes` 让继承文件和 `assets/` 下的所有文件不做换行符转换，因此在 Windows 检出（`core.autocrlf=true`）中这些逐字节检查同样通过。
+
+`scripts/prepare_pages.py` 只复制 Git 跟踪的 `assets/`、`data/`、`src/`、`docs/`、`licenses/` 和明确列出的根目录网页、配置、署名文件；不会发布 `.git/`、工作流、抓取脚本、测试或未跟踪文件。上传目标仅为独立生成的站点目录，不是仓库根目录。白名单只限定网站发布范围，不是敏感内容检测器；仓库本身公开，提交任何文件前仍需检查内容。
 
 页面保留 `noindex,nofollow`，但这不是访问控制。发布包以 950 MB 为硬上限，给 GitHub Pages 的 1 GB 上限留出余量；新增素材超限时部署会停止，现有线上版本不变。保留全部原图字节，不在发布时重新压缩素材。
 
 ## 来源更新检查
 
-[检查工作流](.github/workflows/check-sources.yml) 每周一 03:00 UTC 自动运行，也可在 Actions 页手动触发。它以 `--metadata-only` 重新枚举 Fandom 与 BWIKI 的曲绘候选，不下载任何图片，再用 `scripts/check_sources.py` 与 `main` 上的 `data/sources/wiki-discovery.json` 比较。候选集合没有变化时只在运行摘要里记录；出现新增、重新上传（SHA-1 或尺寸变化）或移除的文件时，工作流把新的发现快照和歌曲索引推到 `auto/wiki-source-check` 分支，并创建或更新一个英文标题形如"Wiki source update: N added · M re-uploaded · K removed (YYYY-MM-DD)"的 PR。正文先是英文报告，列出每个文件的来源页、尺寸、曲名和本地是否已有下载；随后在可折叠的"简体中文"区块中附完整的中文报告。
+[检查工作流](.github/workflows/check-sources.yml) 每周一 03:00 UTC 自动运行，也可在 Actions 页手动触发，但只能从 `main` 运行（从其他分支运行会被拒绝）。它以 `--metadata-only` 重新枚举 Fandom 与 BWIKI 的曲绘候选，不下载任何图片，再用 `scripts/check_sources.py` 与 `main` 上的 `data/sources/wiki-discovery.json` 比较。候选集合没有变化时只在运行摘要里记录；若之前运行留下的快照 PR 仍处于打开状态，因其快照已过时，会附评论关闭。出现新增、重新上传（SHA-1 或尺寸变化）或移除的文件时，工作流把新的发现快照和歌曲索引推到 `auto/wiki-source-check` 分支，并创建或更新一个英文标题形如"Wiki source update: N added · M re-uploaded · K removed (YYYY-MM-DD)"的 PR。正文先是英文报告，列出每个文件的来源页、尺寸、曲名和本地是否已有下载；随后在可折叠的"简体中文"区块中附完整的中文报告。文件名、曲名和曲包名由 Wiki 编辑者填写，报告一律以行内代码显示，因此无法向 PR 或运行摘要加入链接、@提及、issue 引用、图片或 HTML。
 
-合并该 PR 只更新快照，不改变图库。随后在本地运行 `scripts/fetch_wikis.py --resume` 下载新增和重新上传的文件，再 build、verify、检查 `failures` 与 checksum 字段并提交图片与清单（命令见 PR 正文和下文"目录与复现"）。首次启用前需要在仓库 Settings → Actions → General → Workflow permissions 勾选 "Allow GitHub Actions to create and approve pull requests"，否则工作流能推分支但无法创建 PR。公开仓库 60 天没有提交时 GitHub 会暂停 `schedule` 触发，需在 Actions 页重新启用。
+抓取 Wiki 和安装依赖在只读令牌、不保存凭据的任务中进行。另一个不运行任何第三方代码的任务只接收这两个快照文件，据此重新生成报告、提交并创建 PR；写权限令牌只用于这次推送和 PR 命令。它只更新本仓库中由机器人创建的 PR（来自 fork、分支同名的 PR 会被忽略）；若有其他人向 `auto/wiki-source-check` 提交过，工作流拒绝覆盖该分支：先合并或转移这些提交，再删除分支。PR 的标题和正文归机器人所有，每次更新都会重写。不合并而关闭 PR 并不能阻止下一次仍发现差异的运行创建新 PR；如需暂停检查，请停用该工作流。GitHub 不会为用 `GITHUB_TOKEN` 创建的 PR 运行工作流，因此测试工作流不会在快照 PR 上运行；该 PR 只改动构建不读取的两个发现文件，合并后 Pages 工作流会再次运行全部检查。
+
+合并该 PR 只更新快照，不改变图库。随后在本地运行 `scripts/fetch_wikis.py --resume` 下载新增和重新上传的文件，再 build、verify、检查 `failures`、`upstream_status` 与 checksum 字段并提交图片与清单（命令见 PR 正文和下文"目录与复现"）。`--resume` 不会删除任何文件：已移除和被取代的记录仍保留在清单中，以 `upstream_status` 标记。首次启用前需要在仓库 Settings → Actions → General → Workflow permissions 勾选 "Allow GitHub Actions to create and approve pull requests"，否则工作流能推分支但无法创建 PR。公开仓库 60 天没有提交时 GitHub 会暂停 `schedule` 触发，需在 Actions 页重新启用。
 
 画师来源（`fetch_artists.py`）的 Pixiv 作品 ID 写在脚本里，公开档案来源基本是静态内容，二者都不在自动检查范围内；要补充新作品仍需手动编辑脚本并重新抓取。
 
