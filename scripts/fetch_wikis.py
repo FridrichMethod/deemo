@@ -265,8 +265,12 @@ def discover_bwiki(fandom_songs):
     lookup = defaultdict(list)
     for song in songs + fandom_songs:
         lookup[normalized(song["title"])].append(song)
-    collection_names = {collection for song in songs + fandom_songs for collection in song["collections"]}
-    collection_lookup = {normalized(name): name for name in unique_collections(collection_names)}
+    # A cover's related page is a BWIKI page, so BWIKI's own spelling of a collection wins; a Fandom spelling only
+    # fills in a collection that no BWIKI song page names.
+    collection_lookup = {}
+    for group in (songs, fandom_songs):
+        for name in unique_collections(collection for song in group for collection in song["collections"]):
+            collection_lookup.setdefault(normalized(name), name)
     inventory = allimages("bwiki")
     selected = []
     excluded_large = []

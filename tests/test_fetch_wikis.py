@@ -68,6 +68,11 @@ def fandom_page(title, wikitext, *images):
             "revisions": [{"slots": {"main": {"*": wikitext}}}], "images": [{"title": image} for image in images]}
 
 
+def bwiki_song_page(title, collection):
+    """A BWIKI song page whose 所属曲包 (collection) parameter is collection."""
+    return {**fandom_page(title, "{{歌曲|所属曲包=" + collection + "}}"), "fullurl": f"https://bwiki.example.test/{title}"}
+
+
 def discover_fandom(song_pages, infos):
     """Run Fandom discovery against canned song pages (no collection pages) and canned imageinfo."""
     titles = [page["title"] for page in song_pages]
@@ -361,6 +366,21 @@ class CollectionNameTests(unittest.TestCase):
             song("Magnolia", ["Deemo's Collection Vol.1", "Deemo's collection Vol. 1B"]),
             song("Magnolia", ["Deemo's collection Vol.1B"], source="bwiki")])
         self.assertEqual(selected[0]["collections"], ["Deemo's Collection Vol.1", "Deemo's collection Vol. 1B"])
+
+    def test_bwiki_cover_uses_the_bwiki_spelling_of_its_collection(self):
+        # The cover's related page is a BWIKI page, whose title is BWIKI's spelling ("#" cannot appear in a title);
+        # a Fandom spelling is used only for a collection that no BWIKI song page names.
+        bwiki_pages = [bwiki_song_page("Song A", "Etude collection"), bwiki_song_page("Song B", "RAC collection -1")]
+        fandom = [song("Song A", ["Etude Collection", "Aioi collection", "Aioi Collection"]), song("Song B", ["RAC Collection #1"])]
+        inventory = [allimage(name, 180, 180) for name in ("Etude_collection.png", "RAC_collection_-1.png", "Aioi_collection.png")]
+        expected = {"Etude_collection.png": ("Etude collection", "Etude%20collection"),
+                    "RAC_collection_-1.png": ("RAC collection -1", "RAC%20collection%20-1"),
+                    "Aioi_collection.png": ("Aioi Collection", "Aioi%20Collection")}
+        for pages in (bwiki_pages, bwiki_pages[::-1]):
+            selected, _, _ = discover_bwiki(inventory, fandom, pages)
+            self.assertEqual({row["info"]["name"]: (row["kind"], row["collections"], row["related_pages"]) for row in selected},
+                             {name: ("collection_cover", [collection], ["https://wiki.biligame.com/deemo/" + page])
+                              for name, (collection, page) in expected.items()})
 
     def test_fandom_merges_spellings_across_song_pages(self):
         selected, _, _ = discover_fandom([fandom_page("Song A", "{{Return|Etude collection}}", "File:Shared.png"),
