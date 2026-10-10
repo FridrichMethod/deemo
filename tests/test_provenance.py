@@ -466,13 +466,18 @@ class ArchiveComposerTests(unittest.TestCase):
     def test_a_borrowed_credit_names_its_source_in_both_languages(self):
         for language, table in messages("src/i18n/archive.js").items():
             with self.subTest(language=language):
-                self.assertEqual(set(re.findall(r"\{(\w+)\}", table["provenance.composer_from"])), {"composer", "source"})
+                self.assertEqual(re.findall(r"\{(\w+)\}", table["provenance.composer"]), ["composer"])
+                self.assertEqual(re.findall(r"\{(\w+)\}", table["provenance.composer_source"]), ["source"])
+        # The credit itself always reads exactly as provenance.composer, which the browser smoke test expects; a
+        # borrowed one is followed by its own paragraph naming the wiki that gave it.
         script = (ROOT / "src/archive.js").read_text(encoding="utf-8")
-        self.assertRegex(function_body(script, "provenanceBlock"), r"if \(p\.composer\) block\.append\(composerLine\(p\)\);")
-        line = function_body(script, "composerLine")
-        self.assertRegex(line, r'if \(!p\.composer_source\) return element\("p", t\("provenance\.composer", \{composer\}\)\);')
-        self.assertRegex(line, r'textValue\(p\.composer_source\)\.split\(" / "\)\.map\(\(id\) => i18n\.sourceName\(id, ')
-        self.assertRegex(line, r'return element\("p", t\("provenance\.composer_from", \{composer, source\}\)\);\s*$')
+        self.assertRegex(function_body(script, "provenanceBlock"), r"if \(p\.composer\) block\.append\(\.\.\.composerLines\(p\)\);")
+        lines = function_body(script, "composerLines")
+        self.assertRegex(lines, r'const lines = \[element\("p", t\("provenance\.composer", \{composer: textValue\(p\.composer\)\}\)\)\];')
+        self.assertRegex(lines, r'if \(p\.composer_source\) \{\s*const source = textValue\(p\.composer_source\)\.split\(" / "\)'
+                                r'\.map\(\(id\) => i18n\.sourceName\(id, ')
+        self.assertRegex(lines, r'lines\.push\(element\("p", t\("provenance\.composer_source", \{source\}\)\)\);\s*\}')
+        self.assertRegex(lines, r"return lines;\s*$")
 
 
 class ArchiveUpstreamTests(unittest.TestCase):
