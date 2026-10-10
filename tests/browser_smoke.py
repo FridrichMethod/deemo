@@ -520,6 +520,24 @@ def check_card_tags(browser):
     checks.append("card tags set the family and kind apart, in both languages")
 
 
+def check_no_repeated_names(browser):
+    """A card names an artist that its source's name already starts with once (the Jimdo works lead the default
+    order), and a reference file's row does not repeat its title as the name of its source link."""
+    for lang in ("en", "zh-CN"):
+        page = new_page(browser)
+        navigate(page, f"archive.html?lang={lang}")
+        page.wait_for_selector(".card")
+        lines = page.evaluate("[...document.querySelectorAll('.card')].map((card) => card.children[3].textContent)")
+        repeated = [line for line in lines if len(line.split(" · ")) == 2 and line.split(" · ")[1].startswith(line.split(" · ")[0])]
+        assert not repeated, (lang, repeated[:3])
+        assert any(" / " in line and " · " not in line for line in lines), (lang, lines[:5])  # Jimdo: "artist / artist — ..."
+        page.locator(".source-inventory summary").first.click()
+        rows = page.evaluate("[...document.querySelectorAll('#references p')].map((row) => [...row.querySelectorAll('a')].map((link) => link.textContent))")
+        assert rows and all(len(links) == 2 and not links[0].startswith(links[1]) for links in rows), (lang, rows)
+        finish(page)
+    checks.append("no artist or reference title shown twice, in both languages")
+
+
 def check_viewer_provenance(browser):
     """The viewer states each record's composer and provenance class in the page language; a record a refetch kept
     with an upstream_status gets a localized line for it."""
@@ -889,6 +907,7 @@ with sync_playwright() as p:
     check_deep_link_filters(browser)
     check_viewer_provenance(browser)
     check_card_tags(browser)
+    check_no_repeated_names(browser)
     check_previews(browser)
     check_attribution(browser)
     check_slideshow_controls(browser)

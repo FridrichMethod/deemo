@@ -104,12 +104,14 @@
     if (i18n.lang !== i18n.defaultLang) params.set("lang", i18n.lang);
     try { history.replaceState(null, "", `${location.pathname}?${params}`); } catch { /* file:// remains usable */ }
   }
-  // Language-dependent parts of a card; card.children is [image button, title, size line, source line, tag]. The family
-  // and kind labels, which may hold " / " themselves ("Public archives / reposts"), are set apart with a dash.
+  // Language-dependent parts of a card; card.children is [image button, title, size line, source line, tag]. The artist
+  // is left out when the source's name already starts with it (an artist's own site), and the family and kind labels,
+  // which may hold " / " themselves ("Public archives / reposts"), are set apart with a dash.
   function localizeCard(card, asset) {
     const [button, , , source, tag] = card.children;
     button.setAttribute("aria-label", t("card.view", {title: asset.title}));
-    source.textContent = [asset.artist, sourceName(asset)].filter(Boolean).join(" · ");
+    const name = sourceName(asset);
+    source.textContent = [asset.artist && !name.startsWith(asset.artist) ? asset.artist : null, name].filter(Boolean).join(" · ");
     const records = asset.provenance.length > 1 ? [t("card.records", {count: asset.provenance.length})] : [];
     tag.textContent = [`${familyName(asset.family)} — ${kindName(asset.kind)}`, ...records].join(" · ");
   }
@@ -269,11 +271,13 @@
   // Rebuilt from scratch on every language change, so rows are never duplicated.
   function renderInventory() {
     $("inventory-summary").textContent = t("inventory.summary", {sources: catalog.summary.source_count, records: catalog.summary.source_asset_records});
+    // A reference file's source is often named like the file itself; the second link then says what it leads to.
     $("references").replaceChildren(...catalog.assets.filter((asset) => !asset.gallery).map((asset) => {
       const link = element("a", `${asset.title} (${asset.format}, ${size(asset.bytes)})`);
       link.href = asset.url;
       const p = element("p");
-      p.append(link, document.createTextNode(" · "), sourceLink(sourceName(asset), asset.page_url));
+      const source = sourceName(asset);
+      p.append(link, document.createTextNode(" · "), sourceLink(source === asset.title ? t("inventory.source_page") : source, asset.page_url));
       return p;
     }));
     $("sources").replaceChildren(...catalog.sources.map((source) => {
