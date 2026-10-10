@@ -53,7 +53,7 @@ On 2026-09-05, 1,057 public source files were archived in total; on 2026-10-08, 
 
 Every download keeps the original bytes of the response, with no AI upscaling, cropping, watermark removal, background removal or format conversion. `original` means the original download variant offered by the site; it is not automatically the same as the artist's working master. Some Fandom downloads have checksums that differ from the wiki upload metadata; the manifest records this explicitly.
 
-Song titles for the legacy assets are filled in from exact internal keys in a public mapping. For single images in artist posts whose song title cannot be confirmed directly, the original post and page index are kept and the image is marked `unmapped`; a post's grouping is not automatically taken as the collection of the attached images. Composers and artists are kept in separate fields.
+Song titles for the legacy assets are filled in from exact internal keys in a public mapping; a texture with no exact key takes the single key that differs from it only in letter case and is marked `mapped_case_insensitive_internal_key`. For single images in artist posts whose song title cannot be confirmed directly, the original post and page index are kept and the image is marked `unmapped`; a post's grouping is not automatically taken as the collection of the attached images. Composers and artists are kept in separate fields.
 
 For paid art books and games, only the purchase source is recorded; they were not downloaded. Dead share links, failed accesses, audio waveforms/spectrograms, videos and mixed fanart sites whose attribution cannot be confirmed are recorded in the source inventory and are not counted as successfully downloaded artwork.
 

@@ -312,18 +312,35 @@ https://github.com/FridrichMethod/deemo
             var kind = DEEMO_I18N.has("slideshow.kind." + data.kind) ? DEEMO_I18N.t("slideshow.kind." + data.kind) : "";
             if (kind) eyebrow.append(element("span", "notes-kind", kind));
             eyebrow.append(element("span", "notes-count", slideIndex + " / " + imgTargets.length));
+            // A wiki title that names none of the slide's mapped songs (data-songs) is only the file's key
+            // ("Classic01" for "Tristesse"): the songs are the headline and the key follows as a quiet file
+            // reference. A title that looks like a file name names a song only when it is the song's name ("Cloud9",
+            // "U7228"), never by containment ("Celia02forsis fc" for "For Sis", "Code11" for "Code : 11"). Any other
+            // title names a song when either contains the other, ignoring case, accents and punctuation ("Fur Alice",
+            // "Continuum (DEEMO Ver.)").
+            var songs = data.songs ? data.songs.split("\n") : [];
+            var fold = function(text) { return text.normalize("NFKD").toLowerCase().replace(/[^\p{L}\p{N}]/gu, ""); };
+            var folded = fold(data.title);
+            var file = isFileName(data.title, data.id);
+            var named = songs.some(function(song) {
+                if (file) return song.toLowerCase() === data.title.toLowerCase();
+                var name = fold(song);
+                return Boolean(name && folded) && (folded.indexOf(name) >= 0 || name.indexOf(folded) >= 0);
+            });
+            var fileKey = songs.length && !named && /^wikis:/.test(data.sourceId || "") ? data.title : "";
+            var headline = fileKey ? songs.join(" / ") : data.title;
             // A wrapping title breaks after its last spaced dash ("Book of Alice —" / "page 1"), never before a dash
             // or a trailing number: each side of that dash is kept whole where it fits (see src/slideshow.css).
             var title = element("p", "notes-title");
-            var glued = data.title.replace(/ — /g, "\u00a0— ").replace(/ (\d+)$/, "\u00a0$1");
+            var glued = headline.replace(/ — /g, "\u00a0— ").replace(/ (\d+)$/, "\u00a0$1");
             var dash = glued.lastIndexOf("\u00a0— ");
             if (dash > 0) title.append(element("span", "notes-title-part", glued.slice(0, dash + 2)), " ", element("span", "notes-title-part", glued.slice(dash + 3)));
             else title.textContent = glued;
             // CJK characters count double, so long titles step down a size before they wrap into many lines.
-            var weight = Array.from(data.title).reduce(function(sum, char) {
+            var weight = Array.from(headline).reduce(function(sum, char) {
                 return sum + (/[\u1100-\u11ff\u2e80-\ua4cf\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/.test(char) ? 2 : 1);
             }, 0);
-            if (isFileName(data.title, data.id)) title.dataset.length = "file";
+            if (file && !named && !fileKey) title.dataset.length = "file";
             else if (weight > 30) title.dataset.length = "longer";
             else if (weight > 18) title.dataset.length = "long";
             var meta = element("dl", "notes-meta");
@@ -333,6 +350,11 @@ https://github.com/FridrichMethod/deemo
                 metaRow(meta, data.collection.indexOf("\n") >= 0 ? DEEMO_I18N.t("slideshow.notes.collections") : DEEMO_I18N.t("slideshow.notes.collection"), data.collection);
             }
             notes.append(eyebrow, title);
+            if (fileKey) {
+                var reference = element("p", "notes-title", fileKey);
+                reference.dataset.length = "file";
+                notes.append(reference);
+            }
             if (meta.childElementCount) notes.append(meta);
             return notes;
         }

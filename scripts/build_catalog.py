@@ -5,6 +5,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
+import subprocess
+import sys
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -15,34 +18,88 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_MANIFESTS = ("artists", "wikis", "archives")
+# Legacy keys that name a collection cover: the book sprites, and deemo1a/deemo1b, the Deemo's Collection Vol.1A/1B
+# covers (the same files are covers on Fandom; see the cover pattern in scripts/fetch_wikis.py).
+COVER_KEY = re.compile(r"booksprite|bookcover|^deemo1[ab]$", re.IGNORECASE)
+# Optional fields on a record the fetchers carried forward rather than dropped: its upstream file was removed, was
+# superseded by a newer upload (superseded_by names the record with the canonical id), or failed to re-download.
+UPSTREAM_STATUSES = ("removed", "superseded", "fetch_failed")
+# Every tracked file here must be a record's or a variant's path (assets/thumbs/ has its own check).
+ORPHAN_CHECK_DIRECTORIES = ("assets/public", "assets/legacy")
 
 
 def attr(value: object) -> str:
-    return escape(str(value), {'"': "&quot;", "'": "&#39;", "\n": "&#10;"})
+    """A double- or single-quoted attribute value. CR, LF and TAB become character references, so HTML parsing
+    (which turns a raw CR into LF) and --check (which compares the file exactly) both keep the value as it is."""
+    return escape(str(value), {'"': "&quot;", "'": "&#39;", "\n": "&#10;", "\r": "&#13;", "\t": "&#9;"})
 
 
 def safe_path(root: Path, value: str) -> Path:
     relative = Path(value)
     if relative.is_absolute() or not relative.parts or ".." in relative.parts:
         raise ValueError(f"Unsafe asset path: {value}")
-    path = (root / relative).resolve()
-    if not path.is_relative_to(root.resolve()):
-        raise ValueError(f"Asset outside repository: {value}")
     if relative.parts[0] != "assets":
         raise ValueError(f"Unexpected asset directory: {value}")
+    # Resolving follows symlinks: a linked file or directory must still land inside the repository's assets/.
+    path = (root / relative).resolve()
+    if not path.is_relative_to(root.resolve()) or not path.is_relative_to((root / "assets").resolve()):
+        raise ValueError(f"Asset outside the repository's assets directory: {value}")
     return path
+
+
+def tracked_files(root: Path, directories: tuple[str, ...]) -> list[str] | None:
+    """Git-tracked files under these directories, as sorted POSIX paths relative to root, skipping dot-files and
+    __pycache__ as scripts/prepare_pages.py does. None when root is not the top of a git checkout."""
+    try:
+        top = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
+        if Path(top.stdout.strip()).resolve() != root.resolve():
+            return None
+        listed = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--", *directories], capture_output=True, check=True)
+    except (OSError, subprocess.CalledProcessError) as error:
+        if (root / ".git").exists():
+            print(f"warning: cannot list tracked files, so unreferenced assets are not checked: {error}", file=sys.stderr)
+        return None
+    names = (name.decode("utf-8") for name in listed.stdout.split(b"\0") if name)
+    return sorted(name for name in names if not any(part.startswith(".") or part == "__pycache__" for part in name.split("/")))
+
+
+def required_input(root: Path, relative: str, directory: bool = False) -> Path:
+    """An input every build needs: a missing one fails loudly rather than quietly building a smaller site."""
+    path = root / relative
+    if not (path.is_dir() if directory else path.is_file()):
+        raise FileNotFoundError(f"Missing required input: {relative}")
+    return path
+
+
+def legacy_pngs(directory: Path) -> list[Path]:
+    """A legacy directory's PNGs in file-name order. The explicit key and the exact suffix test give the same list
+    on every platform (WindowsPath sorts case-folded, and glob matches case-insensitively on Windows)."""
+    return sorted((path for path in directory.iterdir() if path.suffix == ".png"), key=lambda path: path.name)
+
+
+def mapped_song(songs: dict, key: str) -> tuple[dict, str]:
+    """The song-mapping entry for a legacy texture key, with its title_status. An exact key wins; failing that, the
+    one mapping key that differs only in case ("Randall" -> "randall"). Several such keys leave the key unmapped."""
+    if songs.get(key):
+        return songs[key], "mapped_exact_internal_key"
+    variants = [name for name in songs if name != key and name.casefold() == key.casefold()]
+    if len(variants) == 1 and songs[variants[0]]:
+        return songs[variants[0]], "mapped_case_insensitive_internal_key"
+    return {}, "internal_key"
 
 
 def legacy_assets(root: Path) -> list[dict]:
     assets = []
-    mapping_path = root / "data/sources/song-mapping.json"
-    mapping = json.loads(mapping_path.read_text(encoding="utf-8")) if mapping_path.exists() else {}
-    song_data = mapping.get("data", {})
-    songs, books = song_data.get("songs", {}), song_data.get("books", [])
-    original_dir = root / "assets/legacy/trans"
-    quantized_dir = root / "assets/legacy/tiny"
-    originals = sorted(original_dir.glob("*.png"))
-    if {path.name for path in originals} != {path.name for path in quantized_dir.glob("*.png")}:
+    mapping_path = required_input(root, "data/sources/song-mapping.json")
+    mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
+    song_data = mapping.get("data") or {}
+    songs, books = song_data.get("songs"), song_data.get("books")
+    if not isinstance(songs, dict) or not isinstance(books, list):
+        raise ValueError(f"Song mapping has no data.songs object and data.books list: {mapping_path.relative_to(root)}")
+    original_dir = required_input(root, "assets/legacy/trans", directory=True)
+    quantized_dir = required_input(root, "assets/legacy/tiny", directory=True)
+    originals = legacy_pngs(original_dir)
+    if {path.name for path in originals} != {path.name for path in legacy_pngs(quantized_dir)}:
         raise ValueError("Legacy trans/tiny filenames must be paired exactly")
     for path in originals:
         raw = path.read_bytes()
@@ -50,10 +107,10 @@ def legacy_assets(root: Path) -> list[dict]:
             width, height = image.size
             format_name = image.format
         key = path.stem
-        song = songs.get(key, {})
+        song, title_status = mapped_song(songs, key)
         book_index = song.get("book")
         book = books[book_index].get("name") if isinstance(book_index, int) and 0 <= book_index < len(books) else None
-        is_cover = any(word in key.lower() for word in ("booksprite", "bookcover"))
+        is_cover = bool(COVER_KEY.search(key))
         asset = {
             "id": f"legacy:{key}", "source_id": "legacy",
             "title": song.get("name", key), "internal_key": key, "artist": None,
@@ -65,7 +122,7 @@ def legacy_assets(root: Path) -> list[dict]:
             "download_url": None, "path": path.relative_to(root).as_posix(),
             "width": width, "height": height, "format": format_name,
             "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(),
-            "fetched_at": None, "game": "DEEMO", "title_status": "mapped_exact_internal_key" if song else "internal_key",
+            "fetched_at": None, "game": "DEEMO", "title_status": title_status,
             "notes": "Inherited game texture; upstream made pure-white pixels transparent.",
         }
         quantized_path = quantized_dir / path.name
@@ -93,6 +150,11 @@ def validate_asset(root: Path, asset: dict, verify: bool = False) -> None:
     page_url = urlsplit(asset["page_url"])
     if page_url.scheme not in {"https", "http"} or not page_url.netloc:
         raise ValueError(f"Unsafe source URL: {asset['page_url']}")
+    status = asset.get("upstream_status")
+    if status is not None and status not in UPSTREAM_STATUSES:
+        raise ValueError(f"Unknown upstream_status {status!r}: {asset['id']}")
+    if (status == "superseded") != (asset.get("superseded_by") is not None):
+        raise ValueError(f"superseded_by goes with upstream_status 'superseded', and only with it: {asset['id']}")
     path = safe_path(root, asset["path"])
     if path.stat().st_size != asset["bytes"]:
         raise ValueError(f"Byte count mismatch: {path}")
@@ -123,9 +185,7 @@ def combine(root: Path, verify: bool = False) -> dict:
     }]
     assets, failures, snapshots = [], [], {}
     for family in SOURCE_MANIFESTS:
-        path = root / "data" / "sources" / f"{family}.json"
-        if not path.exists():
-            continue
+        path = required_input(root, f"data/sources/{family}.json")
         manifest = json.loads(path.read_text(encoding="utf-8"))
         snapshots[family] = manifest.get("fetched_at")
         sources.extend({**source, "family": family} for source in manifest["sources"])
@@ -156,6 +216,15 @@ def combine(root: Path, verify: bool = False) -> dict:
             by_hash[asset["sha256"]] = {
                 **asset, "source_name": source["name"], "provenance": [provenance],
             }
+    for asset in assets:
+        successor = asset.get("superseded_by")
+        if successor is not None and (successor == asset["id"] or successor not in seen_ids):
+            raise ValueError(f"superseded_by names no other asset: {asset['id']} -> {successor}")
+    if verify:
+        referenced = {Path(record["path"]).as_posix() for asset in assets for record in (asset, *asset.get("variants", []))}
+        orphans = [name for name in tracked_files(root, ORPHAN_CHECK_DIRECTORIES) or [] if name not in referenced]
+        if orphans:
+            raise ValueError(f"{len(orphans)} tracked file(s) referenced by no manifest record or variant: {', '.join(orphans)}")
     entries = list(by_hash.values())
     for entry in entries:
         entry["gallery"] = bool(entry.get("width") and entry.get("height"))
@@ -180,8 +249,9 @@ def combine(root: Path, verify: bool = False) -> dict:
 
 def slide_notes(asset: dict) -> dict:
     """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated.
-    A collection name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out."""
-    found = {"composer": [], "artist": [], "collection": []}
+    A collection name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out.
+    data-songs lists the mapped song titles, which the notes headline when the title is only a wiki file key."""
+    found = {"songs": [], "composer": [], "artist": [], "collection": []}
     seen = {key: set() for key in found}
 
     def fold(text: str) -> str:
@@ -199,6 +269,8 @@ def slide_notes(asset: dict) -> dict:
             found[key].append(text)
 
     for record in asset.get("provenance") or [asset]:
+        for value in record.get("song_titles") or []:
+            add("songs", value)
         add("composer", record.get("composer"))
         add("artist", record.get("artist"))
         add("collection", record.get("collection"))
@@ -240,6 +312,15 @@ def art_layout(root: Path, asset: dict) -> dict:
     return fields
 
 
+def slide_kind(asset: dict) -> str:
+    """The kind the slide's eyebrow names. An unmapped legacy texture is "illustration" in the catalog only as the
+    archive's "Illustration / unmapped" catch-all, and most of them are song textures, so its slide says "unmapped",
+    a kind with no label: the eyebrow then names no kind rather than call it an illustration."""
+    if asset.get("family") == "legacy" and asset.get("title_status") == "internal_key" and asset["kind"] == "illustration":
+        return "unmapped"
+    return asset["kind"]
+
+
 def render_slideshow(root: Path, catalog: dict) -> str:
     template = (root / "templates/slideshow.html").read_text(encoding="utf-8-sig")
     assets = [asset for asset in catalog["assets"] if asset["gallery"] and asset["kind"] != "reference"]
@@ -253,7 +334,7 @@ def render_slideshow(root: Path, catalog: dict) -> str:
             "data-id": asset["id"], "data-title": asset["title"],
             "data-source": asset["source_name"], "data-source-id": asset["source_id"],
             "data-page": asset["page_url"],
-            "data-size": f"{asset['width']} × {asset['height']}", "data-kind": asset["kind"],
+            "data-size": f"{asset['width']} × {asset['height']}", "data-kind": slide_kind(asset),
             **layout, **slide_notes(asset), "alt": asset["title"],
         }
         attributes = " ".join(f'{key}="{attr(value)}"' for key, value in fields.items())
@@ -261,11 +342,11 @@ def render_slideshow(root: Path, catalog: dict) -> str:
     return template.replace("@python-work-area", "\n".join(slides))
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--verify", action="store_true", help="Verify every hash, image header and format")
+    parser.add_argument("--verify", action="store_true", help="Verify every hash, image header and format, and that every tracked file under assets/public and assets/legacy is referenced")
     parser.add_argument("--check", action="store_true", help="Check generated files without writing")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     catalog = combine(ROOT, args.verify)
     encoded = json.dumps(catalog, ensure_ascii=False, indent=2) + "\n"
     script = "window.DEEMO_CATALOG = " + json.dumps(catalog, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029") + ";\n"
@@ -276,11 +357,14 @@ def main() -> None:
     }
     for path, content in outputs.items():
         if args.check:
-            if not path.exists() or path.read_text(encoding="utf-8") != content:
-                raise SystemExit(f"Out-of-date generated file: {path.relative_to(ROOT)}")
+            # Decode the raw bytes: no newline translation (read_text only takes newline= from Python 3.13), so a
+            # stray CR is never read back as LF. The outputs themselves never contain a CR (attr() and JSON escape
+            # it), so folding CRLF only accepts a Windows core.autocrlf checkout.
+            if not path.is_file() or path.read_bytes().decode("utf-8").replace("\r\n", "\n") != content:
+                raise SystemExit(f"Out-of-date generated file: {path.relative_to(ROOT).as_posix()}")
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(content, encoding="utf-8")
+            path.write_text(content, encoding="utf-8", newline="\n")
     print(json.dumps(catalog["summary"], ensure_ascii=False, indent=2))
 
 
