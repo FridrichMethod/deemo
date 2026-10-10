@@ -894,12 +894,28 @@ canvas {
     }
 }
 
-/* Phones held sideways: the credits give way so the title and the caption stay clear of the control row. */
+/* Phones held sideways: of the credits only the artist's stays, as one run of text without the rule above it, and
+   the caption leaves out the image size while the notes are up, so the title and the caption stay clear of the
+   control row and the artwork is never shown without its artist (screenshots too). */
 @media screen and (orientation: landscape) and (max-height: 430px) {
     .dear-alice {
         font-size: min((40vw - var(--gutter) - 24px) / 12.6, 4.2vh);
     }
     .notes-meta {
+        display: block;
+        margin-top: .5em;
+    }
+    .notes-meta::before,
+    .notes-meta > :not(.notes-artist) {
+        display: none;
+    }
+    .notes-meta > .notes-artist {
+        display: inline;
+    }
+    .notes-meta dt {
+        margin-right: .8em;
+    }
+    .liner-text:not(.is-dedication) ~ .asset-caption .asset-heading {
         display: none;
     }
 }

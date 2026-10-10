@@ -173,6 +173,15 @@ class SlideshowTemplateTests(unittest.TestCase):
         self.assertTrue(reduced, "No reduced-motion block")
         self.assertIn(".mySlides", reduced.group(1), "Reduced motion turns slides without the crossfade")
 
+    def test_short_screens_keep_the_artist_credit(self):
+        """Tiers that drop credits keep the artist's row, so no layout shows an artwork without its artist."""
+        self.assertIn('"notes-artist"', self.html, "metaRow() tags the artist's row")
+        self.assertNotRegex(self.css, r"\.notes-meta\s*\{[^}]*display:\s*none")
+        for selector in re.findall(r"([^{}/]*\.notes-meta[^{}]*)\{[^}]*display:\s*none", self.css):
+            for part in selector.split(","):
+                if ".notes-meta" in part and "::before" not in part:
+                    self.assertIn(":not(.notes-artist)", part)
+
     def test_screenshot_overlay_does_not_live_in_the_url(self):
         self.assertNotIn(":target", self.css, "The overlay must not depend on the URL fragment")
         self.assertNotRegex(self.html, r"location\.(?:href|hash)\s*=")

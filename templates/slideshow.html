@@ -291,12 +291,15 @@ https://github.com/FridrichMethod/deemo
         function metaRow(list, label, value) {
             if (!value) return;
             var values = value.split("\n");
+            var dt = element("dt", null, label);
             var dd = element("dd");
             values.forEach(function(line, i) {
                 if (i) dd.append(document.createElement("br"));
                 dd.append(line);
             });
-            list.append(element("dt", null, label), dd);
+            // The artist's credit is the row that stays where short screens drop the others (see src/slideshow.css).
+            if (label === DEEMO_I18N.t("slideshow.notes.artist")) dt.className = dd.className = "notes-artist";
+            list.append(dt, dd);
         }
 
         // A title that is only a file name ("booksprites_10", "Rac01lifill", "Celia02forsis fc", "MN2 Booksprites")
