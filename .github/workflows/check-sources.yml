@@ -19,6 +19,11 @@ defaults:
 env:
   SNAPSHOT_BRANCH: auto/wiki-source-check
   BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+  # How `gh pr list --json author` names github-actions[bot].
+  BOT_LOGIN: app/github-actions
+  # Only the bot's own pull request from this repository: anyone can open a pull request from a fork
+  # whose branch has the same name.
+  BOT_PR_QUERY: '[.[] | select(.isCrossRepository == false and .author.login == env.BOT_LOGIN)][0].number // empty'
 
 jobs:
   discover:
@@ -120,8 +125,9 @@ jobs:
             GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
             git push --force origin "HEAD:refs/heads/$SNAPSHOT_BRANCH"
           printf '\n---\nSource · 来源: %s\n' "$RUN_URL" >> "$RUNNER_TEMP/report.md"
-          number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open --json number --jq '.[0].number')"
-          if [ "${number:-}" != "" ]; then
+          number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open \
+            --json number,isCrossRepository,author --jq "$BOT_PR_QUERY")"
+          if [ -n "$number" ]; then
             gh pr edit "$number" --title "$title" --body-file "$RUNNER_TEMP/report.md"
             gh pr comment "$number" --body "Snapshot refreshed by a new check run · 快照已由新的检查运行刷新: $RUN_URL"
           else
