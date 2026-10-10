@@ -10,6 +10,8 @@
 
 2026-10-08 增量：来源检查工作流发现 57 个 BWIKI 曲包封面候选（均为 2021 年上传，属于 `allimages` 枚举差异而非新发布曲绘），以 `--resume` 导入，全部与 Wiki 原上传 SHA-1 一致，另有 11 条已有记录的 `collections`/`related_pages` 随新候选元数据更新。其中 5 个 70×47 的 `* Collections Titletab` 是 UI 标题页签而非封面：BWIKI 发现流程当时尚未套用 Fandom 的 UI 过滤。它们已于 2026-10-09 从快照、清单和仓库中移除，发现流程现已将其排除。其余 52 个为约 180×180 的缩略图。现为 **809 张**（Fandom 561、BWIKI 248；单曲图 662、曲包封面 147），共 **459,809,756 bytes**（约 438.51 MiB），808 PNG、1 JPEG；SHA-1 不一致的仍为上述 4 张。
 
+2026-10-09 元数据修正（未改动任何图片）：快照（`wiki-discovery.json`）与清单（`wikis.json`）已按当前抓取脚本的输出修补。112 条记录的 `collections` 把同一曲包以仅大小写、空格或标点不同的多种拼写重复列出（`Etude Collection` / `Etude collection`），现各保留一种拼写。16 个 BWIKI 曲包封面的曲包名及 `related_pages` 中的 BWIKI 页面改用 BWIKI 自己的拼写（`RAC collection -1` 而非 `RAC Collection #1`）；其中 5 个曲包没有任何 BWIKI 歌页提及，改用 Fandom 各拼写中按码位排序的第一个。7 张经 `format=png` 取得的图片 SHA-1 与大小均与原上传一致，其 `delivery_note` 不再称其可能经过 CDN 重编码。
+
 ## 文件与来源
 
 - `assets/public/wikis/fandom/`：从原版 `Category:Songs` 的歌页，以及原版曲包页面取得图片引用。
