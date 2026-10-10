@@ -371,7 +371,9 @@ def carry_forward(previous, manifest):
     source was read without error and no longer lists it, or "fetch_failed" when the record or its
     source failed this run. When upstream bytes changed, the new version keeps the canonical id and
     the old one stays as "<id>:<old sha256[:12]>" with upstream_status "superseded" and superseded_by
-    naming the canonical id. Files are never deleted; sources of kept records are kept too.
+    naming the canonical id. When upstream reverts to an earlier version, the canonical record holds
+    those bytes and that file again, so the superseded copy of it is not kept twice. Files are never
+    deleted; sources of kept records are kept too.
     """
     records = {row["id"]: row for row in manifest["assets"]}
     failed_assets = {row["asset_id"] for row in manifest["failures"] if row.get("asset_id")}
@@ -390,7 +392,12 @@ def carry_forward(previous, manifest):
             records[old["id"]] = {**old, "upstream_status": status}
         else:
             records[old["id"]] = {**old, "upstream_status": "removed"}
-    manifest["assets"] = list(records.values())
+    def restored(row):
+        canonical = records.get(row.get("superseded_by"))
+        return (row.get("upstream_status") == "superseded" and canonical is not None
+                and (canonical["sha256"], canonical["path"]) == (row["sha256"], row["path"]))
+
+    manifest["assets"] = [row for row in records.values() if not restored(row)]
     missing = {row["source_id"] for row in manifest["assets"]} - {row["id"] for row in manifest["sources"]}
     manifest["sources"].extend(row for row in previous.get("sources", []) if row["id"] in missing)
 

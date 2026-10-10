@@ -259,6 +259,62 @@ class TumblrArtistTests(unittest.TestCase):
         self.assertEqual([f["source_id"] for f in manifest["failures"]], expected)
 
 
+TUMBLR_POST = "129276170315"
+TUMBLR_IMAGE = "https://64.media.tumblr.com/abc/tumblr_x_1280.png"
+
+
+class TumblrRefetchTests(TempRoot):
+    """A re-uploaded Tumblr image can keep its URL, so only the bytes tell its versions apart."""
+
+    def run_main(self, web, *flags):
+        with patch.object(artists, "ROOT", self.root), patch.object(artists, "PIXIV_POSTS", {}), \
+                patch.object(artists, "TUMBLR_POSTS", {TUMBLR_POST: "Mili Collection Vol. 2"}), \
+                patch.object(artists, "collect_jimdo", lambda *args, **kwargs: None), \
+                patch.object(artists, "collect_reference", lambda *args, **kwargs: None), \
+                patch.object(artists.time, "sleep", lambda seconds: None), patch.object(artists.requests, "get", web), \
+                patch.object(sys, "argv", ["fetch_artists.py", *flags]), contextlib.redirect_stdout(io.StringIO()):
+            return artists.main()
+
+    def manifest(self):
+        manifest = self.read_manifest("artists")
+        manifest.pop("fetched_at")
+        for asset in manifest["assets"]:
+            self.assertEqual(sha((self.root / asset["path"]).read_bytes()), asset["sha256"], asset["id"])
+        return manifest, {asset["id"]: asset for asset in manifest["assets"]}
+
+    def test_unchanged_url_reupload_is_stable_and_a_revert_is_listed_once(self):
+        post = {"id": TUMBLR_POST, "url-with-slug": f"https://wublaze.tumblr.com/post/{TUMBLR_POST}/x",
+                "photos": [{"photo-url-1280": TUMBLR_IMAGE}]}
+        red, blue = png("red"), png("blue")
+        web = FakeWeb({artists.TUMBLR_API: "var tumblr_api_read = " + json.dumps({"posts": [post]}) + ";", TUMBLR_IMAGE: red})
+        canonical = f"artists:tumblr:{TUMBLR_POST}:p0"
+        stem = f"assets/public/artists/blaze-wu/tumblr-{TUMBLR_POST}-p00"
+        self.assertEqual(self.run_main(web), 0)
+
+        web.routes[TUMBLR_IMAGE] = blue
+        self.assertEqual(self.run_main(web, "--refresh"), 0)
+        refreshed, assets = self.manifest()
+        self.assertEqual(sorted(assets), [canonical, f"{canonical}:{sha(red)[:12]}"])
+        self.assertEqual((assets[canonical]["sha256"], assets[canonical]["path"]), (sha(blue), f"{stem}-{sha(blue)[:12]}.png"))
+        self.assertEqual(assets[f"{canonical}:{sha(red)[:12]}"]["path"], f"{stem}.png")
+
+        # Without --refresh the cached copy of the URL is the canonical record, never the superseded one.
+        web.requested.clear()
+        self.assertEqual(self.run_main(web), 0)
+        self.assertNotIn(TUMBLR_IMAGE, web.requested)
+        self.assertEqual(self.manifest()[0], refreshed)
+
+        # Upstream reverts: the red version is canonical again and is not also kept as superseded.
+        web.routes[TUMBLR_IMAGE] = red
+        self.assertEqual(self.run_main(web, "--refresh"), 0)
+        reverted, assets = self.manifest()
+        self.assertEqual(sorted(assets), [canonical, f"{canonical}:{sha(blue)[:12]}"])
+        self.assertEqual((assets[canonical]["sha256"], assets[canonical]["path"]), (sha(red), f"{stem}.png"))
+        self.assertEqual(assets[f"{canonical}:{sha(blue)[:12]}"]["path"], f"{stem}-{sha(blue)[:12]}.png")
+        self.assertEqual(self.run_main(web), 0)
+        self.assertEqual(self.manifest()[0], reverted)
+
+
 JIMDO_HTML = '<a data-href="{lightbox}"><img alt="{caption}" data-orig-width="{w}" data-orig-height="{h}"></a>'
 LIGHTBOX = "https://image.jimcdn.com/app/cms/image/transf/dimension=2048x2048:format=png/path/s1/image/{key}/version/1/image.png"
 
@@ -405,6 +461,16 @@ class ArchivesTests(TempRoot):
         self.assertEqual((superseded["upstream_status"], superseded["superseded_by"], superseded["path"]),
                          ("superseded", "archives:cover-art-archive:11", "assets/public/archives/cover-art-archive/11.png"))
         self.assertEqual((self.root / superseded["path"]).read_bytes(), old)
+
+        # Upstream reverts to the old bytes: they are canonical again and listed once.
+        web.routes[f"https://coverartarchive.org/release/{archives.CAA_MBID}/11.jpg"] = old
+        archives.reset()
+        self.assertEqual(self.run_main(web, self.caa_step()), 0)
+        assets = {a["id"]: a for a in self.read_manifest("archives")["assets"]}
+        self.assertEqual(sorted(assets), ["archives:cover-art-archive:11", f"archives:cover-art-archive:11:{sha(new)[:12]}"])
+        self.assertEqual((assets["archives:cover-art-archive:11"]["sha256"], assets["archives:cover-art-archive:11"]["path"]),
+                         (sha(old), "assets/public/archives/cover-art-archive/11.png"))
+        self.assertEqual(assets[f"archives:cover-art-archive:11:{sha(new)[:12]}"]["superseded_by"], "archives:cover-art-archive:11")
 
     def test_manifest_is_written_once_and_never_on_interrupt(self):
         path = self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [], "failures": []})
