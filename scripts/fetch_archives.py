@@ -340,10 +340,11 @@ def check_entry(entry):
 
 
 def catalog():
-    pool(check_entry, CATALOG_ENTRIES, 5)
+    # Created first: main() files an unexpected error escaping this step under this source id.
     sid = "internet-archive-202606"
     row = source(sid, "Internet Archive DEEMO OST 202606", "https://archive.org/details/deemo_ost-_202606", "excluded_audio_derivatives",
                  "Metadata examined without downloading audio. PNG files derived from FLAC and spectrograms are audio visualizations, not original loose cover art. Audio metadata itself attributes embedded pictures to DEEMO Wiki.")
+    pool(check_entry, CATALOG_ENTRIES, 5)
     metadata = "https://archive.org/metadata/deemo_ost-_202606"
     try:
         data = get(metadata, ARCHIVE_ORG_HOSTS).json()

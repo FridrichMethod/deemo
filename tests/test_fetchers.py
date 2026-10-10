@@ -430,6 +430,22 @@ class ArchivesTests(TempRoot):
         self.assertEqual((self.root / kept[0]["path"]).read_bytes(), old)
         self.assertNotIn("retained unchanged", sources["archives:kitsunefreak-cleaned"]["notes"])
 
+    def test_unexpected_step_error_is_filed_under_an_existing_source(self):
+        class Broken:
+            def get(self, url, **kwargs):
+                raise RuntimeError(f"unexpected: {url}")  # not a RequestException, so check_entry lets it escape
+
+        self.assertEqual(self.run_main(Broken()), 1)
+        manifest = self.read_manifest("archives")
+        sources = {row["id"] for row in manifest["sources"]}
+        for failure in manifest["failures"]:
+            self.assertIn(failure["source_id"], sources)
+            self.assertTrue(failure["url"], failure)
+        self.assertIn(("archives:internet-archive-202606", "https://archive.org/details/deemo_ost-_202606"),
+                      [(f["source_id"], f["url"]) for f in manifest["failures"]])
+        with contextlib.redirect_stdout(io.StringIO()):
+            archives.verify()
+
     def test_partial_source_and_removed_record(self):
         web = FakeWeb({CAA_API: json.dumps({"images": [caa_image(11), caa_image(12)]}),
                        f"https://coverartarchive.org/release/{archives.CAA_MBID}/11.jpg": png("red")})
