@@ -126,9 +126,11 @@ After originals are added or removed, rebuild the previews before the catalog, t
 .venv/bin/python scripts/build_catalog.py --verify
 .venv/bin/python -I scripts/build_thumbnails.py --check
 .venv/bin/python -I tests/test_thumbnails.py
+# Optional and slower: re-encode every preview from its original
+.venv/bin/python -I scripts/build_thumbnails.py --verify
 ```
 
-With the Pillow version pinned in `requirements.txt`, a rebuild writes byte-identical files, and `--verify` re-encodes every preview from its original to confirm it. `--check`, which `tests/test_thumbnails.py` also runs, confirms that every larger gallery image has a preview and that each preview exists, decodes, and has the expected size and hash, with no orphaned files. `--prune` deletes previews whose original has left the gallery. The script will not mix encoder settings or Pillow versions; `--rebuild` re-encodes every preview. It stops with an error on an original whose colour mode or profile it cannot preview faithfully, such as CMYK, rather than write a preview with wrong colours.
+With the Pillow version pinned in `requirements.txt`, a rebuild writes byte-identical files, and `scripts/build_thumbnails.py --verify` re-encodes every preview from its original to confirm it; `scripts/build_catalog.py --verify` only checks that each listed preview exists with its recorded size and SHA-256. `scripts/build_thumbnails.py --check`, which `tests/test_thumbnails.py` also runs, confirms that every larger gallery image has a preview and that each preview exists, decodes, and has the expected size and hash, with no orphaned files. `scripts/build_thumbnails.py --prune` deletes previews whose original has left the gallery. The script will not mix encoder settings or Pillow versions; `scripts/build_thumbnails.py --rebuild` re-encodes every preview. It stops with an error on an original whose colour mode or profile it cannot preview faithfully, such as CMYK, rather than write a preview with wrong colours.
 
 ## Attribution
 

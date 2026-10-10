@@ -126,9 +126,11 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
 .venv/bin/python scripts/build_catalog.py --verify
 .venv/bin/python -I scripts/build_thumbnails.py --check
 .venv/bin/python -I tests/test_thumbnails.py
+# 可选，较慢：从原图重新编码每张预览图
+.venv/bin/python -I scripts/build_thumbnails.py --verify
 ```
 
-使用 `requirements.txt` 中固定的 Pillow 版本时，重建会写出逐字节相同的文件；`--verify` 会从原图重新编码每张预览图并加以确认。`--check`（`tests/test_thumbnails.py` 也会运行）确认每张较大的图库图片都有预览图，且每张预览图存在、可解码、尺寸和哈希符合记录，也没有孤立文件。`--prune` 删除原图已不在图库中的预览图。脚本不会混用不同的编码设置或 Pillow 版本；`--rebuild` 会重新编码全部预览图。遇到无法如实预览的色彩模式或配置文件（如 CMYK）时，脚本会报错停止，而不是写出颜色错误的预览图。
+使用 `requirements.txt` 中固定的 Pillow 版本时，重建会写出逐字节相同的文件；`scripts/build_thumbnails.py --verify` 会从原图重新编码每张预览图并加以确认，而 `scripts/build_catalog.py --verify` 只检查记录中的每张预览图存在且大小与 SHA-256 符合记录。`scripts/build_thumbnails.py --check`（`tests/test_thumbnails.py` 也会运行）确认每张较大的图库图片都有预览图，且每张预览图存在、可解码、尺寸和哈希符合记录，也没有孤立文件。`scripts/build_thumbnails.py --prune` 删除原图已不在图库中的预览图。脚本不会混用不同的编码设置或 Pillow 版本；`scripts/build_thumbnails.py --rebuild` 会重新编码全部预览图。遇到无法如实预览的色彩模式或配置文件（如 CMYK）时，脚本会报错停止，而不是写出颜色错误的预览图。
 
 ## 署名
 
