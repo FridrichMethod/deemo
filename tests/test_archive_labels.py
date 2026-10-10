@@ -8,6 +8,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTER = re.compile(r"DEEMO_I18N\.register\((\{.*\})\);\s*$", re.DOTALL)
+# Source statuses the fetch scripts write besides fetch_archives' fixed list. A refetch can bring any of them into the
+# catalog (a run with failures marks its source partial or failed), so they are labelled before they first appear.
+FETCHER_STATUSES = {"complete", "partial", "failed", "unavailable", "discovered", "pending", "reference_only",
+                    "fetched", "no_assets_fetched"}
 
 
 def message_tables():
@@ -28,7 +32,7 @@ class ArchiveLabelTests(unittest.TestCase):
             self.assertEqual(missing, [], f"Add {prefix}.<token> labels for {language} to src/i18n/archive.js; the page would show raw tokens")
 
     def test_source_statuses_are_labelled(self):
-        self.assert_labelled("status", {source["status"] for source in self.catalog["sources"]})
+        self.assert_labelled("status", {source["status"] for source in self.catalog["sources"]} | FETCHER_STATUSES)
 
     def test_file_qualities_are_labelled(self):
         self.assert_labelled("quality", {record["quality"] for record in self.records if record.get("quality")})
