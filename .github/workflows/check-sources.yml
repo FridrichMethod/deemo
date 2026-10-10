@@ -119,6 +119,11 @@ jobs:
             --manifest data/sources/wikis.json \
             --report "$RUNNER_TEMP/report.md" \
             --summary "$RUNNER_TEMP/summary.json"
+          python3 -I - "$RUNNER_TEMP/summary.json" <<'PY'
+          import json, sys
+          if not json.load(open(sys.argv[1], encoding="utf-8"))["changed"]:
+              sys.exit("::error::The snapshot handed over by the discover job does not differ from main.")
+          PY
       - name: Open or update the snapshot pull request
         env:
           GH_TOKEN: ${{ github.token }}
