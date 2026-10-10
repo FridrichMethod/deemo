@@ -282,6 +282,20 @@ class CompareTests(unittest.TestCase):
                 self.assertIn(status, steps)
         self.assertNotIn("not deleted automatically", check.TEXT["en"]["next_steps"])
 
+    def test_next_steps_rebuild_the_previews_before_the_catalog_and_run_every_test(self):
+        # New or re-uploaded originals need grid previews, which the catalog build records and tests/test_thumbnails.py
+        # requires; CI runs every tests/test_*.py, so the local steps do too.
+        commands = ["scripts/fetch_wikis.py --resume", "scripts/build_thumbnails.py --prune", "scripts/build_catalog.py --verify",
+                    'for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done']
+        for lang in ("en", "zh-CN"):
+            with self.subTest(lang=lang):
+                block = re.search(r"```sh\n(.*?)```", check.TEXT[lang]["next_steps"], re.DOTALL).group(1)
+                lines = block.splitlines()
+                self.assertEqual(len(lines), len(commands), block)
+                for line, command in zip(lines, commands):
+                    self.assertIn(command, line)
+                self.assertIn("tests/test_thumbnails.py", check.TEXT[lang]["next_steps"])
+
     def test_language_tables_match(self):
         english, chinese = check.TEXT["en"], check.TEXT["zh-CN"]
         self.assertEqual(english.keys(), chinese.keys())

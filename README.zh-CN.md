@@ -36,7 +36,7 @@ python -I -m http.server 8765 --bind 127.0.0.1
 
 抓取 Wiki 和安装依赖在只读令牌、不保存凭据的任务中进行。另一个不运行任何第三方代码的任务只接收这两个快照文件，据此重新生成报告、提交并创建 PR；写权限令牌只用于这次推送和 PR 命令。它只更新或关闭本仓库中从 `auto/wiki-source-check` 发起的 PR，无论由机器人还是维护者创建（来自 fork、分支同名的 PR 会被忽略）；若有其他人向该分支提交过，工作流拒绝覆盖它：先合并或转移这些提交，再删除分支。PR 的标题和正文归机器人所有，每次更新都会重写。不合并而关闭 PR 并不能阻止下一次仍发现差异的运行创建新 PR；如需暂停检查，请停用该工作流。GitHub 不会为用 `GITHUB_TOKEN` 创建的 PR 运行工作流，因此测试工作流不会在快照 PR 上运行；该 PR 只改动构建不读取的两个发现文件，合并后 Pages 工作流会再次运行全部检查。
 
-合并该 PR 只更新快照，不改变图库。随后在本地运行 `scripts/fetch_wikis.py --resume` 下载新增和重新上传的文件，再 build、verify、检查 `failures`、`upstream_status` 与 checksum 字段并提交图片与清单（命令见 PR 正文和下文"目录与复现"）。`--resume` 不会删除任何文件：已移除和被取代的记录仍保留在清单中，以 `upstream_status` 标记。首次启用前需要在仓库 Settings → Actions → General → Workflow permissions 勾选 "Allow GitHub Actions to create and approve pull requests"，否则工作流能推分支但无法创建 PR。公开仓库 60 天没有提交时 GitHub 会暂停 `schedule` 触发，需在 Actions 页重新启用。
+合并该 PR 只更新快照，不改变图库。随后在本地运行 `scripts/fetch_wikis.py --resume` 下载新增和重新上传的文件，用 `scripts/build_thumbnails.py --prune` 刷新网格预览图（见下文"网格预览图"），再用 `scripts/build_catalog.py --verify` 构建，运行全部 `tests/test_*.py`，检查 `failures`、`upstream_status` 与 checksum 字段，然后提交图片、预览图、清单与重新生成的目录（命令见 PR 正文和下文"目录与复现"）。`--resume` 不会删除任何文件：已移除和被取代的记录仍保留在清单中，以 `upstream_status` 标记。首次启用前需要在仓库 Settings → Actions → General → Workflow permissions 勾选 "Allow GitHub Actions to create and approve pull requests"，否则工作流能推分支但无法创建 PR。公开仓库 60 天没有提交时 GitHub 会暂停 `schedule` 触发，需在 Actions 页重新启用。
 
 画师来源（`fetch_artists.py`）的 Pixiv 作品 ID 写在脚本里，公开档案来源基本是静态内容，二者都不在自动检查范围内；要补充新作品仍需手动编辑脚本并重新抓取。
 
