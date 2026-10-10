@@ -284,9 +284,9 @@ def instant(stamp):
     return datetime.fromisoformat(stamp.replace("Z", "+00:00"))
 
 
-def composer_drift(manifest, snapshot):
-    """Ids of the manifest's records whose composer or composer_source differs from their candidate's in the snapshot,
-    in manifest order.
+def composer_drift(manifest, snapshot, keys=("composer", "composer_source")):
+    """Ids of the manifest's records whose composer or composer_source (or other keys) differs from their candidate's in
+    the snapshot, in manifest order.
 
     Only a manifest resumed from this snapshot answers to it. The source-check workflow commits a newer snapshot and
     song index on their own (fetch_wikis.py --metadata-only), and the manifest takes their composers at the --resume
@@ -299,7 +299,7 @@ def composer_drift(manifest, snapshot):
     # A carried-forward record (upstream_status) keeps what it had.
     return [record["id"] for record in manifest["assets"]
             if record["id"] in by_id and record["source_id"] not in earlier and not record.get("upstream_status")
-            and any(record.get(key) != by_id[record["id"]].get(key) for key in ("composer", "composer_source"))]
+            and any(record.get(key) != by_id[record["id"]].get(key) for key in keys)]
 
 
 class CommittedWikiDataTests(unittest.TestCase):
@@ -321,6 +321,21 @@ class CommittedWikiDataTests(unittest.TestCase):
 
     def test_records_carry_their_candidates_composer(self):
         self.assertEqual(composer_drift(self.manifest, self.snapshot), [], "Run fetch_wikis.py --resume")
+
+    def test_every_record_shows_the_same_spelling_of_a_collection(self):
+        # BWIKI and Fandom spell collections differently; every record shows one spelling and keeps the others as
+        # collection_aliases for search (fetch_wikis.with_collection_aliases(), applied before the composers).
+        expected = fetch.with_composers(fetch.with_collection_aliases(self.candidates, self.songs), self.songs)
+        differ = [row["file_title"] for row, want in zip(self.candidates, expected) if list(row.items()) != list(want.items())]
+        self.assertEqual(differ, [], "Patch the snapshot with fetch_wikis.with_collection_aliases()")
+        self.assertEqual(composer_drift(self.manifest, self.snapshot, ("collections", "collection_aliases")), [],
+                         "Run fetch_wikis.py --resume")
+        shown = {}
+        for row in self.candidates + [record for record in self.assets if not record.get("upstream_status")]:
+            for name in row["collections"]:
+                shown.setdefault(fetch.normalized(name) or name, set()).add(name)
+        self.assertEqual({key: sorted(names) for key, names in shown.items() if len(names) > 1}, {})
+        self.assertIn("RAC Collection #1", {name for names in shown.values() for name in names})
 
     def test_composers_sit_on_song_art_where_a_verified_rerun_puts_them(self):
         wikis = {row["source_id"] for row in self.songs}
