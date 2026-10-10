@@ -114,6 +114,15 @@ class SlideshowTemplateTests(unittest.TestCase):
                 with self.subTest(src=node.attrs.get("src")):
                     self.assertIn("alt", node.attrs, "Decorative icons take alt=\"\"")
 
+    def test_accessible_names_contain_the_visible_label(self):
+        """WCAG 2.5.3: an aria-label on a control with visible text must contain that text."""
+        for node in self.nodes:
+            label_key, text_key = i18n_attrs(node).get("aria-label"), node.attrs.get("data-i18n")
+            if label_key and text_key:
+                for lang in ("en", "zh-CN"):
+                    with self.subTest(control=text_key, lang=lang):
+                        self.assertIn(self.messages[lang][text_key].casefold(), self.messages[lang][label_key].casefold())
+
     def test_screenshot_overlay_does_not_live_in_the_url(self):
         self.assertNotIn(":target", self.css, "The overlay must not depend on the URL fragment")
         self.assertNotRegex(self.html, r"location\.(?:href|hash)\s*=")
