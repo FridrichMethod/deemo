@@ -14,7 +14,16 @@ music, fonts, or other third-party media. Public availability of a source
 does not change its ownership. Per-file attribution and source URLs are
 recorded in data/sources/*.json and data/catalog.json.
 
-Third-party software notices embedded in src/vendor/legacy-ui.js are retained.
+src/vendor/legacy-ui.js is the upstream src/main.js, kept byte for byte. It
+bundles third-party software under the MIT License, whose full texts are in
+licenses/:
+  html2canvas 0.5.0-beta3, Copyright (c) 2012 Niklas von Hertzen
+    (licenses/html2canvas-MIT.txt; the bundle banner names 2016 and leaves
+    the license name blank)
+  punycode.js 1.2.4, Copyright Mathias Bynens, built into html2canvas
+    (licenses/punycode-MIT.txt)
+  Pace 1.0.0, Copyright (c) 2013 HubSpot, Inc. (licenses/pace-MIT.txt)
+
 Inherited site media are organized under assets/site/, and both versions
 of the inherited artwork are preserved under assets/legacy/. Attribution
 and license locations are indexed in licenses/README.md; relocation does
