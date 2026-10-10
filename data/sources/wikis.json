@@ -274,7 +274,7 @@
         ]
       },
       "notes": "Only original DEEMO and its ports. DEEMO II categories, audio, charts, screenshots and unrelated UI are excluded.",
-      "asset_count": 253,
+      "asset_count": 248,
       "failure_count": 0
     },
     {
@@ -1062,39 +1062,6 @@
       ],
       "related_pages": [
         "https://wiki.biligame.com/deemo/Collaboration%20Collection"
-      ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
-    },
-    {
-      "id": "wikis:bwiki:1b103848971f8e7d",
-      "source_id": "wikis:bwiki",
-      "title": "Lyrical Collections Titletab",
-      "kind": "collection_cover",
-      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Lyrical_Collections_Titletab.png",
-      "download_url": "https://patchwiki.biligame.com/images/deemo/8/8f/ghxxc41jv6yufhds26vm3a36ptlccxi.png",
-      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/8/8f/ghxxc41jv6yufhds26vm3a36ptlccxi.png",
-      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/8/8f/ghxxc41jv6yufhds26vm3a36ptlccxi.png",
-      "path": "assets/public/wikis/bwiki/Lyrical_Collections_Titletab--2cc98550159f.png",
-      "width": 70,
-      "height": 47,
-      "format": "PNG",
-      "bytes": 3208,
-      "sha256": "2cc98550159f58bf91802125aa1f6b08aabe3a5700f4560c21de0e2caff70a22",
-      "fetched_at": "2026-10-08T11:49:56.119048Z",
-      "game": "DEEMO",
-      "content_type": "image/png",
-      "wiki_mime": "image/png",
-      "wiki_sha1": "8d3d6c40682a2fee5f7b3cb80c17f4acb460a576",
-      "wiki_timestamp": "2021-09-01T01:49:33Z",
-      "download_sha1": "8d3d6c40682a2fee5f7b3cb80c17f4acb460a576",
-      "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true,
-      "song_titles": [],
-      "collections": [
-        "Lyrical Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Lyrical%20Collections%20Titletab"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
@@ -3263,39 +3230,6 @@
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
-      "id": "wikis:bwiki:5c2cb2aaae5b7c43",
-      "source_id": "wikis:bwiki",
-      "title": "Exotic Collections Titletab",
-      "kind": "collection_cover",
-      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Exotic_Collections_Titletab.png",
-      "download_url": "https://patchwiki.biligame.com/images/deemo/a/ac/gqk9bkcg5c6jsb74wg5qm5wpkf9iqoj.png",
-      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/a/ac/gqk9bkcg5c6jsb74wg5qm5wpkf9iqoj.png",
-      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/a/ac/gqk9bkcg5c6jsb74wg5qm5wpkf9iqoj.png",
-      "path": "assets/public/wikis/bwiki/Exotic_Collections_Titletab--fa970778047a.png",
-      "width": 70,
-      "height": 47,
-      "format": "PNG",
-      "bytes": 3573,
-      "sha256": "fa970778047a034e128aa33704fc9311410b597e79694c788e3d7258f25915d5",
-      "fetched_at": "2026-10-08T11:49:54.316705Z",
-      "game": "DEEMO",
-      "content_type": "image/png",
-      "wiki_mime": "image/png",
-      "wiki_sha1": "8f4a344dfffc0bbaa26cc5805b6803fbee591c93",
-      "wiki_timestamp": "2021-09-01T01:49:34Z",
-      "download_sha1": "8f4a344dfffc0bbaa26cc5805b6803fbee591c93",
-      "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true,
-      "song_titles": [],
-      "collections": [
-        "Exotic Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Exotic%20Collections%20Titletab"
-      ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
-    },
-    {
       "id": "wikis:bwiki:5c5090883730ba1e",
       "source_id": "wikis:bwiki",
       "title": "Rayark selection Vol.3",
@@ -4386,39 +4320,6 @@
       "mapping_method": "Exact normalized song title / image filename match"
     },
     {
-      "id": "wikis:bwiki:7b63d8725811cc21",
-      "source_id": "wikis:bwiki",
-      "title": "Spiritual Collections Titletab",
-      "kind": "collection_cover",
-      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Spiritual_Collections_Titletab.png",
-      "download_url": "https://patchwiki.biligame.com/images/deemo/1/1c/8eev9fg0atx3kqaz0rwypmc9lk90kis.png",
-      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/1/1c/8eev9fg0atx3kqaz0rwypmc9lk90kis.png",
-      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/1/1c/8eev9fg0atx3kqaz0rwypmc9lk90kis.png",
-      "path": "assets/public/wikis/bwiki/Spiritual_Collections_Titletab--e2f02975e755.png",
-      "width": 70,
-      "height": 47,
-      "format": "PNG",
-      "bytes": 3907,
-      "sha256": "e2f02975e755ca488e59ffcb7378ddff4c86da4389642134e7d7880b5e21b63b",
-      "fetched_at": "2026-10-08T11:49:59.158331Z",
-      "game": "DEEMO",
-      "content_type": "image/png",
-      "wiki_mime": "image/png",
-      "wiki_sha1": "47e9fe27dca1685738d33cef0b6ae8523eac70e4",
-      "wiki_timestamp": "2021-09-01T01:49:31Z",
-      "download_sha1": "47e9fe27dca1685738d33cef0b6ae8523eac70e4",
-      "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true,
-      "song_titles": [],
-      "collections": [
-        "Spiritual Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Spiritual%20Collections%20Titletab"
-      ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
-    },
-    {
       "id": "wikis:bwiki:7b7999e3a657a969",
       "source_id": "wikis:bwiki",
       "title": "Girl Meets World",
@@ -5045,39 +4946,6 @@
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
       "mapping_method": "Exact normalized song title / image filename match"
-    },
-    {
-      "id": "wikis:bwiki:87a8b11db1d83324",
-      "source_id": "wikis:bwiki",
-      "title": "Rayark Collections Titletab",
-      "kind": "collection_cover",
-      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Rayark_Collections_Titletab.png",
-      "download_url": "https://patchwiki.biligame.com/images/deemo/e/ee/pbrn9a0k5xjxinaijjh0c7poue2752k.png",
-      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/e/ee/pbrn9a0k5xjxinaijjh0c7poue2752k.png",
-      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/e/ee/pbrn9a0k5xjxinaijjh0c7poue2752k.png",
-      "path": "assets/public/wikis/bwiki/Rayark_Collections_Titletab--f3ff1cfbddfe.png",
-      "width": 70,
-      "height": 47,
-      "format": "PNG",
-      "bytes": 3168,
-      "sha256": "f3ff1cfbddfe34cd7e52fdeaeda25a38cfa53f81be0d345a09963ab0da46a08f",
-      "fetched_at": "2026-10-08T11:49:58.421665Z",
-      "game": "DEEMO",
-      "content_type": "image/png",
-      "wiki_mime": "image/png",
-      "wiki_sha1": "d8d1af5bfcb95a4b7c1951ae15176ec3aefc2f6c",
-      "wiki_timestamp": "2021-09-01T01:49:35Z",
-      "download_sha1": "d8d1af5bfcb95a4b7c1951ae15176ec3aefc2f6c",
-      "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true,
-      "song_titles": [],
-      "collections": [
-        "Rayark Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Rayark%20Collections%20Titletab"
-      ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },
     {
       "id": "wikis:bwiki:87e75add16b64d5a",
@@ -7285,39 +7153,6 @@
       ],
       "related_pages": [
         "https://wiki.biligame.com/deemo/DS%3APIANO%20Collection"
-      ],
-      "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
-    },
-    {
-      "id": "wikis:bwiki:cc65f3e7ba90c509",
-      "source_id": "wikis:bwiki",
-      "title": "Piano Collections Titletab",
-      "kind": "collection_cover",
-      "page_url": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Piano_Collections_Titletab.png",
-      "download_url": "https://patchwiki.biligame.com/images/deemo/5/53/tp2t0eysxwbtznyji6iqal1rntns9h7.png",
-      "resolved_download_url": "https://patchwiki.biligame.com/images/deemo/5/53/tp2t0eysxwbtznyji6iqal1rntns9h7.png",
-      "wiki_original_url": "https://patchwiki.biligame.com/images/deemo/5/53/tp2t0eysxwbtznyji6iqal1rntns9h7.png",
-      "path": "assets/public/wikis/bwiki/Piano_Collections_Titletab--3267e3752485.png",
-      "width": 70,
-      "height": 47,
-      "format": "PNG",
-      "bytes": 3665,
-      "sha256": "3267e375248583c2e24c3706b623f5ba64af6deb5bf1645a9fa33349aa7bf06f",
-      "fetched_at": "2026-10-08T11:49:57.372757Z",
-      "game": "DEEMO",
-      "content_type": "image/png",
-      "wiki_mime": "image/png",
-      "wiki_sha1": "fe3a3e53c42e902d5a052d176ad6e2749ed659fb",
-      "wiki_timestamp": "2021-09-01T01:49:32Z",
-      "download_sha1": "fe3a3e53c42e902d5a052d176ad6e2749ed659fb",
-      "wiki_original_size_matches": true,
-      "wiki_original_sha1_matches": true,
-      "song_titles": [],
-      "collections": [
-        "Piano Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Piano%20Collections%20Titletab"
       ],
       "provenance": "Public community wiki upload; original creator/upload lineage not independently established."
     },

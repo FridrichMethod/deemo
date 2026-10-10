@@ -27654,32 +27654,6 @@
     },
     {
       "source": "bwiki",
-      "file_title": "文件:Exotic Collections Titletab.png",
-      "info": {
-        "name": "Exotic_Collections_Titletab.png",
-        "timestamp": "2021-09-01T01:49:34Z",
-        "size": 3573,
-        "width": 70,
-        "height": 47,
-        "url": "https://patchwiki.biligame.com/images/deemo/a/ac/gqk9bkcg5c6jsb74wg5qm5wpkf9iqoj.png",
-        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Exotic_Collections_Titletab.png",
-        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=249",
-        "sha1": "8f4a344dfffc0bbaa26cc5805b6803fbee591c93",
-        "mime": "image/png",
-        "ns": 6,
-        "title": "文件:Exotic Collections Titletab.png"
-      },
-      "kind": "collection_cover",
-      "song_titles": [],
-      "collections": [
-        "Exotic Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Exotic%20Collections%20Titletab"
-      ]
-    },
-    {
-      "source": "bwiki",
       "file_title": "文件:Farewell Waltz.png",
       "info": {
         "name": "Farewell_Waltz.png",
@@ -29364,32 +29338,6 @@
     },
     {
       "source": "bwiki",
-      "file_title": "文件:Lyrical Collections Titletab.png",
-      "info": {
-        "name": "Lyrical_Collections_Titletab.png",
-        "timestamp": "2021-09-01T01:49:33Z",
-        "size": 3208,
-        "width": 70,
-        "height": 47,
-        "url": "https://patchwiki.biligame.com/images/deemo/8/8f/ghxxc41jv6yufhds26vm3a36ptlccxi.png",
-        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Lyrical_Collections_Titletab.png",
-        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=248",
-        "sha1": "8d3d6c40682a2fee5f7b3cb80c17f4acb460a576",
-        "mime": "image/png",
-        "ns": 6,
-        "title": "文件:Lyrical Collections Titletab.png"
-      },
-      "kind": "collection_cover",
-      "song_titles": [],
-      "collections": [
-        "Lyrical Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Lyrical%20Collections%20Titletab"
-      ]
-    },
-    {
-      "source": "bwiki",
       "file_title": "文件:L：The Lower collection.png",
       "info": {
         "name": "L：The_Lower_collection.png",
@@ -30326,32 +30274,6 @@
     },
     {
       "source": "bwiki",
-      "file_title": "文件:Piano Collections Titletab.png",
-      "info": {
-        "name": "Piano_Collections_Titletab.png",
-        "timestamp": "2021-09-01T01:49:32Z",
-        "size": 3665,
-        "width": 70,
-        "height": 47,
-        "url": "https://patchwiki.biligame.com/images/deemo/5/53/tp2t0eysxwbtznyji6iqal1rntns9h7.png",
-        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Piano_Collections_Titletab.png",
-        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=247",
-        "sha1": "fe3a3e53c42e902d5a052d176ad6e2749ed659fb",
-        "mime": "image/png",
-        "ns": 6,
-        "title": "文件:Piano Collections Titletab.png"
-      },
-      "kind": "collection_cover",
-      "song_titles": [],
-      "collections": [
-        "Piano Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Piano%20Collections%20Titletab"
-      ]
-    },
-    {
-      "source": "bwiki",
       "file_title": "文件:Piano Sonata No.3.png",
       "info": {
         "name": "Piano_Sonata_No.3.png",
@@ -30871,32 +30793,6 @@
         "Collaboration collection"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
-    },
-    {
-      "source": "bwiki",
-      "file_title": "文件:Rayark Collections Titletab.png",
-      "info": {
-        "name": "Rayark_Collections_Titletab.png",
-        "timestamp": "2021-09-01T01:49:35Z",
-        "size": 3168,
-        "width": 70,
-        "height": 47,
-        "url": "https://patchwiki.biligame.com/images/deemo/e/ee/pbrn9a0k5xjxinaijjh0c7poue2752k.png",
-        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Rayark_Collections_Titletab.png",
-        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=250",
-        "sha1": "d8d1af5bfcb95a4b7c1951ae15176ec3aefc2f6c",
-        "mime": "image/png",
-        "ns": 6,
-        "title": "文件:Rayark Collections Titletab.png"
-      },
-      "kind": "collection_cover",
-      "song_titles": [],
-      "collections": [
-        "Rayark Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Rayark%20Collections%20Titletab"
-      ]
     },
     {
       "source": "bwiki",
@@ -31774,32 +31670,6 @@
         "Hundotte collection"
       ],
       "mapping_method": "Exact normalized song title / image filename match"
-    },
-    {
-      "source": "bwiki",
-      "file_title": "文件:Spiritual Collections Titletab.png",
-      "info": {
-        "name": "Spiritual_Collections_Titletab.png",
-        "timestamp": "2021-09-01T01:49:31Z",
-        "size": 3907,
-        "width": 70,
-        "height": 47,
-        "url": "https://patchwiki.biligame.com/images/deemo/1/1c/8eev9fg0atx3kqaz0rwypmc9lk90kis.png",
-        "descriptionurl": "https://wiki.biligame.com/deemo/%E6%96%87%E4%BB%B6:Spiritual_Collections_Titletab.png",
-        "descriptionshorturl": "https://wiki.biligame.com/deemo/index.php?curid=245",
-        "sha1": "47e9fe27dca1685738d33cef0b6ae8523eac70e4",
-        "mime": "image/png",
-        "ns": 6,
-        "title": "文件:Spiritual Collections Titletab.png"
-      },
-      "kind": "collection_cover",
-      "song_titles": [],
-      "collections": [
-        "Spiritual Collections Titletab"
-      ],
-      "related_pages": [
-        "https://wiki.biligame.com/deemo/Spiritual%20Collections%20Titletab"
-      ]
     },
     {
       "source": "bwiki",

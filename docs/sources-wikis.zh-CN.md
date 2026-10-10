@@ -8,12 +8,12 @@
 
 全量审计已逐文件核对 byte count、SHA-256、SHA-1、Pillow 实际格式与尺寸，并检查 manifest 唯一 ID 与磁盘文件一一对应；757 张全部通过，无孤立文件。753 张与 Wiki 发布的原上传 SHA-1 一致。4 张不同：`Spring Snowflake Flower`、`Ark of Desire`、`I Race The Dawn x Sunset`、`Protest`，均保留差异标记。7 张通过 full-size `format=png` 回退取得，其 SHA-1 最终也都与原上传一致。
 
-2026-10-08 增量：来源检查工作流发现 57 个 BWIKI 曲包封面候选（约 180×180 的缩略图，均为 2021 年上传，属于 `allimages` 枚举差异而非新发布曲绘），以 `--resume` 导入，全部与 Wiki 原上传 SHA-1 一致，另有 11 条已有记录的 `collections`/`related_pages` 随新候选元数据更新。现为 **814 张**（Fandom 561、BWIKI 253；单曲图 662、曲包封面 152），共 **459,827,277 bytes**（约 438.53 MiB），813 PNG、1 JPEG；SHA-1 不一致的仍为上述 4 张。
+2026-10-08 增量：来源检查工作流发现 57 个 BWIKI 曲包封面候选（均为 2021 年上传，属于 `allimages` 枚举差异而非新发布曲绘），以 `--resume` 导入，全部与 Wiki 原上传 SHA-1 一致，另有 11 条已有记录的 `collections`/`related_pages` 随新候选元数据更新。其中 5 个 70×47 的 `* Collections Titletab` 是 UI 标题页签而非封面：BWIKI 发现流程当时尚未套用 Fandom 的 UI 过滤。它们已于 2026-10-09 从快照、清单和仓库中移除，发现流程现已将其排除。其余 52 个为约 180×180 的缩略图。现为 **809 张**（Fandom 561、BWIKI 248；单曲图 662、曲包封面 147），共 **459,809,756 bytes**（约 438.51 MiB），808 PNG、1 JPEG；SHA-1 不一致的仍为上述 4 张。
 
 ## 文件与来源
 
 - `assets/public/wikis/fandom/`：从原版 `Category:Songs` 的歌页，以及原版曲包页面取得图片引用。
-- `assets/public/wikis/bwiki/`：枚举 `allimages` 全部分页，以歌曲索引的规范化标题匹配图片名，另收录可确认的曲包封面。
+- `assets/public/wikis/bwiki/`：枚举 `allimages` 全部分页，以歌曲索引的规范化标题匹配图片名，另收录可确认的曲包封面。UI 图片（标题页签、标志、截图、DEEMO II）按与 Fandom 相同的规则排除；两个 Wiki 的曲包封面短边均须至少 100 px。
 - `data/sources/wikis.json`：最终图片清单、下载状态与失败记录，是图库整合的输入。
 - `data/sources/wiki-discovery.json`：可复查和继续下载的候选快照，包含原始 MediaWiki imageinfo。
 - `data/sources/wiki-song-index.json`：公开歌页的标题、曲包、作曲家和图片引用。模板字段 `Artist` 是作曲家，存为 `composer`，不会被误当成画师。
