@@ -7,6 +7,12 @@ https://github.com/mashirozx/deemo
 The upstream history (86 commits through c0f999a) was squashed into a single
 root snapshot; the Apache-2.0 license is retained.
 The gallery, metadata, fetching tools, and documentation were adapted in 2026.
+Upstream files changed in 2026 say so in a notice at their top:
+templates/slideshow.html (from test.html; the generated index.html copies
+its header), src/slideshow.css (from style.css) and browserconfig.xml.
+site.webmanifest (JSON, which allows no comments) and .gitattributes were
+also changed. scripts/build_catalog.py replaces the upstream html.py, and
+README.md replaces the upstream README.
 
 DEEMO artwork and game assets belong to Rayark Inc. and their respective
 creators. The software license does not grant a license to the artwork,
@@ -14,8 +20,34 @@ music, fonts, or other third-party media. Public availability of a source
 does not change its ownership. Per-file attribution and source URLs are
 recorded in data/sources/*.json and data/catalog.json.
 
-Third-party software notices embedded in src/vendor/legacy-ui.js are retained.
+src/vendor/legacy-ui.js is the upstream src/main.js, kept byte for byte. It
+bundles third-party software under the MIT License, whose full texts are in
+licenses/:
+  html2canvas 0.5.0-beta3, Copyright (c) 2012 Niklas von Hertzen
+    (licenses/html2canvas-MIT.txt; the bundle banner names 2016 and leaves
+    the license name blank)
+  punycode.js 1.2.4, Copyright Mathias Bynens, built into html2canvas
+    (licenses/punycode-MIT.txt)
+  Pace 1.0.0, Copyright (c) 2013 HubSpot, Inc. (licenses/pace-MIT.txt)
+
+The upstream snapshot also shipped two commercial fonts. Their licenses do
+not allow redistribution, so in 2026 they were removed from the repository's
+current files and from the website:
+  Copperplate Gothic Light (src/COPRGTL.ttf): data copyright URW Software &
+    Type GmbH, additional data copyright The Font Bureau, Inc., Copyright
+    1994 Microsoft Corporation; all rights reserved.
+  RocknRoll Typo bold (src/RocknRoll_Typo_bold.ttf): Copyright (c) 2010 by
+    Otto Maurer; all rights reserved. The license embedded in the font says
+    it shall not be "made available in any other manner to any third party".
+The slideshow now uses these two faces only when a visitor already has them
+installed. Fantique Four (assets/site/fonts/Fantique-Four.ttf), by Steve Tune
+of Digital Empires (Copyright Digital Empires Inc 1997), is still included:
+the license embedded in the font calls it shareware/donationware and says
+"The font is complete as is and you may use it".
+
 Inherited site media are organized under assets/site/, and both versions
 of the inherited artwork are preserved under assets/legacy/. Attribution
-and license locations are indexed in licenses/README.md; relocation does
-not change the rights of the original creators.
+and license locations are indexed in licenses/README.md, which also lists
+the known creator, rights holder and license of every file under
+assets/site/ and says where they are unknown; relocation does not change
+the rights of the original creators.

@@ -71,7 +71,7 @@ templates/slideshow.html           slideshow template (generates the root index.
 scripts/                           fetching, building and verification; legacy/ holds historical experiment scripts
 data/sources/                      per-source manifests, candidates and song-title mapping
 data/catalog.{json,js}              full provenance records and the offline browsing catalog
-data/legacy-inventory.json          migration paths, Git blobs and SHA-256 of 670 legacy files
+data/legacy-inventory.json          migration paths, Git blobs and SHA-256 of 668 legacy files
 licenses/                          third-party license texts and asset attribution index
 *.zh-CN.md                         Simplified Chinese versions of README, docs/ and other documents; the same-name .md is the default English version
 LICENSE / NOTICE                   standard software license and attribution entry points
@@ -118,3 +118,5 @@ Offline verification and browser acceptance checks:
 ## Attribution
 
 The original interface was designed by Mashiro; this collection and the new tooling are maintained by FridrichMethod. Rights to the song artwork and other game assets remain with Rayark and the respective creators; the repository's code license grants no new license for these media. See [NOTICE](NOTICE), [LICENSE](LICENSE), the [third-party license and asset attribution index](licenses/README.md) and each image's provenance record.
+
+The [license index](licenses/README.md) also covers third-party code and media. The JavaScript bundled with the original interface (`src/vendor/legacy-ui.js`) contains html2canvas, punycode.js and Pace, all MIT-licensed; their license texts are in [html2canvas-MIT.txt](licenses/html2canvas-MIT.txt), [punycode-MIT.txt](licenses/punycode-MIT.txt) and [pace-MIT.txt](licenses/pace-MIT.txt). The index also lists the known creator and license of every inherited icon, font, image and audio file under `assets/site/`, and says where they are unknown. Two commercial fonts inherited from upstream, Copperplate Gothic Light and RocknRoll Typo bold, are no longer distributed because their licenses forbid it; the slideshow uses them only if they are already installed on the visitor's device. Fantique Four, a donationware font, is still included.

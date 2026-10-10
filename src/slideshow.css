@@ -1,11 +1,17 @@
-﻿@font-face {
+﻿/* Derived from mashirozx/deemo style.css (Apache-2.0, https://github.com/mashirozx/deemo);
+   modified by FridrichMethod, 2026. See NOTICE. */
+
+/* Copperplate Gothic Light and RocknRoll Typo bold are commercial fonts whose licences forbid
+   redistribution, so they are no longer shipped (see NOTICE): these faces resolve only to a copy
+   installed on the visitor's device, and the font stacks fall back otherwise. */
+@font-face {
     font-family: Coprhtl;
-    src: url(../assets/site/fonts/COPRGTL.ttf);
+    src: local("Copperplate Gothic Light"), local("CopperplateGothic-Light"), local("Copperplate Light"), local("Copperplate-Light"), local("Copperplate");
 }
 
 @font-face {
     font-family: COPRGTL;
-    src: url(../assets/site/fonts/COPRGTL.ttf);
+    src: local("Copperplate Gothic Light"), local("CopperplateGothic-Light"), local("Copperplate Light"), local("Copperplate-Light"), local("Copperplate");
 }
 
 @font-face {
@@ -15,7 +21,7 @@
 
 @font-face {
     font-family: RocknRoll;
-    src: url(../assets/site/fonts/RocknRoll_Typo_bold.ttf);
+    src: local("RocknRoll Typo bold"), local("RocknRollTypobold");
 }
 
 html,
@@ -242,7 +248,7 @@ body {
 }
 
 .signature {
-    font-family: COPRGTL;
+    font-family: COPRGTL, sans-serif;
     font-size: 20px;
     position: fixed;
     left: 15px;
