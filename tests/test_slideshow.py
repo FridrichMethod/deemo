@@ -1,8 +1,9 @@
 """Offline guards for the slideshow template and stylesheet: named, keyboard-operable controls in both
 languages, a bottom row whose DOM order follows its layout, a screenshot overlay that does not live in the URL,
 slides that crossfade without a keyframe fade and take no hits while hidden, an artist credit that no tier
-drops, and the visible attribution link. They read the sources only; hit-testing, focus and layout need a
-browser."""
+drops, arrows kept below the language toggle on short landscape screens, a signature whose box leaves the
+toggle its taps, and the visible attribution link. They read the sources only; real hit-testing, focus,
+keyboard handling and layout need a browser (tests/browser_smoke.py)."""
 
 import json
 import re
@@ -84,6 +85,33 @@ def top_level_css(css):
         index = match.end()
     out.append(css[index:] if depth == 0 else "")
     return "".join(out)
+
+
+def media_block(css, condition):
+    """The body of the first @media block whose condition contains `condition`."""
+    match = re.search(r"@media[^{]*" + re.escape(condition) + r"[^{]*\{", css)
+    if not match:
+        return None
+    depth = 1
+    for brace in re.finditer(r"[{}]", css[match.end():]):
+        depth += 1 if brace.group() == "{" else -1
+        if depth == 0:
+            return css[match.end():match.end() + brace.start()]
+    return None
+
+
+def css_value(css, selectors, prop):
+    """The last value `css` gives `prop` in a rule for exactly this selector list (one selector per line or not)."""
+    rule = r"(?m)^[ \t]*" + r"\s*,\s*".join(map(re.escape, selectors)) + r"\s*\{([^}]*)\}"
+    values = [found.group(1) for body in re.findall(rule, css)
+              for found in re.finditer(r"(?<![\w-])" + re.escape(prop) + r"\s*:\s*([^;]+?)\s*(?:;|$)", body)]
+    return values[-1] if values else None
+
+
+def px(value):
+    """A pixel length (or a bare 0) as a number; None for anything else."""
+    match = re.fullmatch(r"(-?[\d.]+)px|(0)", value or "")
+    return float(match.group(1) or 0) if match else None
 
 
 def i18n_attrs(node):
@@ -184,6 +212,34 @@ class SlideshowTemplateTests(unittest.TestCase):
             for part in selector.split(","):
                 if ".notes-meta" in part and "::before" not in part:
                     self.assertIn(":not(.notes-artist)", part)
+
+    def test_short_landscape_arrows_stay_below_the_language_toggle(self):
+        """Sideways phones: the next arrow shares its column with the language toggle, and below about 345px of
+        height the stage's centre comes within the toggle's reach, so the arrows' centre is clamped below it."""
+        base = top_level_css(self.css)
+        block = media_block(self.css, "(orientation: landscape) and (max-height: 560px)")
+        self.assertTrue(block, "No short-landscape block")
+        lengths = {
+            "toggle top": px(css_value(base, [".lang-toggle"], "top")),
+            "toggle height": px(css_value(base, [".bt"], "height")),
+            "toggle padding": px(css_value(base, [".bt"], "padding")),
+            "arrow margin-top": px((css_value(base, [".prev", ".next"], "margin") or "").split(" ")[0]),
+            "stage margin-top": px(css_value(block, [".slideshow-container"], "margin-top")),
+        }
+        for name, length in lengths.items():
+            self.assertIsNotNone(length, f"No {name} in px in src/slideshow.css")
+        clamp = re.fullmatch(r"max\(50%,\s*(\d+)px\)", css_value(block, [".prev", ".next"], "top") or "")
+        self.assertTrue(clamp, "Short landscape screens clamp the arrows' top with max(50%, <n>px)")
+        arrow_top = lengths["stage margin-top"] + int(clamp.group(1)) + lengths["arrow margin-top"]
+        toggle_bottom = lengths["toggle top"] + lengths["toggle height"] + 2 * lengths["toggle padding"]
+        self.assertGreaterEqual(arrow_top, toggle_bottom, "The arrows' top edge clears the bottom of the language toggle")
+
+    def test_the_wrapped_signature_leaves_the_language_toggle_its_taps(self):
+        """Wrapped on a narrow phone (about 330px wide with the shipped font), the fixed signature's box spans to the
+        right edge of the screen, over the top of the toggle; only its links take pointer events."""
+        base = top_level_css(self.css)
+        self.assertEqual(css_value(base, [".signature"], "pointer-events"), "none")
+        self.assertEqual(css_value(base, [".signature a"], "pointer-events"), "auto")
 
     def test_screenshot_overlay_does_not_live_in_the_url(self):
         self.assertNotIn(":target", self.css, "The overlay must not depend on the URL fragment")
