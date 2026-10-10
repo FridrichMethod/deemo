@@ -323,7 +323,7 @@ def main(argv: list[str] | None = None) -> None:
             # No newline translation, so a stray CR is never read back as LF. The outputs themselves never contain
             # a CR (attr() and JSON escape it), so folding CRLF only accepts a Windows core.autocrlf checkout.
             if not path.is_file() or path.read_text(encoding="utf-8", newline="").replace("\r\n", "\n") != content:
-                raise SystemExit(f"Out-of-date generated file: {path.relative_to(ROOT)}")
+                raise SystemExit(f"Out-of-date generated file: {path.relative_to(ROOT).as_posix()}")
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(content, encoding="utf-8", newline="\n")

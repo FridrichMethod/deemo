@@ -7,8 +7,10 @@ import html
 import importlib.util
 import io
 import json
+import struct
 import tempfile
 import unittest
+import zlib
 from html.parser import HTMLParser
 from pathlib import Path
 from unittest.mock import patch
@@ -18,6 +20,17 @@ from PIL import Image
 spec = importlib.util.spec_from_file_location("build_catalog", Path(__file__).resolve().parents[1] / "scripts/build_catalog.py")
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)
+
+
+def png_chunk(data, kind):
+    """Offset and data length of the first chunk of this type in a PNG file."""
+    offset = 8
+    while offset < len(data):
+        length = int.from_bytes(data[offset:offset + 4], "big")
+        if data[offset + 4:offset + 8] == kind:
+            return offset, length
+        offset += 12 + length
+    raise ValueError(f"No {kind} chunk")
 
 
 class ImgTags(HTMLParser):
@@ -64,6 +77,13 @@ class CatalogTests(unittest.TestCase):
     def manifest(self, family, asset):
         content = {"sources": [{"id": asset["source_id"], "name": family, "url": asset["page_url"]}], "assets": [asset]}
         (self.root / f"data/sources/{family}.json").write_text(json.dumps(content), encoding="utf-8")
+
+    def stored(self, relative, raw, **fields):
+        """Write bytes under the root; returns the sample record pointed at them, with their size and SHA-256."""
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+        return {**self.asset, "path": relative, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(), **fields}
 
     def template(self):
         (self.root / "templates").mkdir(exist_ok=True)
@@ -121,6 +141,87 @@ class CatalogTests(unittest.TestCase):
             build.validate_asset(self.root, bad_hash, True)
         with self.assertRaisesRegex(ValueError, "Dimension mismatch"):
             build.validate_asset(self.root, {**self.asset, "width": 9}, True)
+
+    def test_recorded_metadata_must_match_the_file(self):
+        for message, change in {
+            "Byte count mismatch": {"bytes": self.asset["bytes"] + 1},
+            "Invalid SHA-256": {"sha256": self.asset["sha256"][:40]},
+            "Format mismatch": {"format": "JPEG"},
+            "Invalid PDF header": {"format": "PDF"},
+        }.items():
+            with self.subTest(message), self.assertRaisesRegex(ValueError, message):
+                build.validate_asset(self.root, {**self.asset, **change}, True)
+        for key in ("id", "source_id", "title", "kind", "page_url", "path", "bytes", "sha256"):
+            record = {name: value for name, value in self.asset.items() if name != key}
+            with self.subTest(missing=key), self.assertRaisesRegex(ValueError, f"Missing {key}"):
+                build.validate_asset(self.root, record, True)
+
+    def test_corrupt_image_data_fails_verification(self):
+        raw = (self.root / self.asset["path"]).read_bytes()
+        offset, length = png_chunk(raw, b"IDAT")
+        crc = slice(offset + 8 + length, offset + 12 + length)
+        # A wrong checksum, which only Image.verify() notices...
+        bad_checksum = bytearray(raw)
+        bad_checksum[crc.start] ^= 0xFF
+        # ...and a damaged pixel stream under a valid checksum, which only decoding (Image.load()) notices.
+        bad_stream = bytearray(raw)
+        bad_stream[offset + 8 + length // 2] ^= 0xFF
+        bad_stream[crc] = struct.pack(">I", zlib.crc32(bytes(bad_stream[offset + 4:crc.start])))
+        for name, data in (("checksum", bad_checksum), ("stream", bad_stream)):
+            record = self.stored(f"assets/public/artists/{name}.png", bytes(data))
+            with self.subTest(name), self.assertRaises((OSError, SyntaxError)):
+                build.validate_asset(self.root, record, True)
+
+    def test_pdf_records_need_a_pdf_header_and_stay_out_of_the_gallery(self):
+        pdf = self.stored("assets/public/archives/booklet.pdf", b"%PDF-1.4\n%%EOF\n", id="archive:booklet", source_id="archive",
+                          kind="reference", format="PDF", width=None, height=None)
+        self.manifest("archives", pdf)
+        catalog = build.combine(self.root, verify=True)
+        self.assertFalse(catalog["assets"][0]["gallery"])
+        self.assertEqual(catalog["summary"]["gallery_images"], 0)
+        self.assertEqual(self.slides(catalog), [])
+        fake = self.stored("assets/public/archives/fake.pdf", b"<html>not a PDF</html>", format="PDF", width=None, height=None)
+        with self.assertRaisesRegex(ValueError, "Invalid PDF header"):
+            build.validate_asset(self.root, fake, True)
+
+    def test_reference_images_are_catalogued_but_not_slides(self):
+        self.manifest("artists", {**self.asset, "kind": "reference"})
+        catalog = build.combine(self.root, verify=True)
+        self.assertTrue(catalog["assets"][0]["gallery"])
+        self.assertEqual(self.slides(catalog), [])
+
+    def test_manifest_ids_and_sources_must_be_unique_and_declared(self):
+        self.manifest("artists", self.asset)
+        self.manifest("wikis", {**self.asset, "source_id": "wiki"})
+        with self.assertRaisesRegex(ValueError, "Duplicate asset ID: artist:sample"):
+            build.combine(self.root, verify=True)
+        self.required_inputs()
+        (self.root / "data/sources/artists.json").write_text(json.dumps({"sources": [], "assets": [self.asset]}), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Missing source: artist"):
+            build.combine(self.root, verify=True)
+        self.required_inputs()
+        self.manifest("artists", self.asset)
+        (self.root / "data/sources/wikis.json").write_text(json.dumps({"sources": [{"id": "artist", "name": "Other"}], "assets": []}), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Duplicate source IDs"):
+            build.combine(self.root, verify=True)
+
+    def test_check_reports_each_stale_or_missing_output_without_writing(self):
+        self.manifest("artists", self.asset)
+        self.assertIsNone(self.run_main("--verify"))
+        self.assertIsNone(self.run_main("--verify", "--check"))
+        for relative in ("data/catalog.json", "data/catalog.js", "index.html"):
+            with self.subTest(relative):
+                path = self.root / relative
+                built = path.read_bytes()
+                path.write_bytes(built + b"<!-- edited -->")
+                self.assertEqual(self.run_main("--check"), f"Out-of-date generated file: {relative}")
+                self.assertEqual(path.read_bytes(), built + b"<!-- edited -->")
+                path.unlink()
+                self.assertEqual(self.run_main("--check"), f"Out-of-date generated file: {relative}")
+                self.assertFalse(path.exists())
+                path.write_bytes(built)
+        self.manifest("artists", {**self.asset, "title": "Renamed upstream"})
+        self.assertEqual(self.run_main("--check"), "Out-of-date generated file: data/catalog.json")
 
     def test_legacy_mapping_distinguishes_composer_and_illustrator(self):
         self.legacy_pair()
