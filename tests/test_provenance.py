@@ -1,7 +1,8 @@
 """Offline checks that provenance reaches the pages: wiki art carries the composer of its mapped songs, copied from
 the song index by scripts/fetch_wikis.py and kept in the committed snapshot and manifest, and each slide carries the
 provenance class of the copy its caption credits, which the slideshow names next to the kind in both languages. The
-archive viewer states a carried-forward record's upstream status and offers the newer version of a superseded one.
+archive viewer names the wiki a borrowed composer credit comes from, states a carried-forward record's upstream status
+and offers the newer version of a superseded one.
 
 Nothing touches the network: the fetcher runs against a temporary root and a fake web that serves canned bytes.
 """
@@ -399,6 +400,21 @@ class CommittedSlideshowTests(unittest.TestCase):
         credited = [slide for slide in self.slides if slide["data-source-id"].startswith("wikis:") and slide.get("data-composer")]
         self.assertGreater(len(credited), 400)
         self.assertIn("Sakuzyo", {slide["data-composer"] for slide in credited if slide["data-title"] == "Altale"})
+
+
+class ArchiveComposerTests(unittest.TestCase):
+    """The archive viewer names the source of a composer credit taken from another wiki's song page."""
+
+    def test_a_borrowed_credit_names_its_source_in_both_languages(self):
+        for language, table in messages("src/i18n/archive.js").items():
+            with self.subTest(language=language):
+                self.assertEqual(set(re.findall(r"\{(\w+)\}", table["provenance.composer_from"])), {"composer", "source"})
+        script = (ROOT / "src/archive.js").read_text(encoding="utf-8")
+        self.assertRegex(function_body(script, "provenanceBlock"), r"if \(p\.composer\) block\.append\(composerLine\(p\)\);")
+        line = function_body(script, "composerLine")
+        self.assertRegex(line, r'if \(!p\.composer_source\) return element\("p", t\("provenance\.composer", \{composer\}\)\);')
+        self.assertRegex(line, r'textValue\(p\.composer_source\)\.split\(" / "\)\.map\(\(id\) => i18n\.sourceName\(id, ')
+        self.assertRegex(line, r'return element\("p", t\("provenance\.composer_from", \{composer, source\}\)\);\s*$')
 
 
 class ArchiveUpstreamTests(unittest.TestCase):

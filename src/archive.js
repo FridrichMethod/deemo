@@ -24,6 +24,7 @@
     return i18n.has(`provenance.class.${token}`) ? t(`provenance.class.${token}`) : p.provenance;
   }
   const sourceName = (record) => i18n.sourceName(record.source_id, record.source_name);
+  const sourceNames = new Map(catalog.sources.map((source) => [source.id, source.name]));
   const images = catalog.assets.filter((asset) => asset.gallery);
   const fields = ["query", "family", "kind", "minimum", "sort"];
   const initial = new URLSearchParams(location.search);
@@ -174,11 +175,19 @@
     }
     return notes;
   }
+  // The credit shows under this record's source link, so a composer taken from another source's page (composer_source:
+  // the wiki whose song page of the same title names one when the record's own page does not) names that source.
+  function composerLine(p) {
+    const composer = textValue(p.composer);
+    if (!p.composer_source) return element("p", t("provenance.composer", {composer}));
+    const source = textValue(p.composer_source).split(" / ").map((id) => i18n.sourceName(id, sourceNames.get(id) || id)).join(" / ");
+    return element("p", t("provenance.composer_from", {composer, source}));
+  }
   function provenanceBlock(p) {
     const block = element("section", null, "provenance-item");
     block.append(sourceLink(sourceName(p), p.page_url), element("p", p.title));
     if (p.artist) block.append(element("p", t("provenance.artist", {artist: textValue(p.artist)})));
-    if (p.composer) block.append(element("p", t("provenance.composer", {composer: textValue(p.composer)})));
+    if (p.composer) block.append(composerLine(p));
     if (p.collection) {
       const collection = {collection: textValue(p.collection)};
       block.append(element("p", p.collection_scope === "source_post_grouping" ? t("provenance.post_grouping", collection) : t("provenance.collection", collection)));
