@@ -8,6 +8,7 @@ import importlib.util
 import io
 import json
 import struct
+import subprocess
 import tempfile
 import unittest
 import zlib
@@ -84,6 +85,18 @@ class CatalogTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(raw)
         return {**self.asset, "path": relative, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(), **fields}
+
+    def image(self, relative, colour, **fields):
+        """A distinct 8 x 12 PNG under the root and the sample record pointed at it."""
+        buffer = io.BytesIO()
+        Image.new("RGB", (8, 12), colour).save(buffer, "PNG")
+        return self.stored(relative, buffer.getvalue(), **fields)
+
+    def git(self, *args):
+        try:
+            subprocess.run(["git", "-C", str(self.root), *args], check=True, capture_output=True)
+        except (OSError, subprocess.CalledProcessError) as error:
+            self.skipTest(f"git is unavailable: {error}")
 
     def template(self):
         (self.root / "templates").mkdir(exist_ok=True)
@@ -204,6 +217,35 @@ class CatalogTests(unittest.TestCase):
         (self.root / "data/sources/wikis.json").write_text(json.dumps({"sources": [{"id": "artist", "name": "Other"}], "assets": []}), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "Duplicate source IDs"):
             build.combine(self.root, verify=True)
+
+    def test_verify_rejects_tracked_asset_files_that_no_record_references(self):
+        self.manifest("artists", self.asset)
+        self.legacy_pair()
+        self.git("init", "-q")
+        orphan = self.image("assets/public/wikis/bwiki/Gone--6e5edb15b6be.png", "black")["path"]
+        (self.root / "assets/public/archives").mkdir(parents=True)
+        (self.root / "assets/public/archives/.gitattributes").write_text("* -text\n", encoding="utf-8")
+        (self.root / "assets/thumbs").mkdir()
+        (self.root / "assets/thumbs/sample.webp").write_bytes(b"checked by the thumbnails build")
+        self.git("add", "assets", "data")
+        with self.assertRaisesRegex(ValueError, f"referenced by no manifest record or variant: {orphan}$"):
+            build.combine(self.root, verify=True)
+        build.combine(self.root)  # only --verify checks
+        # The legacy pair (original and variant), dot-files and assets/thumbs/ are not orphans.
+        self.git("rm", "-q", "--cached", orphan)
+        build.combine(self.root, verify=True)
+
+    def test_orphan_check_needs_the_root_of_a_git_checkout(self):
+        self.assertIsNone(build.tracked_files(self.root, build.ORPHAN_CHECK_DIRECTORIES))
+        self.git("init", "-q")
+        self.image("assets/public/wikis/unreferenced.png", "black")
+        self.git("add", "assets")
+        self.assertEqual(build.tracked_files(self.root, build.ORPHAN_CHECK_DIRECTORIES),
+                         ["assets/public/artists/sample.png", "assets/public/wikis/unreferenced.png"])
+        # A directory inside someone else's checkout is not a checkout of this site.
+        nested = self.root / "nested"
+        nested.mkdir()
+        self.assertIsNone(build.tracked_files(nested, build.ORPHAN_CHECK_DIRECTORIES))
 
     def test_check_reports_each_stale_or_missing_output_without_writing(self):
         self.manifest("artists", self.asset)

@@ -6,6 +6,8 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
+import sys
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -19,6 +21,8 @@ SOURCE_MANIFESTS = ("artists", "wikis", "archives")
 # Legacy keys that name a collection cover: the book sprites, and deemo1a/deemo1b, the Deemo's Collection Vol.1A/1B
 # covers (the same files are covers on Fandom; see the cover pattern in scripts/fetch_wikis.py).
 COVER_KEY = re.compile(r"booksprite|bookcover|^deemo1[ab]$", re.IGNORECASE)
+# Every tracked file here must be a record's or a variant's path (assets/thumbs/ has its own check).
+ORPHAN_CHECK_DIRECTORIES = ("assets/public", "assets/legacy")
 
 
 def attr(value: object) -> str:
@@ -38,6 +42,22 @@ def safe_path(root: Path, value: str) -> Path:
     if not path.is_relative_to(root.resolve()) or not path.is_relative_to((root / "assets").resolve()):
         raise ValueError(f"Asset outside the repository's assets directory: {value}")
     return path
+
+
+def tracked_files(root: Path, directories: tuple[str, ...]) -> list[str] | None:
+    """Git-tracked files under these directories, as sorted POSIX paths relative to root, skipping dot-files and
+    __pycache__ as scripts/prepare_pages.py does. None when root is not the top of a git checkout."""
+    try:
+        top = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
+        if Path(top.stdout.strip()).resolve() != root.resolve():
+            return None
+        listed = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--", *directories], capture_output=True, check=True)
+    except (OSError, subprocess.CalledProcessError) as error:
+        if (root / ".git").exists():
+            print(f"warning: cannot list tracked files, so unreferenced assets are not checked: {error}", file=sys.stderr)
+        return None
+    names = (name.decode("utf-8") for name in listed.stdout.split(b"\0") if name)
+    return sorted(name for name in names if not any(part.startswith(".") or part == "__pycache__" for part in name.split("/")))
 
 
 def required_input(root: Path, relative: str, directory: bool = False) -> Path:
@@ -188,6 +208,11 @@ def combine(root: Path, verify: bool = False) -> dict:
             by_hash[asset["sha256"]] = {
                 **asset, "source_name": source["name"], "provenance": [provenance],
             }
+    if verify:
+        referenced = {Path(record["path"]).as_posix() for asset in assets for record in (asset, *asset.get("variants", []))}
+        orphans = [name for name in tracked_files(root, ORPHAN_CHECK_DIRECTORIES) or [] if name not in referenced]
+        if orphans:
+            raise ValueError(f"{len(orphans)} tracked file(s) referenced by no manifest record or variant: {', '.join(orphans)}")
     entries = list(by_hash.values())
     for entry in entries:
         entry["gallery"] = bool(entry.get("width") and entry.get("height"))
@@ -307,7 +332,7 @@ def render_slideshow(root: Path, catalog: dict) -> str:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--verify", action="store_true", help="Verify every hash, image header and format")
+    parser.add_argument("--verify", action="store_true", help="Verify every hash, image header and format, and that every tracked file under assets/public and assets/legacy is referenced")
     parser.add_argument("--check", action="store_true", help="Check generated files without writing")
     args = parser.parse_args(argv)
     catalog = combine(ROOT, args.verify)
