@@ -331,6 +331,42 @@ class DeliveryNoteTests(FetcherRun):
         self.assertEqual(list(again)[-1], "delivery_note")
 
 
+def fandom_page(title, wikitext, *images):
+    return {"title": title, "pageid": int(hashlib.sha1(title.encode()).hexdigest()[:6], 16), "fullurl": f"https://fandom.example.test/{title}", "categories": [],
+            "revisions": [{"slots": {"main": {"*": wikitext}}}], "images": [{"title": image} for image in images]}
+
+
+def discover_fandom(song_pages, infos):
+    """Run Fandom discovery against canned song pages (no collection pages) and canned imageinfo."""
+    titles = [page["title"] for page in song_pages]
+    with patch.object(fetch, "category", lambda source, title: [{"title": t, "ns": 0} for t in titles] if title == "Category:Songs" else []), \
+            patch.object(fetch, "pages", lambda source, requested: song_pages if requested == titles else []), \
+            patch.object(fetch, "imageinfo", lambda source, requested: infos):
+        return fetch.discover_fandom()
+
+
+class CollectionNameTests(unittest.TestCase):
+    def test_spellings_that_differ_in_case_spacing_or_punctuation_merge(self):
+        names = ["Etude collection", "RAC collection -1", "Deemo's collection Vol.1B", "Etude Collection",
+                 "RAC Collection #1", "Deemo's collection Vol. 1B", "Deemo's Collection Vol.1", "Etude collection"]
+        expected = ["Deemo's Collection Vol.1", "Deemo's collection Vol. 1B", "Etude Collection", "RAC Collection #1"]
+        self.assertEqual(fetch.unique_collections(names), expected)
+        self.assertEqual(fetch.unique_collections(reversed(names)), expected)
+
+    def test_bwiki_song_art_lists_each_collection_once(self):
+        # The README's Magnolia example: Fandom and BWIKI spell the same collections differently.
+        selected, _, _ = discover_bwiki([allimage("Magnolia.png", 1024, 1024)], [
+            song("Magnolia", ["Deemo's Collection Vol.1", "Deemo's collection Vol. 1B"]),
+            song("Magnolia", ["Deemo's collection Vol.1B"], source="bwiki")])
+        self.assertEqual(selected[0]["collections"], ["Deemo's Collection Vol.1", "Deemo's collection Vol. 1B"])
+
+    def test_fandom_merges_spellings_across_song_pages(self):
+        selected, _, _ = discover_fandom([fandom_page("Song A", "{{Return|Etude collection}}", "File:Shared.png"),
+                                          fandom_page("Song B", "{{Return|Etude Collection}}", "File:Shared.png")],
+                                         {"File:Shared.png": image_info(1024, 1024)})
+        self.assertEqual(selected[0]["collections"], ["Etude Collection"])
+
+
 class DiscoveryFilterTests(unittest.TestCase):
     def test_bwiki_skips_ui_sprites_like_the_fandom_path(self):
         inventory = [allimage("Exotic_Collections_Titletab.png", 70, 47),  # imported as a "cover" on 2026-10-08
@@ -348,16 +384,11 @@ class DiscoveryFilterTests(unittest.TestCase):
         self.assertEqual([row["info"]["name"] for row in selected], ["Spring_selection.png"])
 
     def test_fandom_skips_icon_sized_collection_covers(self):
-        page = {"title": "Song A", "pageid": 1, "fullurl": "https://fandom.example.test/Song_A", "categories": [],
-                "revisions": [{"slots": {"main": {"*": "{{Song|img=Song A.png}}{{Return|Etude Collection}}"}}}],
-                "images": [{"title": "File:Song A.png"}, {"title": "File:Tiny booksprite.png"},
-                           {"title": "File:Etude booksprites.png"}]}
+        page = fandom_page("Song A", "{{Song|img=Song A.png}}{{Return|Etude Collection}}",
+                           "File:Song A.png", "File:Tiny booksprite.png", "File:Etude booksprites.png")
         infos = {"File:Song A.png": image_info(1024, 1024), "File:Tiny booksprite.png": image_info(64, 64),
                  "File:Etude booksprites.png": image_info(512, 512)}
-        with patch.object(fetch, "category", lambda source, title: [{"title": "Song A", "ns": 0}] if title == "Category:Songs" else []), \
-                patch.object(fetch, "pages", lambda source, titles: [page] if titles == ["Song A"] else []), \
-                patch.object(fetch, "imageinfo", lambda source, titles: infos):
-            selected, _, stats = fetch.discover_fandom()
+        selected, _, stats = discover_fandom([page], infos)
         self.assertEqual({row["file_title"]: row["kind"] for row in selected},
                          {"File:Song A.png": "song_art", "File:Etude booksprites.png": "collection_cover"})
         self.assertEqual([row["title"] for row in stats["excluded"]], ["File:Tiny booksprite.png"])

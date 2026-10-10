@@ -160,6 +160,15 @@ def normalized(value):
     return "".join(c for c in unicodedata.normalize("NFKC", value).casefold() if c.isalnum())
 
 
+def unique_collections(names):
+    """Sorted collection names, keeping one spelling of names that differ only in case, spacing or punctuation
+    ("Etude Collection" / "Etude collection"); the first in code-point order wins, whatever the page or set order."""
+    chosen = {}
+    for name in sorted(set(names)):
+        chosen.setdefault(normalized(name) or name, name)
+    return sorted(chosen.values())
+
+
 def parameter(wikitext, name):
     match = re.search(r"\|\s*" + re.escape(name) + r"\s*=\s*([^|\n}]*)", wikitext, re.I)
     return re.sub(r"<!--.*?-->", "", match.group(1)).strip() if match else ""
@@ -212,7 +221,7 @@ def discover_fandom():
             if song["title"] not in entry["song_titles"]:
                 entry["song_titles"].append(song["title"])
             entry["related_pages"].append(song["page_url"])
-            entry["collections"] = sorted(set(entry["collections"] + song["collections"]))
+            entry["collections"] = unique_collections(entry["collections"] + song["collections"])
             if normalized(stem) != primary:
                 entry["variant_note"] = "Additional raster image referenced by the song page; may be alternate artwork or a composite."
             if song.get("illustrator"):
@@ -272,7 +281,7 @@ def discover_bwiki(fandom_songs):
             selected.append({"source": "bwiki", "file_title": info["title"], "info": info,
                              "kind": "song_art", "song_titles": sorted({s["title"] for s in related}),
                              "related_pages": sorted({s["page_url"] for s in related}),
-                             "collections": sorted({c for s in related for c in s["collections"]}),
+                             "collections": unique_collections(c for s in related for c in s["collections"]),
                              "mapping_method": "Exact normalized song title / image filename match"})
         elif (normalized(stem) in collection_lookup or re.search(r"collection|selection|^Book of |^Epilogue$|^Shattered Memories", stem, re.I)) \
                 and min(info["width"], info["height"]) >= MIN_COVER_EDGE:
