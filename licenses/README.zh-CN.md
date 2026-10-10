@@ -44,7 +44,7 @@
 | `images/upstream-preview-lower.png` | `src/Capture.png` | 未使用 | Mashiro 上游图库（deemo.shino.cc）的截图：页面设计属于 Mashiro，其中的曲绘 © Rayark Inc. 及各自画师。 | 作为历史记录保留；与 `upstream-preview-upper.png` 逐字节相同。 |
 | `images/upstream-preview-upper.png` | `src/Capture.PNG` | 未使用 | 同一张截图。 | 同上。 |
 
-这些 SVG 图标只留下了工具痕迹，没有作者信息。`github`、`love`、`rotate`、`sand-clock`、`save`、`weibo` 和 `wordpress` 使用 Adobe Illustrator 导出时的图层 id `Capa_1`，`save` 还带有在线图标编辑器的 `data-original` 属性；这类痕迹常见于从 Flaticon 下载的图标，但来源均未确认。`pause` 和 `play` 带有 iconfont.cn 下载文件常见的 `t` 与 `p-id` 属性，时间戳为 2018 年 4 月。如了解其中任何来源，欢迎提交 issue。
+这些 SVG 图标只留下了工具痕迹，没有作者信息。`github`、`love`、`rotate`、`sand-clock`、`save`、`weibo` 和 `wordpress` 使用 Adobe Illustrator 导出时的图层 id `Capa_1`，`save` 和 `sand-clock` 还带有在线图标编辑器的 `data-original` 属性；这类痕迹常见于从 Flaticon 下载的图标，但来源均未确认。`pause` 和 `play` 带有 iconfont.cn 下载文件常见的 `t` 与 `p-id` 属性，时间戳为 2018 年 4 月。如了解其中任何来源，欢迎提交 issue。
 
 ### 已移除的字体
 

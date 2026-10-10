@@ -44,7 +44,7 @@ Every file below comes from the upstream snapshot of [mashirozx/deemo](https://g
 | `images/upstream-preview-lower.png` | `src/Capture.png` | Not used | Screenshot of Mashiro's upstream gallery (deemo.shino.cc): the page design is Mashiro's; the artwork shown is © Rayark Inc. and its artists. | Kept as a historical record; byte-identical to `upstream-preview-upper.png`. |
 | `images/upstream-preview-upper.png` | `src/Capture.PNG` | Not used | The same screenshot. | As above. |
 
-The SVG icons record tools, not authors. `github`, `love`, `rotate`, `sand-clock`, `save`, `weibo` and `wordpress` use the layer id `Capa_1` of Adobe Illustrator exports, and `save` also has the `data-original` attributes of an online icon editor; such markers are common in icons downloaded from Flaticon, but no source has been confirmed. `pause` and `play` have the `t` and `p-id` attributes typical of iconfont.cn downloads, with timestamps from April 2018. Information about any of these sources is welcome as an issue.
+The SVG icons record tools, not authors. `github`, `love`, `rotate`, `sand-clock`, `save`, `weibo` and `wordpress` use the layer id `Capa_1` of Adobe Illustrator exports, and `save` and `sand-clock` also have the `data-original` attributes of an online icon editor; such markers are common in icons downloaded from Flaticon, but no source has been confirmed. `pause` and `play` have the `t` and `p-id` attributes typical of iconfont.cn downloads, with timestamps from April 2018. Information about any of these sources is welcome as an issue.
 
 ### Removed fonts
 
