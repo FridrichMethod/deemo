@@ -36,7 +36,7 @@ When a song title cannot be confirmed directly from the original post, `song_tit
 Requires Python 3.10 or newer, `requests`, `beautifulsoup4` and `Pillow`. Run from the repository root:
 
 ```sh
-python scripts/fetch_artists.py --workers 4
+python -I scripts/fetch_artists.py --workers 4
 ```
 
 A rerun checks the public page metadata and reuses a local file when its SHA-256 is correct and its download URL is unchanged. Cached images are downloaded again only when `--refresh` is added explicitly. The script verifies that every image decodes completely, chooses the file extension from the actual format, deduplicates by SHA-256 (bytes already archived keep their record and file; otherwise the record with the smallest asset ID keeps the file, so an identical new upload never writes a second copy), writes every failure to the manifest and returns a non-zero exit status if there are any. Images are downloaded only from the platform's image host (`i.pximg.net`, `image.jimcdn.com`, `*.media.tumblr.com`), and every redirect is checked against it.

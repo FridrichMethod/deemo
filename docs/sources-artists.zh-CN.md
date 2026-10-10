@@ -36,7 +36,7 @@ Siyouko 的[履历页面](https://princeofglass.blogspot.com/p/blog-page_1146.ht
 环境需要 Python 3.10 或更高版本、`requests`、`beautifulsoup4` 和 `Pillow`。从仓库根目录运行：
 
 ```sh
-python scripts/fetch_artists.py --workers 4
+python -I scripts/fetch_artists.py --workers 4
 ```
 
 重新运行会检查公开页面元数据，并在本地文件 SHA-256 正确且下载 URL 不变时复用文件。显式增加 `--refresh` 才会重新下载已缓存图片。脚本验证每张图片能够完整解码，以实际格式确定扩展名，按 SHA-256 去重（已归档的字节保留原记录与文件；否则由资源 ID 最小的记录保留文件，因此字节相同的新上传不会再写一份副本），所有失败写入 manifest 并返回非零退出状态。图片只从对应平台的图片主机（`i.pximg.net`、`image.jimcdn.com`、`*.media.tumblr.com`）下载，每次重定向都按同一列表检查。
