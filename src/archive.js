@@ -137,6 +137,13 @@
     shown = stop;
     $("more").hidden = shown >= filtered.length;
   }
+  // source_dimensions_kind is "<token>; <maintainer prose>". A labelled token states the size the source advertises in the
+  // page language; without a label or a recorded size the value is shown as it is.
+  function dimensionsNote(p) {
+    const key = `provenance.dimensions_kind.${textValue(p.source_dimensions_kind).split(";")[0].trim()}`;
+    const [width, height] = Array.isArray(p.source_dimensions) ? p.source_dimensions : [];
+    return i18n.has(key) && width && height ? element("p", t(key, {width, height})) : note("p", p.source_dimensions_kind);
+  }
   function provenanceBlock(p) {
     const block = element("section", null, "provenance-item");
     block.append(sourceLink(sourceName(p), p.page_url), element("p", p.title));
@@ -152,7 +159,7 @@
     if (p.quality) block.append(element("p", t("provenance.quality", {quality: qualityName(p.quality)})));
     if (typeof p.provenance === "string" && p.provenance) block.append(element("p", t("provenance.class", {label: provenanceClass(p)})));
     for (const key of ["quality_notes", "source_dimensions_kind", "variant_note", "layout_note", "delivery_note", "rights"]) {
-      if (p[key]) block.append(note("p", p[key]));
+      if (p[key]) block.append(key === "source_dimensions_kind" ? dimensionsNote(p) : note("p", p[key]));
     }
     if (p.rights_holder) block.append(element("p", t("provenance.rights_holder", {holder: textValue(p.rights_holder)})));
     if (p.wiki_original_sha1_matches === false) block.append(element("p", t("provenance.checksum_mismatch")));

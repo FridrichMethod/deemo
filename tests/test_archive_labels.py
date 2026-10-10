@@ -19,7 +19,7 @@ UPSTREAM_STATUSES = {"removed", "superseded", "fetch_failed"}
 SHOWN = {
     "source_id", "source_name", "page_url", "download_url", "family", "kind", "title", "artist", "composer",
     "collection", "collection_scope", "collections", "song_titles", "internal_key", "notes", "quality", "provenance",
-    "quality_notes", "source_dimensions_kind", "variant_note", "layout_note", "delivery_note", "rights", "rights_holder",
+    "quality_notes", "source_dimensions", "source_dimensions_kind", "variant_note", "layout_note", "delivery_note", "rights", "rights_holder",
     "wiki_original_sha1_matches", "upstream_status", "mapping_status", "title_status", "variants",
     "path", "width", "height", "format", "bytes", "sha256", "fetched_at",
 }
@@ -33,7 +33,6 @@ IGNORED = {
     "api_approved": "Cover Art Archive approval, true for every scan (checked below)",
     "published_at": "post date; the source link leads to the post",
     "source_page_index": "position of the image in its source post",
-    "source_dimensions": "size the source page states; the file's own size is shown",
     "source_caption": "the artist's caption the shown title was mapped from",
     "advertised_lightbox_url": "lightbox URL behind source_dimensions_kind, which is shown",
     "resolved_url": "redirect target of the shown download URL",
@@ -84,6 +83,17 @@ class ArchiveLabelTests(unittest.TestCase):
         classes = {"wiki" if record["family"] == "wikis" else record["provenance"]
                    for record in self.records if isinstance(record.get("provenance"), str)}
         self.assert_labelled("provenance.class", classes)
+
+    def test_dimension_kinds_are_labelled(self):
+        # source_dimensions_kind is "<token>; <maintainer prose>"; the page states the advertised size through the token's
+        # label and shows the raw value only when the label or the size is missing.
+        records = [record for record in self.records if record.get("source_dimensions_kind")]
+        self.assert_labelled("provenance.dimensions_kind",
+                             {record["source_dimensions_kind"].split(";")[0].strip() for record in records})
+        for record in records:
+            dimensions = record.get("source_dimensions")
+            self.assertTrue(isinstance(dimensions, list) and len(dimensions) == 2 and all(
+                isinstance(value, int) and value > 0 for value in dimensions), record["id"])
 
     def test_upstream_statuses_are_labelled(self):
         found = {record["upstream_status"] for record in self.records if record.get("upstream_status")}
