@@ -15,7 +15,7 @@
 - `assets/public/wikis/fandom/`：从原版 `Category:Songs` 的歌页，以及原版曲包页面取得图片引用。
 - `assets/public/wikis/bwiki/`：枚举 `allimages` 全部分页，以歌曲索引的规范化标题匹配图片名，另收录可确认的曲包封面。UI 图片（标题页签、标志、截图、DEEMO II）按与 Fandom 相同的规则排除；两个 Wiki 的曲包封面短边均须至少 100 px。
 - `data/sources/wikis.json`：最终图片清单、下载状态与失败记录，是图库整合的输入。
-- `data/sources/wiki-discovery.json`：可复查和继续下载的候选快照，包含原始 MediaWiki imageinfo。
+- `data/sources/wiki-discovery.json`：可复查和继续下载的候选快照，包含原始 MediaWiki imageinfo，并在 `stats` 中记录产生该快照的枚举统计（歌页、曲包页或 `allimages` 项数，以及被排除的图片）。`--resume` 会把这些统计连同快照时间 `snapshot_fetched_at` 复制到 `wikis.json` 的 `discovery`。
 - `data/sources/wiki-song-index.json`：公开歌页的标题、曲包、作曲家和图片引用。模板字段 `Artist` 是作曲家，存为 `composer`，不会被误当成画师。
 - `data/sources/wiki-illustrator-index.json`：日本 Wiki 目录的 479 条按原页面顺序保存的标题/表格行；页面同时含作曲家、Vocalist 和独立 `illustrator` 区段，最后者列出 9 位画师，不把其他区段当成画师归属。
 - `data/sources/song-mapping.json`：来自 [syuchan1005/DeemoSongs](https://github.com/syuchan1005/DeemoSongs) 的 legacy 游戏内部 key 与歌曲信息，其 [MIT license](../licenses/DeemoSongs-MIT.txt) 原样保留。该映射较旧，不能代表当前完整曲目集。
@@ -48,10 +48,10 @@ python -I scripts/fetch_wikis.py --resume --workers 4
 
 `--resume` 不会从 `wikis.json` 删去任何记录，也不会删除文件。候选已不在快照中的记录会保留，并标记 `"upstream_status": "removed"`。重新上传的文件下载成功后，新版本沿用原资产 ID，深链接保持不变；旧版本连同文件与记录改用 `<资产 ID>:<其 SHA-256 前 12 位十六进制>` 作为 ID，标记 `"upstream_status": "superseded"`，并以 `"superseded_by"` 指向当前 ID。重新下载失败时保留旧记录并标记 `"upstream_status": "fetch_failed"`，同时在 `failures` 中记录；下次 `--resume` 会重试。
 
-脚本限制最多 4 个并发请求，设置超时和有限重试（HTTP 429、5xx 与 BWIKI 的 EdgeOne 567 最多尝试 3 次，遵循 `Retry-After`，上限 30 秒），逐 25 个结果保存 manifest；每次保存都以原子方式替换文件，并仍列出全部已有记录，中断的运行不会丢失记录。`--metadata-only` 不下载图片，只重写 `wiki-discovery.json` 与 `wiki-song-index.json`；已有的 `wikis.json` 保持不变，`song-mapping.json` 也不受影响，因为 DeemoSongs 映射只在完整运行（不带 `--resume` 或 `--metadata-only`）时抓取。
+脚本限制最多 4 个并发请求，设置超时和有限重试（HTTP 429、5xx 与 BWIKI 的 EdgeOne 567 最多尝试 3 次，遵循 `Retry-After`，上限 30 秒），逐 25 个结果保存 manifest；每次保存都以原子方式替换文件，并仍列出全部已有记录，中断的运行不会丢失记录。`--metadata-only` 不下载图片，只重写 `wiki-discovery.json`（候选与统计）与 `wiki-song-index.json`；已有的 `wikis.json` 保持不变，`song-mapping.json` 也不受影响，因为 DeemoSongs 映射只在完整运行（不带 `--resume` 或 `--metadata-only`）时抓取。
 
 ## 本次访问限制
 
-初次已完整读取 BWIKI 的 480 项 `allimages` 与 182 个歌页；后续刷新 API 遇到 EdgeOne HTTP 567，继续下载使用先前保存的候选快照。最终清单不宣称包含该站每一项未经核对的图片。源列表 `discovery.excluded_large_images` 保留未能明确映射的大图名和尺寸。
+2026-09-05 的初次运行读取了 BWIKI 的 480 项 `allimages` 与 182 个歌页；后续刷新 API 遇到 EdgeOne HTTP 567，继续下载使用先前保存的候选快照。该列表并不完整：2026-10-08 来源检查的枚举又返回了 57 个曲包封面候选，均于 2021 年上传。2026-10-08 的快照没有记录统计信息，因此在下一次发现运行之前，`wikis.json` 中的 `discovery`（480 项、40 个 `excluded_large_images`）描述的仍是 2026-09-05 的枚举。最终清单不宣称包含该站每一项未经核对的图片。源列表 `discovery.excluded_large_images` 保留未能明确映射的大图名和尺寸。
 
 [日本 DEEMO Wiki 的画师目录](https://wikiwiki.jp/deemo/アーティスト別リスト2)最初返回 Cloudflare 403，在下载完成后的正常索引请求中恢复 200，已保存索引。没有绕过挑战或使用登录凭据。实际成败以 `wikis.json` 为准。

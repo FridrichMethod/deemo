@@ -423,6 +423,15 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
     return [merged[asset_id] for asset_id in sorted(merged)]
 
 
+def resumed_sources(sources, snapshot):
+    """The previous manifest's sources, each with the discovery statistics of the snapshot being resumed when the
+    snapshot recorded them; for an older snapshot without statistics the previous ones are kept."""
+    stats = snapshot.get("stats", {})
+    keys = {SOURCES[key]["id"]: key for key in stats if key in SOURCES}
+    return [{**source, "discovery": {**stats[keys[source["id"]]], "snapshot_fetched_at": snapshot.get("fetched_at")}}
+            if source["id"] in keys else source for source in sources]
+
+
 def write_json(relative, data):
     path = ROOT / relative
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -485,11 +494,12 @@ def main():
     existing = {asset["id"]: asset for asset in previous.get("assets", [])}
     manifest = {"schema_version": 1, "fetched_at": now(), "sources": [], "assets": [], "failures": []}
     if args.resume:
-        candidates = json.loads((ROOT / "data/sources/wiki-discovery.json").read_text(encoding="utf-8"))["candidates"]
+        snapshot = json.loads((ROOT / "data/sources/wiki-discovery.json").read_text(encoding="utf-8"))
+        candidates = snapshot["candidates"]
         for candidate in candidates:
             if "booksprite" in candidate["file_title"].lower():
                 candidate["kind"] = "collection_cover"
-        manifest["sources"] = previous["sources"]
+        manifest["sources"] = resumed_sources(previous["sources"], snapshot)
         print(f"Resuming saved discovery: {len(candidates)} candidates", flush=True)
     else:
         print("Discovering Fandom original-DEEMO song pages...", flush=True)
@@ -498,12 +508,16 @@ def main():
         print("Discovering BWIKI song pages and original allimages inventory...", flush=True)
         bwiki, bwiki_songs, bwiki_stats = discover_bwiki(fandom_songs)
         print(f"BWIKI: {len(bwiki_songs)} song pages, {len(bwiki)} image candidates", flush=True)
-        for source, stats in (("fandom", fandom_stats), ("bwiki", bwiki_stats)):
-            manifest["sources"].append({**SOURCES[source], "status": "discovered", "discovery": stats,
+        stats, discovered_at = {"fandom": fandom_stats, "bwiki": bwiki_stats}, now()
+        for source in ("fandom", "bwiki"):
+            manifest["sources"].append({**SOURCES[source], "status": "discovered",
+                                        "discovery": {**stats[source], "snapshot_fetched_at": discovered_at},
                                         "notes": "Only original DEEMO and its ports. DEEMO II categories, audio, charts, screenshots and unrelated UI are excluded."})
         write_json("data/sources/wiki-song-index.json", {"schema_version": 1, "fetched_at": now(), "songs": fandom_songs + bwiki_songs})
         candidates = fandom + bwiki
-        write_json("data/sources/wiki-discovery.json", {"schema_version": 1, "fetched_at": now(), "candidates": candidates})
+        # The statistics travel with the snapshot, so a later --resume can describe the enumeration it resumes.
+        write_json("data/sources/wiki-discovery.json", {"schema_version": 1, "fetched_at": discovered_at, "stats": stats,
+                                                         "candidates": candidates})
     if args.metadata_only:
         if not manifest_path.exists():
             write_json("data/sources/wikis.json", manifest)

@@ -211,7 +211,7 @@ class CheckpointTests(FetcherRun):
         self.assertEqual([path.name for path in (self.root / MANIFEST).parent.iterdir()], ["wikis.json"])
 
 
-class ModeTests(FetcherRun):
+class DiscoveryRun(FetcherRun):
     FANDOM_STATS = {"song_pages": 1, "collection_pages": 0, "excluded": []}
     BWIKI_STATS = {"song_pages": 0, "allimages_count": 1, "excluded_large_images": []}
 
@@ -224,6 +224,8 @@ class ModeTests(FetcherRun):
             self.run_main(*args)
         return song_keys
 
+
+class ModeTests(DiscoveryRun):
     def test_metadata_only_leaves_song_keys_and_images_alone(self):
         manifest = (self.root / MANIFEST).read_bytes()
         self.discover("--metadata-only").assert_not_called()
@@ -237,6 +239,27 @@ class ModeTests(FetcherRun):
     def test_full_discovery_still_refreshes_song_keys(self):
         self.discover().assert_called_once_with()
         self.assertEqual([record["title"] for record in self.read(MANIFEST)["assets"]], ["Art"])
+
+
+class DiscoveryStatsTests(DiscoveryRun):
+    def test_discovery_snapshot_records_its_statistics(self):
+        self.discover("--metadata-only")
+        self.assertEqual(self.read(DISCOVERY)["stats"], {"fandom": self.FANDOM_STATS, "bwiki": self.BWIKI_STATS})
+
+    def test_resume_copies_the_snapshot_statistics_into_the_manifest(self):
+        dump(self.root / DISCOVERY, {"schema_version": 1, "fetched_at": "2026-03-03T00:00:00Z", "candidates": [],
+                                     "stats": {"fandom": self.FANDOM_STATS, "bwiki": self.BWIKI_STATS}})
+        self.run_main("--resume")
+        discovery = {source["id"]: source.get("discovery") for source in self.read(MANIFEST)["sources"]}
+        self.assertEqual(discovery["wikis:bwiki"], {**self.BWIKI_STATS, "snapshot_fetched_at": "2026-03-03T00:00:00Z"})
+        self.assertEqual(discovery["wikis:fandom"], {**self.FANDOM_STATS, "snapshot_fetched_at": "2026-03-03T00:00:00Z"})
+
+    def test_resume_of_a_snapshot_without_statistics_keeps_the_previous_ones(self):
+        manifest = self.read(MANIFEST)
+        manifest["sources"][1]["discovery"] = {"song_pages": 182, "allimages_count": 480, "excluded_large_images": []}
+        dump(self.root / MANIFEST, manifest)
+        self.resume()
+        self.assertEqual(self.read(MANIFEST)["sources"][1]["discovery"], manifest["sources"][1]["discovery"])
 
 
 class RetryTests(FetcherRun):
