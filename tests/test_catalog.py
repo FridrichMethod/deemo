@@ -107,6 +107,30 @@ class CatalogTests(unittest.TestCase):
         self.assertIsNone(asset["artist"])
         self.assertEqual(asset["collection"], "Collection")
         self.assertEqual(asset["kind"], "song_art")
+        self.assertEqual(asset["title_status"], "mapped_exact_internal_key")
+
+    def test_legacy_key_falls_back_to_a_unique_case_insensitive_mapping(self):
+        for key in ("Randall", "magnolia", "Echo"):
+            self.legacy_pair(key)
+        songs = {
+            "randall": {"name": "Randall", "artist": "Hikoshi Hashimoto", "book": 0},
+            "magnolia": {"name": "Magnolia", "artist": "M2U", "book": 0},
+            "Magnolia": {"name": "Not this one", "artist": "Nobody", "book": 0},
+            "echo": {"name": "Echo one"}, "ECHO": {"name": "Echo two"},
+        }
+        mapping = {"source_url": "https://example.com/mapping", "data": {"songs": songs, "books": [{"name": "Collaboration collection"}]}}
+        (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping), encoding="utf-8")
+        assets = {asset["internal_key"]: asset for asset in build.legacy_assets(self.root)}
+        randall = assets["Randall"]
+        self.assertEqual((randall["title"], randall["composer"], randall["collection"], randall["kind"]),
+                         ("Randall", "Hikoshi Hashimoto", "Collaboration collection", "song_art"))
+        self.assertEqual(randall["song_titles"], ["Randall"])
+        self.assertEqual(randall["title_status"], "mapped_case_insensitive_internal_key")
+        self.assertEqual(randall["mapping_source"], "https://example.com/mapping")
+        # An exact key always wins over a case variant.
+        self.assertEqual((assets["magnolia"]["title"], assets["magnolia"]["title_status"]), ("Magnolia", "mapped_exact_internal_key"))
+        # Two keys that differ only in case leave the texture unmapped rather than guessing.
+        self.assertEqual((assets["Echo"]["title"], assets["Echo"]["title_status"], assets["Echo"]["mapping_source"]), ("Echo", "internal_key", None))
 
     def test_quantized_legacy_file_is_a_verified_variant_not_an_extra_slide(self):
         self.legacy_pair()

@@ -49,6 +49,17 @@ def legacy_pngs(directory: Path) -> list[Path]:
     return sorted((path for path in directory.iterdir() if path.suffix == ".png"), key=lambda path: path.name)
 
 
+def mapped_song(songs: dict, key: str) -> tuple[dict, str]:
+    """The song-mapping entry for a legacy texture key, with its title_status. An exact key wins; failing that, the
+    one mapping key that differs only in case ("Randall" -> "randall"). Several such keys leave the key unmapped."""
+    if songs.get(key):
+        return songs[key], "mapped_exact_internal_key"
+    variants = [name for name in songs if name != key and name.casefold() == key.casefold()]
+    if len(variants) == 1 and songs[variants[0]]:
+        return songs[variants[0]], "mapped_case_insensitive_internal_key"
+    return {}, "internal_key"
+
+
 def legacy_assets(root: Path) -> list[dict]:
     assets = []
     mapping_path = required_input(root, "data/sources/song-mapping.json")
@@ -68,7 +79,7 @@ def legacy_assets(root: Path) -> list[dict]:
             width, height = image.size
             format_name = image.format
         key = path.stem
-        song = songs.get(key, {})
+        song, title_status = mapped_song(songs, key)
         book_index = song.get("book")
         book = books[book_index].get("name") if isinstance(book_index, int) and 0 <= book_index < len(books) else None
         is_cover = any(word in key.lower() for word in ("booksprite", "bookcover"))
@@ -83,7 +94,7 @@ def legacy_assets(root: Path) -> list[dict]:
             "download_url": None, "path": path.relative_to(root).as_posix(),
             "width": width, "height": height, "format": format_name,
             "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(),
-            "fetched_at": None, "game": "DEEMO", "title_status": "mapped_exact_internal_key" if song else "internal_key",
+            "fetched_at": None, "game": "DEEMO", "title_status": title_status,
             "notes": "Inherited game texture; upstream made pure-white pixels transparent.",
         }
         quantized_path = quantized_dir / path.name
