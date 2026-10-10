@@ -66,7 +66,11 @@
       (!$("family").value || asset.provenance.some((p) => p.family === $("family").value)) &&
       (!$("kind").value || asset.provenance.some((p) => p.kind === $("kind").value)) &&
       Math.max(asset.width, asset.height) >= Number($("minimum").value));
-    if ($("sort").value === "title") filtered.sort((a, b) => a.title.localeCompare(b.title));
+    // Numeric collation keeps "page 2" before "page 10"; the page language picks the collation.
+    if ($("sort").value === "title") {
+      const collator = new Intl.Collator(i18n.lang, {numeric: true});
+      filtered.sort((a, b) => collator.compare(a.title, b.title));
+    }
     if ($("sort").value === "resolution") filtered.sort((a, b) => b.width * b.height - a.width * a.height);
     renderCount();
     $("grid").replaceChildren();
@@ -221,9 +225,10 @@
   filter();
   // Static [data-i18n] text is handled by the runtime; this re-renders the script-built text in place.
   // Filters, the number of cards shown and the open image stay as they are. A search query is matched
-  // again, because the index holds localized source names and so can match differently per language.
+  // again, because the index holds localized source names and so can match differently per language;
+  // a title sort is redone in the new language's collation.
   i18n.onChange(() => {
-    if ($("query").value.trim()) {
+    if ($("query").value.trim() || $("sort").value === "title") {
       const previous = shown, openId = $("viewer").open ? filtered[current]?.id : null;
       filter();
       while (shown < Math.min(previous, filtered.length)) more();
