@@ -155,6 +155,14 @@ class SlideshowTemplateTests(unittest.TestCase):
             offsets[name] = int(match.group(1))
         self.assertEqual([offsets[name] for name in BOTTOM_ROW], sorted(offsets.values()))
 
+    def test_slides_crossfade_without_a_keyframe_fade(self):
+        """A keyframe animation would override the inline opacity that hides the previous slide."""
+        self.assertNotRegex(self.css, r"@(?:-webkit-)?keyframes\s+fade\b")
+        self.assertNotRegex(self.css, r"animation(?:-name)?\s*:\s*fade\b")
+        reduced = re.search(r"@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}", self.css, re.DOTALL)
+        self.assertTrue(reduced, "No reduced-motion block")
+        self.assertIn(".mySlides", reduced.group(1), "Reduced motion turns slides without the crossfade")
+
     def test_screenshot_overlay_does_not_live_in_the_url(self):
         self.assertNotIn(":target", self.css, "The overlay must not depend on the URL fragment")
         self.assertNotRegex(self.html, r"location\.(?:href|hash)\s*=")

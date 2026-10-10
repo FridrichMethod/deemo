@@ -274,7 +274,8 @@ body {
 
 /* The stage clips the transparent margins of padded textures (see .deemo-draw). The soft shadow sits here rather
    than on the image, so it follows the art's alpha after a softened edge (below) and is not clipped by the stage;
-   it sets opaque squares and strips and cut-out art alike on the paper as prints. */
+   it sets opaque squares and strips and cut-out art alike on the paper as prints. The opacity transition is the
+   crossfade between slides (the "fade" class on each slide carries no animation of its own). */
 .mySlides {
     position: absolute;
     inset: 0;
@@ -461,33 +462,6 @@ img:not([src]) {
 .active,
 .dot:hover {
     background-color: #717171;
-}
-
-/* Fading animation */
-
-.fade {
-    -webkit-animation-name: fade;
-    -webkit-animation-duration: 1.5s;
-    animation-name: fade;
-    animation-duration: 1.5s;
-}
-
-@-webkit-keyframes fade {
-    from {
-        opacity: .2
-    }
-    to {
-        opacity: 1
-    }
-}
-
-@keyframes fade {
-    from {
-        opacity: .2
-    }
-    to {
-        opacity: 1
-    }
 }
 
 /* On smaller screens, decrease text size */
@@ -1063,6 +1037,7 @@ canvas {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .mySlides,
     .liner-text > *,
     .liner-text.is-dedication .slide-notes,
     .liner-text:not(.is-dedication) .dear-alice,
