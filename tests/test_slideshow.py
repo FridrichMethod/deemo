@@ -268,7 +268,8 @@ class SlideshowTemplateTests(unittest.TestCase):
 
     def test_the_archive_page_has_one_name(self):
         """The slideshow's archive button (whose label stays in its tooltip, WCAG 2.5.3), its caption link and the
-        README links call archive.html by the name the page gives itself, in each language."""
+        README links call archive.html by the name the page gives itself, in each language. The caption link is that
+        name alone: a longer one wraps onto a line of its own, under the bottom control row of a phone held sideways."""
         archive = json.loads(REGISTER.search((ROOT / "src/i18n/archive.js").read_text(encoding="utf-8")).group(1))
         links = [node for node in self.nodes if node.tag == "a" and node.attrs.get("href") == "archive.html"]
         self.assertEqual({node.attrs.get("data-i18n") for node in links}, {"slideshow.archive.text", "slideshow.caption.browse"})
@@ -280,8 +281,8 @@ class SlideshowTemplateTests(unittest.TestCase):
                 messages = self.messages[lang]
                 self.assertIn(messages["slideshow.archive.text"].casefold(), name.casefold())
                 self.assertIn(messages["slideshow.archive.text"].casefold(), messages["slideshow.archive.label"].casefold())
-                for key in ("slideshow.archive.label", "slideshow.caption.browse"):
-                    self.assertIn(name, messages[key])
+                self.assertIn(name, messages["slideshow.archive.label"])
+                self.assertEqual(messages["slideshow.caption.browse"], name)
                 online = re.search(r"\[([^\]]+)\]\(https://fridrichmethod\.github\.io/deemo/archive\.html\)",
                                    (ROOT / readme).read_text(encoding="utf-8"))
                 self.assertIn(name, online.group(1))
