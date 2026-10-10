@@ -19,11 +19,11 @@ defaults:
 env:
   SNAPSHOT_BRANCH: auto/wiki-source-check
   BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-  # How `gh pr list --json author` names github-actions[bot].
-  BOT_LOGIN: app/github-actions
-  # Only the bot's own pull request from this repository: anyone can open a pull request from a fork
-  # whose branch has the same name.
-  BOT_PR_QUERY: '[.[] | select(.isCrossRepository == false and .author.login == env.BOT_LOGIN)][0].number // empty'
+  # The pull request from this repository's snapshot branch, whether the bot or a maintainer opened it
+  # (a maintainer has to when the bot may not create pull requests). Anyone can open a pull request from
+  # a fork whose branch has the same name, so those are ignored; only users with write access can push
+  # the branch here, and GitHub allows one open pull request per head branch and base.
+  SNAPSHOT_PR_QUERY: '[.[] | select(.isCrossRepository == false)][0].number // empty'
 
 jobs:
   discover:
@@ -152,7 +152,7 @@ jobs:
             git push --force-with-lease="refs/heads/$SNAPSHOT_BRANCH:$lease" origin "HEAD:refs/heads/$SNAPSHOT_BRANCH"
           printf '\n---\nSource · 来源: %s\n' "$RUN_URL" >> "$RUNNER_TEMP/report.md"
           number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open \
-            --json number,isCrossRepository,author --jq "$BOT_PR_QUERY")"
+            --json number,isCrossRepository --jq "$SNAPSHOT_PR_QUERY")"
           if [ -n "$number" ]; then
             gh pr edit "$number" --title "$title" --body-file "$RUNNER_TEMP/report.md"
             gh pr comment "$number" --body "Snapshot refreshed by a new check run · 快照已由新的检查运行刷新: $RUN_URL"
@@ -177,7 +177,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open \
-            --json number,isCrossRepository,author --jq "$BOT_PR_QUERY")"
+            --json number,isCrossRepository --jq "$SNAPSHOT_PR_QUERY")"
           if [ -z "$number" ]; then
             echo "No open snapshot pull request."
             exit 0
