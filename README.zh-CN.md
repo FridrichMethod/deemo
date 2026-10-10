@@ -118,3 +118,5 @@ python -m venv .venv
 ## 署名
 
 原界面由 Mashiro 设计；本收藏及新增工具由 FridrichMethod 维护。曲绘及其他游戏素材的权利仍属于 Rayark 与对应创作者；仓库代码许可证不为这些媒体赋予新许可。参见 [NOTICE](NOTICE)、[LICENSE](LICENSE)、[第三方许可与素材归属索引](licenses/README.zh-CN.md) 和每张图片的来源记录。
+
+[许可索引](licenses/README.zh-CN.md)同样涵盖第三方代码与素材。原界面打包的 JavaScript（`src/vendor/legacy-ui.js`）包含 html2canvas、punycode.js 和 Pace，均采用 MIT 许可，许可文本见 [html2canvas-MIT.txt](licenses/html2canvas-MIT.txt)、[punycode-MIT.txt](licenses/punycode-MIT.txt) 和 [pace-MIT.txt](licenses/pace-MIT.txt)。索引还列出了 `assets/site/` 下每个继承的图标、字体、图片和音频文件的已知创作者与许可，并写明哪些仍不清楚。上游继承的两款商业字体 Copperplate Gothic Light 和 RocknRoll Typo bold 的许可禁止再分发，因此不再随仓库发布；幻灯片仅在访客设备已安装这些字体时使用它们。捐赠软件字体 Fantique Four 仍保留。
