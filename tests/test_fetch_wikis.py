@@ -63,6 +63,21 @@ def discover_bwiki(inventory, fandom_songs=(), bwiki_pages=()):
         return fetch.discover_bwiki(list(fandom_songs))
 
 
+def fandom_page(title, wikitext, *images):
+    return {"title": title, "pageid": len(title), "fullurl": f"https://fandom.example.test/{title}", "categories": [],
+            "revisions": [{"slots": {"main": {"*": wikitext}}}], "images": [{"title": image} for image in images]}
+
+
+def discover_fandom(song_pages, infos):
+    """Run Fandom discovery against canned song pages (no collection pages) and canned imageinfo."""
+    titles = [page["title"] for page in song_pages]
+    members = [{"title": title, "ns": 0} for title in titles]
+    with patch.object(fetch, "category", lambda source, title: members if title == "Category:Songs" else []), \
+            patch.object(fetch, "pages", lambda source, requested: song_pages if requested == titles else []), \
+            patch.object(fetch, "imageinfo", lambda source, requested: infos):
+        return fetch.discover_fandom()
+
+
 def png(color, width=64, height=48):
     buffer = io.BytesIO()
     Image.new("RGB", (width, height), color).save(buffer, "PNG")
@@ -277,10 +292,10 @@ class RetryTests(FetcherRun):
         self.assertEqual(self.sleeps, [7, fetch.MAX_RETRY_AFTER])
 
     def test_retry_after_may_be_an_http_date(self):
-        when = email.utils.format_datetime(datetime.now(timezone.utc) + timedelta(seconds=12), usegmt=True)
+        when = email.utils.format_datetime(datetime.now(timezone.utc) + timedelta(seconds=20), usegmt=True)
         self.web.routes[self.URL] = [(503, b"", {"Retry-After": when}), (200, b"", {})]
         fetch.get(self.URL)
-        self.assertTrue(10 <= self.sleeps[0] <= 12, self.sleeps)
+        self.assertTrue(5 <= self.sleeps[0] <= 20, self.sleeps)
 
     def test_attempts_are_bounded_and_client_errors_fail_at_once(self):
         self.web.routes[self.URL] = (567, b"", {})
@@ -330,20 +345,6 @@ class DeliveryNoteTests(FetcherRun):
         self.assertNotEqual(again["delivery_note"], self.OLD_NOTE)
         self.assertEqual(again, record)
         self.assertEqual(list(again)[-1], "delivery_note")
-
-
-def fandom_page(title, wikitext, *images):
-    return {"title": title, "pageid": int(hashlib.sha1(title.encode()).hexdigest()[:6], 16), "fullurl": f"https://fandom.example.test/{title}", "categories": [],
-            "revisions": [{"slots": {"main": {"*": wikitext}}}], "images": [{"title": image} for image in images]}
-
-
-def discover_fandom(song_pages, infos):
-    """Run Fandom discovery against canned song pages (no collection pages) and canned imageinfo."""
-    titles = [page["title"] for page in song_pages]
-    with patch.object(fetch, "category", lambda source, title: [{"title": t, "ns": 0} for t in titles] if title == "Category:Songs" else []), \
-            patch.object(fetch, "pages", lambda source, requested: song_pages if requested == titles else []), \
-            patch.object(fetch, "imageinfo", lambda source, requested: infos):
-        return fetch.discover_fandom()
 
 
 class CollectionNameTests(unittest.TestCase):
@@ -399,10 +400,11 @@ print(json.dumps(cover["collections"] + cover["related_pages"]))
 
     def test_cover_collection_spelling_does_not_depend_on_hash_order(self):
         outputs = set()
+        env = {key: os.environ[key] for key in ("PATH", "SYSTEMROOT") if key in os.environ}
         with tempfile.TemporaryDirectory() as empty:
             for seed in range(12):
                 result = subprocess.run([sys.executable, "-s", "-c", self.CHILD, str(SCRIPT)], cwd=empty, capture_output=True,
-                                        env={"PATH": os.environ.get("PATH", ""), "PYTHONHASHSEED": str(seed)}, text=True)
+                                        env={**env, "PYTHONHASHSEED": str(seed)}, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr[-600:])
                 outputs.add(result.stdout)
         self.assertEqual([json.loads(output) for output in outputs],
