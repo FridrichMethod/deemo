@@ -39,11 +39,15 @@
     } catch { return element("span", text); }
     return node;
   }
+  // The index and the query share one fold: NFKC turns full-width and compatibility forms (Ｍａｇ, ：, ﾏﾄﾒ) into plain ones,
+  // toLowerCase() ignores the browser locale (toLocaleLowerCase() maps I to dotless ı under tr/az), and katakana
+  // folds to hiragana.
+  const fold = (text) => text.normalize("NFKC").toLowerCase().replace(/[\u30a1-\u30f6]/g, (kana) => String.fromCharCode(kana.charCodeAt(0) - 0x60));
   // Search covers the verbatim source name and its localized display name, so the index is built per language.
   function searchable(asset) {
-    return [asset.title, asset.artist, asset.internal_key, ...asset.provenance.flatMap((p) =>
+    return fold([asset.title, asset.artist, asset.internal_key, ...asset.provenance.flatMap((p) =>
       [p.title, p.artist, p.composer, p.collection, p.collections, p.collection_aliases, p.song_titles, p.source_name, sourceName(p), p.page_url, p.internal_key])]
-      .map(textValue).join(" ").toLocaleLowerCase();
+      .map(textValue).join(" "));
   }
   const searchIndexes = new Map();
   function searchText() {
@@ -55,7 +59,8 @@
   }
   function filter() {
     const index = searchText();
-    const terms = $("query").value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+    // A colon also separates terms, so "Re: the" and "Re：the" (one term after NFKC) match the same titles.
+    const terms = fold($("query").value).split(/[\s:]+/).filter(Boolean);
     filtered = images.filter((asset) =>
       terms.every((term) => index.get(asset.id).includes(term)) &&
       (!$("family").value || asset.provenance.some((p) => p.family === $("family").value)) &&
