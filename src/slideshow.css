@@ -498,17 +498,13 @@ img:not([src]) {
     z-index: 1000;
 }
 
-.overlay:target {
+.overlay.is-open {
     visibility: visible;
     opacity: 1;
 }
 
-.overlay:target .save {
+.overlay.is-open .save {
     display: block !important;
-}
-
-.overlay:target .photo {
-    display: none!important;
 }
 
 .popup {
@@ -532,10 +528,20 @@ img:not([src]) {
     top: 20px;
     right: 30px;
     transition: all 200ms;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
     font-size: 30px;
     font-weight: bold;
     text-decoration: none;
     color: #fff;
+}
+
+.popup .close:focus-visible {
+    outline: 3px solid #9c8656;
+    outline-offset: 3px;
 }
 
 .popup .content {
@@ -636,7 +642,7 @@ canvas {
 }
 
 /* The screenshot overlay's close button sits in the same corner; screenshot() resets inline visibility, hence !important. */
-.overlay:target ~ .lang-toggle {
+.overlay.is-open ~ .lang-toggle {
     visibility: hidden !important;
 }
 

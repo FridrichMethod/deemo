@@ -114,14 +114,15 @@ https://github.com/FridrichMethod/deemo
 
         <div class="archive-link bt"><a href="archive.html" data-lang-link aria-label="Browse the Artwork Archive" data-i18n="slideshow.archive.text" data-i18n-attr="aria-label:slideshow.archive.label">Gallery</a></div>
 
-        <div id="screenshot" class="overlay">
+        <!-- Opened by screenshot() with the is-open class, not the URL hash, so a reload, Back or a shared link never reopens it empty. -->
+        <div id="screenshot" class="overlay" role="dialog" aria-modal="true" aria-label="Screenshot" data-i18n-attr="aria-label:slideshow.screenshot.dialog">
             <div class="save bt">
                 <a href="javascript:downloadCanvas();">
                     <div class="pop"><img src="assets/site/icons/save.svg" class="css-1bgbwga" data-reactid="50"></div>
                 </a>
             </div>
             <div class="popup">
-                <a class="close" href="#">&times;</a>
+                <button type="button" class="close" aria-label="Close screenshot" data-i18n-attr="aria-label:slideshow.screenshot.close" onclick="closeScreenshot()">&times;</button>
                 <div id="scerrn-content"></div>
             </div>
         </div>
@@ -438,31 +439,51 @@ https://github.com/FridrichMethod/deemo
             }
         }
 
-        function saveFile(url) {
-            var date = new Date();
-            var filename = "deemo-";
-            filename = filename + date.getTime();
-            filename = filename + ".png";
-            var xhr = new XMLHttpRequest();
-            xhr.responseType = 'blob';
-            xhr.onload = function() {
-                var a = document.createElement('a');
-                a.href = window.URL.createObjectURL(xhr.response);
-                a.download = filename;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                //a = null;
-            };
-            xhr.open('GET', url);
-            xhr.send();
+        // Screenshot overlay: one canvas at a time, shown with a class (see the markup) and dropped on close.
+        var screenshotOverlay = document.getElementById("screenshot");
+        var screenshotContent = document.getElementById("scerrn-content");
+
+        function isScreenshotOpen() {
+            return screenshotOverlay.classList.contains("is-open");
+        }
+
+        function setScreenshotOpen(open) {
+            screenshotOverlay.classList.toggle("is-open", open);
+            // While it is open the page behind it is inert, so Tab and the arrow keys stay with the overlay.
+            Array.prototype.forEach.call(screenshotOverlay.parentElement.children, function(child) {
+                if (child !== screenshotOverlay) child.inert = open;
+            });
+            if (open) {
+                screenshotOverlay.querySelector(".save a").focus();
+            } else {
+                screenshotContent.replaceChildren();
+                document.querySelector(".photo a").focus();
+            }
+        }
+
+        function closeScreenshot() {
+            if (isScreenshotOpen()) setScreenshotOpen(false);
         }
 
         function downloadCanvas() {
-            var src = document.getElementsByTagName("canvas");
-            var img = src[src.length - 1].toDataURL("image/png");
-            saveFile(img);
+            var canvas = screenshotContent.querySelector("canvas");
+            if (!canvas) return;
+            canvas.toBlob(function(blob) {
+                if (!blob) return;
+                var link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "deemo-" + Date.now() + ".png";
+                document.body.append(link);
+                link.click();
+                link.remove();
+                // The download reads the blob after the click returns; release it once that has had ample time.
+                window.setTimeout(URL.revokeObjectURL.bind(URL, link.href), 40000);
+            }, "image/png");
         }
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Escape" && isScreenshotOpen()) closeScreenshot();
+        });
 
         function screenshot() {
             var sholdHide = new Array("photo", "iplayer", "random", "github", "archive-link", "lang-toggle", "asset-caption", "signature", "prev", "next");
@@ -473,8 +494,8 @@ https://github.com/FridrichMethod/deemo
                 useCORS: true
             };
             html2canvas(document.body, opt).then(function(canvas) {
-                document.getElementById("scerrn-content").appendChild(canvas);
-                location.href = "#screenshot";
+                screenshotContent.replaceChildren(canvas);
+                setScreenshotOpen(true);
             });
 
             for (var i = 0; i < sholdHide.length; i++) document.getElementsByClassName(sholdHide[i])[0].style.visibility = 'visible';
