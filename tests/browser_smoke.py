@@ -560,27 +560,31 @@ def check_previews(browser):
     monitor.settle(page)
     cards = page.evaluate("""() => { const assets = window.DEEMO_CATALOG.assets.filter((a) => a.gallery);
         return [...document.querySelectorAll('.card-image img')].map((img, index) => [img.getAttribute('src'), assets[index].thumb || null, assets[index].url]); }""")
-    assert len(cards) == 60 and all(thumb for _, thumb, _ in cards), "The first cards all have previews"
-    assert all(src == thumb for src, thumb, _ in cards), cards[:3]
-    originals = {urlparse(mounted_url(url)).path for _, _, url in cards}
+    # Images of 480 px or less have no preview and are their own card image; a card with a preview never requests its
+    # original. Most of the first cards have one, so the check cannot pass on cards without any.
+    previewed = [index for index, (_, thumb, _) in enumerate(cards) if thumb]
+    assert len(cards) == 60 and len(previewed) * 2 > len(cards), (len(cards), len(previewed))
+    assert all(src == (thumb or url) for src, thumb, url in cards), cards[:3]
+    originals = {urlparse(mounted_url(cards[index][2])).path for index in previewed}
     assert not originals & set(requested), sorted(originals & set(requested))[:3]
     image_bytes = page.evaluate("performance.getEntriesByType('resource').filter((e) => e.initiatorType === 'img').reduce((sum, e) => sum + e.encodedBodySize, 0)")
     assert 0 < image_bytes < 2_000_000, f"The first screen of the grid loaded {image_bytes} bytes of images"
-    page.locator(".card-image").first.click()
+    first = previewed[0]
+    page.locator(".card-image").nth(first).click()
     page.wait_for_function(IMAGE_SHOWN)
-    url = cards[0][2]
+    url = cards[first][2]
     assert urlparse(page.evaluate("document.getElementById('full-image').currentSrc")).path == urlparse(mounted_url(url)).path
     assert page.locator("#download").get_attribute("href") == url == page.locator("#original").get_attribute("href")
     assert urlparse(mounted_url(url)).path in requested
     finish(page)
-    # The first card's preview fails on purpose.
+    # The first previewed card's preview fails on purpose.
     page = new_page(browser, 1440, 900)
-    preview = mounted_url(cards[0][1])
+    preview = mounted_url(cards[first][1])
     monitor.expect(preview)
     page.route(preview, lambda route: route.abort())
     navigate(page, "archive.html")
-    page.wait_for_function("(() => { const img = document.querySelector('.card-image img'); return img.complete && img.naturalWidth > 0; })()", timeout=10_000)
-    assert page.locator(".card-image img").first.get_attribute("src") == cards[0][2]
+    page.wait_for_function("(index) => { const img = document.querySelectorAll('.card-image img')[index]; return img.complete && img.naturalWidth > 0; }", arg=first, timeout=10_000)
+    assert page.locator(".card-image img").nth(first).get_attribute("src") == cards[first][2]
     finish(page)
     checks.append(f"grid previews ({image_bytes} bytes of images on the first screen), originals in the viewer, fallback")
 
