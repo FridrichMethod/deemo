@@ -157,6 +157,20 @@ class BuildTests(Fixture):
         self.assertEqual(self.files(), first)
         self.assertEqual(thumbs.problems(self.root, reencode=True), [])
 
+    def test_a_preview_that_no_longer_matches_the_manifest_is_rendered_again(self):
+        thumbs.build(self.root)
+        first, manifest = self.files(), (self.root / thumbs.MANIFEST).read_bytes()
+        path = self.root / self.manifest()["thumbnails"][self.sha("wide.png")]["path"]
+        # Same size, one byte flipped: only the recorded SHA-256 tells the damaged preview apart.
+        damaged = bytearray(path.read_bytes())
+        damaged[len(damaged) // 2] ^= 0xFF
+        path.write_bytes(bytes(damaged))
+        summary = thumbs.build(self.root)
+        self.assertEqual((summary["rendered"], summary["reused"]), (1, 2))
+        self.assertEqual(self.files(), first)
+        self.assertEqual((self.root / thumbs.MANIFEST).read_bytes(), manifest)
+        self.assertEqual(thumbs.problems(self.root), [])
+
     def test_previews_are_small_metadata_free_webp_files(self):
         thumbs.build(self.root)
         entries = self.manifest()["thumbnails"]
