@@ -209,6 +209,34 @@ class CheckpointTests(FetcherRun):
         self.assertEqual([path.name for path in (self.root / MANIFEST).parent.iterdir()], ["wikis.json"])
 
 
+class ModeTests(FetcherRun):
+    FANDOM_STATS = {"song_pages": 1, "collection_pages": 0, "excluded": []}
+    BWIKI_STATS = {"song_pages": 0, "allimages_count": 1, "excluded_large_images": []}
+
+    def discover(self, *args):
+        """Run main() with canned discovery results; returns the mock standing in for fetch_song_keys."""
+        candidate = self.offer("Art.png", png("red"))
+        with patch.object(fetch, "discover_fandom", return_value=([], [song("Art")], self.FANDOM_STATS)), \
+                patch.object(fetch, "discover_bwiki", return_value=([candidate], [], self.BWIKI_STATS)), \
+                patch.object(fetch, "fetch_song_keys") as song_keys:
+            self.run_main(*args)
+        return song_keys
+
+    def test_metadata_only_leaves_song_keys_and_images_alone(self):
+        manifest = (self.root / MANIFEST).read_bytes()
+        self.discover("--metadata-only").assert_not_called()
+        self.assertEqual(self.web.calls, [])
+        self.assertEqual((self.root / MANIFEST).read_bytes(), manifest)
+        self.assertEqual(sorted(path.name for path in (self.root / "data/sources").iterdir()),
+                         ["wiki-discovery.json", "wiki-song-index.json", "wikis.json"])
+        self.assertEqual([row["file_title"] for row in self.read(DISCOVERY)["candidates"]], ["文件:Art.png"])
+        self.assertFalse((self.root / "assets").exists())
+
+    def test_full_discovery_still_refreshes_song_keys(self):
+        self.discover().assert_called_once_with()
+        self.assertEqual([record["title"] for record in self.read(MANIFEST)["assets"]], ["Art"])
+
+
 class DiscoveryFilterTests(unittest.TestCase):
     def test_bwiki_skips_ui_sprites_like_the_fandom_path(self):
         inventory = [allimage("Exotic_Collections_Titletab.png", 70, 47),  # imported as a "cover" on 2026-10-08

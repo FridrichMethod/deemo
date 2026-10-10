@@ -463,11 +463,13 @@ def main():
         write_json("data/sources/wiki-song-index.json", {"schema_version": 1, "fetched_at": now(), "songs": fandom_songs + bwiki_songs})
         candidates = fandom + bwiki
         write_json("data/sources/wiki-discovery.json", {"schema_version": 1, "fetched_at": now(), "candidates": candidates})
-        fetch_song_keys()
     if args.metadata_only:
         if not manifest_path.exists():
             write_json("data/sources/wikis.json", manifest)
         return
+    if not args.resume:
+        # The legacy song-key mapping is unrelated to the wiki candidates, so only a full run refreshes it.
+        fetch_song_keys()
     previous_failures = {failure.get("title"): failure for failure in previous.get("failures", [])}
     for candidate in candidates:
         if candidate["file_title"] in previous_failures:

@@ -48,7 +48,7 @@ python -I scripts/fetch_wikis.py --resume --workers 4
 
 `--resume` never drops a record from `wikis.json` and never deletes a file. A record whose candidate is no longer in the snapshot is kept with `"upstream_status": "removed"`. When a re-uploaded file is downloaded, the new version keeps the asset ID, so deep links stay stable, and the previous version keeps its file and record under the ID `<asset ID>:<first 12 hex digits of its SHA-256>`, with `"upstream_status": "superseded"` and `"superseded_by"` naming the current ID. If a re-download fails, the previous record stays, marked `"upstream_status": "fetch_failed"`, next to its entry in `failures`; the next `--resume` retries it.
 
-The script allows at most 4 concurrent requests, sets timeouts and limited retries, and saves the manifest after every 25 results; every save replaces the file atomically and still lists every previous record, so an interrupted run loses nothing. `--metadata-only` only updates the candidate metadata; an existing final image manifest is kept.
+The script allows at most 4 concurrent requests, sets timeouts and limited retries, and saves the manifest after every 25 results; every save replaces the file atomically and still lists every previous record, so an interrupted run loses nothing. `--metadata-only` downloads no images and rewrites only `wiki-discovery.json` and `wiki-song-index.json`; it keeps an existing `wikis.json` and leaves `song-mapping.json` alone, because the DeemoSongs mapping is fetched only by a full run (without `--resume` or `--metadata-only`).
 
 ## Access limits in this run
 
