@@ -156,6 +156,10 @@ def pages(source, titles):
                 for field in ("images", "categories"):
                     seen = {row["title"] for row in target[field]}
                     target[field].extend(row for row in page.get(field, []) if row["title"] not in seen)
+                # A continued response can bring what the first copy of the page lacked, such as its revisions
+                # (the wikitext) when the result-size limit stopped the first one.
+                for key, value in page.items():
+                    target.setdefault(key, value)
             if "continue" not in result:
                 break
             continuation = result["continue"]
@@ -165,16 +169,23 @@ def pages(source, titles):
 def imageinfo(source, titles):
     infos = {}
     for start in range(0, len(titles), 50):
-        result = api(
-            source,
-            titles="|".join(titles[start : start + 50]),
-            prop="imageinfo",
-            iiprop="size|url|mime|timestamp|sha1|extmetadata",
-            iilimit=1,
-        )
-        for page in result.get("query", {}).get("pages", {}).values():
-            if page.get("imageinfo"):
-                infos[page["title"]] = page["imageinfo"][0]
+        continuation = {}
+        # At its result-size limit MediaWiki answers only part of the batch and returns `continue` for the rest.
+        while True:
+            result = api(
+                source,
+                titles="|".join(titles[start : start + 50]),
+                prop="imageinfo",
+                iiprop="size|url|mime|timestamp|sha1|extmetadata",
+                iilimit=1,
+                **continuation,
+            )
+            for page in result.get("query", {}).get("pages", {}).values():
+                if page.get("imageinfo"):
+                    infos.setdefault(page["title"], page["imageinfo"][0])
+            if "continue" not in result:
+                break
+            continuation = result["continue"]
     return infos
 
 

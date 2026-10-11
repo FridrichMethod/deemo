@@ -826,6 +826,69 @@ class DiscoveryFilterTests(unittest.TestCase):
         self.assertEqual([row["title"] for row in stats["excluded"]], ["File:Tiny booksprite.png"])
 
 
+class ContinuationTests(unittest.TestCase):
+    """MediaWiki stops a query at its result-size limit and returns `continue`; the rest arrives in later responses."""
+
+    def test_imageinfo_follows_the_continuation(self):
+        page = fandom_page("Song A", "{{Song|img=Alpha.png}}", "File:Alpha.png", "File:Beta.png", "File:Gamma.png")
+        names = ("Alpha.png", "Beta.png", "Gamma.png")
+        requested = []
+
+        def api(source, **params):
+            requested.append(params)
+            # The first response holds Alpha's imageinfo only, the continued one the other two.
+            listed = names[:1] if "iicontinue" not in params else names[1:]
+            pages = {
+                str(index): {
+                    "title": "File:" + name,
+                    **({"imageinfo": [image_info(1024, 1024, name)]} if name in listed else {}),
+                }
+                for index, name in enumerate(names)
+            }
+            more = (
+                {}
+                if "iicontinue" in params
+                else {"continue": {"iicontinue": "Beta.png|20210901000000", "continue": "||"}}
+            )
+            return {**more, "query": {"pages": pages}}
+
+        with (
+            patch.object(
+                fetch,
+                "category",
+                lambda source, title: [{"title": "Song A", "ns": 0}] if title == "Category:Songs" else [],
+            ),
+            patch.object(fetch, "pages", lambda source, titles: [page] if titles == ["Song A"] else []),
+            patch.object(fetch, "api", api),
+        ):
+            selected, _, stats = fetch.discover_fandom()
+        self.assertEqual([row["file_title"] for row in selected], ["File:" + name for name in names])
+        self.assertEqual(stats["excluded"], [])
+        self.assertEqual([params.get("iicontinue") for params in requested], [None, "Beta.png|20210901000000"])
+
+    def test_pages_keep_revisions_that_arrive_in_a_continuation(self):
+        complete = {
+            "A": fandom_page("A", "{{Song|Artist=Composer A}}"),
+            "B": fandom_page("B", "{{Song|Artist=Composer B}}"),
+        }
+
+        def without_revisions(title):
+            return {key: value for key, value in complete[title].items() if key != "revisions"}
+
+        def api(source, **params):
+            if "rvcontinue" not in params:
+                pages = {"1": complete["A"], "2": without_revisions("B")}
+                return {"continue": {"rvcontinue": "2|0", "continue": "||"}, "query": {"pages": pages}}
+            return {"query": {"pages": {"1": without_revisions("A"), "2": complete["B"]}}}
+
+        with patch.object(fetch, "api", api):
+            pages = fetch.pages("fandom", ["A", "B"])
+        self.assertEqual(
+            {page["title"]: fetch.song_metadata("fandom", page).get("composer") for page in pages},
+            {"A": "Composer A", "B": "Composer B"},
+        )
+
+
 class EncodingTests(unittest.TestCase):
     def test_resume_reads_utf8_manifests_under_an_ascii_locale(self):
         """The manifests are UTF-8 (BWIKI titles start with 文件:); reading them must not depend on the locale."""
