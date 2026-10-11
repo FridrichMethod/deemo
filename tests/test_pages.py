@@ -2,6 +2,8 @@
 
 import importlib.util
 import re
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -97,6 +99,33 @@ class PagesTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "budget"):
                 pages.prepare(self.root, self.output, self.tracked)
         self.assertFalse(self.output.exists())
+
+
+def in_git_checkout():
+    if not shutil.which("git"):
+        return False
+    try:
+        top = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    return Path(top.stdout.strip()).resolve() == ROOT
+
+
+@unittest.skipUnless(in_git_checkout(), "needs git and a Git checkout of this repository")
+class RepositoryTests(unittest.TestCase):
+    def test_the_tracked_site_fits_the_pages_budget(self):
+        # The deployment measures the payload only after a merge to main; this test runs on every push and pull
+        # request (tests.yml), so a change that would push the site past the budget fails before it is merged.
+        tracked = pages.tracked_files(ROOT)
+        selected, total = pages.payload(ROOT, tracked)
+        self.assertIn(Path("index.html"), selected)
+        self.assertLessEqual(
+            total, pages.MAX_SITE_BYTES, f"{total - pages.MAX_SITE_BYTES} bytes over the Pages budget: remove material"
+        )
+        with patch.object(pages, "MAX_SITE_BYTES", total - 1), self.assertRaisesRegex(ValueError, f"budget: {total}$"):
+            pages.payload(ROOT, tracked)
 
 
 if __name__ == "__main__":

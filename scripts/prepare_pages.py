@@ -46,14 +46,27 @@ def select_files(root, tracked):
     return selected
 
 
-def prepare(root, output, tracked):
-    root, output = root.resolve(), output.resolve()
-    if output.is_relative_to(root):
-        raise ValueError("Pages output must be outside the repository")
+def tracked_files(root):
+    """Every Git-tracked path of the checkout at root, as git ls-files lists it."""
+    raw = subprocess.check_output(["git", "ls-files", "-z"], cwd=root)
+    return [name.decode("utf-8") for name in raw.split(b"\0") if name]
+
+
+def payload(root, tracked):
+    """The files a deployment publishes and their total size, measured without copying anything; fails over
+    MAX_SITE_BYTES. tests/test_pages.py runs it on every push and pull request, before anything reaches main."""
     selected = select_files(root, tracked)
     total = sum((root / path).stat().st_size for path in selected)
     if total > MAX_SITE_BYTES:
         raise ValueError(f"Pages payload exceeds {MAX_SITE_BYTES} byte budget: {total}")
+    return selected, total
+
+
+def prepare(root, output, tracked):
+    root, output = root.resolve(), output.resolve()
+    if output.is_relative_to(root):
+        raise ValueError("Pages output must be outside the repository")
+    selected, total = payload(root, tracked)
     # Never overwrite an existing artifact or user directory.
     output.mkdir(parents=True, exist_ok=False)
     for relative in selected:
@@ -67,9 +80,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
-    raw = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT)
-    tracked = [name.decode("utf-8") for name in raw.split(b"\0") if name]
-    print(json.dumps(prepare(ROOT, args.output, tracked), indent=2))
+    print(json.dumps(prepare(ROOT, args.output, tracked_files(ROOT)), indent=2))
 
 
 if __name__ == "__main__":
