@@ -1660,6 +1660,46 @@ class ContinuationLimitTests(FetcherRun):
         self.assertEqual((self.root / MANIFEST).read_bytes(), manifest)
 
 
+class DocumentationTests(unittest.TestCase):
+    def test_the_continuation_limit_is_documented_as_it_is_applied(self):
+        """docs/sources-wikis.md and its Chinese mirror state the limit continued() applies: MAX_CONTINUATIONS
+        continuation requests after a list's first request, one more in all, where pages() and imageinfo() continue
+        each batch of 30 or 50 titles as a list of its own."""
+        batches = {"pages": [], "imageinfo": []}
+
+        def api(source, **params):
+            batches["imageinfo" if params["prop"] == "imageinfo" else "pages"].append(params["titles"].count("|") + 1)
+            return {"query": {"pages": {}}}
+
+        titles = [f"File:{index}.png" for index in range(101)]
+        with patch.object(fetch, "api", api):
+            fetch.pages("fandom", titles)
+            fetch.imageinfo("fandom", titles)
+        self.assertEqual(batches, {"pages": [30, 30, 30, 11], "imageinfo": [50, 50, 1]})
+        limit = fetch.MAX_CONTINUATIONS
+        for document, phrases in (
+            (
+                "docs/sources-wikis.md",
+                (
+                    f"for at most {limit:,} continuation requests after its first request, {limit + 1:,} requests in all",
+                    "page contents and `imageinfo` are requested for 30 and 50 titles at a time, and each such batch "
+                    "counts as one list",
+                ),
+            ),
+            (
+                "docs/sources-wikis.zh-CN.md",
+                (
+                    f"在首次请求之后最多再发出 {limit} 次续查请求，即共 {limit + 1} 次请求",
+                    "页面内容与 `imageinfo` 分别按每批 30 个与 50 个标题请求，每一批各算作一个列表",
+                ),
+            ),
+        ):
+            text = (REPO / document).read_text(encoding="utf-8")
+            for phrase in phrases:
+                with self.subTest(document=document, phrase=phrase):
+                    self.assertTrue(phrase in text, f"{document} does not say: {phrase}")
+
+
 class EncodingTests(unittest.TestCase):
     def test_resume_reads_utf8_manifests_under_an_ascii_locale(self):
         """The manifests are UTF-8 (BWIKI titles start with 文件:); reading them must not depend on the locale."""

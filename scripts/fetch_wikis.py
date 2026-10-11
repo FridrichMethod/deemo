@@ -100,8 +100,8 @@ check_sources = _load_source_check()
 
 class IncompleteList(RuntimeError):
     """A MediaWiki list that could not be read to its end: the server repeated a continuation, sent one that is not an
-    object, or still continued after MAX_CONTINUATIONS requests. Discovery stops with it, so no snapshot is written from
-    a list cut short."""
+    object, or still continued after MAX_CONTINUATIONS continuation requests (MAX_CONTINUATIONS + 1 requests in all).
+    Discovery stops with it, so no snapshot is written from a list cut short."""
 
 
 class RefusedDownload(ValueError):
