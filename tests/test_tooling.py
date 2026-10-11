@@ -227,7 +227,11 @@ def mapping(lines, indent, where):
 
 
 def block_text(value, children):
-    """The text of a `key: |` literal block or of a one-line scalar."""
+    """The text of a `key: |` literal block, of a one-paragraph `key: >-` folded block or of a one-line scalar."""
+    if value == ">-":
+        if any(not line.strip() for line in children):
+            raise AssertionError("folded blocks of more than one paragraph are not supported here")
+        return " ".join(line.strip() for line in children)
     if value != "|":
         return yaml_scalar(value, "scalar")
     indent = min(indent_of(line) for line in children if line.strip())
@@ -687,21 +691,74 @@ class WorkflowTests(unittest.TestCase):
                 self.assertEqual(step["keys"].get("if"), "${{ !cancelled() && steps.install.outcome == 'success' }}")
 
     def test_pages_deploys_only_after_the_tests_workflow(self):
+        # guard -> test (all of tests.yml) -> build (the artifact) -> deploy. None of the later jobs has an if: that could
+        # run it after an earlier one failed: a job runs only when every job it needs succeeded, unless its condition
+        # calls a status function (the deploy job's condition, pinned in tests/test_pages.py, calls none).
         _, jobs = self.workflows["pages.yml"]
+
+        def needs(job_id):
+            value = yaml_scalar(jobs[job_id]["keys"].get("needs", ("",))[0], "needs")
+            return set(value) if isinstance(value, list) else {value} - {""}
+
+        def uses(job):
+            return {step["keys"].get("uses", "").split("@")[0] for step in job["steps"]} - {""}
+
         callers = [
             job_id
             for job_id, job in jobs.items()
             if job["keys"].get("uses", ("",))[0] == "./.github/workflows/tests.yml"
         ]
-        self.assertEqual(len(callers), 1)
-        deployers = [
-            job
-            for job in jobs.values()
-            if any(step["keys"].get("uses", "").startswith("actions/deploy-pages@") for step in job["steps"])
-        ]
-        self.assertEqual(len(deployers), 1)
-        needs = yaml_scalar(deployers[0]["keys"].get("needs", ("",))[0], "needs")
-        self.assertIn(callers[0], needs if isinstance(needs, list) else [needs])
+        self.assertEqual(callers, ["test"])
+        self.assertEqual(set(jobs["test"]["keys"]), {"name", "needs", "uses", "permissions"}, "no inputs, no if:")
+        builders = [job_id for job_id, job in jobs.items() if "actions/upload-pages-artifact" in uses(job)]
+        deployers = [job_id for job_id, job in jobs.items() if "actions/deploy-pages" in uses(job)]
+        self.assertEqual((builders, deployers), (["build"], ["deploy"]))
+        self.assertEqual(needs("guard"), set())
+        self.assertEqual(needs("test"), {"guard"})
+        self.assertEqual(needs("build"), {"guard", "test"})
+        self.assertEqual(needs("deploy"), {"guard", "test", "build"})
+        for job_id in ("guard", "test", "build"):
+            self.assertNotIn("if", jobs[job_id]["keys"], job_id)
+        self.assertNotRegex(
+            block_text(*jobs["deploy"]["keys"]["if"]), r"\b(?:always|success|failure|cancelled)\s*\(", "status check"
+        )
+        text = (WORKFLOWS / "pages.yml").read_text(encoding="utf-8")
+        self.assertNotIn("continue-on-error", text)
+
+    def test_pages_permissions_are_minimal(self):
+        # Nothing by default; read access for the jobs that check out and test the release; the Pages and OIDC grants
+        # only for the deploy job, which runs no repository code: it has no checkout and no run step.
+        top, jobs = self.workflows["pages.yml"]
+        self.assertEqual(top["permissions"], ("{}", []))
+        self.assertEqual(
+            {job_id: job_permissions(job) for job_id, job in jobs.items()},
+            {
+                "guard": {"contents": "read"},
+                "test": {"contents": "read"},
+                "build": {"contents": "read"},
+                "deploy": {"pages": "write", "id-token": "write"},
+            },
+        )
+        lines = (WORKFLOWS / "pages.yml").read_text(encoding="utf-8").splitlines()
+        grants = [line.strip() for line in lines if GRANTS_WRITE.fullmatch(line) or "write-all" in line]
+        self.assertEqual(grants, ["pages: write", "id-token: write"])
+        deploy = jobs["deploy"]
+        self.assertEqual([step["run"] for step in deploy["steps"]], [None, None])
+        self.assertEqual(
+            [step["keys"]["uses"].split("@")[0] for step in deploy["steps"]],
+            ["actions/configure-pages", "actions/deploy-pages"],
+        )
+        actions = {match[1] for line in lines if (match := re.fullmatch(r"\s*(?:- )?uses: ([^@\s]+)(?:@.*)?", line))}
+        self.assertEqual(
+            actions,
+            {
+                "actions/checkout",
+                "./.github/workflows/tests.yml",
+                "actions/upload-pages-artifact",
+                "actions/configure-pages",
+                "actions/deploy-pages",
+            },
+        )
 
 
 @unittest.skipUnless(in_git_checkout(), "needs git and a Git checkout of this repository")

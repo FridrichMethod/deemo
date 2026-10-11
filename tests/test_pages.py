@@ -1,6 +1,7 @@
-"""Ensure only tracked, allowlisted website files reach the GitHub Pages payload."""
+"""Ensure only a release is deployed, and only tracked, allowlisted website files reach the GitHub Pages payload."""
 
 import importlib.util
+import os
 import re
 import shutil
 import subprocess
@@ -10,32 +11,288 @@ from pathlib import Path
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("prepare_pages", ROOT / "scripts/prepare_pages.py")
-pages = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(pages)
 
 
-def workflow_jobs(relative):
-    """{job id: its lines} of a workflow, split at the two-space job keys under `jobs:` (the layout these files use)."""
-    lines = (ROOT / relative).read_text(encoding="utf-8").splitlines()
-    body = lines[lines.index("jobs:") + 1 :]
-    starts = [index for index, line in enumerate(body) if re.fullmatch(r"  [A-Za-z_][\w-]*:", line)]
-    return {
-        body[start].strip().rstrip(":"): body[start + 1 : end]
-        for start, end in zip(starts, [*starts[1:], len(body)], strict=True)
+def load(name, relative):
+    spec = importlib.util.spec_from_file_location(name, ROOT / relative)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+pages = load("prepare_pages", "scripts/prepare_pages.py")
+# The workflow reader of the tooling tests: the standard library has no YAML parser, and that reader follows the block
+# layout of these workflows line by line and fails on a line it does not recognise.
+workflows = load("test_tooling", "tests/test_tooling.py")
+
+# The deploy job's condition, verbatim. The expression language has no regular expressions, so this only requires a tag
+# ref that starts with v, from a published full release or a manual run; the guard steps check the whole vX.Y.Z tag.
+DEPLOY_CONDITION = (
+    "startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'workflow_dispatch' || "
+    "(github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease == false))"
+)
+# The only contexts the guard steps may read. GitHub renders a property the event does not have as an empty string.
+GUARD_CONTEXTS = (
+    "github.event_name",
+    "github.event.action",
+    "github.ref",
+    "github.event.release.tag_name",
+    "github.event.release.prerelease",
+    "github.sha",
+)
+EXPRESSION = re.compile(r"\$\{\{ ([a-z_.]+) \}\}")
+COMMITTER = {"NAME": "Release test", "EMAIL": "release@example.invalid", "DATE": "2026-10-11T00:00:00Z"}
+
+
+def published(tag="v1.1.0", commit="released", **changes):
+    """The contexts of a run started by publishing a full release of tag."""
+    contexts = {
+        "github.event_name": "release",
+        "github.event.action": "published",
+        "github.ref": f"refs/tags/{tag}",
+        "github.event.release.tag_name": tag,
+        "github.event.release.prerelease": "false",
+        "github.sha": commit,
     }
+    return {**contexts, **changes}
+
+
+def dispatched(ref="refs/tags/v1.1.0", commit="released", event="workflow_dispatch"):
+    """The contexts of a run on ref that no release started: a manual run, or another event."""
+    return {"github.event_name": event, "github.ref": ref, "github.sha": commit}
+
+
+class Checkout:
+    """A repository as actions/checkout with fetch-depth: 0 leaves it: origin's branches under refs/remotes/origin/,
+    every tag, no local branch, and HEAD detached at the run's commit. The commits:
+
+        root - released - tip     main (refs/remotes/origin/main); v1.1.0 tags released, v1.2.0 tip
+            \\
+             aside                another branch only (refs/remotes/origin/feature); v1.3.0 tags it
+
+    Two more refs name aside where a careless guard would look for main: a local branch main, and a tag named
+    origin/main, which `git rev-parse origin/main` prefers to the remote-tracking branch. With main=False, origin has
+    no main branch at all."""
+
+    def __init__(self, directory, main=True):
+        self.directory = directory
+        self.env = {
+            "PATH": os.environ.get("PATH", ""),
+            "HOME": str(directory),
+            "GIT_CONFIG_NOSYSTEM": "1",
+            **{f"GIT_{role}_{key}": value for role in ("AUTHOR", "COMMITTER") for key, value in COMMITTER.items()},
+        }
+        self.git("init", "--quiet")
+        tree = self.git("mktree")
+        root = self.git("commit-tree", tree, "-m", "root")
+        released = self.git("commit-tree", tree, "-p", root, "-m", "released")
+        tip = self.git("commit-tree", tree, "-p", released, "-m", "tip")
+        aside = self.git("commit-tree", tree, "-p", root, "-m", "aside")
+        self.commits = {"released": released, "tip": tip, "aside": aside}
+        refs = {
+            "refs/remotes/origin/feature": aside,
+            "refs/heads/main": aside,
+            "refs/tags/origin/main": aside,
+            "refs/tags/v1.1.0": released,
+            "refs/tags/v1.2.0": tip,
+            "refs/tags/v1.3.0": aside,
+        }
+        if main:
+            refs["refs/remotes/origin/main"] = tip
+        for ref, commit in refs.items():
+            self.git("update-ref", ref, commit)
+
+    def git(self, *args):
+        return subprocess.run(
+            ["git", *args], cwd=self.directory, env=self.env, input="", capture_output=True, text=True, check=True
+        ).stdout.strip()
+
+    def detach(self, commit):
+        self.git("update-ref", "--no-deref", "HEAD", self.commits[commit])
 
 
 class WorkflowTests(unittest.TestCase):
-    def test_only_main_is_ever_deployed(self):
-        # workflow_dispatch runs on any ref the maintainer picks; the deploy job itself refuses all but main, whatever
-        # the github-pages environment's branch policy would allow.
-        jobs = workflow_jobs(".github/workflows/pages.yml")
+    @classmethod
+    def setUpClass(cls):
+        cls.top, cls.jobs = workflows.read_workflow("pages.yml")
+
+    def test_only_a_published_release_or_a_manual_run_starts_the_workflow(self):
+        # Pushes, pull requests and schedules never start it: tests.yml runs on those, and deploys nothing.
+        self.assertEqual(self.top["on"][0], "", "triggers as a block, not a list")
+        triggers = workflows.mapping(self.top["on"][1], 2, "on")
+        self.assertEqual(set(triggers), {"release", "workflow_dispatch"})
+        release = workflows.mapping(triggers["release"][1], 4, "release")
+        self.assertEqual(set(release), {"types"})
+        self.assertEqual(workflows.yaml_scalar(release["types"][0], "types"), ["published"])
+        self.assertEqual(triggers["workflow_dispatch"], ("", []), "a manual run takes no inputs")
+
+    def test_the_artifact_job_repeats_the_guards_before_anything_else(self):
+        # The guard job is the guards alone: the event and ref check, a checkout with every commit, the main check. The
+        # build job starts with the same three steps, so nothing it runs from the checkout precedes them.
+        guard, build = self.jobs["guard"]["steps"], self.jobs["build"]["steps"]
+        self.assertEqual(len(guard), 3)
+        self.assertEqual(guard[0]["lines"], build[0]["lines"])
+        self.assertEqual(guard[2]["lines"], build[2]["lines"])
+        for job, steps in (("guard", guard), ("build", build)):
+            with self.subTest(job=job):
+                first, checkout, main = steps[:3]
+                for step in (first, main):
+                    self.assertIsNotNone(step["run"])
+                    self.assertEqual(set(step["keys"]) - {"name", "env", "run"}, set(), "no if: or continue-on-error")
+                self.assertTrue(checkout["keys"]["uses"].startswith("actions/checkout@"))
+                self.assertIn("          fetch-depth: 0", checkout["lines"])
+                self.assertIn("          persist-credentials: false", checkout["lines"])
+        later = [step["keys"].get("uses") or step["run"] for step in build[3:]]
+        self.assertEqual(
+            later[:2],
+            [
+                "python3 -I tests/test_pages.py",
+                'python3 -I scripts/prepare_pages.py --output "$RUNNER_TEMP/deemo-site"',
+            ],
+        )
+        self.assertTrue(later[2].startswith("actions/upload-pages-artifact@"))
+        self.assertIn("          path: ${{ runner.temp }}/deemo-site", build[5]["lines"])
+        self.assertEqual(len(later), 3)
+
+    def test_only_the_deploy_job_deploys_and_only_for_a_release_tag(self):
         deployers = [
-            name for name, lines in jobs.items() if any("uses: actions/deploy-pages@" in line for line in lines)
+            job_id
+            for job_id, job in self.jobs.items()
+            if any(step["keys"].get("uses", "").startswith("actions/deploy-pages@") for step in job["steps"])
         ]
         self.assertEqual(deployers, ["deploy"])
-        self.assertIn("    if: github.ref == 'refs/heads/main'", jobs["deploy"])
+        self.assertEqual(workflows.block_text(*self.jobs["deploy"]["keys"]["if"]), DEPLOY_CONDITION)
+        environment = workflows.mapping(self.jobs["deploy"]["keys"]["environment"][1], 6, "environment")
+        self.assertEqual(environment["name"][0], "github-pages")
+        concurrency = workflows.mapping(self.top["concurrency"][1], 2, "concurrency")
+        self.assertEqual(
+            {key: value for key, (value, _) in concurrency.items()},
+            {"group": "github-pages", "cancel-in-progress": "false"},
+        )
+
+
+@unittest.skipUnless(shutil.which("bash") and shutil.which("git"), "needs bash and git to run the guard steps")
+class GuardTests(unittest.TestCase):
+    """The guard steps of pages.yml run as GitHub runs them (bash -eo pipefail, the step's env from the run's contexts)
+    in a repository laid out as their checkout leaves it. Each refused run differs from an accepted one in one respect,
+    so it passes if the check of that respect is removed or loosened."""
+
+    @classmethod
+    def setUpClass(cls):
+        _, jobs = workflows.read_workflow("pages.yml")
+        cls.guards = {job: (jobs[job]["steps"][0], jobs[job]["steps"][2]) for job in ("guard", "build")}
+        cls.temporary = tempfile.TemporaryDirectory()
+        directory = Path(cls.temporary.name)
+        (directory / "checkout").mkdir()
+        (directory / "no-main").mkdir()
+        cls.checkout = Checkout(directory / "checkout")
+        cls.without_main = Checkout(directory / "no-main", main=False)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.temporary.cleanup()
+
+    def environment(self, step, contexts, checkout):
+        env = {**checkout.env, "LANG": "en_US.UTF-8"}  # a locale whose [0-9] also matches other scripts' digits
+        for name, value in step["env"].items():
+            expression = EXPRESSION.fullmatch(value)
+            if expression is None:
+                self.assertNotIn("${{", value, f"{name}: one property per variable")
+                env[name] = workflows.yaml_scalar(value, name)
+                continue
+            self.assertIn(expression[1], GUARD_CONTEXTS, f"{name} reads a context these tests do not model")
+            env[name] = contexts.get(expression[1], "")
+        return env
+
+    def run_guards(self, job, contexts, head=None, checkout=None):
+        """(1 or 2 for the guard step that refused the run, or None, and the output of the last step that ran). The
+        commit of the contexts and head are names of Checkout commits; HEAD is the run's commit unless head is given."""
+        checkout = checkout or self.checkout
+        checkout.detach(head or contexts["github.sha"])
+        contexts = {**contexts, "github.sha": checkout.commits[contexts["github.sha"]]}
+        for number, step in enumerate(self.guards[job], 1):
+            result = subprocess.run(
+                ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
+                cwd=checkout.directory,
+                env=self.environment(step, contexts, checkout),
+                capture_output=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=60,
+            )
+            if result.returncode != 0:
+                self.assertRegex(result.stdout, r"(?m)^::error::\S", "a refusal says why")
+                return number, result.stdout + result.stderr
+            self.assertNotIn("::error::", result.stdout)
+        return None, result.stdout + result.stderr
+
+    def assert_guards(self, refused_by, contexts, head=None, checkout=None):
+        """The guard steps of both jobs refuse the run at step `refused_by` (1 or 2), or pass it if that is None."""
+        run = {key.rsplit(".", 1)[-1]: value for key, value in contexts.items()}
+        if head:
+            run["head"] = head
+        if checkout:
+            run["origin_main"] = "missing"
+        for job in self.guards:
+            with self.subTest(job=job, **run):
+                refused, output = self.run_guards(job, contexts, head, checkout)
+                self.assertEqual(refused, refused_by, output)
+                if refused_by is None:
+                    self.assertIn("is on main.", output)
+
+    def test_a_published_release_or_a_manual_run_on_its_tag_passes(self):
+        for contexts in (
+            published(),
+            published("v1.2.0", "tip"),
+            dispatched(),
+            dispatched("refs/tags/v1.2.0", "tip"),
+            dispatched("refs/tags/v10.20.30", "released"),
+        ):
+            self.assert_guards(None, contexts)
+
+    def test_other_events_are_refused_even_on_a_release_tag(self):
+        for event in ("push", "pull_request", "pull_request_target", "schedule", "workflow_run", "repository_dispatch"):
+            self.assert_guards(1, dispatched(event=event))
+        self.assert_guards(1, dispatched("refs/heads/main", "tip", event="push"))
+        self.assert_guards(1, dispatched("refs/pull/7/merge", "aside", event="pull_request"))
+        self.assert_guards(1, dispatched("refs/heads/main", "tip", event="schedule"))
+
+    def test_a_ref_that_is_not_a_vXYZ_tag_is_refused(self):
+        for ref in (
+            "refs/heads/main",
+            "refs/heads/v1.1.0",
+            "refs/heads/refs/tags/v1.1.0",
+            "refs/tags/v1.1",
+            "refs/tags/1.1.0",
+            "refs/tags/v1.1.0-rc1",
+            "refs/tags/v1.1.0.1",
+            "refs/tags/V1.1.0",
+            "refs/tags/xv1.1.0",
+            "refs/tags/v1.1.0/x",
+            "refs/tags/v1..0",
+            "refs/tags/v1.1.0 ",
+            "refs/tags/v1.1.0\nrefs/tags/v1.1.0",
+            "refs/tags/v1.1.\u0663",  # ARABIC-INDIC DIGIT THREE, a [0-9] in en_US.UTF-8
+            "",
+        ):
+            self.assert_guards(1, dispatched(ref))
+        for tag in ("v1.1", "1.1.0", "v1.1.0-rc1"):
+            self.assert_guards(1, published(tag))
+
+    def test_a_prerelease_or_another_release_action_is_refused(self):
+        for prerelease in ("true", ""):
+            self.assert_guards(1, published(**{"github.event.release.prerelease": prerelease}))
+        for action in ("created", "released", "prereleased", "edited", ""):
+            self.assert_guards(1, published(**{"github.event.action": action}))
+        self.assert_guards(1, published(**{"github.event.release.tag_name": "v1.2.0"}))
+
+    def test_a_commit_that_is_not_on_main_is_refused(self):
+        self.assert_guards(2, published("v1.3.0", "aside"))
+        self.assert_guards(2, dispatched("refs/tags/v1.3.0", "aside"))
+        # The checkout is not the run's commit: the run's commit is on main and the checkout is not, or the reverse.
+        self.assert_guards(2, dispatched(), head="aside")
+        self.assert_guards(2, dispatched("refs/tags/v1.3.0", "aside"), head="released")
+        self.assert_guards(2, published(), checkout=self.without_main)
 
 
 class PagesTests(unittest.TestCase):
@@ -162,8 +419,8 @@ def in_git_checkout():
 @unittest.skipUnless(in_git_checkout(), "needs git and a Git checkout of this repository")
 class RepositoryTests(unittest.TestCase):
     def test_the_tracked_site_fits_the_pages_budget(self):
-        # The deployment measures the payload only after a merge to main; this test runs on every push and pull
-        # request (tests.yml), so a change that would push the site past the budget fails before it is merged.
+        # The deployment measures the payload only for a release; this test runs on every push and pull request
+        # (tests.yml), so a change that would push the site past the budget fails before it is merged.
         tracked = pages.tracked_files(ROOT)
         try:
             selected, total = pages.payload(ROOT, tracked)
