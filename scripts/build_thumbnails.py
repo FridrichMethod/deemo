@@ -17,6 +17,7 @@ import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import cast
 
 import PIL
 from PIL import Image, ImageCms, ImageOps, features
@@ -46,9 +47,10 @@ DESCRIPTION = (
 
 
 def _load_catalog_builder():
-    spec = importlib.util.spec_from_file_location(
-        "build_catalog", Path(__file__).resolve().with_name("build_catalog.py")
-    )
+    path = Path(__file__).resolve().with_name("build_catalog.py")
+    spec = importlib.util.spec_from_file_location("build_catalog", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load {path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -97,7 +99,7 @@ def originals(root: Path) -> dict[str, dict]:
             continue
         if thumb_size(entry["width"], entry["height"]):
             wanted[entry["sha256"]] = {key: entry[key] for key in ("path", "width", "height")}
-    names = {}
+    names: dict[str, str] = {}
     for sha256, original in wanted.items():
         other = names.setdefault(thumb_path(sha256), original["path"])
         if other != original["path"]:
@@ -134,8 +136,12 @@ def colour_managed(image: Image.Image, path: str) -> tuple[Image.Image, bytes | 
     alpha = image.mode == "LA" or "transparency" in image.info
     grey = image.convert("LA" if alpha else "L")
     try:
-        # A fresh sRGB profile on every call, so worker threads never share a LittleCMS profile handle.
-        rgb = ImageCms.profileToProfile(grey.convert("L"), profile, ImageCms.createProfile("sRGB"), outputMode="RGB")
+        # A fresh sRGB profile on every call, so worker threads never share a LittleCMS profile handle. Without
+        # inPlace=True, profileToProfile() always returns the new image.
+        rgb = cast(
+            Image.Image,
+            ImageCms.profileToProfile(grey.convert("L"), profile, ImageCms.createProfile("sRGB"), outputMode="RGB"),
+        )
     except ImageCms.PyCMSError as error:
         raise ValueError(f"Cannot preview {path}: its greyscale ICC profile cannot be applied ({error})") from error
     if alpha:
@@ -145,11 +151,11 @@ def colour_managed(image: Image.Image, path: str) -> tuple[Image.Image, bytes | 
 
 def render(root: Path, original: dict) -> tuple[bytes, tuple[int, int]]:
     """Downscale one original to a WebP preview. No EXIF or XMP is written; colour_managed() decides the ICC profile."""
-    with Image.open(build_catalog.safe_path(root, original["path"])) as image:
-        image.load()
+    with Image.open(build_catalog.safe_path(root, original["path"])) as opened:
+        opened.load()
         # Browsers show originals upright, so the preview applies the EXIF orientation too.
-        ImageOps.exif_transpose(image, in_place=True)
-        image, icc_profile = colour_managed(eight_bit(image, original["path"]), original["path"])
+        ImageOps.exif_transpose(opened, in_place=True)
+        image, icc_profile = colour_managed(eight_bit(opened, original["path"]), original["path"])
         size = thumb_size(*image.size)
         if size is None:
             raise ValueError(f"Original is not larger than {LONG_EDGE} px: {original['path']}")
@@ -229,8 +235,8 @@ def build(root: Path, prune: bool = False, rebuild: bool = False, workers: int |
     referenced = {entry["path"] for entry in entries.values()}
     orphans = [path for path in stored_files(root) if path not in referenced]
     if prune:
-        for path in orphans:
-            (root / path).unlink()
+        for name in orphans:
+            (root / name).unlink()
     return {
         "thumbnails": len(entries),
         "rendered": len(pending),
@@ -266,8 +272,9 @@ def check_entry(root: Path, sha256: str, entry: dict, original: dict | None) -> 
             f"Dimension mismatch: {path} is {size[0]}x{size[1]}, {MANIFEST} says {entry.get('width')}x{entry.get('height')}"
         )
     if original:
-        # Either orientation: an EXIF-rotated original is previewed upright.
-        expected = thumb_size(original["width"], original["height"])
+        # Either orientation: an EXIF-rotated original is previewed upright. originals() lists only images larger
+        # than LONG_EDGE, so thumb_size() gives a size here.
+        expected = cast(tuple[int, int], thumb_size(original["width"], original["height"]))
         if sorted(size) != sorted(expected):
             found.append(
                 f"Dimension mismatch: {path} is {size[0]}x{size[1]}, expected {expected[0]}x{expected[1]} for {original['path']}"
@@ -358,7 +365,8 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> None:
         found = problems(root, reencode=args.verify, workers=args.workers)
         if found:
             raise SystemExit("\n".join(found))
-        thumbnails = read_manifest(root)["thumbnails"]
+        # problems() reports a missing manifest, so with no problems it exists.
+        thumbnails = cast(dict, read_manifest(root))["thumbnails"]
         print(
             json.dumps(
                 {

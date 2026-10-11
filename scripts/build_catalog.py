@@ -12,6 +12,7 @@ import unicodedata
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Any
 from urllib.parse import quote, urlsplit
 from xml.sax.saxutils import escape
 
@@ -233,7 +234,7 @@ def shared_collection_spellings(assets: list[dict]) -> list[dict]:
     result = []
     for asset in assets:
         own = names(asset)
-        changes = {}
+        changes: dict[str, Any] = {}
         if asset.get("collection") in own:
             changes["collection"] = shown[collection_key(asset["collection"])]
         if set(asset.get("collections") or []) & set(own):
@@ -293,7 +294,9 @@ def combine(root: Path, verify: bool = False) -> dict:
             "notes": "Original PNGs are in assets/legacy/trans/. Paired palette-quantized copies in assets/legacy/tiny/ are available as alternate downloads.",
         }
     ]
-    assets, failures, snapshots = [], [], {}
+    assets: list[dict] = []
+    failures: list[dict] = []
+    snapshots: dict[str, object] = {}
     for family in SOURCE_MANIFESTS:
         path = required_input(root, f"data/sources/{family}.json")
         manifest = json.loads(path.read_text(encoding="utf-8"))
@@ -311,7 +314,8 @@ def combine(root: Path, verify: bool = False) -> dict:
     source_map = {source["id"]: source for source in sources}
     if len(source_map) != len(sources):
         raise ValueError("Duplicate source IDs across manifests")
-    seen_ids, by_hash = set(), {}
+    seen_ids: set[str] = set()
+    by_hash: dict[str, dict] = {}
     for asset in assets:
         validate_asset(root, asset, verify)
         for variant in asset.get("variants", []):
@@ -385,8 +389,8 @@ def slide_notes(asset: dict) -> dict:
     """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated.
     A collection name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out.
     data-songs lists the mapped song titles, which the notes headline when the title is only a wiki file key."""
-    found = {"songs": [], "composer": [], "artist": [], "collection": []}
-    seen = {key: set() for key in found}
+    found: dict[str, list[str]] = {"songs": [], "composer": [], "artist": [], "collection": []}
+    seen: dict[str, set[str]] = {key: set() for key in found}
     title = fold(str(asset.get("title") or ""))
 
     def add(key: str, value: object) -> None:

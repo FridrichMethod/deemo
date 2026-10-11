@@ -65,8 +65,8 @@ def create():
     for entry in tree.split(b"\0"):
         if not entry:
             continue
-        info, original = entry.split(b"\t", 1)
-        original = original.decode("utf-8")
+        info, name = entry.split(b"\t", 1)
+        original = name.decode("utf-8")
         target = destination(original)
         if not target:
             continue
