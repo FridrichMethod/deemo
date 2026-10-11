@@ -2,6 +2,7 @@
 
 import ast
 import contextlib
+import functools
 import hashlib
 import importlib.util
 import io
@@ -1435,9 +1436,9 @@ class ConnectionHostTests(unittest.TestCase):
                 for url in self.ACCEPTED:
                     self.assertTrue(module.host_allowed(url, self.HOSTS), (module.__name__, url))
             for url in self.REFUSED:
-                self.assertEqual(self.connection_hosts(lambda: fetch(url)), [], (name, url))
+                self.assertEqual(self.connection_hosts(functools.partial(fetch, url)), [], (name, url))
             for url in self.ACCEPTED:
-                hosts = self.connection_hosts(lambda: fetch(url))
+                hosts = self.connection_hosts(functools.partial(fetch, url))
                 self.assertEqual([host.rstrip(".") for host in hosts], ["64.media.tumblr.com"], (name, url))
 
     def test_hosts_match_whole_labels_over_https_only(self):

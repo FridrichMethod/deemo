@@ -8,23 +8,22 @@ Images retain their downloaded bytes; Pillow only validates and reads metadata.
 from __future__ import annotations
 
 import argparse
+import json
+import os
+import re
+import threading
+import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from hashlib import sha256
 from io import BytesIO
-import json
-import os
 from pathlib import Path
-import re
-import threading
-import time
 from urllib.parse import urljoin, urlsplit
 
+import requests
 from bs4 import BeautifulSoup
 from PIL import Image
-import requests
-
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = "data/sources/artists.json"
@@ -546,7 +545,8 @@ def fetch_all(manifest, jobs, cache, refresh, workers, previous=()):
     ordered = sorted(jobs, key=lambda job: job["id"])
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(download, job, cache, refresh) for job in ordered]
-        for job, future in zip(ordered, futures):
+        # strict: futures is built from ordered one job at a time, so the lengths are always equal.
+        for job, future in zip(ordered, futures, strict=True):
             try:
                 result = save_asset(*future.result(), hashes)
                 manifest["assets"].append(result)
