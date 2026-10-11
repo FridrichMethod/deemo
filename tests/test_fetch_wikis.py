@@ -10,8 +10,10 @@ import email.utils
 import hashlib
 import importlib.util
 import io
+import itertools
 import json
 import os
+import signal
 import struct
 import subprocess
 import sys
@@ -21,9 +23,11 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import quote, urljoin
 
 import requests
 from PIL import Image
+from requests.structures import CaseInsensitiveDict
 
 REPO = Path(__file__).resolve().parents[1]
 SCRIPT = REPO / "scripts/fetch_wikis.py"
@@ -34,6 +38,9 @@ MANIFEST = "data/sources/wikis.json"
 DISCOVERY = "data/sources/wiki-discovery.json"
 ILLUSTRATOR_INDEX = "data/sources/wiki-illustrator-index.json"
 ILLUSTRATOR_URL = "https://wikiwiki.jp/deemo/アーティスト別リスト2"
+# Where each wiki serves its image files (DOWNLOAD_LOCATIONS in scripts/check_sources.py): only there do downloads go.
+BWIKI_IMAGES = "https://patchwiki.biligame.com/images/deemo/"
+FANDOM_IMAGES = "https://static.wikia.nocookie.net/deemo/images/"
 # FetcherRun replaces it with a no-op; the illustrator index tests put it back.
 FETCH_ILLUSTRATOR_INDEX = fetch.fetch_illustrator_index
 
@@ -123,7 +130,9 @@ def png(color, width=64, height=48):
 
 class FakeResponse:
     def __init__(self, url, status=200, content=b"", headers=None):
-        self.url, self.status_code, self.content, self.headers = url, status, content, dict(headers or {})
+        self.url, self.status_code, self.content = url, status, content
+        self.headers = CaseInsensitiveDict(headers or {})
+        self.consumed = 0  # body bytes handed out by iter_content()
 
     def json(self):
         return json.loads(self.content)
@@ -132,6 +141,19 @@ class FakeResponse:
     def text(self):
         return self.content.decode("utf-8")
 
+    @property
+    def is_redirect(self):
+        return "location" in self.headers and self.status_code in (301, 302, 303, 307, 308)
+
+    def iter_content(self, chunk_size=1):
+        for start in range(0, len(self.content), chunk_size):
+            chunk = self.content[start : start + chunk_size]
+            self.consumed += len(chunk)
+            yield chunk
+
+    def close(self):
+        pass
+
     def raise_for_status(self):
         if self.status_code >= 400:
             raise requests.HTTPError(f"{self.status_code} Error for url: {self.url}", response=self)
@@ -139,20 +161,29 @@ class FakeResponse:
 
 class FakeWeb:
     """Stands in for requests.get. A route is bytes (200), a (status, body, headers) tuple, or a list of these served
-    in turn (the last one repeats); any other URL behaves as if the network were down. Every request is recorded."""
+    in turn (the last one repeats); any other URL behaves as if the network were down. Like requests, it follows a
+    redirect (a 3xx with a Location) unless allow_redirects=False. Every request is recorded in calls, its
+    allow_redirects and stream options in options, and every response in responses."""
 
     def __init__(self):
-        self.routes, self.calls = {}, []
+        self.routes, self.calls, self.options, self.responses = {}, [], [], []
 
-    def __call__(self, url, params=None, headers=None, timeout=None):
-        self.calls.append(url)
-        route = self.routes.get(url)
-        if isinstance(route, list):
-            route = route.pop(0) if len(route) > 1 else route[0]
-        if route is None:
-            raise requests.ConnectionError(f"offline: {url}")
-        status, body, headers = route if isinstance(route, tuple) else (200, route, {"Content-Type": "image/png"})
-        return FakeResponse(url, status, body, headers)
+    def __call__(self, url, params=None, headers=None, timeout=None, allow_redirects=True, stream=False):
+        for _ in range(30):  # requests' default max_redirects
+            self.calls.append(url)
+            self.options.append({"allow_redirects": allow_redirects, "stream": stream})
+            route = self.routes.get(url)
+            if isinstance(route, list):
+                route = route.pop(0) if len(route) > 1 else route[0]
+            if route is None:
+                raise requests.ConnectionError(f"offline: {url}")
+            status, body, served = route if isinstance(route, tuple) else (200, route, {"Content-Type": "image/png"})
+            response = FakeResponse(url, status, body, served)
+            self.responses.append(response)
+            if not (allow_redirects and response.is_redirect):
+                return response
+            url = urljoin(url, response.headers["Location"])
+        raise requests.TooManyRedirects(f"Exceeded 30 redirects: {url}")
 
 
 class FetcherRun(unittest.TestCase):
@@ -183,8 +214,8 @@ class FetcherRun(unittest.TestCase):
         )
 
     def offer(self, name, payload, **extra):
-        """A BWIKI candidate for the file name whose download URL serves payload."""
-        url = f"https://images.example.test/{hashlib.sha1(payload).hexdigest()}/{name}"
+        """A BWIKI candidate for the file name whose download URL, under BWIKI's image path, serves payload."""
+        url = f"{BWIKI_IMAGES}{hashlib.sha1(payload).hexdigest()}/{quote(name)}"
         self.web.routes[url] = payload
         with Image.open(io.BytesIO(payload)) as image:
             width, height = image.size
@@ -384,18 +415,25 @@ class CheckpointTests(FetcherRun):
     def test_ctrl_c_cancels_the_queued_downloads_and_keeps_the_finished_ones(self):
         # Ctrl-C reaches the main thread while a worker downloads. The queued downloads are cancelled instead of all
         # running to the end, and every download that finished has its record: none is left as a file without one.
+        # A shell starts a background job with SIGINT ignored, and interrupt_main() then does nothing at all. Ctrl-C at
+        # a terminal reaches Python's own handler, so the test installs it, whoever started the run.
+        previous = signal.signal(signal.SIGINT, signal.default_int_handler)
+        self.addCleanup(signal.signal, signal.SIGINT, previous)
         candidates = [self.offer(f"Art {index:02}.png", png((index * 4, 0, 0))) for index in range(60)]
         web, saved, write_json = self.web, threading.Event(), fetch.write_json
+        requests_made, lock = itertools.count(1), threading.Lock()
 
         def saving(relative, data):
             write_json(relative, data)
             saved.set()
 
         def interrupting(url, **options):
-            if len(web.calls) >= 5:
-                saved.wait(0.5)  # a request after Ctrl-C waits until the run has saved the manifest
+            with lock:  # each request takes its own number, whichever thread makes it, so exactly one is the fifth
+                number = next(requests_made)
+            if number == 6:
+                saved.wait(10)  # the request after Ctrl-C waits until the run has saved the manifest
             response = web(url, **options)
-            if len(web.calls) == 5:
+            if number == 5:
                 _thread.interrupt_main()
             return response
 
@@ -405,11 +443,64 @@ class CheckpointTests(FetcherRun):
             self.assertRaises(KeyboardInterrupt),
         ):
             self.resume(*candidates)
-        # The interrupted download and the one the worker had started (one more if the save took over 0.5 s).
-        self.assertLessEqual(len(self.web.calls), 5 + 2)
+        # The interrupted download and at most the one the worker had started; the queued ones were cancelled.
+        self.assertLessEqual(len(self.web.calls), 5 + 1)
         files = {path.relative_to(self.root).as_posix() for path in (self.root / "assets").rglob("*") if path.is_file()}
         self.assertGreaterEqual(len(files), 5)
         self.assertEqual({record["path"] for record in self.read(MANIFEST)["assets"]}, files)
+
+    def test_an_early_interrupt_keeps_the_failures_of_the_candidates_it_did_not_reach(self):
+        # Ctrl-C before the first periodic checkpoint still saves the manifest. A candidate the run has not reached
+        # keeps its record (fetch_failed) and its entry in failures, which explains the status and gives the next run
+        # its retry hints; a candidate the run reached has only this run's outcome.
+        names = ("Kept", "Back", "Again", "Waiting", "Queued")
+        first = {name: self.offer(f"{name}.png", png((index * 40, 0, 0))) for index, name in enumerate(names)}
+        self.resume(*first.values())
+
+        def gone(name, where):
+            """The candidate re-uploaded (a new SHA-1) at a URL that does not answer."""
+            return {**first[name], "info": {**first[name]["info"], "sha1": "e" * 40, "url": BWIKI_IMAGES + where}}
+
+        failing = [first["Kept"], *(gone(name, f"gone/{name}.png") for name in names[1:])]
+        previous = self.resume(*failing)
+        self.assertEqual(
+            [row["title"] for row in previous["failures"]], sorted(f"文件:{name}.png" for name in names[1:])
+        )
+        back = self.offer("Back.png", png("green"))  # the re-upload of Back answers now
+        current = [first["Kept"], back, gone("Again", "moved/Again.png"), failing[3], failing[4]]
+
+        def interrupted(futures):
+            # Collects in submission order; Ctrl-C reaches the main thread before the fourth (Waiting) is collected.
+            for index, future in enumerate(futures):
+                if index == 3:
+                    raise KeyboardInterrupt
+                concurrent.futures.wait([future])
+                yield future
+
+        with patch.object(fetch, "as_completed", interrupted), self.assertRaises(KeyboardInterrupt):
+            self.resume(*current)
+        saved = self.read(MANIFEST)
+        self.assertEqual(
+            [(row["title"], row["url"]) for row in saved["failures"]],
+            [
+                ("文件:Again.png", BWIKI_IMAGES + "moved/Again.png"),  # this run's failure only
+                ("文件:Queued.png", BWIKI_IMAGES + "gone/Queued.png"),  # the previous run's, kept as it was
+                ("文件:Waiting.png", BWIKI_IMAGES + "gone/Waiting.png"),
+            ],
+        )
+        earlier = {row["title"]: row for row in previous["failures"]}
+        self.assertEqual(saved["failures"][1:], [earlier["文件:Queued.png"], earlier["文件:Waiting.png"]])
+        # Every fetch_failed record sits next to its entry in failures.
+        failed = sorted(
+            record["title"] for record in saved["assets"] if record.get("upstream_status") == "fetch_failed"
+        )
+        self.assertEqual(failed, ["Again", "Queued", "Waiting"])
+        # Run to the end, the manifest lists this run's failures only.
+        manifest = self.resume(*current)
+        self.assertEqual(
+            [row["title"] for row in manifest["failures"]], ["文件:Again.png", "文件:Queued.png", "文件:Waiting.png"]
+        )
+        self.assertEqual(manifest["failures"][0]["url"], BWIKI_IMAGES + "moved/Again.png")
 
     def test_manifest_write_is_atomic(self):
         fetch.write_json(MANIFEST, {"assets": ["kept"]})
@@ -641,6 +732,150 @@ class DownloadIntegrityTests(FetcherRun):
         self.assertEqual(self.files(), [])
 
 
+class DownloadGuardTests(FetcherRun):
+    """An image download goes only over https to the wiki's own image path (DOWNLOAD_LOCATIONS in
+    scripts/check_sources.py), for the first URL and every redirect, and reads at most MAX_IMAGE_BYTES. The snapshot it
+    downloads from comes from a job that runs third-party code, so nothing else in it is trusted."""
+
+    def files(self):
+        return sorted(
+            path.relative_to(self.root).as_posix() for path in self.root.rglob("assets/**/*") if path.is_file()
+        )
+
+    def serve(self, routes):
+        """Replace the fake web's routes and forget the requests made so far."""
+        self.web.routes = routes
+        for log in (self.web.calls, self.web.options, self.web.responses):
+            log.clear()
+
+    def refused(self, candidate, *, reason="Refusing"):
+        """Resume candidate and check that it failed, with a failure row naming reason, and that no file was written."""
+        manifest = self.resume(candidate)
+        self.assertEqual(manifest["assets"], [])
+        self.assertEqual([failure["title"] for failure in manifest["failures"]], [candidate["file_title"]])
+        self.assertIn(reason, manifest["failures"][0]["error"])
+        self.assertEqual(self.files(), [])
+        return manifest
+
+    def test_only_https_urls_under_the_wiki_image_path_are_requested(self):
+        payload = png("red")
+
+        class EveryHostAnswers(dict):
+            def get(self, url, default=None):
+                return payload
+
+        for source, url in (
+            ("bwiki", "http://patchwiki.biligame.com/images/deemo/a/ab/Art.png"),
+            ("bwiki", "https://evil.example.test/images/deemo/a/ab/Art.png"),
+            ("bwiki", "http://127.0.0.1:8080/images/deemo/a/ab/Art.png"),
+            ("bwiki", "https://patchwiki.biligame.com/images/otherwiki/a/ab/Art.png"),
+            ("bwiki", FANDOM_IMAGES + "a/ab/Art.png"),  # the other wiki's image path
+            ("fandom", "http://static.wikia.nocookie.net/deemo/images/a/ab/Art.png/revision/latest?cb=1"),
+        ):
+            with self.subTest(source=source, url=url):
+                offered = self.offer("Art.png", payload)
+                candidate = {**offered, "source": source, "info": {**offered["info"], "url": url}}
+                self.serve(EveryHostAnswers())  # the host would serve a valid image of the published size
+                self.refused(candidate)
+                self.assertEqual(self.web.calls, [])
+
+    def test_a_redirect_is_followed_only_while_it_stays_under_the_image_path(self):
+        payload = png("red")
+        start, inside = BWIKI_IMAGES + "a/ab/Art.png", BWIKI_IMAGES + "b/bc/Art.png"
+        for location in (
+            "https://evil.example.test/images/deemo/a/ab/Art.png",
+            "http://patchwiki.biligame.com/images/deemo/b/bc/Art.png",  # a downgrade to plain http
+            "../../../otherwiki/a/ab/Art.png",  # relative: /images/otherwiki/a/ab/Art.png
+            "https://patchwiki.biligame.com:8443/images/deemo/b/bc/Art.png",
+        ):
+            with self.subTest(location=location):
+                offered = self.offer("Art.png", payload)
+                candidate = {**offered, "info": {**offered["info"], "url": start}}
+                target = urljoin(start, location)
+                self.serve({start: (302, b"", {"Location": location}), target: payload})
+                self.refused(candidate)
+                self.assertEqual(self.web.calls, [start])
+        # A redirect that stays on the image path is followed by hand, and the record names both URLs.
+        self.serve({start: (301, b"", {"Location": "/images/deemo/b/bc/Art.png"}), inside: payload})
+        offered = self.offer("Art.png", payload)
+        (record,) = self.resume({**offered, "info": {**offered["info"], "url": start}})["assets"]
+        self.assertEqual((record["download_url"], record["resolved_download_url"]), (start, inside))
+        self.assertEqual(self.web.calls, [start, inside])
+        self.assertEqual(self.files(), [record["path"]])
+        self.assertEqual(self.web.options, [{"allow_redirects": False, "stream": True}] * len(self.web.calls))
+
+    def test_a_redirect_loop_is_cut_off(self):
+        start = BWIKI_IMAGES + "a/ab/Art.png"
+        offered = self.offer("Art.png", png("red"))
+        self.serve({start: (302, b"", {"Location": start})})
+        self.refused({**offered, "info": {**offered["info"], "url": start}}, reason="redirects")
+        self.assertEqual(self.web.calls, [start] * (fetch.MAX_REDIRECTS + 1))
+
+    def test_a_response_over_the_size_limit_is_refused_before_anything_is_written(self):
+        self.assertEqual(fetch.MAX_IMAGE_BYTES, 64 * 1024 * 1024)
+        payload = png("red")
+        candidate = self.offer("Art.png", payload)
+        (url,) = fetch.download_urls(candidate)
+        with patch.object(fetch, "MAX_IMAGE_BYTES", len(payload) - 1):
+            # Streamed: the read stops at the chunk that crosses the limit.
+            self.serve({url: payload + bytes(3 * fetch.CHUNK_BYTES)})
+            self.refused(candidate, reason="limit")
+            (response,) = self.web.responses
+            self.assertLessEqual(response.consumed, fetch.CHUNK_BYTES)
+            # Declared: a Content-Length over the limit is refused before the body is read.
+            self.serve({url: (200, payload, {"Content-Type": "image/png", "Content-Length": str(len(payload))})})
+            self.refused(candidate, reason="limit")
+            (response,) = self.web.responses
+            self.assertEqual(response.consumed, 0)
+        self.serve({url: payload})
+        with patch.object(fetch, "MAX_IMAGE_BYTES", len(payload)):
+            (record,) = self.resume(candidate)["assets"]
+        self.assertEqual((record["bytes"], self.files()), (len(payload), [record["path"]]))
+
+    def test_the_wiki_image_paths_still_download(self):
+        bwiki = self.offer("Art.png", png("red"))
+        upload = png("green")
+        fandom_url = FANDOM_IMAGES + "a/ab/Song.png/revision/latest?cb=20210901000000"
+        fandom = {
+            "source": "fandom",
+            "file_title": "File:Song.png",
+            "info": {
+                **image_info(64, 48, "Song.png"),
+                "url": fandom_url,
+                "size": len(upload),
+                "sha1": hashlib.sha1(upload).hexdigest(),
+            },
+            "kind": "song_art",
+            "song_titles": ["Song"],
+            "collections": [],
+            "related_pages": [],
+        }
+        self.web.routes[FANDOM_IMAGES + "a/ab/Song.png?format=original"] = upload
+        records = {record["title"]: record for record in self.resume(bwiki, fandom)["assets"]}
+        self.assertEqual(sorted(records), ["Art", "Song"])
+        self.assertEqual(records["Song"]["download_url"], FANDOM_IMAGES + "a/ab/Song.png?format=original")
+        self.assertEqual(self.read(MANIFEST)["failures"], [])
+        # Every URL a resume of the committed snapshot may request passes the same check.
+        committed = json.loads((REPO / DISCOVERY).read_text(encoding="utf-8"))["candidates"]
+        hinted = [{**row, "try_canonical_first": True, "try_png_first": True} for row in committed]
+        refused = [
+            url
+            for row in committed + hinted
+            for url in fetch.download_urls(row)
+            if not fetch.download_allowed(row["source"], url)
+        ]
+        self.assertGreater(len(committed), 800)
+        self.assertEqual(refused, [])
+
+    def test_downloads_and_the_source_check_share_one_list_of_image_paths(self):
+        self.assertEqual(Path(fetch.check_sources.__file__), REPO / "scripts/check_sources.py")
+        url = BWIKI_IMAGES + "a/ab/Art.png"
+        self.assertTrue(fetch.download_allowed("bwiki", url))
+        with patch.dict(fetch.check_sources.DOWNLOAD_LOCATIONS, {"bwiki": ("images.example.test", "/deemo/")}):
+            self.assertFalse(fetch.download_allowed("bwiki", url))
+            self.assertTrue(fetch.download_allowed("bwiki", "https://images.example.test/deemo/a/ab/Art.png"))
+
+
 class DeliveryNoteTests(FetcherRun):
     OLD_NOTE = (
         "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. "
@@ -649,7 +884,7 @@ class DeliveryNoteTests(FetcherRun):
 
     def fandom(self, name, upload, served):
         """A Fandom candidate for upload whose original endpoints are down and whose format=png fallback serves served."""
-        url = f"https://static.example.test/deemo/images/a/ab/{name}/revision/latest?cb=1"
+        url = f"{FANDOM_IMAGES}a/ab/{name}/revision/latest?cb=1"
         self.web.routes[url + "&format=png"] = served
         with Image.open(io.BytesIO(upload)) as image:
             width, height = image.size

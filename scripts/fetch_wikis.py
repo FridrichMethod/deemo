@@ -3,12 +3,14 @@
 
 Dependencies: requests, Pillow. Run from anywhere; paths are relative to this repo.
 The manifests preserve source metadata separately from measured downloaded bytes.
+Image downloads go only to the wikis' image paths listed in scripts/check_sources.py.
 """
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -22,7 +24,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urljoin
 
 import requests
 from PIL import Image
@@ -51,6 +53,12 @@ HEADERS = {"User-Agent": "DEEMO-Public-Art-Archive/1.0 (personal research; 4 wor
 RETRY_STATUSES = {429, 500, 502, 503, 504, 567}
 ATTEMPTS = 3
 MAX_RETRY_AFTER = 30  # seconds; a longer Retry-After is capped so a run stays bounded
+TIMEOUT = (10, 25)  # seconds to connect, and to wait for each read
+# An image download follows at most this many redirects, each checked like the first URL (see download_allowed()).
+MAX_REDIRECTS = 5
+# The most bytes read from one image response, read in CHUNK_BYTES pieces; the largest wiki image is about 2.1 MiB.
+MAX_IMAGE_BYTES = 64 * 1024 * 1024
+CHUNK_BYTES = 1024 * 1024
 RASTER = re.compile(r"\.(png|jpe?g|webp|gif)$", re.I)
 UI = re.compile(r"^(arrow|bbook|ac-icon|fc-icon|logo|wikilogo)(\.|$)|titletab|screenshot|^\d{8} |DEEMO[ _]II", re.I)
 # Shortest edge of a collection cover; anything smaller is a UI tab or icon (the smallest real cover is 142 px).
@@ -67,6 +75,27 @@ SONG_INDEX_FIELDS = ("composer", "composer_source", "collection_aliases")
 CANDIDATE_FIELDS = ("artist", "variant_note", "mapping_method")
 # The optional fields download() writes after "provenance", in its order; a re-run puts a new one in the same place.
 AFTER_PROVENANCE = ("provenance", *CANDIDATE_FIELDS, "layout_note", "wiki_extmetadata")
+
+
+def _load_source_check():
+    """scripts/check_sources.py, loaded by its path (python -I puts no script directory on sys.path). Its
+    DOWNLOAD_LOCATIONS and download_url_allowed() say where each wiki serves its images: the source check refuses a
+    proposed snapshot on the same terms, so the two cannot drift apart. It uses only the standard library."""
+    path = Path(__file__).resolve().with_name("check_sources.py")
+    spec = importlib.util.spec_from_file_location("check_sources", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+check_sources = _load_source_check()
+
+
+class RefusedDownload(ValueError):
+    """An image download not made or not finished: a URL outside the wiki's image path, too many redirects, or a
+    response over MAX_IMAGE_BYTES. It is not retried, and no other URL of the candidate is tried."""
 
 
 def now():
@@ -91,18 +120,83 @@ def retry_delay(error, attempt):
     return min(2**attempt, 8)
 
 
-def get(url, *, params=None, headers=None):
+def retried(call, *args, **kwargs):
+    """call(*args, **kwargs), called again after a connection error, a timeout or an HTTP error whose status is in
+    RETRY_STATUSES (ATTEMPTS calls in all, waiting retry_delay() in between); any other HTTP error is raised at once."""
     for attempt in range(ATTEMPTS):
         try:
-            response = requests.get(url, params=params, headers={**HEADERS, **(headers or {})}, timeout=(10, 25))
-            response.raise_for_status()
-            return response
+            return call(*args, **kwargs)
         except requests.RequestException as error:
             if isinstance(error, requests.HTTPError) and error.response.status_code not in RETRY_STATUSES:
                 raise
             if attempt == ATTEMPTS - 1:
                 raise
             time.sleep(retry_delay(error, attempt))
+
+
+def get(url, *, params=None, headers=None):
+    def attempt():
+        response = requests.get(url, params=params, headers={**HEADERS, **(headers or {})}, timeout=TIMEOUT)
+        response.raise_for_status()
+        return response
+
+    return retried(attempt)
+
+
+def download_allowed(source, url):
+    """Whether url may be requested for an image of source: an https URL under that wiki's image path, as
+    check_sources.download_url_allowed() decides from DOWNLOAD_LOCATIONS, both as written and as requests sends it."""
+    if not check_sources.download_url_allowed(source, url):
+        return False
+    try:
+        sent = requests.Request("GET", url).prepare().url
+    except (ValueError, requests.RequestException):
+        return False
+    return check_sources.download_url_allowed(source, sent)
+
+
+def read_image(response):
+    """The body of a streamed image response. Past MAX_IMAGE_BYTES it raises RefusedDownload: at once when the
+    Content-Length says so, otherwise at the chunk that crosses the limit, so no more is read or kept."""
+    declared = str(response.headers.get("Content-Length") or "")
+    if re.fullmatch(r"[0-9]+", declared) and int(declared) > MAX_IMAGE_BYTES:
+        raise RefusedDownload(
+            f"Refusing a response of {int(declared)} bytes, over the {MAX_IMAGE_BYTES}-byte limit: {response.url!r}"
+        )
+    chunks, size = [], 0
+    for chunk in response.iter_content(chunk_size=CHUNK_BYTES):
+        size += len(chunk)
+        if size > MAX_IMAGE_BYTES:
+            raise RefusedDownload(f"Refusing a response over the {MAX_IMAGE_BYTES}-byte limit: {response.url!r}")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+def image_response(url, headers):
+    """One request of an image download, following no redirect: (response, body), body None for a redirect. The body
+    is streamed and read here, so a connection lost mid-body is retried like any other request (see get_image())."""
+    response = requests.get(url, headers={**HEADERS, **headers}, timeout=TIMEOUT, allow_redirects=False, stream=True)
+    try:
+        response.raise_for_status()
+        return response, None if response.is_redirect else read_image(response)
+    finally:
+        response.close()
+
+
+def get_image(source, url, headers):
+    """The final response of an image download of source, and its body.
+
+    Every URL requested, the first and each redirect target, must pass download_allowed(); redirects are followed by
+    hand, at most MAX_REDIRECTS of them, and the body is read up to MAX_IMAGE_BYTES. Otherwise RefusedDownload is
+    raised before anything more is requested or read. Connection errors and RETRY_STATUSES are retried like get()."""
+    for _ in range(MAX_REDIRECTS + 1):
+        if not download_allowed(source, url):
+            raise RefusedDownload(f"Refusing a download URL outside the wiki's image path: {url!r}")
+        response, body = retried(image_response, url, headers)
+        if body is not None:
+            return response, body
+        url = urljoin(response.url, response.headers["Location"])
+    raise RefusedDownload(f"Refusing to follow more than {MAX_REDIRECTS} redirects: {url!r}")
 
 
 def api(source, **params):
@@ -501,6 +595,20 @@ def placed(record, fields):
     return {key: value for key, value in result.items() if value is not None}
 
 
+def download_urls(candidate):
+    """The URLs download() tries for the candidate's file, in order; get_image() checks each before requesting it."""
+    info = candidate["info"]
+    if candidate["source"] != "fandom":
+        return [info["url"]]
+    # Public Fandom CDN supports format=original, disabling implicit WebP negotiation.
+    separator = "&" if "?" in info["url"] else "?"
+    urls = [info["url"].split("/revision/", 1)[0] + "?format=original", info["url"] + separator + "format=original"]
+    if candidate.get("try_canonical_first"):
+        urls.reverse()
+    png_url = info["url"] + separator + "format=png"
+    return [png_url, *urls] if candidate.get("try_png_first") else [*urls, png_url]
+
+
 def download(candidate, existing):
     source = candidate["source"]
     info = candidate["info"]
@@ -547,31 +655,16 @@ def download(candidate, existing):
             if note:
                 record["delivery_note"] = note
             return record
-    url = info["url"]
-    # Public Fandom CDN supports format=original, disabling implicit WebP negotiation.
-    if source == "fandom":
-        url = url.split("/revision/", 1)[0] + "?format=original"
     attempted_failures = []
-    urls = [url]
-    if source == "fandom":
-        urls.append(info["url"] + ("&" if "?" in info["url"] else "?") + "format=original")
-        if candidate.get("try_canonical_first"):
-            urls.reverse()
-        png_url = info["url"] + ("&" if "?" in info["url"] else "?") + "format=png"
-        if candidate.get("try_png_first"):
-            urls.insert(0, png_url)
-        else:
-            urls.append(png_url)
-    for download_url in urls:
+    # A RefusedDownload is not a network error: it fails the candidate at once, with no other URL tried.
+    for url in download_urls(candidate):
         try:
-            response = get(download_url, headers={"Referer": quote(SOURCES[source]["url"], safe=":/")})
-            url = download_url
+            response, payload = get_image(source, url, {"Referer": quote(SOURCES[source]["url"], safe=":/")})
             break
         except requests.RequestException as error:
-            attempted_failures.append({"url": download_url, "error": str(error)})
+            attempted_failures.append({"url": url, "error": str(error)})
     else:
         raise RuntimeError(json.dumps(attempted_failures))
-    payload = response.content
     with Image.open(BytesIO(payload)) as image:
         image_format = image.format
         width, height = image.size
@@ -639,6 +732,13 @@ def failure_key(failure):
     return tuple(str(failure.get(field) or "") for field in ("source_id", "title", "url", "stage", "error"))
 
 
+def failure_candidate_id(failure):
+    """The id of the candidate a download failure is about, or None for any other failure (the reference index)."""
+    source = next((key for key, value in SOURCES.items() if value["id"] == failure.get("source_id")), None)
+    title = failure.get("title")
+    return candidate_id({"source": source, "file_title": title}) if source and isinstance(title, str) else None
+
+
 def merge_assets(existing, candidate_ids, results, failed_ids):
     """The manifest's records: this run's results merged over the previous records, so none is silently dropped.
 
@@ -682,20 +782,28 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
     return [merged[asset_id] for asset_id in sorted(merged) if not restored(merged[asset_id])]
 
 
-def download_all(candidates, existing, manifest, workers):
+def download_all(candidates, existing, manifest, workers, previous_failures=()):
     """Download or verify every candidate; returns (candidate ids, results by id, ids whose download failed).
 
     The manifest is saved after every 25 results. On Ctrl-C, or any other exception that stops the run, the queued
     downloads are cancelled, the running ones finish writing their files, and the manifest is saved with every
-    download that finished before the exception propagates, so no downloaded file is left without its record."""
+    download that finished before the exception propagates, so no downloaded file is left without its record. Each
+    save also keeps the previous_failures (the previous manifest's) of the candidates without an outcome yet."""
     candidate_ids = {candidate_id(item) for item in candidates}
     results, failed_ids, jobs = {}, set(), {}
 
     def checkpoint():
-        # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest.
+        # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest, and the
+        # previous failures of the candidates it has not reached: a fetch_failed record keeps the entry explaining it,
+        # and the next run its retry hints. A finished run has reached every candidate, so it lists its own only.
         manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
         manifest["failures"].sort(key=failure_key)  # completion order varies between runs
-        write_json("data/sources/wikis.json", manifest)
+        pending = candidate_ids - results.keys() - failed_ids
+        waiting = [failure for failure in previous_failures if failure_candidate_id(failure) in pending]
+        write_json(
+            "data/sources/wikis.json",
+            {**manifest, "failures": sorted(manifest["failures"] + waiting, key=failure_key)},
+        )
 
     def collect(future):
         item = jobs[future]
@@ -909,7 +1017,9 @@ def main():
             candidate["try_canonical_first"] = True
             if str(previous_failures[candidate["file_title"]].get("error", "")).startswith("[{"):
                 candidate["try_png_first"] = True
-    candidate_ids, results, failed_ids = download_all(candidates, existing, manifest, args.workers)
+    candidate_ids, results, failed_ids = download_all(
+        candidates, existing, manifest, args.workers, previous.get("failures", [])
+    )
     manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
     wiki_ids = {source["id"] for source in SOURCES.values()}
     for source in manifest["sources"]:

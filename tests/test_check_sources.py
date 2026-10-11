@@ -182,6 +182,33 @@ class CompareTests(unittest.TestCase):
             self.assertIn(cell, part)
         self.assertIn("| 来源 | 文件 | 变化（之前 → 之后） |", chinese)
 
+    def test_file_metadata_changes_are_listed_while_the_file_is_unchanged(self):
+        # --resume gives a verified record the snapshot's info.extmetadata as wiki_extmetadata, so a change to it alone
+        # is listed too. A re-upload brings new file metadata anyway (its DateTime is the upload time), and is listed
+        # under Re-uploaded instead.
+        def with_metadata(row, metadata):
+            return {**row, "info": {**row["info"], "extmetadata": metadata}}
+
+        old = {"DateTime": {"value": "2020-04-28T02:40:58Z"}, "ObjectName": {"value": "Kept"}}
+        new = {**old, "ObjectName": {"value": HOSTILE}}
+        baseline = snapshot(with_metadata(candidate("fandom", "Kept.png"), old))
+        report = check.compare(baseline, snapshot(with_metadata(candidate("fandom", "Kept.png"), new)), self.manifest)
+        self.assertEqual(report["counts"], {**NO_CHANGE, "metadata_changed": 1, "baseline": 1, "current": 1})
+        (row,) = report["metadata_changed"]
+        self.assertEqual(row["changes"], [{"field": "wiki_extmetadata", "old": old, "new": new}])
+        (line,) = [line for line in check.render(report).splitlines() if line.startswith("| Fandom |")]
+        self.assertIn("| `wiki_extmetadata`: `{", line)
+        for cell in table_cells(line):
+            self.assertNotRegex(OWN_LINK.sub("", without_code_spans(cell)), ACTIVE, line)
+        # Empty and missing file metadata are the same: a record keeps neither.
+        empty = snapshot(with_metadata(candidate("fandom", "Kept.png"), {}))
+        report = check.compare(empty, snapshot(candidate("fandom", "Kept.png")), self.manifest)
+        self.assertEqual(report["counts"], {**NO_CHANGE, "baseline": 1, "current": 1})
+        # A re-upload is listed as one, not also as a metadata change.
+        reupload = with_metadata(candidate("fandom", "Kept.png", sha1="b" * 40), new)
+        report = check.compare(baseline, snapshot(reupload), self.manifest)
+        self.assertEqual(report["counts"], {**NO_CHANGE, "reuploaded": 1, "baseline": 1, "current": 1})
+
     def test_added_reuploaded_and_removed_candidates(self):
         baseline = snapshot(
             candidate("fandom", "Kept.png"), candidate("bwiki", "Gone.png"), candidate("fandom", "Same.png")

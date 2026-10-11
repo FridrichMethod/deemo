@@ -7,8 +7,8 @@ The report lists wiki candidates that were added, re-uploaded (different SHA-1 o
 or removed since the baseline, whether each was uploaded after the baseline snapshot,
 and whether a local download already exists for it. Only those file changes open a pull
 request; candidates whose mapping metadata (song titles, collections, composers and the
-like) changed are counted and listed as well, since a merge carries those changes to the
-records. The report is written in English,
+like) or, for an unchanged file, the wiki's file metadata changed are counted and listed as
+well, since a merge carries those changes to the records. The report is written in English,
 followed by the same report in Simplified Chinese inside a collapsed <details> block;
 if both together would exceed REPORT_LIMIT characters, each table lists fewer rows.
 
@@ -39,7 +39,8 @@ SOURCE_LABELS = {"fandom": "Fandom", "bwiki": "BWIKI"}
 SOURCE_HOSTS = {"fandom": "deemo.fandom.com", "bwiki": "wiki.biligame.com"}
 # Where each wiki serves its image files. fetch_wikis.py --resume downloads every candidate's info.url, and the snapshot
 # is produced by a job that installs and runs third-party code, so a proposed snapshot must keep to these. The path
-# prefix matters as much as the host: each CDN serves every wiki of its farm.
+# prefix matters as much as the host: each CDN serves every wiki of its farm. fetch_wikis.py loads this table and
+# download_url_allowed() to check every download URL and redirect target, one definition for both.
 DOWNLOAD_LOCATIONS = {
     "fandom": ("static.wikia.nocookie.net", "/deemo/images/"),
     "bwiki": ("patchwiki.biligame.com", "/images/deemo/"),
@@ -53,7 +54,8 @@ BIDI_CONTROL = re.compile(r"[\u202a-\u202e\u2066-\u2069]")
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?(?:Z|[+-]\d{2}:?\d{2})?")
 FINGERPRINT_FIELDS = ("sha1", "size", "width", "height")
-# Candidate fields that fetch_wikis.py --resume copies into the record of a verified file.
+# Candidate fields that fetch_wikis.py --resume copies into the record of a verified file. wiki_extmetadata is the
+# snapshot's info.extmetadata, which the record keeps under that name (see metadata_value()).
 METADATA_FIELDS = (
     "kind",
     "song_titles",
@@ -65,6 +67,7 @@ METADATA_FIELDS = (
     "artist",
     "variant_note",
     "mapping_method",
+    "wiki_extmetadata",
 )
 SMALL_IMAGE_EDGE = 300
 ROW_LIMIT = 100
@@ -88,11 +91,11 @@ TEXT: dict[str, dict[str, Any]] = {
         "unchanged": "The candidate set has not changed; nothing to do.",
         "unchanged_files": (
             "No file was added, re-uploaded or removed, so no pull request is opened. {} candidate has changed "
-            "metadata (song titles, collections, composers or other mapping fields); the next snapshot pull request "
-            "carries the change.",
+            "metadata (song titles, collections, composers, other mapping fields or file metadata); the next snapshot "
+            "pull request carries the change.",
             "No file was added, re-uploaded or removed, so no pull request is opened. {} candidates have changed "
-            "metadata (song titles, collections, composers or other mapping fields); the next snapshot pull request "
-            "carries the changes.",
+            "metadata (song titles, collections, composers, other mapping fields or file metadata); the next snapshot "
+            "pull request carries the changes.",
         ),
         "section": "### {} ({})",
         "added": "Added",
@@ -131,7 +134,7 @@ Merging this PR only updates the discovery snapshot; it includes no images. Afte
 for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done
 ```
 
-`--resume` verifies the SHA-256 and Wiki SHA-1 of existing files against the snapshot and downloads only added and re-uploaded files; the records of the files it verifies take the snapshot's song titles, collections, composers and other mapping fields (the changes are listed under "Changed metadata"). `--resume` never deletes files and keeps every previously verified record, marked with `upstream_status`: a re-uploaded file is saved under a new file name and keeps the asset id, while the previous version keeps its file and record as `"upstream_status": "superseded"`; a removed file keeps its record as `"upstream_status": "removed"`; a failed re-download keeps the old record as `"upstream_status": "fetch_failed"`. `build_thumbnails.py --prune` then writes the grid previews of new and re-uploaded images and deletes the previews whose original left the gallery; it runs before the catalog build, which records the previews, and `tests/test_thumbnails.py` fails without them. "Added" entries uploaded before the baseline snapshot are usually changes in the wiki enumeration or the song-title mapping, not newly published artwork. Check the `failures`, `upstream_status` and checksum comparison fields in `data/sources/wikis.json`, then commit the images, the previews (`assets/thumbs/`, `data/thumbs.json`), the manifests (`data/sources/`) and the rebuilt catalog (`data/catalog.json`, `data/catalog.js`, `index.html`).
+`--resume` verifies the SHA-256 and Wiki SHA-1 of existing files against the snapshot and downloads only added and re-uploaded files; the records of the files it verifies take the snapshot's song titles, collections, composers, other mapping fields and file metadata (the changes are listed under "Changed metadata"). `--resume` never deletes files and keeps every previously verified record, marked with `upstream_status`: a re-uploaded file is saved under a new file name and keeps the asset id, while the previous version keeps its file and record as `"upstream_status": "superseded"`; a removed file keeps its record as `"upstream_status": "removed"`; a failed re-download keeps the old record as `"upstream_status": "fetch_failed"`. `build_thumbnails.py --prune` then writes the grid previews of new and re-uploaded images and deletes the previews whose original left the gallery; it runs before the catalog build, which records the previews, and `tests/test_thumbnails.py` fails without them. "Added" entries uploaded before the baseline snapshot are usually changes in the wiki enumeration or the song-title mapping, not newly published artwork. Check the `failures`, `upstream_status` and checksum comparison fields in `data/sources/wikis.json`, then commit the images, the previews (`assets/thumbs/`, `data/thumbs.json`), the manifests (`data/sources/`) and the rebuilt catalog (`data/catalog.json`, `data/catalog.js`, `index.html`).
 """,
     },
     "zh-CN": {
@@ -144,8 +147,8 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
         ),
         "unchanged": "候选集合没有变化，无需处理。",
         "unchanged_files": (
-            "没有新增、重新上传或移除的文件，因此不会创建 PR。{} 个候选的元数据（曲名、曲包、作曲者等映射字段）有变化，"
-            "下一个快照 PR 会带上这些变化。"
+            "没有新增、重新上传或移除的文件，因此不会创建 PR。{} 个候选的元数据（曲名、曲包、作曲者等映射字段或文件元数据）"
+            "有变化，下一个快照 PR 会带上这些变化。"
         ),
         "section": "### {}（{}）",
         "added": "新增",
@@ -181,7 +184,7 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
 for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done
 ```
 
-`--resume` 按快照校验已有文件的 SHA-256 与 Wiki SHA-1，只下载新增和重新上传的文件；校验通过的文件，其记录采用快照中的曲名、曲包、作曲者等映射字段（变化列在"元数据变化"下）。`--resume` 不会删除任何文件，并保留所有已校验的记录，以 `upstream_status` 标记：重新上传的文件以新文件名保存并沿用原资产 ID，旧版本保留文件和记录，标记为 `"upstream_status": "superseded"`；已移除的文件保留记录，标记为 `"upstream_status": "removed"`；重新下载失败时保留旧记录，标记为 `"upstream_status": "fetch_failed"`。随后 `build_thumbnails.py --prune` 为新增和重新上传的图片生成网格预览图，并删除原图已不在图库中的预览图；它须在构建目录之前运行（目录会记录预览图），缺少预览图时 `tests/test_thumbnails.py` 会失败。上传时间早于基线快照的"新增"条目通常是 Wiki 枚举或曲名映射的变化，而不是新发布的曲绘。检查 `data/sources/wikis.json` 中的 `failures`、`upstream_status` 与 checksum 比较字段，然后提交图片、预览图（`assets/thumbs/`、`data/thumbs.json`）、清单（`data/sources/`）与重新生成的目录（`data/catalog.json`、`data/catalog.js`、`index.html`）。
+`--resume` 按快照校验已有文件的 SHA-256 与 Wiki SHA-1，只下载新增和重新上传的文件；校验通过的文件，其记录采用快照中的曲名、曲包、作曲者等映射字段与文件元数据（变化列在"元数据变化"下）。`--resume` 不会删除任何文件，并保留所有已校验的记录，以 `upstream_status` 标记：重新上传的文件以新文件名保存并沿用原资产 ID，旧版本保留文件和记录，标记为 `"upstream_status": "superseded"`；已移除的文件保留记录，标记为 `"upstream_status": "removed"`；重新下载失败时保留旧记录，标记为 `"upstream_status": "fetch_failed"`。随后 `build_thumbnails.py --prune` 为新增和重新上传的图片生成网格预览图，并删除原图已不在图库中的预览图；它须在构建目录之前运行（目录会记录预览图），缺少预览图时 `tests/test_thumbnails.py` 会失败。上传时间早于基线快照的"新增"条目通常是 Wiki 枚举或曲名映射的变化，而不是新发布的曲绘。检查 `data/sources/wikis.json` 中的 `failures`、`upstream_status` 与 checksum 比较字段，然后提交图片、预览图（`assets/thumbs/`、`data/thumbs.json`）、清单（`data/sources/`）与重新生成的目录（`data/catalog.json`、`data/catalog.js`、`index.html`）。
 """,
     },
 }
@@ -274,12 +277,25 @@ def describe(candidate: dict, previous: dict | None, assets: dict[str, dict], ba
     return row
 
 
+def metadata_value(candidate: dict, field: str) -> object:
+    """A candidate's value of one of METADATA_FIELDS, as the record of a verified file holds it."""
+    if field == "wiki_extmetadata":
+        # Empty file metadata is left out of a record, like missing metadata.
+        return candidate.get("info", {}).get("extmetadata") or None
+    return candidate.get(field)
+
+
 def metadata_changes(candidate: dict, previous: dict) -> list[dict]:
-    """The METADATA_FIELDS whose value differs between the previous and the current candidate, in that order."""
+    """The METADATA_FIELDS whose value differs between the previous and the current candidate, in that order.
+
+    wiki_extmetadata counts only while the file is unchanged: a re-uploaded file brings new file metadata anyway (its
+    DateTime is the upload time), and the report lists it under Re-uploaded."""
+    reuploaded = fingerprint(candidate) != fingerprint(previous)
     return [
-        {"field": field, "old": previous.get(field), "new": candidate.get(field)}
+        {"field": field, "old": metadata_value(previous, field), "new": metadata_value(candidate, field)}
         for field in METADATA_FIELDS
-        if candidate.get(field) != previous.get(field)
+        if metadata_value(candidate, field) != metadata_value(previous, field)
+        and not (field == "wiki_extmetadata" and reuploaded)
     ]
 
 
