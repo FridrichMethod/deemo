@@ -6,6 +6,7 @@ temporary directory, so the repository's own manifests are never read or written
 
 import _thread
 import concurrent.futures
+import contextlib
 import email.utils
 import hashlib
 import importlib.util
@@ -13,6 +14,7 @@ import io
 import itertools
 import json
 import os
+import shutil
 import signal
 import struct
 import subprocess
@@ -1032,6 +1034,83 @@ class DownloadGuardTests(FetcherRun):
         ]
         self.assertGreater(len(committed), 800)
         self.assertEqual(refused, [])
+
+    def fandom(self, payload):
+        """A Fandom candidate for payload, and the URLs download() tries for it in turn (see download_urls())."""
+        candidate = {
+            "source": "fandom",
+            "file_title": "File:Song.png",
+            "info": {
+                **image_info(64, 48, "Song.png"),
+                "url": FANDOM_IMAGES + "a/ab/Song.png/revision/latest?cb=20210901000000",
+                "size": len(payload),
+                "sha1": hashlib.sha1(payload).hexdigest(),
+            },
+            "kind": "song_art",
+            "song_titles": ["Song"],
+            "collections": [],
+            "related_pages": [],
+        }
+        return candidate, fetch.download_urls(candidate)
+
+    @staticmethod
+    def moving(url, moved):
+        """A stand-in for requests.Request.prepare that sends url to moved, as a requests quirk might."""
+        prepare = requests.Request.prepare
+
+        def prepared(request):
+            result = prepare(request)
+            result.url = moved if request.url == url else result.url
+            return result
+
+        return patch.object(requests.Request, "prepare", prepared)
+
+    def test_a_url_is_checked_as_requests_sends_it_as_well(self):
+        # No URL is known that passes as written but not as requests prepares it (the check decodes the path anyway),
+        # so a preparation that moves the URL off the image path stands in for one.
+        payload = png("red")
+        candidate = self.offer("Art.png", payload)
+        (url,) = fetch.download_urls(candidate)
+        moved = "https://patchwiki.biligame.com/images/otherwiki/a/ab/Art.png"
+        self.assertTrue(fetch.download_allowed("bwiki", url))
+        with self.moving(url, moved):
+            self.assertTrue(fetch.check_sources.download_url_allowed("bwiki", url))
+            self.assertFalse(fetch.download_allowed("bwiki", url))
+            self.serve({url: payload, moved: payload})
+            self.refused(candidate)
+        self.assertEqual(self.web.calls, [])
+
+    def test_a_refused_download_is_not_retried_and_tries_no_other_url(self):
+        # Every URL after the first would serve the image; a refusal still fails the candidate at once, without another
+        # attempt or URL (unlike a network error, after which the next URL is tried).
+        payload = png("green")
+        candidate, (first, *others) = self.fandom(payload)
+        self.assertEqual(len(others), 2)
+        manifest = (self.root / MANIFEST).read_bytes()
+        evil = "https://evil.example.test/deemo/images/a/ab/Song.png"
+        for name, route, limit, moved in (
+            ("refused before it is requested", payload, fetch.MAX_IMAGE_BYTES, FANDOM_IMAGES + "../x.png"),
+            ("redirected off the image path", (302, b"", {"Location": evil}), fetch.MAX_IMAGE_BYTES, None),
+            (
+                "redirected to a Location that is not UTF-8",
+                (302, b"", {"Location": "x\xe9.png"}),
+                fetch.MAX_IMAGE_BYTES,
+                None,
+            ),
+            ("redirected in a loop", (302, b"", {"Location": first}), fetch.MAX_IMAGE_BYTES, None),
+            ("over the size limit", payload, len(payload) - 1, None),
+        ):
+            with self.subTest(name), patch.object(fetch, "MAX_IMAGE_BYTES", limit):
+                # Each case starts afresh: no earlier failure (the URLs keep their order) and no file from an earlier case.
+                (self.root / MANIFEST).write_bytes(manifest)
+                shutil.rmtree(self.root / "assets", ignore_errors=True)
+                self.serve({first: route, evil: payload, **dict.fromkeys(others, payload)})
+                self.sleeps.clear()
+                with self.moving(first, moved) if moved else contextlib.nullcontext():
+                    (failure,) = self.refused(candidate)["failures"]
+                self.assertEqual(set(self.web.calls), {first} if moved is None else set())
+                self.assertEqual(self.sleeps, [])
+                self.assertTrue(failure["error"].startswith("Refusing"), failure["error"])
 
     def test_downloads_and_the_source_check_share_one_list_of_image_paths(self):
         self.assertEqual(Path(fetch.check_sources.__file__), REPO / "scripts/check_sources.py")
