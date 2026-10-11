@@ -165,13 +165,32 @@ class RepositoryTests(unittest.TestCase):
         # The deployment measures the payload only after a merge to main; this test runs on every push and pull
         # request (tests.yml), so a change that would push the site past the budget fails before it is merged.
         tracked = pages.tracked_files(ROOT)
-        selected, total = pages.payload(ROOT, tracked)
+        try:
+            selected, total = pages.payload(ROOT, tracked)
+        except ValueError as error:
+            # payload() refuses an over-budget site itself; report that as this test's failure, with the excess.
+            measured = re.search(r"budget: ([0-9]+)$", str(error))
+            if measured is None:
+                raise
+            excess = int(measured.group(1)) - pages.MAX_SITE_BYTES
+            raise self.failureException(f"{excess} bytes over the Pages budget: remove material") from None
         self.assertIn(Path("index.html"), selected)
-        self.assertLessEqual(
-            total, pages.MAX_SITE_BYTES, f"{total - pages.MAX_SITE_BYTES} bytes over the Pages budget: remove material"
-        )
+        self.assertLessEqual(total, pages.MAX_SITE_BYTES)
+        # The check measures what is published: one byte less of budget and the same files are refused.
         with patch.object(pages, "MAX_SITE_BYTES", total - 1), self.assertRaisesRegex(ValueError, f"budget: {total}$"):
             pages.payload(ROOT, tracked)
+
+    def test_an_over_budget_site_fails_the_budget_test_with_its_excess(self):
+        # Over the budget, the test above must fail (not stop with an error) and say how many bytes to remove.
+        result = unittest.TestResult()
+        with patch.object(pages, "MAX_SITE_BYTES", 1):
+            RepositoryTests("test_the_tracked_site_fits_the_pages_budget").run(result)
+        self.assertEqual(result.errors, [])
+        (failure,) = result.failures
+        excess = re.search(r"AssertionError: ([0-9]+) bytes over the Pages budget: remove material$", failure[1], re.M)
+        self.assertIsNotNone(excess, failure[1])
+        total = sum((ROOT / path).stat().st_size for path in pages.select_files(ROOT, pages.tracked_files(ROOT)))
+        self.assertEqual(int(excess.group(1)), total - 1)
 
 
 if __name__ == "__main__":
