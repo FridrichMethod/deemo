@@ -180,10 +180,15 @@ def read_manifest(root: Path) -> dict | None:
 
 
 def write_atomic(path: Path, data: bytes) -> None:
+    """Write through a temporary sibling and os.replace, so an interrupted write keeps the previous file at path and
+    leaves no temporary file behind."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + ".tmp")
-    temporary.write_bytes(data)
-    os.replace(temporary, path)
+    try:
+        temporary.write_bytes(data)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def stored_files(root: Path) -> list[str]:

@@ -11,6 +11,7 @@ import struct
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import quote
 
 from PIL import Image, ImageCms, ImageStat
@@ -502,6 +503,36 @@ class CheckTests(Fixture):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as raised:
             thumbs.main(["--check", "--prune"], root=self.root)
         self.assertEqual(raised.exception.code, 2)
+
+
+class WriteTests(Fixture):
+    """The previews and data/thumbs.json are written through write_atomic(): an interrupted write keeps the previous
+    bytes and leaves no temporary file behind (a stray .webp.tmp would fail --check until pruned)."""
+
+    def snapshot(self):
+        files = [self.root / thumbs.MANIFEST, *sorted((self.root / thumbs.THUMB_DIR).iterdir())]
+        listing = sorted(path.name for path in (self.root / "data").iterdir())
+        return {path.relative_to(self.root).as_posix(): path.read_bytes() for path in files}, listing
+
+    def test_an_interrupted_write_keeps_the_previous_file(self):
+        thumbs.build(self.root)
+        before = self.snapshot()
+        with patch.object(thumbs.os, "replace", side_effect=OSError("interrupted")), self.assertRaises(OSError):
+            thumbs.write_atomic(self.root / thumbs.MANIFEST, b"partial")
+        self.assertEqual(self.snapshot(), before)
+
+    def test_an_interrupted_build_keeps_the_previews_and_the_manifest(self):
+        thumbs.build(self.root)
+        before = self.snapshot()
+        self.add_image("new.png", (900, 900), "RGB", "PNG")
+        self.write_manifest()
+        with patch.object(thumbs.os, "replace", side_effect=OSError("interrupted")), self.assertRaises(OSError):
+            thumbs.build(self.root)
+        self.assertEqual(self.snapshot(), before)
+        self.assertEqual(
+            thumbs.problems(self.root),
+            ["No thumbnail for assets/public/artists/new.png: run scripts/build_thumbnails.py"],
+        )
 
 
 class PruneTests(Fixture):
