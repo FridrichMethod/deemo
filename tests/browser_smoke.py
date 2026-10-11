@@ -372,8 +372,15 @@ def check_language(browser):
     assert page.evaluate("document.documentElement.lang") == "en"
     assert page.locator("#asset-source").inner_text() == "Original repository · game textures"
     assert "lang=" not in page.url and "lang=" not in page.locator(".archive-link a").get_attribute("href")
+    # An address with a fragment and no query keeps the fragment and gains ?lang= (and loses it again).
+    navigate(page, "index.html#screenshot")
+    page.wait_for_function("document.querySelector('.deemo-view').style.opacity === '1'")
+    for lang, address in (("zh-CN", "index.html?lang=zh-CN#screenshot"), ("en", "index.html#screenshot")):
+        page.locator("[data-lang-toggle]").first.click()
+        assert page.evaluate("document.documentElement.lang") == lang
+        assert page.url == mounted_url(address), (lang, page.url)
     finish(page)
-    checks.append("language toggle, persistence and localized source names")
+    checks.append("language toggle, persistence and localized source names; ?lang= beside a fragment")
 
 
 def check_language_before_catalog(browser):
