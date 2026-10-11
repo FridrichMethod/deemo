@@ -1834,6 +1834,48 @@ class ArchiveSiteTests(TempRoot):
             (status["archives:official-deemo"], status["archives:rayarkmusic-tumblr"]), ("failed", "failed")
         )
 
+    def test_get_raises_after_max_redirects(self):
+        page = f"{MIRROR}/deemo"
+        web = FakeWeb({page: (302, b"", {"Location": page})})
+        with (
+            patch.object(archives, "session", return_value=web),
+            self.assertRaisesRegex(ValueError, "Too many redirects"),
+        ):
+            archives.get(page, archives.TUMBLR_HOSTS)
+        self.assertEqual(web.requested, [page] * (archives.MAX_REDIRECTS + 1))
+
+    def test_a_redirect_loop_fails_the_page_instead_of_reading_it_as_empty(self):
+        # Were get() to return the last 3xx, the mirror page would be read as listing no tags and every archived
+        # repost would be marked "removed", with exit status 0.
+        page, data, sid = f"{MIRROR}/deemo", png("red"), "rayarkmusic-tumblr"
+        previous = {
+            "id": f"archives:{sid}:77-1",
+            "source_id": f"archives:{sid}",
+            "title": "Song",
+            "kind": "song_art",
+            "page_url": f"{MIRROR}/post/77/song",
+            "download_url": COVER_OK,
+            "path": self.put(f"assets/public/archives/{sid}/77-1.png", data),
+            "width": 4,
+            "height": 4,
+            "format": "PNG",
+            "bytes": len(data),
+            "sha256": sha(data),
+            "fetched_at": "2026-01-01T00:00:00+00:00",
+            "game": "DEEMO",
+        }
+        self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [previous], "failures": []})
+        web = self.web()
+        web.routes[page] = (302, b"", {"Location": page})
+        code, manifest = self.run_steps(web, "tumblr_mirror")
+        self.assertEqual(code, 1)
+        self.assertEqual([(f["source_id"], f["url"]) for f in manifest["failures"]], [(f"archives:{sid}", page)])
+        self.assertIn("Too many redirects", manifest["failures"][0]["error"])
+        self.assertEqual(
+            [(a["id"], a.get("upstream_status")) for a in manifest["assets"]], [(previous["id"], "fetch_failed")]
+        )
+        self.assertEqual({row["id"]: row["status"] for row in manifest["sources"]}, {f"archives:{sid}": "failed"})
+
 
 class ConnectionHostTests(unittest.TestCase):
     """The allow-list must judge the host requests really connects to, read here from the real HTTPAdapter."""
