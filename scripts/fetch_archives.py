@@ -101,8 +101,22 @@ def host_allowed(url, hosts):
     )
 
 
+def redirect_target(r):
+    """The absolute URL the redirect response r sends to, read from its Location as requests reads it: http.client
+    decodes header bytes as latin-1, so the header is encoded back and decoded as UTF-8 (a raw UTF-8 path stays itself
+    instead of turning into mojibake), requoted, and resolved against r's URL. A Location that is not UTF-8 raises
+    InvalidURL, both a ValueError and a RequestException, so it fails a download or a reachability check before
+    anything more is requested."""
+    header = r.headers["location"]
+    try:
+        location = header.encode("latin-1").decode("utf-8")
+    except UnicodeError:
+        raise requests.exceptions.InvalidURL(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
+    return urljoin(r.url, requests.utils.requote_uri(location))
+
+
 def get(url, hosts):
-    """GET url over https, following redirects only while every hop stays within hosts."""
+    """GET url over https, following redirects (see redirect_target()) only while every hop stays within hosts."""
     url = https(url)
     for _ in range(MAX_REDIRECTS + 1):
         if not host_allowed(url, hosts):
@@ -111,7 +125,7 @@ def get(url, hosts):
         if not r.is_redirect:
             r.raise_for_status()
             return r
-        url = urljoin(r.url, r.headers["location"])
+        url = redirect_target(r)
     raise ValueError(f"Too many redirects: {url}")
 
 
@@ -605,15 +619,15 @@ def registrable_domain(host):
 def reach(url):
     """The final response of url, following at most MAX_REDIRECTS redirects that stay on https within its registrable
     domain (see registrable_domain(); a sibling host such as www.tumblr.com for wublaze.tumblr.com counts, an IP
-    address never does), and the Location of the first redirect that would leave it (not requested), or None. Only the
-    status line and headers are read: the body is never downloaded."""
+    address never does), and the target of the first redirect that would leave it (see redirect_target(); not
+    requested), or None. Only the status line and headers are read: the body is never downloaded."""
     site = registrable_domain(urlsplit(url).hostname)
     for _ in range(MAX_REDIRECTS + 1):
         r = session().get(url, timeout=(12, 35), allow_redirects=False, stream=True)
         r.close()
         if not r.is_redirect:
             return r, None
-        location = urljoin(r.url, r.headers["location"])
+        location = redirect_target(r)
         # host_allowed() checks the scheme, port and user info too; the registrable domain itself rules out an IP
         # address, whose labels could end like a numeric site's.
         if (

@@ -1998,9 +1998,10 @@ class CatalogCheckTests(unittest.TestCase):
             web = FakeWeb({self.URL: (302, b"", {"Location": location}), location: "bait"})
             row = self.check(web)
             self.assertEqual(web.requested, [self.URL], location)
+            # The target is recorded as requests would request it: requoted, so a backslash is percent-encoded.
             self.assertEqual(
                 (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
-                ("redirected_off_site", 302, self.URL, location),
+                ("redirected_off_site", 302, self.URL, requests.utils.requote_uri(location)),
             )
 
     def test_a_redirect_within_the_site_is_followed(self):
@@ -2075,7 +2076,7 @@ class CatalogCheckTests(unittest.TestCase):
                 self.assertEqual(requested, [url])
                 self.assertEqual(
                     (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
-                    ("redirected_off_site", 302, url, urljoin(url, location)),
+                    ("redirected_off_site", 302, url, urljoin(url, requests.utils.requote_uri(location))),
                 )
 
     def test_registrable_domains(self):
@@ -2100,6 +2101,91 @@ class CatalogCheckTests(unittest.TestCase):
         ):
             with self.subTest(host=host):
                 self.assertEqual(archives.registrable_domain(host), domain)
+
+
+def as_received(location):
+    """location as http.client hands a Location header over: its UTF-8 bytes decoded as latin-1."""
+    return location.encode().decode("latin-1")
+
+
+class RedirectLocationTests(unittest.TestCase):
+    """get() and the reachability checks read a redirect's Location as requests does: http.client decodes header bytes
+    as latin-1, so a raw UTF-8 path arrives as mojibake; it is encoded back, read as UTF-8 and requoted."""
+
+    IMAGE = "https://archive.org/download/x/1.jpg"
+    PAGE = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/"
+
+    def setUp(self):
+        archives.reset()
+        self.addCleanup(archives.reset)
+
+    def check(self, web):
+        with patch.object(archives, "session", return_value=web):
+            return archives.check_entry(("reddit-34", "Thread", self.PAGE, "index_only", ""))
+
+    def test_get_follows_a_utf8_location_as_requests_reads_it(self):
+        target = "https://archive.org/items/x/%E4%B8%AD%E6%96%87%E6%9B%B2%E7%BB%98%201.jpg"
+        web = FakeWeb(
+            {self.IMAGE: (302, b"", {"Location": as_received("/items/x/中文曲绘 1.jpg")}), target: png("red")}
+        )
+        with patch.object(archives, "session", return_value=web):
+            self.assertEqual(archives.get(self.IMAGE, archives.CAA_HOSTS).url, target)
+        self.assertEqual(web.requested, [self.IMAGE, target])
+
+    def test_a_reachability_check_follows_a_utf8_location_as_requests_reads_it(self):
+        target = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/%E6%9B%B2%E7%BB%98/"
+        web = FakeWeb(
+            {self.PAGE: (301, b"", {"Location": as_received("/r/TrueDeemo/comments/c3dw62/曲绘/")}), target: ""}
+        )
+        row = self.check(web)
+        self.assertEqual(web.requested, [self.PAGE, target])
+        self.assertEqual(
+            (row["access_status"], row["http_status"], row["resolved_url"]), ("page_reachable", 200, target)
+        )
+        # ... and records the target of a redirect off the site in the same form, not as mojibake.
+        web = FakeWeb({self.PAGE: (302, b"", {"Location": as_received("https://attacker.example/曲绘/")})})
+        row = self.check(web)
+        self.assertEqual(web.requested, [self.PAGE])
+        self.assertEqual(
+            (row["access_status"], row["redirect_location"]),
+            ("redirected_off_site", "https://attacker.example/%E6%9B%B2%E7%BB%98/"),
+        )
+
+    def test_redirect_targets_are_the_ones_requests_would_follow(self):
+        for start, location in (
+            (self.IMAGE, "/items/x/中文.jpg"),
+            (self.IMAGE, "y/Ünïcode name.jpg"),
+            (self.IMAGE, "https://ia800.us.archive.org/%E4%B8%AD 文.jpg"),
+            (self.IMAGE, "//ia800.us.archive.org/1.jpg"),
+            (self.IMAGE, "../../x/100%25 (b).jpg"),
+            (self.IMAGE, "%2e%2e/x.jpg"),
+            (self.PAGE, "https://attacker.example\\@www.reddit.com/"),
+            (self.PAGE, "?query=é#fragment"),
+            (self.PAGE, "/%zz/"),
+        ):
+            with self.subTest(location=location):
+                redirect = response(start, 302, headers={"Location": as_received(location)})
+                # requests.Session.resolve_redirects: the decoded target, requoted, then resolved against the URL.
+                expected = urljoin(start, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
+                self.assertEqual(archives.redirect_target(redirect), expected)
+
+    def test_a_location_that_is_not_utf8_is_refused(self):
+        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
+        location = "/items/x/Caf\xe9.jpg"
+        web = FakeWeb({self.IMAGE: (302, b"", {"Location": location}), urljoin(self.IMAGE, location): png("red")})
+        with (
+            patch.object(archives, "session", return_value=web),
+            self.assertRaisesRegex(ValueError, "Location is not UTF-8"),
+        ):
+            archives.get(self.IMAGE, archives.CAA_HOSTS)
+        self.assertEqual(web.requested, [self.IMAGE])
+        # A reachability check fails as a request instead of following or recording a misread target.
+        web = FakeWeb({self.PAGE: (302, b"", {"Location": location}), urljoin(self.PAGE, location): ""})
+        row = self.check(web)
+        self.assertEqual(web.requested, [self.PAGE])
+        self.assertEqual(row["access_status"], "request_failed")
+        self.assertIn("Location is not UTF-8", row["access_error"])
+        self.assertNotIn("redirect_location", row)
 
 
 class RetryStatusTests(unittest.TestCase):
