@@ -135,6 +135,12 @@ SHOWN_BY = {
 }
 # Helpers that read record fields for the functions above; a helper's code counts only where it is called.
 HELPERS = ("composerLines", "upstreamNotes", "dimensionsNote", "provenanceClass", "sourceName")
+# The names src/archive.js gives a catalog entry (asset) and a provenance record (p, and record in sourceName) where it
+# reads their fields. Only a read of one of them counts: a DOM write (image.width = ...), a selector ($("family")) or a
+# message key (t("provenance.artist")) that spells a field's name is no read of the catalog.
+RECORD = r"(?<![\w$.])(?:asset|p|record)"
+# A loop over field names that reads each from a record: for (const key of ["rights", ...]) { if (p[key]) ... }
+FIELD_LOOP = re.compile(r"\bfor \(const (\w+) of \[([^\]]*)\]\)")
 # Fields the page leaves out on purpose, with the reason. A new manifest field fails the test until it is added to one
 # of the two lists, so a caveat cannot be dropped silently.
 IGNORED = {
@@ -170,6 +176,16 @@ def message_tables():
     return json.loads(REGISTER.search((ROOT / "src/i18n/archive.js").read_text(encoding="utf-8")).group(1))
 
 
+def block(code, opening):
+    """The code between the brace at `opening` and the brace that closes it."""
+    depth = 0
+    for index in range(opening, len(code)):
+        depth += {"{": 1, "}": -1}.get(code[index], 0)
+        if depth == 0:
+            return code[opening + 1 : index]
+    return None
+
+
 def definition(script, name):
     """The code of a function in src/archive.js: a declaration's body, or the expression of an arrow function."""
     declaration = re.search(rf"\bfunction {name}\(", script)
@@ -178,12 +194,23 @@ def definition(script, name):
         if arrow is None:
             raise AssertionError(f"src/archive.js defines no function {name}")
         return arrow.group(1)
-    opening, depth = script.index("{", declaration.end()), 0
-    for index in range(opening, len(script)):
-        depth += {"{": 1, "}": -1}.get(script[index], 0)
-        if depth == 0:
-            return script[opening + 1 : index]
-    raise AssertionError(f"function {name}() is not closed")
+    body = block(script, script.index("{", declaration.end()))
+    if body is None:
+        raise AssertionError(f"function {name}() is not closed")
+    return body
+
+
+def reads(code, key):
+    """Whether code reads the field `key` of a catalog entry or record: asset.key, p?.key, record["key"], or the name in
+    a loop over field names whose body reads p[name]."""
+    if re.search(rf'{RECORD}(?:\?\.|\.){key}\b|{RECORD}(?:\?\.)?\[\s*"{key}"\s*\]', code):
+        return True
+    for loop in FIELD_LOOP.finditer(code):
+        opening = code.find("{", loop.end())
+        body = block(code, opening) if opening >= 0 else None
+        if f'"{key}"' in loop.group(2) and body and re.search(rf"{RECORD}(?:\?\.)?\[\s*{loop.group(1)}\s*\]", body):
+            return True
+    return False
 
 
 def shown_code(script, functions):
@@ -265,8 +292,27 @@ class ArchiveLabelTests(unittest.TestCase):
         for functions, fields in SHOWN_BY.items():
             with self.subTest(functions=functions):
                 code = shown_code(script, functions)
-                unread = sorted(key for key in fields if not re.search(rf'\.{key}\b|"{key}"', code))
+                unread = sorted(key for key in fields if not reads(code, key))
                 self.assertEqual(unread, [], f"src/archive.js no longer reads these SHOWN fields in {functions}")
+
+    def test_only_reads_of_an_entry_or_record_count(self):
+        """A DOM write, a selector or a message key that spells a field's name is no read of the field, so dropping
+        the asset read beside it (image.width = asset.width; p.family === $("family").value) is caught."""
+        self.assertTrue(reads("image.width = asset.width;", "width"))
+        self.assertFalse(reads("image.width = 0; image.height = asset.width;", "height"))
+        self.assertTrue(reads('(p) => p.family === $("family").value', "family"))
+        self.assertFalse(reads('!$("family").value || $("kind").value', "family"))
+        self.assertFalse(reads('t("provenance.artist", {artist: textValue(p.title)})', "artist"))
+        self.assertTrue(reads("p.collections?.length", "collections"))
+        self.assertTrue(reads('p?.notes || asset["path"] || record.source_id', "notes"))
+        self.assertTrue(reads('p?.notes || asset["path"] || record.source_id', "path"))
+        self.assertTrue(reads('p?.notes || asset["path"] || record.source_id', "source_id"))
+        self.assertFalse(reads("thumbnail.path + myasset.path + this.asset.path", "path"))
+        loop = 'for (const key of ["rights", "layout_note"]) {\n  if (p[key]) block.append(note("p", p[key]));\n}'
+        self.assertTrue(reads(loop, "rights") and reads(loop, "layout_note"))
+        self.assertFalse(reads(loop, "rights_holder"))
+        self.assertFalse(reads(loop.replace("p[key]", "labels[key]"), "rights"), "The loop must read a record")
+        self.assertFalse(reads('const names = ["rights"]; for (const key of names) p[key];', "rights"))
 
     def test_shown_code_follows_only_the_helpers_called(self):
         script = (
