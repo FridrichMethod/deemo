@@ -453,7 +453,7 @@ class CompareTests(unittest.TestCase):
                 block = re.search(r"```sh\n(.*?)```", check.TEXT[lang]["next_steps"], re.DOTALL).group(1)
                 lines = block.splitlines()
                 self.assertEqual(len(lines), len(commands), block)
-                for line, command in zip(lines, commands):
+                for line, command in zip(lines, commands, strict=True):
                     self.assertIn(command, line)
                 self.assertIn("tests/test_thumbnails.py", check.TEXT[lang]["next_steps"])
 
