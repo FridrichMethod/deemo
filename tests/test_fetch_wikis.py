@@ -6,6 +6,7 @@ temporary directory, so the repository's own manifests are never read or written
 
 import _thread
 import concurrent.futures
+import contextlib
 import email.utils
 import hashlib
 import importlib.util
@@ -13,6 +14,7 @@ import io
 import itertools
 import json
 import os
+import shutil
 import signal
 import struct
 import subprocess
@@ -162,15 +164,20 @@ class FakeResponse:
 class FakeWeb:
     """Stands in for requests.get. A route is bytes (200), a (status, body, headers) tuple, or a list of these served
     in turn (the last one repeats); any other URL behaves as if the network were down. Like requests, it follows a
-    redirect (a 3xx with a Location) unless allow_redirects=False. Every request is recorded in calls, its
-    allow_redirects and stream options in options, and every response in responses."""
+    redirect (a 3xx with a Location) unless allow_redirects=False. Every request is recorded in calls, its query
+    parameters in params, its allow_redirects and stream options in options, and every response in responses. With a
+    limit, a request past that many fails the test, so a client that would never stop asking cannot hang it."""
 
     def __init__(self):
-        self.routes, self.calls, self.options, self.responses = {}, [], [], []
+        self.routes, self.calls, self.params, self.options, self.responses = {}, [], [], [], []
+        self.limit = None
 
     def __call__(self, url, params=None, headers=None, timeout=None, allow_redirects=True, stream=False):
         for _ in range(30):  # requests' default max_redirects
+            if self.limit is not None and len(self.calls) >= self.limit:
+                raise AssertionError(f"Still requesting after {self.limit} requests: {url}")
             self.calls.append(url)
+            self.params.append(params)
             self.options.append({"allow_redirects": allow_redirects, "stream": stream})
             route = self.routes.get(url)
             if isinstance(route, list):
@@ -599,6 +606,26 @@ class IllustratorIndexTests(DiscoveryRun):
                     [(row["source_id"], row["stage"]) for row in failures], [(self.ENTRY["id"], "reference_index")]
                 )
 
+    def test_a_refresh_redirected_off_the_site_or_too_large_is_recorded(self):
+        # The page is fetched like the API: redirects only to https on wikiwiki.jp, a body of at most 64 MiB.
+        page = b'<div id="body"><h2>illustrator</h2></div>'
+        for name, route, limit in (
+            ("off the site", (302, b"", {"Location": "https://evil.example.test/deemo/"}), fetch.MAX_RESPONSE_BYTES),
+            ("too large", (200, page, {"Content-Type": "text/html"}), len(page) - 1),
+        ):
+            with self.subTest(name), patch.object(fetch, "MAX_RESPONSE_BYTES", limit):
+                self.web.routes = {ILLUSTRATOR_URL: route, "https://evil.example.test/deemo/": page}
+                self.web.calls.clear()
+                self.discover()
+                # Requested once, never retried, and the redirect target never requested.
+                pages = [url for url in self.web.calls if not url.startswith(BWIKI_IMAGES)]  # not the image downloads
+                self.assertEqual(pages, [ILLUSTRATOR_URL])
+                self.assertEqual(self.entry(), self.ENTRY)
+                self.assertEqual(self.read(ILLUSTRATOR_INDEX), self.INDEX)
+                (failure,) = self.read(MANIFEST)["failures"]
+                self.assertEqual((failure["source_id"], failure["stage"]), (self.ENTRY["id"], "reference_index"))
+                self.assertIn("Refusing", failure["error"])
+
     def test_full_run_refreshes_the_index(self):
         page = '<div id="body"><h2>illustrator</h2><table><tr><td><a href="/deemo/X">X</a></td></tr></table></div>'
         self.web.routes[ILLUSTRATOR_URL] = (200, page.encode("utf-8"), {"Content-Type": "text/html"})
@@ -643,6 +670,100 @@ class DiscoveryStatsTests(DiscoveryRun):
         dump(self.root / MANIFEST, manifest)
         self.resume()
         self.assertEqual(self.read(MANIFEST)["sources"][1]["discovery"], manifest["sources"][1]["discovery"])
+
+
+class GetTests(FetcherRun):
+    """get() fetches this script's fixed URLs (the wikis' api.php, the DeemoSongs JSON, the illustrator index): it
+    follows redirects only to https on the URL's own host, at most MAX_REDIRECTS of them, and reads at most
+    MAX_RESPONSE_BYTES of a body. Anything else is refused at once, before more is requested or read, and not retried."""
+
+    URL = "https://wiki.biligame.com/deemo/api.php"
+
+    def test_a_response_over_the_size_limit_is_refused_before_more_is_read(self):
+        self.assertEqual(fetch.MAX_RESPONSE_BYTES, 64 * 1024 * 1024)
+        body = json.dumps({"query": {"pages": {}}}).encode()
+        with patch.object(fetch, "MAX_RESPONSE_BYTES", len(body) - 1):
+            # Streamed: the read stops at the chunk that crosses the limit.
+            self.web.routes[self.URL] = (200, body + bytes(3 * fetch.CHUNK_BYTES), {})
+            with self.assertRaisesRegex(fetch.RefusedDownload, "limit"):
+                fetch.api("bwiki", list="allimages")
+            (response,) = self.web.responses
+            self.assertLessEqual(response.consumed, fetch.CHUNK_BYTES)
+            # Declared: a Content-Length over the limit is refused before the body is read.
+            self.web.routes[self.URL] = (200, body, {"Content-Length": str(len(body))})
+            with self.assertRaisesRegex(fetch.RefusedDownload, "limit"):
+                fetch.get(self.URL)
+            self.assertEqual(self.web.responses[-1].consumed, 0)
+        self.assertEqual((len(self.web.calls), self.sleeps), (2, []))  # never retried
+        with patch.object(fetch, "MAX_RESPONSE_BYTES", len(body)):
+            self.assertEqual(fetch.api("bwiki", list="allimages"), {"query": {"pages": {}}})
+        self.assertEqual(self.web.options[-1], {"allow_redirects": False, "stream": True})
+
+    def test_a_real_response_serves_the_bytes_read_under_the_limit(self):
+        # requests.Response objects with a body stream, as requests builds them: .content, .text and .json() must serve
+        # the bytes read under the limit, decoded as requests decodes them.
+        def answer(body, content_type):
+            def get(url, **options):
+                response = requests.Response()
+                response.status_code, response.url, response.raw = 200, url, io.BytesIO(body)
+                response.headers["Content-Type"] = content_type
+                response.encoding = requests.utils.get_encoding_from_headers(response.headers)
+                return response
+
+            return patch.object(fetch.requests, "get", get)
+
+        page = "<h2>アーティスト別リスト</h2>".encode()
+        with answer(page, "text/html; charset=UTF-8"):
+            response = fetch.get(ILLUSTRATOR_URL)
+        self.assertEqual((response.content, response.text), (page, page.decode()))
+        with answer(page, "text/html"):  # no charset: requests reads text/* as ISO-8859-1
+            self.assertEqual(fetch.get(ILLUSTRATOR_URL).text, page.decode("latin-1"))
+        data = {"query": {"pages": {"1": {"title": "文件:A.png"}}}}
+        with answer(json.dumps(data, ensure_ascii=False).encode(), "application/json"):
+            self.assertEqual(fetch.api("bwiki", list="allimages"), data)
+        with answer(page, "text/html"), patch.object(fetch, "MAX_RESPONSE_BYTES", len(page) - 1):
+            with self.assertRaisesRegex(fetch.RefusedDownload, "limit"):
+                fetch.get(ILLUSTRATOR_URL)
+
+    def test_a_redirect_on_the_same_host_is_followed(self):
+        moved = "https://wiki.biligame.com/deemo/w/api.php?action=query&format=json"
+        self.web.routes = {
+            self.URL: (301, b"", {"Location": "/deemo/w/api.php?action=query&format=json"}),
+            moved: b"{}",
+        }
+        self.assertEqual(fetch.api("bwiki", list="allimages"), {})
+        self.assertEqual(self.web.calls, [self.URL, moved])
+        # The Location carries its own query; the parameters are sent with the first request only.
+        self.assertEqual(self.web.params[0]["list"], "allimages")
+        self.assertIsNone(self.web.params[1])
+        self.assertEqual(self.web.options, [{"allow_redirects": False, "stream": True}] * 2)
+
+    def test_a_redirect_off_the_host_or_off_https_is_refused(self):
+        for location in (
+            "https://evil.example.test/deemo/api.php",
+            "//evil.example.test/deemo/api.php",
+            "http://wiki.biligame.com/deemo/api.php",
+            "https://wiki.biligame.com:8443/deemo/api.php",
+            "https://user@wiki.biligame.com/deemo/api.php",
+            "https://patchwiki.biligame.com/deemo/api.php",  # a sibling host of the same site
+            "https://wiki.biligame.com.evil.example.test/deemo/api.php",
+            "https://wiki.biligame.com\\@evil.example.test/deemo/api.php",
+            "https://127.0.0.1/deemo/api.php",
+        ):
+            with self.subTest(location=location):
+                target = urljoin(self.URL, location)
+                self.web.routes = {self.URL: (302, b"", {"Location": location}), target: b"{}"}
+                self.web.calls.clear()
+                with self.assertRaisesRegex(fetch.RefusedDownload, "Refusing a request off wiki.biligame.com"):
+                    fetch.api("bwiki", list="allimages")
+                self.assertEqual(self.web.calls, [self.URL])
+                self.assertEqual(self.sleeps, [])
+
+    def test_a_redirect_loop_is_cut_off(self):
+        self.web.routes[self.URL] = (302, b"", {"Location": self.URL})
+        with self.assertRaisesRegex(fetch.RefusedDownload, "redirects"):
+            fetch.get(self.URL)
+        self.assertEqual(self.web.calls, [self.URL] * (fetch.MAX_REDIRECTS + 1))
 
 
 class RetryTests(FetcherRun):
@@ -745,7 +866,7 @@ class DownloadGuardTests(FetcherRun):
     def serve(self, routes):
         """Replace the fake web's routes and forget the requests made so far."""
         self.web.routes = routes
-        for log in (self.web.calls, self.web.options, self.web.responses):
+        for log in (self.web.calls, self.web.params, self.web.options, self.web.responses):
             log.clear()
 
     def refused(self, candidate, *, reason="Refusing"):
@@ -775,6 +896,9 @@ class DownloadGuardTests(FetcherRun):
             ("bwiki", BWIKI_IMAGES + "..;/otherwiki/a/ab/Art.png"),
             ("bwiki", BWIKI_IMAGES + "..%5c..%5cotherwiki/a/ab/Art.png"),
             ("fandom", FANDOM_IMAGES + "%252e%252e/%252e%252e/otherwiki/images/a/ab/Art.png/revision/latest?cb=1"),
+            # ... or trailing whitespace or a NUL a server could trim, or an overlong UTF-8 "." a lenient decoder reads.
+            ("bwiki", BWIKI_IMAGES + "..%20/..%00/otherwiki/a/ab/Art.png"),
+            ("bwiki", BWIKI_IMAGES + "%c0%ae%c0%ae/%c0%ae%c0%ae/otherwiki/a/ab/Art.png"),
         ):
             with self.subTest(source=source, url=url):
                 offered = self.offer("Art.png", payload)
@@ -808,6 +932,45 @@ class DownloadGuardTests(FetcherRun):
         self.assertEqual(self.web.calls, [start, inside])
         self.assertEqual(self.files(), [record["path"]])
         self.assertEqual(self.web.options, [{"allow_redirects": False, "stream": True}] * len(self.web.calls))
+
+    def test_a_utf8_redirect_location_is_followed_as_requests_reads_it(self):
+        # http.client decodes header bytes as latin-1, so a raw UTF-8 file name in a Location arrives as mojibake;
+        # requests encodes it back and reads it as UTF-8, and so must the hand-made redirect loop.
+        payload = png("red")
+        start = BWIKI_IMAGES + "a/ab/Art.png"
+        location = "/images/deemo/b/bc/中文曲绘 1.png".encode().decode("latin-1")
+        target = BWIKI_IMAGES + "b/bc/%E4%B8%AD%E6%96%87%E6%9B%B2%E7%BB%98%201.png"
+        self.serve({start: (302, b"", {"Location": location}), target: payload})
+        offered = self.offer("Art.png", payload)
+        (record,) = self.resume({**offered, "info": {**offered["info"], "url": start}})["assets"]
+        self.assertEqual((record["download_url"], record["resolved_download_url"]), (start, target))
+        self.assertEqual(self.web.calls, [start, target])
+
+    def test_redirect_targets_are_the_ones_requests_would_follow(self):
+        start = BWIKI_IMAGES + "a/ab/Art.png"
+        for location in (
+            "/images/deemo/b/bc/中文.png",
+            "b/Ünïcode name.png",
+            "https://patchwiki.biligame.com/images/deemo/c/cd/%E4%B8%AD 文.png",
+            "//patchwiki.biligame.com/images/deemo/d/de/Art.png",
+            "../../deemo/e/ef/100%25 (b).png",
+            "%2e%2e/x.png",
+        ):
+            with self.subTest(location=location):
+                redirect = requests.Response()
+                redirect.status_code, redirect.url = 302, start
+                redirect.headers["Location"] = location.encode().decode("latin-1")  # as http.client hands it over
+                # requests.Session.resolve_redirects: the decoded target, requoted, then resolved against the URL.
+                expected = urljoin(start, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
+                self.assertEqual(fetch.redirect_target(redirect), expected)
+
+    def test_a_redirect_location_that_is_not_utf8_is_refused(self):
+        start = BWIKI_IMAGES + "a/ab/Art.png"
+        offered = self.offer("Art.png", png("red"))
+        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
+        self.serve({start: (302, b"", {"Location": "/images/deemo/b/bc/Caf\xe9.png"})})
+        self.refused({**offered, "info": {**offered["info"], "url": start}}, reason="not UTF-8")
+        self.assertEqual(self.web.calls, [start])
 
     def test_a_redirect_loop_is_cut_off(self):
         start = BWIKI_IMAGES + "a/ab/Art.png"
@@ -871,6 +1034,83 @@ class DownloadGuardTests(FetcherRun):
         ]
         self.assertGreater(len(committed), 800)
         self.assertEqual(refused, [])
+
+    def fandom(self, payload):
+        """A Fandom candidate for payload, and the URLs download() tries for it in turn (see download_urls())."""
+        candidate = {
+            "source": "fandom",
+            "file_title": "File:Song.png",
+            "info": {
+                **image_info(64, 48, "Song.png"),
+                "url": FANDOM_IMAGES + "a/ab/Song.png/revision/latest?cb=20210901000000",
+                "size": len(payload),
+                "sha1": hashlib.sha1(payload).hexdigest(),
+            },
+            "kind": "song_art",
+            "song_titles": ["Song"],
+            "collections": [],
+            "related_pages": [],
+        }
+        return candidate, fetch.download_urls(candidate)
+
+    @staticmethod
+    def moving(url, moved):
+        """A stand-in for requests.Request.prepare that sends url to moved, as a requests quirk might."""
+        prepare = requests.Request.prepare
+
+        def prepared(request):
+            result = prepare(request)
+            result.url = moved if request.url == url else result.url
+            return result
+
+        return patch.object(requests.Request, "prepare", prepared)
+
+    def test_a_url_is_checked_as_requests_sends_it_as_well(self):
+        # No URL is known that passes as written but not as requests prepares it (the check decodes the path anyway),
+        # so a preparation that moves the URL off the image path stands in for one.
+        payload = png("red")
+        candidate = self.offer("Art.png", payload)
+        (url,) = fetch.download_urls(candidate)
+        moved = "https://patchwiki.biligame.com/images/otherwiki/a/ab/Art.png"
+        self.assertTrue(fetch.download_allowed("bwiki", url))
+        with self.moving(url, moved):
+            self.assertTrue(fetch.check_sources.download_url_allowed("bwiki", url))
+            self.assertFalse(fetch.download_allowed("bwiki", url))
+            self.serve({url: payload, moved: payload})
+            self.refused(candidate)
+        self.assertEqual(self.web.calls, [])
+
+    def test_a_refused_download_is_not_retried_and_tries_no_other_url(self):
+        # Every URL after the first would serve the image; a refusal still fails the candidate at once, without another
+        # attempt or URL (unlike a network error, after which the next URL is tried).
+        payload = png("green")
+        candidate, (first, *others) = self.fandom(payload)
+        self.assertEqual(len(others), 2)
+        manifest = (self.root / MANIFEST).read_bytes()
+        evil = "https://evil.example.test/deemo/images/a/ab/Song.png"
+        for name, route, limit, moved in (
+            ("refused before it is requested", payload, fetch.MAX_IMAGE_BYTES, FANDOM_IMAGES + "../x.png"),
+            ("redirected off the image path", (302, b"", {"Location": evil}), fetch.MAX_IMAGE_BYTES, None),
+            (
+                "redirected to a Location that is not UTF-8",
+                (302, b"", {"Location": "x\xe9.png"}),
+                fetch.MAX_IMAGE_BYTES,
+                None,
+            ),
+            ("redirected in a loop", (302, b"", {"Location": first}), fetch.MAX_IMAGE_BYTES, None),
+            ("over the size limit", payload, len(payload) - 1, None),
+        ):
+            with self.subTest(name), patch.object(fetch, "MAX_IMAGE_BYTES", limit):
+                # Each case starts afresh: no earlier failure (the URLs keep their order) and no file from an earlier case.
+                (self.root / MANIFEST).write_bytes(manifest)
+                shutil.rmtree(self.root / "assets", ignore_errors=True)
+                self.serve({first: route, evil: payload, **dict.fromkeys(others, payload)})
+                self.sleeps.clear()
+                with self.moving(first, moved) if moved else contextlib.nullcontext():
+                    (failure,) = self.refused(candidate)["failures"]
+                self.assertEqual(set(self.web.calls), {first} if moved is None else set())
+                self.assertEqual(self.sleeps, [])
+                self.assertTrue(failure["error"].startswith("Refusing"), failure["error"])
 
     def test_downloads_and_the_source_check_share_one_list_of_image_paths(self):
         self.assertEqual(Path(fetch.check_sources.__file__), REPO / "scripts/check_sources.py")
@@ -1322,6 +1562,102 @@ class ContinuationTests(unittest.TestCase):
             {page["title"]: fetch.song_metadata("fandom", page).get("composer") for page in pages},
             {"A": "Composer A", "B": "Composer B"},
         )
+
+
+class ContinuationLimitTests(FetcherRun):
+    """A server that keeps returning `continue` must not keep discovery asking forever, and a list it cuts short must
+    not pass for a complete one: the list stops with IncompleteList, and discovery writes no snapshot."""
+
+    API = fetch.SOURCES["fandom"]["api_url"]
+    # One body serves every list: a category member, an allimages row and a file page still without imageinfo.
+    QUERY = {
+        "categorymembers": [{"title": "A", "ns": 0}],
+        "allimages": [allimage("A.png", 1024, 1024)],
+        "pages": {"1": {"title": "File:A.png", "ns": 6}},
+    }
+    LISTS = {
+        "category": lambda: fetch.category("fandom", "Category:Songs"),
+        "allimages": lambda: fetch.allimages("fandom"),
+        "pages": lambda: fetch.pages("fandom", ["File:A.png"]),
+        "imageinfo": lambda: fetch.imageinfo("fandom", ["File:A.png"]),
+    }
+
+    def setUp(self):
+        super().setUp()
+        self.web.limit = 50  # far above what any case below may ask; without a stop the list would never end
+
+    def answer(self, *continuations):
+        """Serve the API with one response per continuation in turn (None: no `continue`); the last one repeats."""
+        bodies = [
+            json.dumps({**({} if more is None else {"continue": more}), "query": self.QUERY}).encode("utf-8")
+            for more in continuations
+        ]
+        self.web.routes = {self.API: [(200, body, {"Content-Type": "application/json"}) for body in bodies]}
+        for log in (self.web.calls, self.web.params):
+            log.clear()
+
+    def test_a_repeated_continuation_stops_the_list_as_incomplete(self):
+        same = {"xcontinue": "same", "continue": "||"}
+        for name, read in self.LISTS.items():
+            with self.subTest(list=name):
+                self.answer(same)
+                with self.assertRaisesRegex(
+                    fetch.IncompleteList, "is incomplete: the server repeated the continuation"
+                ):
+                    read()
+                # The first request, then the continued one: its answer repeats the continuation just sent.
+                self.assertEqual(len(self.web.calls), 2)
+                self.assertEqual(self.web.params[1]["xcontinue"], "same")
+            with self.subTest(list=name, continuation={}):
+                # An empty continuation asks for what the first request already got.
+                self.answer({})
+                with self.assertRaisesRegex(fetch.IncompleteList, "is incomplete: the server repeated"):
+                    read()
+                self.assertEqual(len(self.web.calls), 1)
+
+    def test_a_continuation_cycle_stops_the_list_as_incomplete(self):
+        first, second = {"xcontinue": "1", "continue": "||"}, {"xcontinue": "2", "continue": "||"}
+        for name, read in self.LISTS.items():
+            with self.subTest(list=name):
+                self.answer(first, second, first)
+                with self.assertRaisesRegex(fetch.IncompleteList, "is incomplete: the server repeated"):
+                    read()
+                self.assertEqual([params.get("xcontinue") for params in self.web.params], [None, "1", "2"])
+
+    def test_a_continuation_that_is_not_an_object_stops_the_list_as_incomplete(self):
+        for name, read in self.LISTS.items():
+            with self.subTest(list=name):
+                self.answer("||")
+                with self.assertRaisesRegex(
+                    fetch.IncompleteList, r"is incomplete: the continuation '\|\|' is not an object"
+                ):
+                    read()
+                self.assertEqual(len(self.web.calls), 1)
+
+    def test_an_endless_continuation_stops_after_the_limit(self):
+        self.assertGreaterEqual(fetch.MAX_CONTINUATIONS, 1000)  # each request brings up to 500 rows
+        endless = [{"xcontinue": str(index), "continue": "||"} for index in range(1, 10)]
+        for name, read in self.LISTS.items():
+            with self.subTest(list=name), patch.object(fetch, "MAX_CONTINUATIONS", 3):
+                # Three continuations are allowed: a list that ends with the third one is complete.
+                self.answer(*endless[:3], None)
+                read()
+                self.assertEqual(len(self.web.calls), 4)
+                self.answer(*endless)
+                with self.assertRaisesRegex(
+                    fetch.IncompleteList, "is incomplete: still continued after 3 continuation requests"
+                ):
+                    read()
+                self.assertEqual([params.get("xcontinue") for params in self.web.params], [None, "1", "2", "3"])
+
+    def test_discovery_writes_no_snapshot_from_an_incomplete_list(self):
+        manifest = (self.root / MANIFEST).read_bytes()
+        self.answer({"cmcontinue": "page|A", "continue": "-||"})
+        with self.assertRaises(fetch.IncompleteList), patch.object(fetch, "fetch_song_keys"):
+            self.run_main("--metadata-only")
+        self.assertEqual(len(self.web.calls), 2)
+        self.assertFalse((self.root / DISCOVERY).exists())
+        self.assertEqual((self.root / MANIFEST).read_bytes(), manifest)
 
 
 class EncodingTests(unittest.TestCase):

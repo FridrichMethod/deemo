@@ -663,6 +663,61 @@ class DownloadLocationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "not under its wiki's image path"):
                     check.compare(snapshot(), snapshot(row), {})
 
+    def test_dot_segments_padded_with_whitespace_or_controls_or_spelled_in_invalid_utf8_are_refused(self):
+        # A server may trim whitespace or control characters around a segment, end it at a NUL (C strings), or decode
+        # bytes that are not UTF-8 leniently, reading the overlong "%c0%ae" as ".".
+        bwiki = "https://patchwiki.biligame.com/images/deemo/"
+        fandom = "https://static.wikia.nocookie.net/deemo/images/"
+        for source, url in (
+            # Each URL holds one spelling, so each spelling is refused on its own.
+            ("bwiki", bwiki + "..%20/..%20/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%09/..%09/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%0d%0a/..%0d%0a/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%c2%a0/..%c2%a0/otherwiki/x.png"),  # no-break space
+            ("bwiki", bwiki + "..%e3%80%80/..%e3%80%80/otherwiki/x.png"),  # ideographic space
+            ("bwiki", bwiki + "..%00/..%00/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%00.png/..%00x/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%01/..%01/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%7f/..%7f/otherwiki/x.png"),  # DEL
+            ("bwiki", bwiki + "..%c2%9f/..%c2%9f/otherwiki/x.png"),  # a C1 control
+            ("bwiki", bwiki + "%20../%20../otherwiki/x.png"),
+            ("bwiki", bwiki + "%01../%01../otherwiki/x.png"),
+            ("bwiki", bwiki + ".%20/..%20;x=1/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%20%5c..%20%5cotherwiki/x.png"),
+            ("bwiki", bwiki + "..%2520/..%2520/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%2500/..%2500/otherwiki/x.png"),
+            ("bwiki", bwiki + "%c0%ae%c0%ae/%c0%ae%c0%ae/otherwiki/x.png"),
+            ("bwiki", bwiki + "%C0%AE%C0%AE/%e0%80%ae%e0%80%ae/otherwiki/x.png"),
+            ("bwiki", bwiki + "%c0%2e%c0%2e/%c0%2e%c0%2e/otherwiki/x.png"),
+            ("bwiki", bwiki + "%25c0%25ae%25c0%25ae/%25c0%25ae%25c0%25ae/otherwiki/x.png"),
+            ("bwiki", bwiki + "a/ab/%ff%fe.png"),
+            ("fandom", fandom + "..%20/..%00/otherwiki/images/a/ab/X.png/revision/latest?cb=20210901000000"),
+            ("fandom", fandom + "%c0%ae%c0%ae/%c0%ae%c0%ae/otherwiki/images/a/ab/X.png/revision/latest"),
+        ):
+            with self.subTest(source=source, url=url):
+                self.assertFalse(check.download_url_allowed(source, url))
+                row = {**candidate("fandom", "X.png", url=url), "source": source}
+                with self.assertRaisesRegex(ValueError, "not under its wiki's image path"):
+                    check.compare(snapshot(), snapshot(row), {})
+
+    def test_names_with_spaces_dots_and_non_ascii_letters_are_accepted(self):
+        # Only a piece that is "." or ".." once trimmed is refused: dots, spaces and UTF-8 letters around other text are
+        # part of a file name.
+        bwiki = "https://patchwiki.biligame.com/images/deemo/a/ab/"
+        for url in (
+            bwiki + "%E4%B8%AD%E6%96%87%E6%9B%B2%E7%BB%98.png",
+            bwiki + "Caf%C3%A9_%E2%80%94_No%C3%ABl.png",
+            bwiki + "..%20x.png",
+            bwiki + "x%20...png",
+            bwiki + "...%20.png",
+            bwiki + "..A.png",
+            bwiki + "%2E%2E%2E.png",
+            bwiki + "100%25%20Love_%2520.png",
+            bwiki + "..%E4%B8%AD.png",
+        ):
+            with self.subTest(url=url):
+                self.assertTrue(check.download_url_allowed("bwiki", url))
+
     def test_file_names_with_semicolons_backslashes_and_percent_signs_are_accepted(self):
         # MediaWiki file names may hold ";", "\" and "%" ("100%.png" is served as 100%25.png): only a segment that
         # reads as "." or ".." is refused, not the characters around one.

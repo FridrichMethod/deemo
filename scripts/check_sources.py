@@ -51,6 +51,9 @@ URL_SAFE = ":/?#[]@!$&'()*+,;=%"
 # reorder the visible text.
 CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f\u2028\u2029]")
 BIDI_CONTROL = re.compile(r"[\u202a-\u202e\u2066-\u2069]")
+# Whitespace and control characters at either end of a decoded path segment, which a server may trim before it reads
+# the segment (see reads_as_dot()).
+SEGMENT_PADDING = re.compile(r"^[\s\x00-\x1f\x7f-\x9f]+|[\s\x00-\x1f\x7f-\x9f]+$")
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?(?:Z|[+-]\d{2}:?\d{2})?")
 FINGERPRINT_FIELDS = ("sha1", "size", "width", "height")
@@ -209,18 +212,31 @@ def index_candidates(snapshot: dict) -> dict[tuple[str, str], dict]:
     return candidates
 
 
+def reads_as_dot(piece: str) -> bool:
+    """Whether a server could read one piece of a URL path (split at "/" and "\\") as "." or "..": without a ";" path
+    parameter ("..;x=1"), cut at a NUL (a server written in C stops there), or with the whitespace and control
+    characters at either end trimmed ("..%20", "..%0d%0a")."""
+    name = piece.split(";", 1)[0].split("\x00", 1)[0]
+    return SEGMENT_PADDING.sub("", name) in (".", "..")
+
+
 def has_dot_segment(path: str) -> bool:
     """Whether a server could read a segment of the URL path as "." or "..", and so leave the directory it names.
 
     The path is checked as written and after each round of percent-decoding, repeated until nothing changes (a server
-    that decodes twice reads "%252e" as "."). In every form a backslash counts as "/" and a ";" path parameter is
-    dropped ("..;x=1" is ".."). The characters themselves are allowed: MediaWiki file names may hold ";", "\\" and "%".
+    that decodes twice reads "%252e" as "."). In every form a backslash counts as "/", and each piece is read as
+    reads_as_dot() says. A round whose bytes are not UTF-8 counts too: a lenient decoder reads the overlong "%c0%ae" as
+    "." (MediaWiki titles cannot hold "%" and two hex digits, so a real file name never decodes to such bytes). The
+    characters themselves are allowed: MediaWiki file names may hold ";", "\\", "%", spaces and dots.
     """
     while True:
-        if any(piece.split(";", 1)[0] in (".", "..") for piece in re.split(r"[/\\]", path)):
+        if any(reads_as_dot(piece) for piece in re.split(r"[/\\]", path)):
+            return True
+        try:
+            decoded = unquote(path, errors="strict")
+        except UnicodeDecodeError:
             return True
         # Each round that changes the path shortens it (three characters "%XX" become one), so the loop ends.
-        decoded = unquote(path)
         if decoded == path:
             return False
         path = decoded

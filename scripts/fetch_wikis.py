@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urljoin, urlsplit
 
 import requests
 from PIL import Image
@@ -54,11 +54,16 @@ RETRY_STATUSES = {429, 500, 502, 503, 504, 567}
 ATTEMPTS = 3
 MAX_RETRY_AFTER = 30  # seconds; a longer Retry-After is capped so a run stays bounded
 TIMEOUT = (10, 25)  # seconds to connect, and to wait for each read
-# An image download follows at most this many redirects, each checked like the first URL (see download_allowed()).
+# A request follows at most this many redirects, each checked like the first URL (see download_allowed() and get()).
 MAX_REDIRECTS = 5
 # The most bytes read from one image response, read in CHUNK_BYTES pieces; the largest wiki image is about 2.1 MiB.
 MAX_IMAGE_BYTES = 64 * 1024 * 1024
+# The most bytes read from one response of get(): an API query, the DeemoSongs JSON or the illustrator index page.
+MAX_RESPONSE_BYTES = 64 * 1024 * 1024
 CHUNK_BYTES = 1024 * 1024
+# The most continuation requests one MediaWiki list (or one batch of titles) may take, far above any real list: each
+# request brings up to 500 rows, so as many requests would list half a million.
+MAX_CONTINUATIONS = 1000
 RASTER = re.compile(r"\.(png|jpe?g|webp|gif)$", re.I)
 UI = re.compile(r"^(arrow|bbook|ac-icon|fc-icon|logo|wikilogo)(\.|$)|titletab|screenshot|^\d{8} |DEEMO[ _]II", re.I)
 # Shortest edge of a collection cover; anything smaller is a UI tab or icon (the smallest real cover is 142 px).
@@ -93,9 +98,16 @@ def _load_source_check():
 check_sources = _load_source_check()
 
 
+class IncompleteList(RuntimeError):
+    """A MediaWiki list that could not be read to its end: the server repeated a continuation, sent one that is not an
+    object, or still continued after MAX_CONTINUATIONS requests. Discovery stops with it, so no snapshot is written from
+    a list cut short."""
+
+
 class RefusedDownload(ValueError):
-    """An image download not made or not finished: a URL outside the wiki's image path, too many redirects, or a
-    response over MAX_IMAGE_BYTES. It is not retried, and no other URL of the candidate is tried."""
+    """A request not made or a response not read: an image URL outside the wiki's image path, a URL of get() off its
+    first URL's https host, a redirect whose Location is not UTF-8, too many redirects, or a body over its byte limit
+    (MAX_IMAGE_BYTES or MAX_RESPONSE_BYTES). It is not retried, and no other URL of an image candidate is tried."""
 
 
 def now():
@@ -134,13 +146,60 @@ def retried(call, *args, **kwargs):
             time.sleep(retry_delay(error, attempt))
 
 
-def get(url, *, params=None, headers=None):
-    def attempt():
-        response = requests.get(url, params=params, headers={**HEADERS, **(headers or {})}, timeout=TIMEOUT)
-        response.raise_for_status()
-        return response
+def on_host(url, host):
+    """Whether url is an https URL on exactly host, with no user or port other than 443, both as written and as requests
+    sends it (urllib3 reads a backslash as the start of the path, so "https://a\\@b/" goes to a)."""
+    try:
+        raw = urlsplit(url)
+        sent = urlsplit(requests.Request("GET", url).prepare().url)
+        ports = {raw.port, sent.port}
+    except (ValueError, requests.RequestException):
+        return False
+    return (
+        raw.scheme == sent.scheme == "https"
+        and raw.hostname == sent.hostname == host
+        and ports <= {None, 443}
+        and "@" not in raw.netloc + sent.netloc
+    )
 
-    return retried(attempt)
+
+def page_response(url, params, headers):
+    """One request of get(), following no redirect, its body read here up to MAX_RESPONSE_BYTES, so a connection lost
+    mid-body is retried like any other request. requests keeps a body it has read in _content, where .content, .text
+    and .json() find it, so the response is set up as if requests had read these bytes itself."""
+    response = requests.get(
+        url,
+        params=params,
+        headers={**HEADERS, **(headers or {})},
+        timeout=TIMEOUT,
+        allow_redirects=False,
+        stream=True,
+    )
+    try:
+        response.raise_for_status()
+        if not response.is_redirect:
+            response._content = read_body(response, MAX_RESPONSE_BYTES)
+        return response
+    finally:
+        response.close()
+
+
+def get(url, *, params=None, headers=None):
+    """The response of url, one of this script's fixed https URLs (the wikis' api.php, the DeemoSongs JSON, the
+    illustrator index), with its body read.
+
+    Redirects are followed by hand (see redirect_target()), at most MAX_REDIRECTS of them and only to https URLs on url's
+    own host, and the body is read up to MAX_RESPONSE_BYTES; otherwise RefusedDownload is raised before anything more is
+    requested or read. Connection errors and RETRY_STATUSES are retried (see retried())."""
+    host = urlsplit(url).hostname
+    for _ in range(MAX_REDIRECTS + 1):
+        if not on_host(url, host):
+            raise RefusedDownload(f"Refusing a request off {host}: {url!r}")
+        response = retried(page_response, url, params, headers)
+        if not response.is_redirect:
+            return response
+        url, params = redirect_target(response), None  # the Location carries its own query
+    raise RefusedDownload(f"Refusing to follow more than {MAX_REDIRECTS} redirects: {url!r}")
 
 
 def download_allowed(source, url):
@@ -155,19 +214,19 @@ def download_allowed(source, url):
     return check_sources.download_url_allowed(source, sent)
 
 
-def read_image(response):
-    """The body of a streamed image response. Past MAX_IMAGE_BYTES it raises RefusedDownload: at once when the
-    Content-Length says so, otherwise at the chunk that crosses the limit, so no more is read or kept."""
+def read_body(response, limit):
+    """The body of a streamed response. Past limit bytes it raises RefusedDownload: at once when the Content-Length
+    says so, otherwise at the chunk that crosses the limit, so no more is read or kept."""
     declared = str(response.headers.get("Content-Length") or "")
-    if re.fullmatch(r"[0-9]+", declared) and int(declared) > MAX_IMAGE_BYTES:
+    if re.fullmatch(r"[0-9]+", declared) and int(declared) > limit:
         raise RefusedDownload(
-            f"Refusing a response of {int(declared)} bytes, over the {MAX_IMAGE_BYTES}-byte limit: {response.url!r}"
+            f"Refusing a response of {int(declared)} bytes, over the {limit}-byte limit: {response.url!r}"
         )
     chunks, size = [], 0
     for chunk in response.iter_content(chunk_size=CHUNK_BYTES):
         size += len(chunk)
-        if size > MAX_IMAGE_BYTES:
-            raise RefusedDownload(f"Refusing a response over the {MAX_IMAGE_BYTES}-byte limit: {response.url!r}")
+        if size > limit:
+            raise RefusedDownload(f"Refusing a response over the {limit}-byte limit: {response.url!r}")
         chunks.append(chunk)
     return b"".join(chunks)
 
@@ -178,16 +237,29 @@ def image_response(url, headers):
     response = requests.get(url, headers={**HEADERS, **headers}, timeout=TIMEOUT, allow_redirects=False, stream=True)
     try:
         response.raise_for_status()
-        return response, None if response.is_redirect else read_image(response)
+        return response, None if response.is_redirect else read_body(response, MAX_IMAGE_BYTES)
     finally:
         response.close()
+
+
+def redirect_target(response):
+    """The absolute URL a redirect response sends to, read from its Location as requests reads it: http.client decodes
+    header bytes as latin-1, so the header is encoded back and decoded as UTF-8 (a raw UTF-8 file name stays itself
+    instead of turning into mojibake), requoted, and resolved against the response's URL. A Location that is not UTF-8
+    raises RefusedDownload."""
+    header = response.headers["Location"]
+    try:
+        location = header.encode("latin-1").decode("utf-8")
+    except UnicodeError:
+        raise RefusedDownload(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
+    return urljoin(response.url, requests.utils.requote_uri(location))
 
 
 def get_image(source, url, headers):
     """The final response of an image download of source, and its body.
 
     Every URL requested, the first and each redirect target, must pass download_allowed(); redirects are followed by
-    hand, at most MAX_REDIRECTS of them, and the body is read up to MAX_IMAGE_BYTES. Otherwise RefusedDownload is
+    hand (see redirect_target()), at most MAX_REDIRECTS of them, and the body is read up to MAX_IMAGE_BYTES. Otherwise RefusedDownload is
     raised before anything more is requested or read. Connection errors and RETRY_STATUSES are retried like get()."""
     for _ in range(MAX_REDIRECTS + 1):
         if not download_allowed(source, url):
@@ -195,7 +267,7 @@ def get_image(source, url, headers):
         response, body = retried(image_response, url, headers)
         if body is not None:
             return response, body
-        url = urljoin(response.url, response.headers["Location"])
+        url = redirect_target(response)
     raise RefusedDownload(f"Refusing to follow more than {MAX_REDIRECTS} redirects: {url!r}")
 
 
@@ -206,45 +278,59 @@ def api(source, **params):
     return result
 
 
+def continued(source, label, **params):
+    """Each response of the api() query params, following its `continue` until a response has none; the caller may
+    stop early. A continuation the server already sent (it would loop), one that is not an object, or one more after
+    MAX_CONTINUATIONS continuation requests raises IncompleteList, naming label: a list is never cut short silently."""
+    incomplete = f"{source} {label} is incomplete"
+    continuation, sent = {}, {json.dumps({})}
+    for _ in range(MAX_CONTINUATIONS + 1):
+        result = api(source, **params, **continuation)
+        yield result
+        if "continue" not in result:
+            return
+        continuation = result["continue"]
+        if not isinstance(continuation, dict):
+            raise IncompleteList(f"{incomplete}: the continuation {continuation!r} is not an object")
+        key = json.dumps(continuation, sort_keys=True)
+        if key in sent:
+            raise IncompleteList(f"{incomplete}: the server repeated the continuation {continuation!r}")
+        sent.add(key)
+    raise IncompleteList(f"{incomplete}: still continued after {MAX_CONTINUATIONS} continuation requests")
+
+
 def category(source, title):
     rows = []
-    continuation = {}
-    while True:
-        result = api(source, list="categorymembers", cmtitle=title, cmlimit="max", **continuation)
+    for result in continued(source, f"{title} members", list="categorymembers", cmtitle=title, cmlimit="max"):
         rows.extend(row for row in result.get("query", {}).get("categorymembers", []) if row["ns"] == 0)
-        if "continue" not in result:
-            return rows
-        continuation = result["continue"]
+    return rows
 
 
 def allimages(source):
     rows = []
-    continuation = {}
-    while True:
-        result = api(source, list="allimages", ailimit="max", aiprop="size|url|mime|timestamp|sha1", **continuation)
+    for result in continued(
+        source, "allimages", list="allimages", ailimit="max", aiprop="size|url|mime|timestamp|sha1"
+    ):
         rows.extend(result.get("query", {}).get("allimages", []))
-        if "continue" not in result:
-            return rows
-        continuation = result["continue"]
+    return rows
 
 
 def pages(source, titles):
     merged = {}
     for start in range(0, len(titles), 30):
-        continuation = {}
-        while True:
-            result = api(
-                source,
-                titles="|".join(titles[start : start + 30]),
-                redirects=1,
-                prop="revisions|images|categories|info",
-                rvprop="content|timestamp",
-                rvslots="main",
-                imlimit="max",
-                cllimit="max",
-                inprop="url",
-                **continuation,
-            )
+        batch = titles[start : start + 30]
+        for result in continued(
+            source,
+            f"pages {batch[0]!r} and the {len(batch) - 1} after it",
+            titles="|".join(batch),
+            redirects=1,
+            prop="revisions|images|categories|info",
+            rvprop="content|timestamp",
+            rvslots="main",
+            imlimit="max",
+            cllimit="max",
+            inprop="url",
+        ):
             for page in result.get("query", {}).get("pages", {}).values():
                 if "missing" in page:
                     continue
@@ -256,9 +342,6 @@ def pages(source, titles):
                 # (the wikitext) when the result-size limit stopped the first one.
                 for key, value in page.items():
                     target.setdefault(key, value)
-            if "continue" not in result:
-                break
-            continuation = result["continue"]
     return list(merged.values())
 
 
@@ -272,28 +355,25 @@ def imageinfo(source, titles):
     """The current revision's imageinfo of each file in titles that has one, keyed by page title."""
     infos = {}
     for start in range(0, len(titles), 50):
-        continuation = {}
+        batch = titles[start : start + 50]
         # At its result-size limit MediaWiki answers only part of the batch and returns `continue` for the rest; for a
         # one-title batch that `continue` can bring the current revision (iistart set to its own timestamp).
-        while True:
-            result = api(
-                source,
-                titles="|".join(titles[start : start + 50]),
-                prop="imageinfo",
-                iiprop="size|url|mime|timestamp|sha1|extmetadata",
-                iilimit=1,
-                **continuation,
-            )
+        for result in continued(
+            source,
+            f"imageinfo of {batch[0]!r} and the {len(batch) - 1} files after it",
+            titles="|".join(batch),
+            prop="imageinfo",
+            iiprop="size|url|mime|timestamp|sha1|extmetadata",
+            iilimit=1,
+        ):
             listed = result.get("query", {}).get("pages", {}).values()
             for page in listed:
                 if page.get("imageinfo"):
                     infos.setdefault(page["title"], page["imageinfo"][0])
             # A one-title batch is also continued (iistart) through every older revision of its file, one request
             # each, which setdefault() would discard: stop once each file of the batch has its current revision.
-            waiting = [page for page in listed if awaits_imageinfo(page) and page["title"] not in infos]
-            if "continue" not in result or not waiting:
+            if not any(awaits_imageinfo(page) and page["title"] not in infos for page in listed):
                 break
-            continuation = result["continue"]
     return infos
 
 

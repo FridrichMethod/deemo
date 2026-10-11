@@ -1973,7 +1973,8 @@ class ManifestWriteTests(TempRoot):
 
 
 class CatalogCheckTests(unittest.TestCase):
-    """A reachability check of a catalogued page follows redirects only on https within that page's own site."""
+    """A reachability check of a catalogued page follows redirects only on https within that page's registrable
+    domain."""
 
     URL = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/"
 
@@ -2024,6 +2025,81 @@ class CatalogCheckTests(unittest.TestCase):
         self.assertEqual(row["access_status"], "request_failed")
         self.assertIn("Too many redirects", row["access_error"])
         self.assertEqual(len(web.requested), archives.MAX_REDIRECTS + 1)
+
+    def check_page(self, url, location):
+        """Check the catalogued page url, which redirects to location (served if it is requested); returns
+        (row, requested URLs)."""
+        target = urljoin(url, location)
+        web = FakeWeb({url: (302, b"", {"Location": location}), target: "page"})
+        with patch.object(archives, "session", return_value=web):
+            row = archives.check_entry(("page", "Page", url, "index_only", ""))
+        return row, web.requested
+
+    def test_a_redirect_within_the_registrable_domain_is_followed(self):
+        # A sibling host of the same organisation: the registrable domain is the last two labels of the host, or the
+        # last three under a country code's public second level (co.jp, com.cn).
+        for url, location in (
+            ("https://wublaze.tumblr.com/post/129276170315/x", "https://www.tumblr.com/wublaze/129276170315/x"),
+            ("https://search.bilibili.com/all?keyword=DEEMO", "https://www.bilibili.com/search?keyword=DEEMO"),
+            ("https://www.kadokawa.co.jp/product/322109001023/", "https://store.kadokawa.co.jp/shop/g/g322109001023/"),
+            ("https://pan.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA", "https://yun.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA"),
+            ("https://bookwalker.jp/de0/", "https://global.bookwalker.jp/de0/"),
+            ("https://news.example.com.cn/a", "https://www.example.com.cn/a"),
+        ):
+            with self.subTest(url=url):
+                row, requested = self.check_page(url, location)
+                self.assertEqual(requested, [url, location])
+                self.assertEqual(
+                    (row["access_status"], row["http_status"], row["resolved_url"]), ("page_reachable", 200, location)
+                )
+                self.assertNotIn("redirect_location", row)
+
+    def test_a_redirect_off_the_registrable_domain_is_not_followed(self):
+        for url, location in (
+            ("https://www.kadokawa.co.jp/product/1/", "https://evil.co.jp/product/1/"),  # another site under co.jp
+            ("https://news.example.com.cn/a", "https://evil.com.cn/a"),
+            ("https://wublaze.tumblr.com/post/1/x", "https://tumblr.com.evil.example/post/1/x"),
+            ("https://wublaze.tumblr.com/post/1/x", "https://eviltumblr.com/post/1/x"),
+            ("https://wublaze.tumblr.com/post/1/x", "http://www.tumblr.com/wublaze/1/x"),  # plain http
+            ("https://search.bilibili.com/all", "https://www.bilibili.com:8443/all"),
+            ("https://search.bilibili.com/all", "https://user@www.bilibili.com/all"),
+            ("https://search.bilibili.com/all", "https://www.bilibili.com\\@evil.example/all"),
+            ("https://wublaze.tumblr.com/post/1/x", "https://192.0.2.1/post/1/x"),  # IP address literals
+            ("https://wublaze.tumblr.com/post/1/x", "https://[2001:db8::1]/post/1/x"),
+            ("https://192.0.2.1/page", "https://192.0.2.1/other"),  # an IP address has no registrable domain
+            ("https://www.2.1/page", "https://192.0.2.1/other"),  # nor is it within one, however its labels end
+            ("https://co.jp/page", "https://evil.co.jp/page"),
+        ):
+            with self.subTest(url=url, location=location):
+                row, requested = self.check_page(url, location)
+                self.assertEqual(requested, [url])
+                self.assertEqual(
+                    (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
+                    ("redirected_off_site", 302, url, urljoin(url, location)),
+                )
+
+    def test_registrable_domains(self):
+        for host, domain in (
+            ("www.reddit.com", "reddit.com"),
+            ("wublaze.tumblr.com", "tumblr.com"),
+            ("search.bilibili.com", "bilibili.com"),
+            ("rayark.promo", "rayark.promo"),
+            ("WWW.Kadokawa.CO.JP.", "kadokawa.co.jp"),
+            ("a.b.example.ac.uk", "example.ac.uk"),
+            ("shop.example.ne.jp", "example.ne.jp"),
+            ("x.co.com", "co.com"),  # "co" is a public second level only under a two-letter country code
+            ("example.co", "example.co"),
+            ("example.co.jp", "example.co.jp"),
+            ("co.jp", None),  # a public suffix is no one's site
+            ("CO.UK.", None),
+            ("localhost", "localhost"),
+            ("192.0.2.1", None),
+            ("2001:db8::1", None),
+            ("", None),
+            (None, None),
+        ):
+            with self.subTest(host=host):
+                self.assertEqual(archives.registrable_domain(host), domain)
 
 
 class RetryStatusTests(unittest.TestCase):
