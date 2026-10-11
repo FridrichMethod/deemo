@@ -59,6 +59,9 @@ MAX_REDIRECTS = 5
 # The most bytes read from one image response, read in CHUNK_BYTES pieces; the largest wiki image is about 2.1 MiB.
 MAX_IMAGE_BYTES = 64 * 1024 * 1024
 CHUNK_BYTES = 1024 * 1024
+# The most continuation requests one MediaWiki list (or one batch of titles) may take, far above any real list: each
+# request brings up to 500 rows, so as many requests would list half a million.
+MAX_CONTINUATIONS = 1000
 RASTER = re.compile(r"\.(png|jpe?g|webp|gif)$", re.I)
 UI = re.compile(r"^(arrow|bbook|ac-icon|fc-icon|logo|wikilogo)(\.|$)|titletab|screenshot|^\d{8} |DEEMO[ _]II", re.I)
 # Shortest edge of a collection cover; anything smaller is a UI tab or icon (the smallest real cover is 142 px).
@@ -91,6 +94,12 @@ def _load_source_check():
 
 
 check_sources = _load_source_check()
+
+
+class IncompleteList(RuntimeError):
+    """A MediaWiki list that could not be read to its end: the server repeated a continuation, sent one that is not an
+    object, or still continued after MAX_CONTINUATIONS requests. Discovery stops with it, so no snapshot is written from
+    a list cut short."""
 
 
 class RefusedDownload(ValueError):
@@ -206,45 +215,59 @@ def api(source, **params):
     return result
 
 
+def continued(source, label, **params):
+    """Each response of the api() query params, following its `continue` until a response has none; the caller may
+    stop early. A continuation the server already sent (it would loop), one that is not an object, or one more after
+    MAX_CONTINUATIONS continuation requests raises IncompleteList, naming label: a list is never cut short silently."""
+    incomplete = f"{source} {label} is incomplete"
+    continuation, sent = {}, {json.dumps({})}
+    for _ in range(MAX_CONTINUATIONS + 1):
+        result = api(source, **params, **continuation)
+        yield result
+        if "continue" not in result:
+            return
+        continuation = result["continue"]
+        if not isinstance(continuation, dict):
+            raise IncompleteList(f"{incomplete}: the continuation {continuation!r} is not an object")
+        key = json.dumps(continuation, sort_keys=True)
+        if key in sent:
+            raise IncompleteList(f"{incomplete}: the server repeated the continuation {continuation!r}")
+        sent.add(key)
+    raise IncompleteList(f"{incomplete}: still continued after {MAX_CONTINUATIONS} continuation requests")
+
+
 def category(source, title):
     rows = []
-    continuation = {}
-    while True:
-        result = api(source, list="categorymembers", cmtitle=title, cmlimit="max", **continuation)
+    for result in continued(source, f"{title} members", list="categorymembers", cmtitle=title, cmlimit="max"):
         rows.extend(row for row in result.get("query", {}).get("categorymembers", []) if row["ns"] == 0)
-        if "continue" not in result:
-            return rows
-        continuation = result["continue"]
+    return rows
 
 
 def allimages(source):
     rows = []
-    continuation = {}
-    while True:
-        result = api(source, list="allimages", ailimit="max", aiprop="size|url|mime|timestamp|sha1", **continuation)
+    for result in continued(
+        source, "allimages", list="allimages", ailimit="max", aiprop="size|url|mime|timestamp|sha1"
+    ):
         rows.extend(result.get("query", {}).get("allimages", []))
-        if "continue" not in result:
-            return rows
-        continuation = result["continue"]
+    return rows
 
 
 def pages(source, titles):
     merged = {}
     for start in range(0, len(titles), 30):
-        continuation = {}
-        while True:
-            result = api(
-                source,
-                titles="|".join(titles[start : start + 30]),
-                redirects=1,
-                prop="revisions|images|categories|info",
-                rvprop="content|timestamp",
-                rvslots="main",
-                imlimit="max",
-                cllimit="max",
-                inprop="url",
-                **continuation,
-            )
+        batch = titles[start : start + 30]
+        for result in continued(
+            source,
+            f"pages {batch[0]!r} and the {len(batch) - 1} after it",
+            titles="|".join(batch),
+            redirects=1,
+            prop="revisions|images|categories|info",
+            rvprop="content|timestamp",
+            rvslots="main",
+            imlimit="max",
+            cllimit="max",
+            inprop="url",
+        ):
             for page in result.get("query", {}).get("pages", {}).values():
                 if "missing" in page:
                     continue
@@ -256,9 +279,6 @@ def pages(source, titles):
                 # (the wikitext) when the result-size limit stopped the first one.
                 for key, value in page.items():
                     target.setdefault(key, value)
-            if "continue" not in result:
-                break
-            continuation = result["continue"]
     return list(merged.values())
 
 
@@ -272,28 +292,25 @@ def imageinfo(source, titles):
     """The current revision's imageinfo of each file in titles that has one, keyed by page title."""
     infos = {}
     for start in range(0, len(titles), 50):
-        continuation = {}
+        batch = titles[start : start + 50]
         # At its result-size limit MediaWiki answers only part of the batch and returns `continue` for the rest; for a
         # one-title batch that `continue` can bring the current revision (iistart set to its own timestamp).
-        while True:
-            result = api(
-                source,
-                titles="|".join(titles[start : start + 50]),
-                prop="imageinfo",
-                iiprop="size|url|mime|timestamp|sha1|extmetadata",
-                iilimit=1,
-                **continuation,
-            )
+        for result in continued(
+            source,
+            f"imageinfo of {batch[0]!r} and the {len(batch) - 1} files after it",
+            titles="|".join(batch),
+            prop="imageinfo",
+            iiprop="size|url|mime|timestamp|sha1|extmetadata",
+            iilimit=1,
+        ):
             listed = result.get("query", {}).get("pages", {}).values()
             for page in listed:
                 if page.get("imageinfo"):
                     infos.setdefault(page["title"], page["imageinfo"][0])
             # A one-title batch is also continued (iistart) through every older revision of its file, one request
             # each, which setdefault() would discard: stop once each file of the batch has its current revision.
-            waiting = [page for page in listed if awaits_imageinfo(page) and page["title"] not in infos]
-            if "continue" not in result or not waiting:
+            if not any(awaits_imageinfo(page) and page["title"] not in infos for page in listed):
                 break
-            continuation = result["continue"]
     return infos
 
 

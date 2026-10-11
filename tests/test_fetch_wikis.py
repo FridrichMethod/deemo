@@ -162,15 +162,20 @@ class FakeResponse:
 class FakeWeb:
     """Stands in for requests.get. A route is bytes (200), a (status, body, headers) tuple, or a list of these served
     in turn (the last one repeats); any other URL behaves as if the network were down. Like requests, it follows a
-    redirect (a 3xx with a Location) unless allow_redirects=False. Every request is recorded in calls, its
-    allow_redirects and stream options in options, and every response in responses."""
+    redirect (a 3xx with a Location) unless allow_redirects=False. Every request is recorded in calls, its query
+    parameters in params, its allow_redirects and stream options in options, and every response in responses. With a
+    limit, a request past that many fails the test, so a client that would never stop asking cannot hang it."""
 
     def __init__(self):
-        self.routes, self.calls, self.options, self.responses = {}, [], [], []
+        self.routes, self.calls, self.params, self.options, self.responses = {}, [], [], [], []
+        self.limit = None
 
     def __call__(self, url, params=None, headers=None, timeout=None, allow_redirects=True, stream=False):
         for _ in range(30):  # requests' default max_redirects
+            if self.limit is not None and len(self.calls) >= self.limit:
+                raise AssertionError(f"Still requesting after {self.limit} requests: {url}")
             self.calls.append(url)
+            self.params.append(params)
             self.options.append({"allow_redirects": allow_redirects, "stream": stream})
             route = self.routes.get(url)
             if isinstance(route, list):
@@ -745,7 +750,7 @@ class DownloadGuardTests(FetcherRun):
     def serve(self, routes):
         """Replace the fake web's routes and forget the requests made so far."""
         self.web.routes = routes
-        for log in (self.web.calls, self.web.options, self.web.responses):
+        for log in (self.web.calls, self.web.params, self.web.options, self.web.responses):
             log.clear()
 
     def refused(self, candidate, *, reason="Refusing"):
@@ -1325,6 +1330,102 @@ class ContinuationTests(unittest.TestCase):
             {page["title"]: fetch.song_metadata("fandom", page).get("composer") for page in pages},
             {"A": "Composer A", "B": "Composer B"},
         )
+
+
+class ContinuationLimitTests(FetcherRun):
+    """A server that keeps returning `continue` must not keep discovery asking forever, and a list it cuts short must
+    not pass for a complete one: the list stops with IncompleteList, and discovery writes no snapshot."""
+
+    API = fetch.SOURCES["fandom"]["api_url"]
+    # One body serves every list: a category member, an allimages row and a file page still without imageinfo.
+    QUERY = {
+        "categorymembers": [{"title": "A", "ns": 0}],
+        "allimages": [allimage("A.png", 1024, 1024)],
+        "pages": {"1": {"title": "File:A.png", "ns": 6}},
+    }
+    LISTS = {
+        "category": lambda: fetch.category("fandom", "Category:Songs"),
+        "allimages": lambda: fetch.allimages("fandom"),
+        "pages": lambda: fetch.pages("fandom", ["File:A.png"]),
+        "imageinfo": lambda: fetch.imageinfo("fandom", ["File:A.png"]),
+    }
+
+    def setUp(self):
+        super().setUp()
+        self.web.limit = 50  # far above what any case below may ask; without a stop the list would never end
+
+    def answer(self, *continuations):
+        """Serve the API with one response per continuation in turn (None: no `continue`); the last one repeats."""
+        bodies = [
+            json.dumps({**({} if more is None else {"continue": more}), "query": self.QUERY}).encode("utf-8")
+            for more in continuations
+        ]
+        self.web.routes = {self.API: [(200, body, {"Content-Type": "application/json"}) for body in bodies]}
+        for log in (self.web.calls, self.web.params):
+            log.clear()
+
+    def test_a_repeated_continuation_stops_the_list_as_incomplete(self):
+        same = {"xcontinue": "same", "continue": "||"}
+        for name, read in self.LISTS.items():
+            with self.subTest(list=name):
+                self.answer(same)
+                with self.assertRaisesRegex(
+                    fetch.IncompleteList, "is incomplete: the server repeated the continuation"
+                ):
+                    read()
+                # The first request, then the continued one: its answer repeats the continuation just sent.
+                self.assertEqual(len(self.web.calls), 2)
+                self.assertEqual(self.web.params[1]["xcontinue"], "same")
+            with self.subTest(list=name, continuation={}):
+                # An empty continuation asks for what the first request already got.
+                self.answer({})
+                with self.assertRaisesRegex(fetch.IncompleteList, "is incomplete: the server repeated"):
+                    read()
+                self.assertEqual(len(self.web.calls), 1)
+
+    def test_a_continuation_cycle_stops_the_list_as_incomplete(self):
+        first, second = {"xcontinue": "1", "continue": "||"}, {"xcontinue": "2", "continue": "||"}
+        for name, read in self.LISTS.items():
+            with self.subTest(list=name):
+                self.answer(first, second, first)
+                with self.assertRaisesRegex(fetch.IncompleteList, "is incomplete: the server repeated"):
+                    read()
+                self.assertEqual([params.get("xcontinue") for params in self.web.params], [None, "1", "2"])
+
+    def test_a_continuation_that_is_not_an_object_stops_the_list_as_incomplete(self):
+        for name, read in self.LISTS.items():
+            with self.subTest(list=name):
+                self.answer("||")
+                with self.assertRaisesRegex(
+                    fetch.IncompleteList, r"is incomplete: the continuation '\|\|' is not an object"
+                ):
+                    read()
+                self.assertEqual(len(self.web.calls), 1)
+
+    def test_an_endless_continuation_stops_after_the_limit(self):
+        self.assertGreaterEqual(fetch.MAX_CONTINUATIONS, 1000)  # each request brings up to 500 rows
+        endless = [{"xcontinue": str(index), "continue": "||"} for index in range(1, 10)]
+        for name, read in self.LISTS.items():
+            with self.subTest(list=name), patch.object(fetch, "MAX_CONTINUATIONS", 3):
+                # Three continuations are allowed: a list that ends with the third one is complete.
+                self.answer(*endless[:3], None)
+                read()
+                self.assertEqual(len(self.web.calls), 4)
+                self.answer(*endless)
+                with self.assertRaisesRegex(
+                    fetch.IncompleteList, "is incomplete: still continued after 3 continuation requests"
+                ):
+                    read()
+                self.assertEqual([params.get("xcontinue") for params in self.web.params], [None, "1", "2", "3"])
+
+    def test_discovery_writes_no_snapshot_from_an_incomplete_list(self):
+        manifest = (self.root / MANIFEST).read_bytes()
+        self.answer({"cmcontinue": "page|A", "continue": "-||"})
+        with self.assertRaises(fetch.IncompleteList), patch.object(fetch, "fetch_song_keys"):
+            self.run_main("--metadata-only")
+        self.assertEqual(len(self.web.calls), 2)
+        self.assertFalse((self.root / DISCOVERY).exists())
+        self.assertEqual((self.root / MANIFEST).read_bytes(), manifest)
 
 
 class EncodingTests(unittest.TestCase):
