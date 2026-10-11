@@ -134,6 +134,9 @@ def download(sid, key, title, page, url, kind, hosts, **extra):
             with Image.open(io.BytesIO(blob)) as im:
                 width, height, fmt = im.width, im.height, im.format
                 im.verify()
+            # verify() reads little beyond the header of a JPEG or GIF; decoding the whole image rejects a truncated one.
+            with Image.open(io.BytesIO(blob)) as im:
+                im.load()
             ext = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp", "GIF": ".gif"}.get(fmt)
             if not ext:
                 raise ValueError(f"Unsupported original format: {fmt}")
@@ -759,6 +762,8 @@ def verify():
                     asset["format"],
                 ), asset["path"]
                 image.verify()
+            with Image.open(io.BytesIO(blob)) as image:
+                image.load()  # raises on an image that does not decode completely
     for asset in manifest["assets"]:
         assert asset.get("superseded_by", asset["id"]) in ids, asset["id"]
     print(f"Verified {len(ids)} assets; checksums, bytes, dimensions, formats, IDs and source references valid.")

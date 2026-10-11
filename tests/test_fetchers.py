@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import random
 import re
 import sys
 import tempfile
@@ -39,6 +40,17 @@ def png(color, size=(4, 4)):
     buffer = io.BytesIO()
     Image.new("RGB", size, color).save(buffer, "PNG")
     return buffer.getvalue()
+
+
+NOISE_SIZE = (64, 48)
+
+
+def truncated(fmt):
+    """The first half of a noise image in fmt: its header opens and verify() passes, but it cannot be decoded."""
+    buffer = io.BytesIO()
+    pixels = random.Random(0).randbytes(NOISE_SIZE[0] * NOISE_SIZE[1] * 3)
+    Image.frombytes("RGB", NOISE_SIZE, pixels).save(buffer, fmt)
+    return buffer.getvalue()[: len(buffer.getvalue()) // 2]
 
 
 def sha(data):
@@ -1310,6 +1322,46 @@ class ArchivesTests(TempRoot):
             self.write_manifest("archives", bad)
             with self.assertRaises(AssertionError), contextlib.redirect_stdout(io.StringIO()):
                 archives.verify()
+
+    def test_an_image_that_does_not_decode_completely_is_not_archived(self):
+        source = {"id": "archives:official-deemo", "name": "Official", "url": "https://deemo.com/", "status": "partial"}
+        for fmt in ("JPEG", "GIF"):
+            with self.subTest(fmt=fmt):
+                archives.reset()
+                url, cut = f"https://deemo.com/img/index_pic.{fmt.lower()}", truncated(fmt)
+                with patch.object(archives, "session", return_value=FakeWeb({url: cut})):
+                    row = archives.download(
+                        "official-deemo",
+                        "index_pic",
+                        "T",
+                        "https://deemo.com/",
+                        url,
+                        "illustration",
+                        hosts=("deemo.com",),
+                    )
+                self.assertIsNone(row)
+                failures = archives.MANIFEST["failures"]
+                self.assertEqual(
+                    [(f["asset_id"], f["url"]) for f in failures], [("archives:official-deemo:index_pic", url)]
+                )
+                self.assertIn("truncated", failures[0]["error"])
+                self.assertEqual(self.archived_files(), set())
+
+                # --verify decodes every recorded image completely as well.
+                width, height = NOISE_SIZE
+                record = {
+                    **self.caa_record(11, cut),
+                    "source_id": source["id"],
+                    "format": fmt,
+                    "width": width,
+                    "height": height,
+                }
+                self.write_manifest(
+                    "archives", {"schema_version": 1, "sources": [source], "assets": [record], "failures": []}
+                )
+                with self.assertRaisesRegex(OSError, "truncated"), contextlib.redirect_stdout(io.StringIO()):
+                    archives.verify()
+                (self.root / record["path"]).unlink()
 
     def test_cover_filter_checks_hostnames(self):
         html = "".join(
