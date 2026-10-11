@@ -24,7 +24,7 @@ Both pages are in English by default. Each page has a language button (labeled "
 
 ## Website deployment
 
-After a push to `main`, the [Pages workflow](.github/workflows/pages.yml) publishes the site automatically, but only after the [test workflow](.github/workflows/tests.yml) passes in the same run; if any check fails, nothing is deployed and the live site stays unchanged. The test workflow also runs on every push and every pull request, whatever its base branch. It installs `requirements.txt` and runs every `tests/test_*.py`, `scripts/build_catalog.py --verify --check` (a stale `index.html` or catalog fails it), `scripts/build_legacy_inventory.py` and `scripts/fetch_archives.py --verify`; a separate job runs `tests/browser_smoke.py` against a local server with the runner's Chrome. `.gitattributes` keeps the inherited files and everything under `assets/` out of line-ending conversion, so these byte checks also pass in a Windows checkout (`core.autocrlf=true`).
+After a push to `main`, the [Pages workflow](.github/workflows/pages.yml) publishes the site automatically, but only after the [test workflow](.github/workflows/tests.yml) passes in the same run; if any check fails, nothing is deployed and the live site stays unchanged. The test workflow also runs on every push and every pull request, whatever its base branch. It installs `requirements.txt` and `requirements-lint.txt`, then runs every `tests/test_*.py` under coverage.py (the run fails if they cover less of `scripts/` than `fail_under` in `pyproject.toml`), `scripts/build_catalog.py --verify --check` (a stale `index.html` or catalog fails it), `scripts/build_legacy_inventory.py` and `scripts/fetch_archives.py --verify`; a separate job runs `tests/browser_smoke.py` against a local server with the runner's Chrome, and a lint job runs every pre-commit hook on every file (ruff, mypy, actionlint, ESLint and the whitespace checks; see "Development" below). `.gitattributes` keeps the inherited files and everything under `assets/` out of line-ending conversion, so these byte checks also pass in a Windows checkout (`core.autocrlf=true`).
 
 `scripts/prepare_pages.py` copies only Git-tracked files from `assets/`, `data/`, `src/`, `docs/`, `licenses/` plus an explicit list of root-level web pages, configuration and attribution files; it never publishes `.git/`, workflows, fetch scripts, tests or untracked files. Only a separately generated site directory is uploaded, not the repository root. The allowlist only limits what the website publishes; it is not a sensitive-content detector. The repository itself is public, so check the contents of any file before committing it.
 
@@ -103,7 +103,7 @@ To rediscover wiki entries, drop `--resume`. Network sources may be rate-limited
 Offline verification and browser acceptance checks:
 
 ```sh
-# Every offline test file, as CI runs them
+# Every offline test file, as CI runs them (CI also measures their coverage and lints; see "Development")
 for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done
 .venv/bin/python scripts/build_catalog.py --verify --check
 .venv/bin/python scripts/build_legacy_inventory.py
@@ -114,6 +114,44 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -I tests/browser_smoke.py --base http://127.0.0.1:8765 --browser /usr/bin/google-chrome
 ```
+
+## Development
+
+The code-quality tools are pinned like the build dependencies: ruff, mypy, coverage.py and pre-commit in `requirements-lint.txt`, ESLint in `package.json` and `package-lock.json`, and each pre-commit hook at a full commit SHA in `.pre-commit-config.yaml`. Their settings are in `pyproject.toml` (ruff, mypy, coverage.py) and `eslint.config.mjs`; `tests/test_tooling.py` checks that the pins agree and that every tool skips the byte-pinned and generated files listed at the end of this section. Install them into the virtual environment from above; ESLint needs Node.js 20.19 or a later 20.x, 22.13 or a later 22.x, or 24 or newer (`engines` in `package.json`):
+
+```sh
+.venv/bin/python -m pip install -r requirements-lint.txt
+npm ci --ignore-scripts
+```
+
+`pre-commit run --all-files` runs every hook on every file, as the lint job of the test workflow does: whitespace and file checks, `ruff check`, `ruff format`, mypy, actionlint on the workflows, and ESLint. A hook that has to rewrite a file (trailing whitespace, a missing final newline, formatting) fails the run, so review its change before committing it. `pre-commit install` runs the hooks on every `git commit` in your own clone; it is optional. Each tool also runs on its own:
+
+```sh
+.venv/bin/pre-commit run --all-files
+.venv/bin/ruff check
+.venv/bin/ruff format
+.venv/bin/mypy
+npx --no-install eslint --max-warnings=0 src
+```
+
+ruff applies the first-stage rules in `pyproject.toml` (syntax and runtime errors, pyflakes, pycodestyle warnings, import order, bugbear, pyupgrade and pylint errors) with a line length of 120 and Python 3.10 syntax; `ruff format --check` only reports what `ruff format` would change. mypy is adopted in stages: stage 1 checks, without strict mode, the five build and publication scripts that `[tool.mypy]` in `pyproject.toml` lists (`build_catalog.py`, `build_legacy_inventory.py`, `build_thumbnails.py`, `check_sources.py` and `prepare_pages.py` in `scripts/`); later stages add the fetchers (`scripts/fetch_*.py`), then the tests, then stricter options. Run mypy without arguments so that it checks exactly that list. ESLint only checks, so never run it with `--fix`: `src/` is published exactly as committed and several tests compare parts of its exact text, so findings are fixed by hand in a reviewed change; `src/vendor/` is not linted.
+
+The test workflow runs the unit tests under coverage.py, which also measures every script a test starts as a subprocess, and fails when they cover less of `scripts/` than `fail_under` in `pyproject.toml`. That threshold is the measured baseline, rounded down: raise it when coverage rises, and never lower it to pass. To measure coverage locally, from the repository root:
+
+```sh
+for test in tests/test_*.py; do .venv/bin/python -I -m coverage run "$test"; done
+.venv/bin/python -I -m coverage combine
+.venv/bin/python -I -m coverage report
+```
+
+Commits that only reformat code are listed in `.git-blame-ignore-revs`. Run `git config blame.ignoreRevsFile .git-blame-ignore-revs` once in your clone, and `git blame` attributes each line to the change that wrote it rather than to a reformatting.
+
+No tool reads or rewrites the following paths. The global `exclude` of `.pre-commit-config.yaml` skips them for every hook, `extend-exclude` in `pyproject.toml` keeps ruff away from them even when a path is passed explicitly, `eslint.config.mjs` ignores `src/vendor/`, and `.editorconfig` turns off editor normalisation for them.
+
+- The inherited files whose bytes `data/legacy-inventory.json` pins (SHA-256 and Git blob): `LICENSE`, `licenses/DeemoSongs-MIT.txt`, `src/vendor/legacy-ui.js`, `scripts/legacy/*.py`, `assets/legacy/` and `assets/site/`. For the same reason `.gitattributes` exempts them from line-ending conversion.
+- The downloaded originals under `assets/public/`, whose SHA-256 the source manifests record.
+- Generated files: `index.html`, `data/catalog.json`, `data/catalog.js`, `data/thumbs.json`, `data/legacy-inventory.json` and the previews in `assets/thumbs/`, and the manifests in `data/sources/` that the fetch scripts write. Regenerate them with their scripts instead of editing them by hand.
+- The license texts (`LICENSE`, `licenses/*.txt`), kept verbatim, and the third-party bundle `src/vendor/legacy-ui.js`, kept exactly as upstream shipped it.
 
 ## Grid previews
 
