@@ -57,6 +57,8 @@ UI = re.compile(r"^(arrow|bbook|ac-icon|fc-icon|logo|wikilogo)(\.|$)|titletab|sc
 MIN_COVER_EDGE = 100
 # Characters MediaWiki forbids in page titles, so a link built from a name containing one cannot resolve.
 ILLEGAL_TITLE = re.compile(r"[#<>\[\]{}|]")
+# The manifest's entry for the Japanese wiki's illustrator directory, reference data kept next to the wiki sources.
+ILLUSTRATOR_SOURCE_ID = "wikis:wikiwiki-illustrators"
 # Optional record fields describing how a carried-forward record relates to the current upstream file.
 UPSTREAM_FIELDS = ("upstream_status", "superseded_by")
 # Optional candidate fields a record copies at its end, in this order (then delivery_note), on download and re-run.
@@ -800,8 +802,13 @@ def fetch_song_keys():
 
 
 def fetch_illustrator_index(manifest):
+    """Refresh the saved illustrator directory and its source entry in the manifest.
+
+    A failed fetch, or a page without the directory (a challenge or maintenance page), is recorded in the failures and
+    keeps the entry the manifest already holds, so a transient block never replaces a good index or drops its path."""
+    previous = next((s for s in manifest["sources"] if s["id"] == ILLUSTRATOR_SOURCE_ID), None)
     source = {
-        "id": "wikis:wikiwiki-illustrators",
+        "id": ILLUSTRATOR_SOURCE_ID,
         "name": "Japanese DEEMO Wiki illustrator directory",
         "url": "https://wikiwiki.jp/deemo/アーティスト別リスト2",
         "status": "unavailable",
@@ -825,6 +832,8 @@ def fetch_illustrator_index(manifest):
                     ],
                 }
             )
+        if not rows:
+            raise ValueError("The page holds no headings or table rows of the illustrator directory")
         write_json(
             "data/sources/wiki-illustrator-index.json",
             {"schema_version": 1, "fetched_at": now(), "source_url": source["url"], "rows": rows},
@@ -834,6 +843,7 @@ def fetch_illustrator_index(manifest):
         manifest["failures"].append(
             {"source_id": source["id"], "url": source["url"], "error": str(error), "stage": "reference_index"}
         )
+        source = previous or source
     manifest["sources"] = [s for s in manifest["sources"] if s["id"] != source["id"]] + [source]
 
 
@@ -876,6 +886,8 @@ def main():
                     "notes": "Only original DEEMO and its ports. DEEMO II categories, audio, charts, screenshots and unrelated UI are excluded.",
                 }
             )
+        # The reference index keeps its entry until fetch_illustrator_index() refreshes it, checkpoints included.
+        manifest["sources"] += [s for s in previous.get("sources", []) if s["id"] == ILLUSTRATOR_SOURCE_ID]
         songs = fandom_songs + bwiki_songs
         write_json("data/sources/wiki-song-index.json", {"schema_version": 1, "fetched_at": now(), "songs": songs})
         candidates = with_composers(with_collection_aliases(fandom + bwiki, songs), songs)
@@ -899,11 +911,16 @@ def main():
                 candidate["try_png_first"] = True
     candidate_ids, results, failed_ids = download_all(candidates, existing, manifest, args.workers)
     manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
+    wiki_ids = {source["id"] for source in SOURCES.values()}
     for source in manifest["sources"]:
+        if source["id"] not in wiki_ids:
+            continue  # the reference index entry has no assets; fetch_illustrator_index() sets its status
         source["asset_count"] = sum(asset["source_id"] == source["id"] for asset in manifest["assets"])
         source["failure_count"] = sum(failure["source_id"] == source["id"] for failure in manifest["failures"])
         source["status"] = "partial" if source["failure_count"] else "complete"
-    fetch_illustrator_index(manifest)
+    if not args.resume:
+        # Like the song keys, the reference index is unrelated to the saved snapshot, so only a full run refreshes it.
+        fetch_illustrator_index(manifest)
     manifest["fetched_at"] = now()
     manifest["assets"].sort(key=lambda row: row["id"])
     manifest["failures"].sort(key=failure_key)

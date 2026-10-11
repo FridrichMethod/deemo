@@ -31,6 +31,10 @@ fetch = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(fetch)
 MANIFEST = "data/sources/wikis.json"
 DISCOVERY = "data/sources/wiki-discovery.json"
+ILLUSTRATOR_INDEX = "data/sources/wiki-illustrator-index.json"
+ILLUSTRATOR_URL = "https://wikiwiki.jp/deemo/アーティスト別リスト2"
+# FetcherRun replaces it with a no-op; the illustrator index tests put it back.
+FETCH_ILLUSTRATOR_INDEX = fetch.fetch_illustrator_index
 
 
 def dump(path, data):
@@ -122,6 +126,10 @@ class FakeResponse:
 
     def json(self):
         return json.loads(self.content)
+
+    @property
+    def text(self):
+        return self.content.decode("utf-8")
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -442,6 +450,77 @@ class ModeTests(DiscoveryRun):
     def test_full_discovery_still_refreshes_song_keys(self):
         self.discover().assert_called_once_with()
         self.assertEqual([record["title"] for record in self.read(MANIFEST)["assets"]], ["Art"])
+
+
+class IllustratorIndexTests(DiscoveryRun):
+    """The Japanese wiki's illustrator directory, saved as reference data next to the wiki manifest."""
+
+    ENTRY = {
+        "id": "wikis:wikiwiki-illustrators",
+        "name": "Japanese DEEMO Wiki illustrator directory",
+        "url": ILLUSTRATOR_URL,
+        "status": "complete",
+        "notes": "Reference directory for illustrator provenance; availability is checked without authentication or "
+        "challenge bypass.",
+        "index_path": ILLUSTRATOR_INDEX,
+    }
+    INDEX = {
+        "schema_version": 1,
+        "fetched_at": "2026-10-08T00:00:00Z",
+        "source_url": ILLUSTRATOR_URL,
+        "rows": [{"type": "h2", "text": "illustrator", "links": []}],
+    }
+
+    def setUp(self):
+        super().setUp()
+        manifest = self.read(MANIFEST)
+        dump(self.root / MANIFEST, {**manifest, "sources": [*manifest["sources"], self.ENTRY]})
+        dump(self.root / ILLUSTRATOR_INDEX, self.INDEX)
+        patcher = patch.object(fetch, "fetch_illustrator_index", FETCH_ILLUSTRATOR_INDEX)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def entry(self):
+        (entry,) = [source for source in self.read(MANIFEST)["sources"] if source["id"] == self.ENTRY["id"]]
+        return entry
+
+    def test_resume_leaves_the_reference_index_alone(self):
+        # --resume works from the saved snapshot; like the song keys, the unrelated reference index is not refetched.
+        self.web.routes[ILLUSTRATOR_URL] = (403, b"Forbidden", {})
+        manifest = self.resume(self.offer("Art.png", png("red")))
+        self.assertNotIn(ILLUSTRATOR_URL, self.web.calls)
+        self.assertEqual(self.entry(), self.ENTRY)
+        self.assertEqual(self.read(ILLUSTRATOR_INDEX), self.INDEX)
+        self.assertEqual(manifest["failures"], [])
+
+    def test_a_failed_or_empty_refresh_keeps_the_saved_index(self):
+        # A Cloudflare 403, or a 200 challenge page without the directory, must not replace a good index.
+        challenge = b"<html><body><p>Checking your browser...</p></body></html>"
+        for status, body in ((403, b"Forbidden"), (200, challenge)):
+            with self.subTest(status=status):
+                self.web.routes[ILLUSTRATOR_URL] = (status, body, {"Content-Type": "text/html"})
+                self.discover()
+                self.assertEqual(self.entry(), self.ENTRY)
+                self.assertEqual(self.read(ILLUSTRATOR_INDEX), self.INDEX)
+                failures = self.read(MANIFEST)["failures"]
+                self.assertEqual(
+                    [(row["source_id"], row["stage"]) for row in failures], [(self.ENTRY["id"], "reference_index")]
+                )
+
+    def test_full_run_refreshes_the_index(self):
+        page = '<div id="body"><h2>illustrator</h2><table><tr><td><a href="/deemo/X">X</a></td></tr></table></div>'
+        self.web.routes[ILLUSTRATOR_URL] = (200, page.encode("utf-8"), {"Content-Type": "text/html"})
+        self.discover()
+        self.assertEqual(
+            self.read(ILLUSTRATOR_INDEX)["rows"],
+            [
+                {"type": "h2", "text": "illustrator", "links": []},
+                {"type": "tr", "text": "X", "links": [{"text": "X", "url": "/deemo/X"}]},
+            ],
+        )
+        self.assertEqual(self.entry(), self.ENTRY)
+        self.assertEqual([source["id"] for source in self.read(MANIFEST)["sources"]][-1], self.ENTRY["id"])
+        self.assertEqual(self.read(MANIFEST)["failures"], [])
 
 
 class DiscoveryStatsTests(DiscoveryRun):
