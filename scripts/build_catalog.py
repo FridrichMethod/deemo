@@ -12,6 +12,7 @@ import unicodedata
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Any
 from urllib.parse import quote, urlsplit
 from xml.sax.saxutils import escape
 
@@ -27,6 +28,13 @@ COVER_KEY = re.compile(r"booksprite|bookcover|^deemo1[ab]$", re.IGNORECASE)
 UPSTREAM_STATUSES = ("removed", "superseded", "fetch_failed")
 # Every tracked file here must be a record's or a variant's path (assets/thumbs/ has its own check).
 ORPHAN_CHECK_DIRECTORIES = ("assets/public", "assets/legacy")
+# The only subdirectories of assets/ a tracked file may be in, each with a check that accounts for its files: records
+# and variants (public/, legacy/; the orphan check), data/thumbs.json (thumbs/; scripts/build_thumbnails.py --check)
+# and data/legacy-inventory.json (site/; scripts/build_legacy_inventory.py).
+ASSET_DIRECTORIES = ("public", "legacy", "thumbs", "site")
+# A SHA-256 as hashlib's hexdigest() writes it. Builds without --verify trust it, and scripts/build_thumbnails.py
+# names each preview file after it, so nothing else may pass for one.
+SHA256 = re.compile(r"[0-9a-f]{64}")
 
 
 def attr(value: object) -> str:
@@ -233,7 +241,7 @@ def shared_collection_spellings(assets: list[dict]) -> list[dict]:
     result = []
     for asset in assets:
         own = names(asset)
-        changes = {}
+        changes: dict[str, Any] = {}
         if asset.get("collection") in own:
             changes["collection"] = shown[collection_key(asset["collection"])]
         if set(asset.get("collections") or []) & set(own):
@@ -263,7 +271,7 @@ def validate_asset(root: Path, asset: dict, verify: bool = False) -> None:
     path = safe_path(root, asset["path"])
     if path.stat().st_size != asset["bytes"]:
         raise ValueError(f"Byte count mismatch: {path}")
-    if len(asset["sha256"]) != 64:
+    if not isinstance(asset["sha256"], str) or not SHA256.fullmatch(asset["sha256"]):
         raise ValueError(f"Invalid SHA-256: {path}")
     if verify:
         if hashlib.sha256(path.read_bytes()).hexdigest() != asset["sha256"]:
@@ -293,7 +301,9 @@ def combine(root: Path, verify: bool = False) -> dict:
             "notes": "Original PNGs are in assets/legacy/trans/. Paired palette-quantized copies in assets/legacy/tiny/ are available as alternate downloads.",
         }
     ]
-    assets, failures, snapshots = [], [], {}
+    assets: list[dict] = []
+    failures: list[dict] = []
+    snapshots: dict[str, object] = {}
     for family in SOURCE_MANIFESTS:
         path = required_input(root, f"data/sources/{family}.json")
         manifest = json.loads(path.read_text(encoding="utf-8"))
@@ -311,7 +321,8 @@ def combine(root: Path, verify: bool = False) -> dict:
     source_map = {source["id"]: source for source in sources}
     if len(source_map) != len(sources):
         raise ValueError("Duplicate source IDs across manifests")
-    seen_ids, by_hash = set(), {}
+    seen_ids: set[str] = set()
+    by_hash: dict[str, dict] = {}
     for asset in assets:
         validate_asset(root, asset, verify)
         for variant in asset.get("variants", []):
@@ -340,10 +351,21 @@ def combine(root: Path, verify: bool = False) -> dict:
         referenced = {
             Path(record["path"]).as_posix() for asset in assets for record in (asset, *asset.get("variants", []))
         }
-        orphans = [name for name in tracked_files(root, ORPHAN_CHECK_DIRECTORIES) or [] if name not in referenced]
+        tracked = tracked_files(root, ("assets",)) or []
+        checked = tuple(f"{directory}/" for directory in ORPHAN_CHECK_DIRECTORIES)
+        orphans = [name for name in tracked if name.startswith(checked) and name not in referenced]
         if orphans:
             raise ValueError(
                 f"{len(orphans)} tracked file(s) referenced by no manifest record or variant: {', '.join(orphans)}"
+            )
+        unexpected = [
+            name for name in tracked if len(parts := name.split("/")) < 3 or parts[1] not in ASSET_DIRECTORIES
+        ]
+        if unexpected:
+            known = ", ".join(f"assets/{directory}" for directory in ASSET_DIRECTORIES[:-1])
+            raise ValueError(
+                f"{len(unexpected)} tracked file(s) outside {known} and assets/{ASSET_DIRECTORIES[-1]}: "
+                f"{', '.join(unexpected)}"
             )
     entries = list(by_hash.values())
     for entry in entries:
@@ -385,8 +407,8 @@ def slide_notes(asset: dict) -> dict:
     """Liner-note fields for a slide, merged across provenance records: verbatim names, one per line, deduplicated.
     A collection name the title already spells out ("Sherwin collection", "Book of Alice — page 1") is left out.
     data-songs lists the mapped song titles, which the notes headline when the title is only a wiki file key."""
-    found = {"songs": [], "composer": [], "artist": [], "collection": []}
-    seen = {key: set() for key in found}
+    found: dict[str, list[str]] = {"songs": [], "composer": [], "artist": [], "collection": []}
+    seen: dict[str, set[str]] = {key: set() for key in found}
     title = fold(str(asset.get("title") or ""))
 
     def add(key: str, value: object) -> None:
@@ -508,7 +530,8 @@ def render_slideshow(root: Path, catalog: dict) -> str:
     with ThreadPoolExecutor() as pool:
         layouts = list(pool.map(lambda asset: art_layout(root, asset), assets))
     slides = []
-    for asset, layout in zip(assets, layouts):
+    # pool.map gives exactly one layout per asset, in order.
+    for asset, layout in zip(assets, layouts, strict=True):
         fields = {
             "class": "deemo-draw",
             "data-src": asset["url"],
@@ -558,7 +581,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--verify",
         action="store_true",
-        help="Verify every hash, image header and format, and that every tracked file under assets/public and assets/legacy is referenced",
+        help="Verify every hash, image header and format, that every tracked file under assets/public and assets/legacy is referenced, and that assets/ tracks files only in public/, legacy/, thumbs/ and site/",
     )
     parser.add_argument("--check", action="store_true", help="Check generated files without writing")
     args = parser.parse_args(argv)

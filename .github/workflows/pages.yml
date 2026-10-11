@@ -22,6 +22,9 @@ jobs:
 
   deploy:
     needs: test
+    # workflow_dispatch can start this workflow on any ref: only main is ever published, whatever the github-pages
+    # environment's branch policy allows. A run from another branch still tests it and then skips this job.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

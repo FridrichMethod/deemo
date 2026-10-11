@@ -11,6 +11,7 @@ import struct
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import quote
 
 from PIL import Image, ImageCms, ImageStat
@@ -255,6 +256,25 @@ class BuildTests(Fixture):
         self.assertTrue(bottom[2] > 200 and bottom[0] < 60, bottom)
         self.assertEqual(thumbs.problems(self.root, reencode=True), [])
 
+    def test_a_hash_with_path_characters_never_names_a_file(self):
+        # A preview is named after its original's SHA-256 and this build runs without --verify: a crafted 64-character
+        # value in a manifest stops it before anything is written, inside the checkout or outside it.
+        crafted = "../../../esc/a01" + "0" * 48
+        self.write_manifest(
+            [
+                {**record, "sha256": crafted} if record["path"].endswith("/wide.png") else record
+                for record in self.records
+            ]
+        )
+        with self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+            thumbs.build(self.root)
+        self.assertEqual([path.name for path in self.base.iterdir()], ["checkout"])
+        self.assertFalse((self.root / thumbs.THUMB_DIR).exists())
+        self.assertFalse((self.root / thumbs.MANIFEST).exists())
+        for value in (crafted, self.sha("wide.png").upper()):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+                thumbs.thumb_path(value)
+
     def test_changed_encoder_settings_need_an_explicit_rebuild(self):
         thumbs.build(self.root)
         manifest = self.manifest()
@@ -384,6 +404,49 @@ class CheckTests(Fixture):
         self.write_manifest([record for record in self.records if not record["path"].endswith("/wide.png")])
         self.assert_problem("belongs to no current gallery original")
 
+    def test_an_entry_naming_another_preview_is_detected(self):
+        # Two same-size originals with their entries' path, bytes and sha256 swapped: each file still matches what is
+        # recorded next to it and has the right size, so only the path check (the name comes from the original's hash)
+        # sees that the grid would show the other artwork's preview.
+        self.add_encoded("plain.png", Image.new("RGB", (1000, 600), (0, 0, 255)), "PNG")
+        self.write_manifest()
+        thumbs.build(self.root)
+        self.assertEqual(thumbs.problems(self.root), [])
+        manifest = self.manifest()
+        first, second = (manifest["thumbnails"][self.sha(name)] for name in ("wide.png", "plain.png"))
+        for key in ("path", "bytes", "sha256"):
+            first[key], second[key] = second[key], first[key]
+        (self.root / thumbs.MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
+        expected = [
+            f"Thumbnail for {self.sha(name)} should be {thumbs.thumb_path(self.sha(name))}, "
+            f"not {thumbs.thumb_path(self.sha(other))}"
+            for name, other in (("wide.png", "plain.png"), ("plain.png", "wide.png"))
+        ]
+        self.assertEqual(sorted(thumbs.problems(self.root)), sorted(expected))
+
+    def test_dot_files_and_caches_are_not_previews(self):
+        # Skipped as build_catalog.tracked_files() and prepare_pages.select_files() skip them: --check does not report
+        # them and --prune never deletes them. A stray non-dot file is still reported (the test above).
+        extras = {".gitattributes": b"* -text\n", ".DS_Store": b"Finder", "__pycache__/cached.pyc": b"cache"}
+        for name, data in extras.items():
+            path = self.root / thumbs.THUMB_DIR / name
+            path.parent.mkdir(exist_ok=True)
+            path.write_bytes(data)
+        self.assertEqual(thumbs.problems(self.root), [])
+        summary = thumbs.build(self.root, prune=True)
+        self.assertEqual((summary["orphans"], summary["pruned"]), ([], []))
+        for name, data in extras.items():
+            with self.subTest(name=name):
+                self.assertEqual((self.root / thumbs.THUMB_DIR / name).read_bytes(), data)
+
+    def test_a_manifest_key_that_is_not_a_hash_is_reported(self):
+        # The check reports such an entry instead of building a path from it (or stopping with a traceback).
+        manifest = self.manifest()
+        crafted = "../../../esc/a01" + "0" * 48
+        manifest["thumbnails"][crafted] = dict(manifest["thumbnails"][self.sha("wide.png")])
+        (self.root / thumbs.MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
+        self.assert_problem(f"Thumbnail key {crafted!r} in {thumbs.MANIFEST} is not a lowercase SHA-256")
+
     def test_undecodable_preview_is_detected(self):
         self.rewrite_entry("wide.png", b"RIFF\x00\x00\x00\x00WEBPVP8 broken")
         self.assert_problem("does not decode")
@@ -440,6 +503,36 @@ class CheckTests(Fixture):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as raised:
             thumbs.main(["--check", "--prune"], root=self.root)
         self.assertEqual(raised.exception.code, 2)
+
+
+class WriteTests(Fixture):
+    """The previews and data/thumbs.json are written through write_atomic(): an interrupted write keeps the previous
+    bytes and leaves no temporary file behind (a stray .webp.tmp would fail --check until pruned)."""
+
+    def snapshot(self):
+        files = [self.root / thumbs.MANIFEST, *sorted((self.root / thumbs.THUMB_DIR).iterdir())]
+        listing = sorted(path.name for path in (self.root / "data").iterdir())
+        return {path.relative_to(self.root).as_posix(): path.read_bytes() for path in files}, listing
+
+    def test_an_interrupted_write_keeps_the_previous_file(self):
+        thumbs.build(self.root)
+        before = self.snapshot()
+        with patch.object(thumbs.os, "replace", side_effect=OSError("interrupted")), self.assertRaises(OSError):
+            thumbs.write_atomic(self.root / thumbs.MANIFEST, b"partial")
+        self.assertEqual(self.snapshot(), before)
+
+    def test_an_interrupted_build_keeps_the_previews_and_the_manifest(self):
+        thumbs.build(self.root)
+        before = self.snapshot()
+        self.add_image("new.png", (900, 900), "RGB", "PNG")
+        self.write_manifest()
+        with patch.object(thumbs.os, "replace", side_effect=OSError("interrupted")), self.assertRaises(OSError):
+            thumbs.build(self.root)
+        self.assertEqual(self.snapshot(), before)
+        self.assertEqual(
+            thumbs.problems(self.root),
+            ["No thumbnail for assets/public/artists/new.png: run scripts/build_thumbnails.py"],
+        )
 
 
 class PruneTests(Fixture):
@@ -500,6 +593,16 @@ class CatalogHookTests(Fixture):
         path.unlink()
         with self.assertRaisesRegex(ValueError, "build_thumbnails"):
             self.catalog()
+
+    def test_a_truncated_preview_fails_the_catalog_build_without_verify(self):
+        # A build without --verify does not hash previews, so the recorded size is what catches a cut-off file.
+        thumbs.build(self.root)
+        path = self.root / self.manifest()["thumbnails"][self.sha("wide.png")]["path"]
+        path.write_bytes(path.read_bytes()[:-1])
+        with self.assertRaisesRegex(
+            ValueError, f"Missing or stale thumbnail {thumbs.thumb_path(self.sha('wide.png'))}"
+        ):
+            self.catalog(verify=False)
 
     def test_previews_must_live_under_assets_thumbs(self):
         thumbs.build(self.root)

@@ -17,6 +17,7 @@ import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import cast
 
 import PIL
 from PIL import Image, ImageCms, ImageOps, features
@@ -46,9 +47,10 @@ DESCRIPTION = (
 
 
 def _load_catalog_builder():
-    spec = importlib.util.spec_from_file_location(
-        "build_catalog", Path(__file__).resolve().with_name("build_catalog.py")
-    )
+    path = Path(__file__).resolve().with_name("build_catalog.py")
+    spec = importlib.util.spec_from_file_location("build_catalog", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load {path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -82,6 +84,10 @@ def thumb_size(width: int, height: int) -> tuple[int, int] | None:
 
 
 def thumb_path(sha256: str) -> str:
+    """The preview's path, named by the first NAME_DIGITS hex digits of its original's SHA-256. Anything but a
+    lowercase SHA-256 is refused, so the name can never leave assets/thumbs/."""
+    if not build_catalog.SHA256.fullmatch(sha256):
+        raise ValueError(f"Invalid SHA-256: {sha256!r}")
     return f"{THUMB_DIR}/{sha256[:NAME_DIGITS]}.webp"
 
 
@@ -97,7 +103,7 @@ def originals(root: Path) -> dict[str, dict]:
             continue
         if thumb_size(entry["width"], entry["height"]):
             wanted[entry["sha256"]] = {key: entry[key] for key in ("path", "width", "height")}
-    names = {}
+    names: dict[str, str] = {}
     for sha256, original in wanted.items():
         other = names.setdefault(thumb_path(sha256), original["path"])
         if other != original["path"]:
@@ -134,8 +140,12 @@ def colour_managed(image: Image.Image, path: str) -> tuple[Image.Image, bytes | 
     alpha = image.mode == "LA" or "transparency" in image.info
     grey = image.convert("LA" if alpha else "L")
     try:
-        # A fresh sRGB profile on every call, so worker threads never share a LittleCMS profile handle.
-        rgb = ImageCms.profileToProfile(grey.convert("L"), profile, ImageCms.createProfile("sRGB"), outputMode="RGB")
+        # A fresh sRGB profile on every call, so worker threads never share a LittleCMS profile handle. Without
+        # inPlace=True, profileToProfile() always returns the new image.
+        rgb = cast(
+            Image.Image,
+            ImageCms.profileToProfile(grey.convert("L"), profile, ImageCms.createProfile("sRGB"), outputMode="RGB"),
+        )
     except ImageCms.PyCMSError as error:
         raise ValueError(f"Cannot preview {path}: its greyscale ICC profile cannot be applied ({error})") from error
     if alpha:
@@ -145,11 +155,11 @@ def colour_managed(image: Image.Image, path: str) -> tuple[Image.Image, bytes | 
 
 def render(root: Path, original: dict) -> tuple[bytes, tuple[int, int]]:
     """Downscale one original to a WebP preview. No EXIF or XMP is written; colour_managed() decides the ICC profile."""
-    with Image.open(build_catalog.safe_path(root, original["path"])) as image:
-        image.load()
+    with Image.open(build_catalog.safe_path(root, original["path"])) as opened:
+        opened.load()
         # Browsers show originals upright, so the preview applies the EXIF orientation too.
-        ImageOps.exif_transpose(image, in_place=True)
-        image, icc_profile = colour_managed(eight_bit(image, original["path"]), original["path"])
+        ImageOps.exif_transpose(opened, in_place=True)
+        image, icc_profile = colour_managed(eight_bit(opened, original["path"]), original["path"])
         size = thumb_size(*image.size)
         if size is None:
             raise ValueError(f"Original is not larger than {LONG_EDGE} px: {original['path']}")
@@ -170,17 +180,29 @@ def read_manifest(root: Path) -> dict | None:
 
 
 def write_atomic(path: Path, data: bytes) -> None:
+    """Write through a temporary sibling and os.replace, so an interrupted write keeps the previous file at path and
+    leaves no temporary file behind."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + ".tmp")
-    temporary.write_bytes(data)
-    os.replace(temporary, path)
+    try:
+        temporary.write_bytes(data)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def stored_files(root: Path) -> list[str]:
+    """Files in assets/thumbs/ that --check accounts for and --prune may delete. Dot-files (.gitattributes, .DS_Store)
+    and __pycache__ are skipped, as build_catalog.tracked_files() and prepare_pages.py skip them."""
     directory = root / THUMB_DIR
     if not directory.exists():
         return []
-    return sorted(path.relative_to(root).as_posix() for path in directory.rglob("*") if path.is_file())
+    return sorted(
+        path.relative_to(root).as_posix()
+        for path in directory.rglob("*")
+        if path.is_file()
+        and not any(part.startswith(".") or part == "__pycache__" for part in path.relative_to(directory).parts)
+    )
 
 
 def workers_for(workers: int | None) -> int:
@@ -206,7 +228,9 @@ def build(root: Path, prune: bool = False, rebuild: bool = False, workers: int |
         else:
             pending.append((sha256, original))
     with ThreadPoolExecutor(workers_for(workers)) as pool:
-        for (sha256, _), (data, (width, height)) in zip(pending, pool.map(lambda item: render(root, item[1]), pending)):
+        # pool.map gives exactly one rendering per pending item, in order.
+        rendered = pool.map(lambda item: render(root, item[1]), pending)
+        for (sha256, _), (data, (width, height)) in zip(pending, rendered, strict=True):
             write_atomic(root / thumb_path(sha256), data)
             entries[sha256] = {
                 "path": thumb_path(sha256),
@@ -227,8 +251,8 @@ def build(root: Path, prune: bool = False, rebuild: bool = False, workers: int |
     referenced = {entry["path"] for entry in entries.values()}
     orphans = [path for path in stored_files(root) if path not in referenced]
     if prune:
-        for path in orphans:
-            (root / path).unlink()
+        for name in orphans:
+            (root / name).unlink()
     return {
         "thumbnails": len(entries),
         "rendered": len(pending),
@@ -241,6 +265,8 @@ def build(root: Path, prune: bool = False, rebuild: bool = False, workers: int |
 
 def check_entry(root: Path, sha256: str, entry: dict, original: dict | None) -> tuple[list[str], bytes | None]:
     """Problems with one recorded preview, and its bytes when they are intact."""
+    if not build_catalog.SHA256.fullmatch(sha256):
+        return [f"Thumbnail key {sha256!r} in {MANIFEST} is not a lowercase SHA-256"], None
     path = entry.get("path")
     if path != thumb_path(sha256):
         return [f"Thumbnail for {sha256} should be {thumb_path(sha256)}, not {path}"], None
@@ -264,8 +290,9 @@ def check_entry(root: Path, sha256: str, entry: dict, original: dict | None) -> 
             f"Dimension mismatch: {path} is {size[0]}x{size[1]}, {MANIFEST} says {entry.get('width')}x{entry.get('height')}"
         )
     if original:
-        # Either orientation: an EXIF-rotated original is previewed upright.
-        expected = thumb_size(original["width"], original["height"])
+        # Either orientation: an EXIF-rotated original is previewed upright. originals() lists only images larger
+        # than LONG_EDGE, so thumb_size() gives a size here.
+        expected = cast(tuple[int, int], thumb_size(original["width"], original["height"]))
         if sorted(size) != sorted(expected):
             found.append(
                 f"Dimension mismatch: {path} is {size[0]}x{size[1]}, expected {expected[0]}x{expected[1]} for {original['path']}"
@@ -316,10 +343,11 @@ def problems(root: Path, reencode: bool = False, workers: int | None = None) -> 
     )
     if reencode:
         with ThreadPoolExecutor(workers_for(workers)) as pool:
+            # pool.map gives exactly one re-encoding per intact preview, in order.
             rendered = pool.map(lambda item: render(root, item[0])[0], intact)
             found.extend(
                 f"Re-encoding {original['path']} does not reproduce {path}"
-                for (original, path, data), fresh in zip(intact, rendered)
+                for (original, path, data), fresh in zip(intact, rendered, strict=True)
                 if fresh != data
             )
     return found
@@ -355,7 +383,8 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> None:
         found = problems(root, reencode=args.verify, workers=args.workers)
         if found:
             raise SystemExit("\n".join(found))
-        thumbnails = read_manifest(root)["thumbnails"]
+        # problems() reports a missing manifest, so with no problems it exists.
+        thumbnails = cast(dict, read_manifest(root))["thumbnails"]
         print(
             json.dumps(
                 {

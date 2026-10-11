@@ -1,12 +1,17 @@
 """Check third-party license texts, inherited-media provenance and attribution statements."""
 
+import importlib.util
 import json
 import re
+import tempfile
 import unittest
 from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SPEC = importlib.util.spec_from_file_location("prepare_pages", ROOT / "scripts/prepare_pages.py")
+pages = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(pages)
 INVENTORY = ROOT / "data/legacy-inventory.json"
 LICENSE_INDEXES = ("licenses/README.md", "licenses/README.zh-CN.md")
 MIT_GRANT = "Permission is hereby granted, free of charge, to any person"
@@ -19,6 +24,8 @@ VENDOR_LICENSES = {
 }
 # Commercial fonts inherited from upstream whose licenses forbid redistribution (see NOTICE).
 REMOVED_FONTS = {"COPRGTL.ttf", "RocknRoll_Typo_bold.ttf"}
+# Compared case-insensitively: coprgtl.TTF is the same font.
+REMOVED_FONT_NAMES = {name.casefold() for name in REMOVED_FONTS}
 # CSS family names the slideshow still uses; the removed faces resolve only to fonts installed locally.
 LOCAL_ONLY_FAMILIES = {"Coprhtl", "COPRGTL", "RocknRoll"}
 FONT_FACE = re.compile(r"@font-face\s*\{([^}]*)\}")
@@ -87,6 +94,19 @@ def inventory_records():
     return json.loads(INVENTORY.read_text(encoding="utf-8"))["files"]
 
 
+def withdrawn_fonts(root):
+    """Files under root named like a withdrawn font, in any letter case, wherever scripts/prepare_pages.py could
+    publish them from: its public directories (assets/, data/, src/, docs/, licenses/) and its root-level files."""
+    candidates = [root / name for name in sorted(pages.PUBLIC_FILES)]
+    for directory in sorted(pages.PUBLIC_DIRECTORIES):
+        candidates.extend((root / directory).rglob("*"))
+    return sorted(
+        path.relative_to(root).as_posix()
+        for path in candidates
+        if path.name.casefold() in REMOVED_FONT_NAMES and path.is_file()
+    )
+
+
 class VendorLicenseTests(unittest.TestCase):
     def test_bundled_components_ship_their_mit_texts(self):
         bundle = (ROOT / "src/vendor/legacy-ui.js").read_bytes()
@@ -113,9 +133,25 @@ class VendorLicenseTests(unittest.TestCase):
 
 class FontTests(unittest.TestCase):
     def test_commercial_fonts_are_not_redistributed(self):
-        shipped = {path.name for path in (ROOT / "assets").rglob("*") if path.is_file()}
-        self.assertEqual(shipped & REMOVED_FONTS, set())
-        self.assertEqual({Path(record["path"]).name for record in inventory_records()} & REMOVED_FONTS, set())
+        self.assertEqual(withdrawn_fonts(ROOT), [])
+        inherited = {Path(record["path"]).name.casefold() for record in inventory_records()}
+        self.assertEqual(inherited & REMOVED_FONT_NAMES, set())
+
+    def test_the_font_guard_covers_everything_the_site_publishes(self):
+        published = [
+            "assets/site/fonts/COPRGTL.ttf",
+            "data/coprgtl.TTF",
+            "docs/fonts/RocknRoll_Typo_bold.ttf",
+            "licenses/COPRGTL.ttf",
+            "src/rocknroll_typo_bold.TTF",
+        ]
+        unpublished = ["templates/COPRGTL.ttf", "tests/RocknRoll_Typo_bold.ttf", "assets/site/fonts/Fantique-Four.ttf"]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for name in (*published, *unpublished):
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).write_bytes(b"font")
+            self.assertEqual(withdrawn_fonts(root), published)
 
     def test_removed_faces_use_only_locally_installed_fonts(self):
         faces = {}
@@ -136,7 +172,7 @@ class FontTests(unittest.TestCase):
             base = ROOT if source.parent.name == "templates" else source.parent
             for url in FONT_URL.findall(source.read_text(encoding="utf-8-sig")):
                 with self.subTest(source=source.relative_to(ROOT).as_posix(), url=url):
-                    self.assertNotIn(Path(url).name, REMOVED_FONTS)
+                    self.assertNotIn(Path(url).name.casefold(), REMOVED_FONT_NAMES)
                     self.assertTrue((base / url).resolve().is_file())
 
 

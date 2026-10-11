@@ -8,6 +8,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import struct
 import subprocess
 import tempfile
@@ -207,6 +208,23 @@ class CatalogTests(unittest.TestCase):
             with self.subTest(missing=key), self.assertRaisesRegex(ValueError, f"Missing {key}"):
                 build.validate_asset(self.root, record, True)
 
+    def test_sha256_must_be_lowercase_hex_in_every_build_mode(self):
+        # scripts/build_thumbnails.py names each preview after the hash and builds without --verify, so a 64-character
+        # value with path characters must fail before any path is made from it. An uppercase digest would also keep
+        # byte-identical files apart in a build without --verify.
+        raw = (self.root / self.asset["path"]).read_bytes()
+        for value in ("../../../esc/a01" + "0" * 48, hashlib.sha256(raw).hexdigest().upper(), "g" * 64, None):
+            for verify in (False, True):
+                with self.subTest(value=value, verify=verify), self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+                    build.validate_asset(self.root, {**self.asset, "sha256": value}, verify)
+            self.manifest("artists", {**self.asset, "sha256": value})
+            with self.subTest(value=value, record="combine"), self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+                build.combine(self.root)
+            variant = {**self.asset, "id": "artist:sample:copy", "sha256": value}
+            self.manifest("artists", {**self.asset, "variants": [variant]})
+            with self.subTest(value=value, record="variant"), self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+                build.combine(self.root)
+
     def test_corrupt_image_data_fails_verification(self):
         raw = (self.root / self.asset["path"]).read_bytes()
         offset, length = png_chunk(raw, b"IDAT")
@@ -285,6 +303,34 @@ class CatalogTests(unittest.TestCase):
         build.combine(self.root)  # only --verify checks
         # The legacy pair (original and variant), dot-files and assets/thumbs/ are not orphans.
         self.git("rm", "-q", "--cached", orphan)
+        build.combine(self.root, verify=True)
+
+    def test_verify_rejects_tracked_files_outside_the_known_asset_directories(self):
+        # assets/ holds public/ and legacy/ (records and variants), thumbs/ (checked by build_thumbnails.py) and site/
+        # (checked by build_legacy_inventory.py). A file anywhere else would pass every other check and be published.
+        self.manifest("artists", self.asset)
+        self.git("init", "-q")
+        strays = sorted(
+            self.image(relative, colour)["path"]
+            for relative, colour in (
+                ("assets/stray.png", "black"),
+                ("assets/tmp/scratch.png", "gray"),
+                ("assets/wikis/forgotten.png", "red"),
+            )
+        )
+        for relative in ("assets/thumbs/sample.webp", "assets/site/icons/favicon.png", "assets/.gitattributes"):
+            (self.root / relative).parent.mkdir(parents=True, exist_ok=True)
+            (self.root / relative).write_bytes(b"checked elsewhere")
+        self.git("add", "assets", "data")
+        with self.assertRaisesRegex(
+            ValueError,
+            r"3 tracked file\(s\) outside assets/public, assets/legacy, assets/thumbs and assets/site: "
+            + ", ".join(map(re.escape, strays))
+            + "$",
+        ):
+            build.combine(self.root, verify=True)
+        build.combine(self.root)  # only --verify checks
+        self.git("rm", "-q", "--cached", *strays)
         build.combine(self.root, verify=True)
 
     def test_orphan_check_needs_the_root_of_a_git_checkout(self):
@@ -797,8 +843,31 @@ class CatalogTests(unittest.TestCase):
                 build.safe_path(self.root, path)
 
     def test_source_urls_are_web_pages(self):
-        with self.assertRaisesRegex(ValueError, "Unsafe source URL"):
-            build.validate_asset(self.root, {**self.asset, "page_url": "javascript:alert(1)"})
+        # page_url becomes the slideshow's Source link (data-page, used as an href with no check of its own), so the
+        # build is its only guard. Each value defeats one clause: a host with another scheme (urlsplit lower-cases
+        # JaVaScRiPt), or http(s) with no host.
+        unsafe = {
+            "javascript:alert(1)": "no scheme allowed, no host",
+            "javascript://x/%0Aalert(1)": "a host, but the javascript scheme",
+            "JaVaScRiPt://x/%0A1": "a host, but the javascript scheme in mixed case",
+            "data://x/,a": "a host, but the data scheme",
+            "vbscript://x/": "a host, but the vbscript scheme",
+            "ftp://example.com/x": "a host, but not http(s)",
+            "//example.com/x": "a host, but no scheme",
+            "https:///x": "https, but no host",
+            "http:x": "http, but no host",
+        }
+        for value, reason in unsafe.items():
+            with self.subTest(value=value, reason=reason):
+                with self.assertRaisesRegex(ValueError, "Unsafe source URL"):
+                    build.validate_asset(self.root, {**self.asset, "page_url": value})
+                self.manifest("artists", {**self.asset, "page_url": value})
+                with self.assertRaisesRegex(ValueError, "Unsafe source URL"):
+                    build.combine(self.root)
+        for value in ("https://example.com/art", "http://example.com/art"):
+            with self.subTest(value=value):
+                self.manifest("artists", {**self.asset, "page_url": value})
+                self.assertEqual(self.slides(build.combine(self.root))[0]["data-page"], value)
 
     def test_html_escapes_remote_metadata(self):
         # Scraped titles and names go into double-quoted attributes: none may end the attribute or the tag, add an
