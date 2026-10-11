@@ -914,7 +914,7 @@ def main():
     wiki_ids = {source["id"] for source in SOURCES.values()}
     for source in manifest["sources"]:
         if source["id"] not in wiki_ids:
-            continue  # the reference index entry has no assets; fetch_illustrator_index() sets its status
+            continue  # the reference index has no assets; its entry keeps the status of its last refresh
         source["asset_count"] = sum(asset["source_id"] == source["id"] for asset in manifest["assets"])
         source["failure_count"] = sum(failure["source_id"] == source["id"] for failure in manifest["failures"])
         source["status"] = "partial" if source["failure_count"] else "complete"
