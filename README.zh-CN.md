@@ -24,11 +24,11 @@ python -I -m http.server 8765 --bind 127.0.0.1
 
 ## 网站部署
 
-推送到 `main` 后，[Pages 工作流](.github/workflows/pages.yml) 自动发布，但必须先在同一次运行中通过[测试工作流](.github/workflows/tests.yml)；任何检查失败都不会部署，现有线上版本不变。测试工作流也在每次推送和每个 PR（无论目标分支）上运行：安装 `requirements.txt` 和 `requirements-lint.txt` 后，在 coverage.py 下运行所有 `tests/test_*.py`（它们对 `scripts/` 的覆盖率低于 `pyproject.toml` 中的 `fail_under` 即失败）、`scripts/build_catalog.py --verify --check`（`index.html` 或目录过期即失败）、`scripts/build_legacy_inventory.py` 和 `scripts/fetch_archives.py --verify`；另一个任务用运行器自带的 Chrome 对本地服务运行 `tests/browser_smoke.py`，还有一个 lint 任务对所有文件运行全部 pre-commit 钩子（ruff、mypy、actionlint、ESLint 和空白检查，见下文"开发"）。`.gitattributes` 让继承文件和 `assets/` 下的所有文件不做换行符转换，因此在 Windows 检出（`core.autocrlf=true`）中这些逐字节检查同样通过。
+推送到 `main` 后，[Pages 工作流](.github/workflows/pages.yml) 自动发布，但必须先在同一次运行中通过[测试工作流](.github/workflows/tests.yml)；任何检查失败都不会部署，现有线上版本不变。也可以在 Actions 页面手动运行 Pages 工作流，但它只从 `main` 部署：从其他分支手动运行时只测试该分支，并跳过部署任务。测试工作流也在每次推送和每个 PR（无论目标分支）上运行：安装 `requirements.txt` 和 `requirements-lint.txt` 后，在 coverage.py 下运行所有 `tests/test_*.py`（它们对 `scripts/` 的覆盖率低于 `pyproject.toml` 中的 `fail_under` 即失败）、`scripts/build_catalog.py --verify --check`（`index.html` 或目录过期即失败）、`scripts/build_legacy_inventory.py` 和 `scripts/fetch_archives.py --verify`；另一个任务用运行器自带的 Chrome 对本地服务运行 `tests/browser_smoke.py`，还有一个 lint 任务对所有文件运行全部 pre-commit 钩子（ruff、mypy、actionlint、ESLint 和空白检查，见下文"开发"）。`.gitattributes` 让继承文件和 `assets/` 下的所有文件不做换行符转换，因此在 Windows 检出（`core.autocrlf=true`）中这些逐字节检查同样通过。
 
 `scripts/prepare_pages.py` 只复制 Git 跟踪的 `assets/`、`data/`、`src/`、`docs/`、`licenses/` 和明确列出的根目录网页、配置、署名文件；不会发布 `.git/`、工作流、抓取脚本、测试或未跟踪文件。上传目标仅为独立生成的站点目录，不是仓库根目录。白名单只限定网站发布范围，不是敏感内容检测器；仓库本身公开，提交任何文件前仍需检查内容。
 
-页面保留 `noindex,nofollow`，但这不是访问控制。发布包以 950 MB 为硬上限，给 GitHub Pages 的 1 GB 上限留出余量；新增素材超限时部署会停止，现有线上版本不变。保留全部原图字节，不在发布时重新压缩素材。
+页面保留 `noindex,nofollow`，但这不是访问控制。发布包以 950 MB 为硬上限，给 GitHub Pages 的 1 GB 上限留出余量；新增素材超限时部署会停止，现有线上版本不变。`tests/test_pages.py` 还会在每次推送和每个 PR 上用这一上限衡量 Git 跟踪的站点文件，因此会超限的改动在进入 `main` 之前就无法通过检查。保留全部原图字节，不在发布时重新压缩素材。
 
 ## 来源更新检查
 

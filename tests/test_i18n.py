@@ -432,6 +432,26 @@ class DocumentTests(unittest.TestCase):
                                 resolved.name.endswith(".zh-CN.md"), "English page should link to the English version"
                             )
 
+    def test_both_readmes_state_the_deployment_guards(self):
+        """Each README's deployment section says what the workflows enforce: a manual run of the Pages workflow deploys
+        only from main (the deploy job's ref condition), and tests/test_pages.py holds the tracked site to the Pages
+        budget of scripts/prepare_pages.py on every push and pull request, before the deploy job measures it."""
+        workflow = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8")
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("    if: github.ref == 'refs/heads/main'\n", workflow)
+        budget = re.search(r"^MAX_SITE_BYTES = ([\d_]+)$", (ROOT / "scripts/prepare_pages.py").read_text("utf-8"), re.M)
+        megabytes = f"{int(budget.group(1)) // 1_000_000} MB"
+        for readme, heading, main_only in (
+            ("README.md", "## Website deployment", "deploys only from `main`"),
+            ("README.zh-CN.md", "## 网站部署", "只从 `main` 部署"),
+        ):
+            with self.subTest(document=readme):
+                text = (ROOT / readme).read_text(encoding="utf-8")
+                section = text[text.index(heading) :].split("\n## ", 1)[0]
+                self.assertIn(main_only, section)
+                self.assertIn("`tests/test_pages.py`", section)
+                self.assertIn(megabytes, section)
+
     def test_translations_keep_document_structure(self):
         for english in DOCUMENTS:
             if not (ROOT / counterpart(english)).is_file():
