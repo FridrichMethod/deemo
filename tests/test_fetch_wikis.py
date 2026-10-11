@@ -12,6 +12,7 @@ import importlib.util
 import io
 import json
 import os
+import struct
 import subprocess
 import sys
 import tempfile
@@ -613,6 +614,31 @@ class DownloadIntegrityTests(FetcherRun):
         self.assertEqual([failure["title"] for failure in manifest["failures"]], ["文件:Art.png"])
         self.assertIn("Unexpected dimensions", manifest["failures"][0]["error"])
         self.assertEqual(self.files(), [first["path"]])
+
+    def test_resume_downloads_a_damaged_local_file_again(self):
+        candidate = self.offer("Art.png", png("red"))
+        first = self.resume(candidate)["assets"][0]
+        path = self.root / first["path"]
+        damaged = bytearray(path.read_bytes())
+        damaged[len(damaged) // 2] ^= 1
+        path.write_bytes(bytes(damaged))
+        calls = len(self.web.calls)
+        again = self.resume(candidate)["assets"][0]
+        self.assertGreater(len(self.web.calls), calls)  # the SHA-256 of the local file no longer matches
+        self.assertEqual(again["sha256"], first["sha256"])
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), again["sha256"])
+
+    def test_a_payload_with_a_broken_checksum_is_refused(self):
+        # A PNG whose IDAT checksum is wrong opens, and reports its size, but fails Image.verify().
+        raw = bytearray(png("red"))
+        start = raw.index(b"IDAT") - 4
+        (length,) = struct.unpack(">I", raw[start : start + 4])
+        raw[start + 8 + length] ^= 0xFF
+        manifest = self.resume(self.offer("Art.png", bytes(raw)))
+        self.assertEqual(manifest["assets"], [])
+        self.assertEqual([failure["title"] for failure in manifest["failures"]], ["文件:Art.png"])
+        self.assertIn("broken PNG file", manifest["failures"][0]["error"])
+        self.assertEqual(self.files(), [])
 
 
 class DeliveryNoteTests(FetcherRun):
