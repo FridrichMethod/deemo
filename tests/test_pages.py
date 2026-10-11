@@ -42,6 +42,18 @@ GUARD_CONTEXTS = (
 )
 EXPRESSION = re.compile(r"\$\{\{ ([a-z_.]+) \}\}")
 COMMITTER = {"NAME": "Release test", "EMAIL": "release@example.invalid", "DATE": "2026-10-11T00:00:00Z"}
+VERSION = r"v[0-9]+\.[0-9]+\.[0-9]+"
+# "[vX.Y.Z](<its release page>) (YYYY-MM-DD)", with ASCII or full-width parentheses around the date.
+CURRENT_RELEASE = re.compile(
+    rf"\[({VERSION})\]\(https://github\.com/FridrichMethod/deemo/releases/tag/({VERSION})\) ?[(（]"
+    r"([0-9]{4}-[0-9]{2}-[0-9]{2})[)）]"
+)
+DEPLOYMENT_SECTIONS = {"README.md": "## Website deployment", "README.zh-CN.md": "## 网站部署"}
+# What the READMEs said while a push to main deployed the site.
+PUSH_DEPLOYED = {
+    "README.md": ("After a push to `main`", "deploys only from `main`", "Pages workflow runs every check again"),
+    "README.zh-CN.md": ("推送到 `main` 后", "只从 `main` 部署", "Pages 工作流会再次运行全部检查"),
+}
 
 
 def published(tag="v1.1.0", commit="released", **changes):
@@ -293,6 +305,35 @@ class GuardTests(unittest.TestCase):
         self.assert_guards(2, dispatched(), head="aside")
         self.assert_guards(2, dispatched("refs/tags/v1.3.0", "aside"), head="released")
         self.assert_guards(2, published(), checkout=self.without_main)
+
+
+class DocumentationTests(unittest.TestCase):
+    def section(self, readme):
+        text = (ROOT / readme).read_text(encoding="utf-8")
+        return text[text.index(DEPLOYMENT_SECTIONS[readme]) :].split("\n## ", 1)[0]
+
+    def test_both_readmes_describe_the_release_model(self):
+        # Releases are vX.Y.Z tags, a manual run on the tag redeploys one, and both READMEs name the same current
+        # release, linked to its page; the budget sentence stays.
+        current = set()
+        for readme in DEPLOYMENT_SECTIONS:
+            with self.subTest(document=readme):
+                section = self.section(readme)
+                self.assertIn("`vX.Y.Z`", section)
+                self.assertRegex(section, rf"`gh workflow run pages\.yml --ref {VERSION}`")
+                (release,) = CURRENT_RELEASE.findall(section)
+                self.assertEqual(release[0], release[1], "the link text names the release it links")
+                current.add((release[0], release[2]))
+                self.assertIn("`tests/test_pages.py`", section)
+                self.assertIn(f"{pages.MAX_SITE_BYTES // 1_000_000} MB", section)
+        self.assertEqual(len(current), 1, "both READMEs name the same current release and date")
+
+    def test_no_readme_says_a_push_to_main_deploys(self):
+        for readme, phrases in PUSH_DEPLOYED.items():
+            text = (ROOT / readme).read_text(encoding="utf-8")
+            for phrase in phrases:
+                with self.subTest(document=readme, phrase=phrase):
+                    self.assertNotIn(phrase, text)
 
 
 class PagesTests(unittest.TestCase):
