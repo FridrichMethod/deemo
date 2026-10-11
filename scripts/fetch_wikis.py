@@ -60,6 +60,10 @@ ILLEGAL_TITLE = re.compile(r"[#<>\[\]{}|]")
 UPSTREAM_FIELDS = ("upstream_status", "superseded_by")
 # Optional candidate fields a record copies at its end, in this order (then delivery_note), on download and re-run.
 SONG_INDEX_FIELDS = ("composer", "composer_source", "collection_aliases")
+# Optional candidate fields a record copies after "provenance", in this order, on download and re-run.
+CANDIDATE_FIELDS = ("artist", "variant_note", "mapping_method")
+# The optional fields download() writes after "provenance", in its order; a re-run puts a new one in the same place.
+AFTER_PROVENANCE = ("provenance", *CANDIDATE_FIELDS, "layout_note", "wiki_extmetadata")
 
 
 def now():
@@ -467,6 +471,22 @@ def candidate_id(candidate):
     return "wikis:" + candidate["source"] + ":" + hashlib.sha256(candidate["file_title"].encode()).hexdigest()[:16]
 
 
+def placed(record, fields):
+    """record with fields applied, each a key of AFTER_PROVENANCE with its value, or None to drop the key.
+
+    A key the record already holds keeps its place, so a record whose fields did not change keeps its key order. A new
+    key goes where download() writes it: after the nearest key before it in AFTER_PROVENANCE that the record holds."""
+    result = {key: fields.get(key, value) for key, value in record.items()}
+    for index, key in enumerate(AFTER_PROVENANCE):
+        if key in result or fields.get(key) is None:
+            continue
+        items = list(result.items())
+        anchor = next((name for name in reversed(AFTER_PROVENANCE[:index]) if name in result), None)
+        position = len(items) if anchor is None else list(result).index(anchor) + 1
+        result = dict(items[:position] + [(key, fields[key])] + items[position:])
+    return {key: value for key, value in result.items() if value is not None}
+
+
 def download(candidate, existing):
     source = candidate["source"]
     info = candidate["info"]
@@ -485,6 +505,15 @@ def download(candidate, existing):
                 for key, value in previous.items()
                 if key not in UPSTREAM_FIELDS + SONG_INDEX_FIELDS + ("delivery_note",)
             }
+            # The mapping fields and the wiki's file metadata come from the snapshot, like the song-index fields: a
+            # corrected or removed credit or note reaches the record without the file changing.
+            current = placed(
+                current,
+                {
+                    **{field: candidate.get(field) for field in CANDIDATE_FIELDS},
+                    "wiki_extmetadata": info.get("extmetadata") or None,
+                },
+            )
             record = {
                 **current,
                 "kind": candidate["kind"],
@@ -570,7 +599,7 @@ def download(candidate, existing):
         "related_pages": candidate["related_pages"],
         "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
     }
-    for field in ("artist", "variant_note", "mapping_method"):
+    for field in CANDIDATE_FIELDS:
         if field in candidate:
             record[field] = candidate[field]
     if width == 2 * height or height == 2 * width:

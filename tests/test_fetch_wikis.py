@@ -273,6 +273,35 @@ class CarryForwardTests(FetcherRun):
         # Resuming the reverted snapshot again changes nothing.
         self.assertEqual(self.resume(self.offer("Art.png", png("red")))["assets"], manifest["assets"])
 
+    def test_verified_rerun_takes_the_mapping_fields_of_the_snapshot(self):
+        # A wiki edit can change the illustrator credit, the variant note, the mapping or the file metadata without
+        # touching the file. A verified re-run follows the snapshot in every direction, with the key order a fresh
+        # download of the same candidate has.
+        payload = png("red")
+        steps = [
+            {"artist": "A", "variant_note": "v", "extmetadata": {"ObjectName": {"value": "Old"}}},
+            {"artist": "B", "extmetadata": {"ObjectName": {"value": "New"}}},
+            {"mapping_method": "Exact normalized song title / image filename match"},
+            {},
+            {"artist": "A", "variant_note": "v", "extmetadata": {"ObjectName": {"value": "Old"}}},
+        ]
+        for index, fields in enumerate(steps):
+            with self.subTest(step=index):
+                extra = {key: value for key, value in fields.items() if key != "extmetadata"}
+                offered = self.offer("Art.png", payload, **extra)
+                if "extmetadata" in fields:
+                    offered["info"]["extmetadata"] = fields["extmetadata"]
+                calls = len(self.web.calls)
+                record = self.resume(offered)["assets"][0]
+                if index:
+                    self.assertEqual(len(self.web.calls), calls)  # verified from the file on disk
+                for field in ("artist", "variant_note", "mapping_method"):
+                    self.assertEqual(record.get(field), offered.get(field), field)
+                self.assertEqual(record.get("wiki_extmetadata"), fields.get("extmetadata"))
+                fresh = fetch.download(offered, {})
+                self.assertEqual(list(record), list(fresh))
+                self.assertEqual({**record, "fetched_at": None}, {**fresh, "fetched_at": None})
+
     def test_failed_redownload_keeps_the_verified_record(self):
         old = self.offer("Art.png", png("red"))
         first = self.resume(old)["assets"][0]
