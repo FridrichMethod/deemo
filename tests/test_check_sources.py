@@ -4,15 +4,17 @@ import hashlib
 import importlib.util
 import json
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-SPEC = importlib.util.spec_from_file_location(
-    "check_sources", Path(__file__).resolve().parents[1] / "scripts/check_sources.py"
-)
+REPO = Path(__file__).resolve().parents[1]
+WORKFLOW = REPO / ".github/workflows/check-sources.yml"
+SPEC = importlib.util.spec_from_file_location("check_sources", REPO / "scripts/check_sources.py")
 check = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(check)
 
@@ -570,6 +572,47 @@ class CompareTests(unittest.TestCase):
             printed_summary = json.loads(printed.call_args[0][0])
             self.assertEqual(list(printed_summary), ["changed", "title", "counts"])
             self.assertEqual(printed_summary["title"], summary["title"])
+
+
+class SnapshotPullRequestLookupTests(unittest.TestCase):
+    """The workflow finds the open snapshot pull request of this repository, however many forks reuse its branch name."""
+
+    def setUp(self):
+        self.text = WORKFLOW.read_text(encoding="utf-8")
+
+    def test_both_jobs_filter_on_the_server(self):
+        # gh pr list fetches at most 30 pull requests, newest first, and filters by branch name only: 30 fork pull
+        # requests from a branch of the same name hid the snapshot pull request. The REST head filter takes owner:branch.
+        commands = "\n".join(line for line in self.text.splitlines() if not line.lstrip().startswith("#"))
+        self.assertEqual(commands.count("gh pr list"), 0, "gh pr list cannot filter by owner")
+        lookups = re.findall(r'number="\$\((.*?)\)"$', self.text, re.MULTILINE | re.DOTALL)
+        self.assertEqual(len(lookups), 2, lookups)  # publish and close-stale
+        endpoint = (
+            '"repos/$GITHUB_REPOSITORY/pulls?head=$GITHUB_REPOSITORY_OWNER:$SNAPSHOT_BRANCH&base=main&state=open"'
+        )
+        for lookup in lookups:
+            self.assertTrue(lookup.startswith(f"gh api {endpoint}"), lookup)
+            self.assertIn('--jq "$SNAPSHOT_PR_QUERY"', lookup)
+
+    @unittest.skipUnless(shutil.which("jq"), "jq is not installed")
+    def test_query_keeps_only_a_pull_request_from_this_repository(self):
+        (query,) = re.findall(r"^  SNAPSHOT_PR_QUERY: '([^']*)'$", self.text, re.MULTILINE)
+
+        def pull(number, head_repository):
+            head = {"repo": {"id": head_repository} if head_repository else None}
+            return {"number": number, "head": head, "base": {"repo": {"id": 1}}}
+
+        for pulls, expected in (
+            ([], ""),
+            ([pull(9, 2), pull(7, 1)], "7"),  # a fork's pull request, then this repository's
+            ([pull(9, None)], ""),  # the fork was deleted
+            ([pull(9, 2)], ""),
+        ):
+            with self.subTest(pulls=pulls):
+                result = subprocess.run(
+                    ["jq", query], input=json.dumps(pulls), capture_output=True, text=True, check=True
+                )
+                self.assertEqual(result.stdout.strip(), expected)
 
 
 if __name__ == "__main__":
