@@ -775,6 +775,9 @@ class DownloadGuardTests(FetcherRun):
             ("bwiki", BWIKI_IMAGES + "..;/otherwiki/a/ab/Art.png"),
             ("bwiki", BWIKI_IMAGES + "..%5c..%5cotherwiki/a/ab/Art.png"),
             ("fandom", FANDOM_IMAGES + "%252e%252e/%252e%252e/otherwiki/images/a/ab/Art.png/revision/latest?cb=1"),
+            # ... or trailing whitespace or a NUL a server could trim, or an overlong UTF-8 "." a lenient decoder reads.
+            ("bwiki", BWIKI_IMAGES + "..%20/..%00/otherwiki/a/ab/Art.png"),
+            ("bwiki", BWIKI_IMAGES + "%c0%ae%c0%ae/%c0%ae%c0%ae/otherwiki/a/ab/Art.png"),
         ):
             with self.subTest(source=source, url=url):
                 offered = self.offer("Art.png", payload)
