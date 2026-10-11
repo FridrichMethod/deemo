@@ -135,6 +135,9 @@ class FakeResponse:
         self.url, self.status_code, self.content = url, status, content
         self.headers = CaseInsensitiveDict(headers or {})
         self.consumed = 0  # body bytes handed out by iter_content()
+        # The other public attributes of a requests.Response, as requests' HTTPAdapter sets them.
+        self.encoding = requests.utils.get_encoding_from_headers(self.headers)
+        self.history, self.reason, self.cookies, self.elapsed, self.request = [], None, None, timedelta(0), None
 
     def json(self):
         return json.loads(self.content)
@@ -701,12 +704,21 @@ class GetTests(FetcherRun):
 
     def test_a_real_response_serves_the_bytes_read_under_the_limit(self):
         # requests.Response objects with a body stream, as requests builds them: .content, .text and .json() must serve
-        # the bytes read under the limit, decoded as requests decodes them.
+        # the bytes read under the limit, decoded as requests decodes them. The responses refuse a write to their
+        # private attributes from outside requests, so this holds through requests' public interface alone.
+        class PublicOnly(requests.Response):
+            def __setattr__(self, name, value):
+                writer = sys._getframe(1).f_globals.get("__name__", "")
+                if name.startswith("_") and writer.partition(".")[0] != "requests":
+                    raise AssertionError(f"{writer} set the private requests.Response.{name}")
+                super().__setattr__(name, value)
+
         def answer(body, content_type):
             def get(url, **options):
-                response = requests.Response()
+                response = PublicOnly()
                 response.status_code, response.url, response.raw = 200, url, io.BytesIO(body)
-                response.headers["Content-Type"] = content_type
+                if content_type is not None:
+                    response.headers["Content-Type"] = content_type
                 response.encoding = requests.utils.get_encoding_from_headers(response.headers)
                 return response
 
@@ -720,6 +732,8 @@ class GetTests(FetcherRun):
             self.assertEqual(fetch.get(ILLUSTRATOR_URL).text, page.decode("latin-1"))
         data = {"query": {"pages": {"1": {"title": "文件:A.png"}}}}
         with answer(json.dumps(data, ensure_ascii=False).encode(), "application/json"):
+            self.assertEqual(fetch.api("bwiki", list="allimages"), data)
+        with answer(json.dumps(data, ensure_ascii=False).encode("utf-16"), None):  # requests guesses JSON's encoding
             self.assertEqual(fetch.api("bwiki", list="allimages"), data)
         with answer(page, "text/html"), patch.object(fetch, "MAX_RESPONSE_BYTES", len(page) - 1):
             with self.assertRaisesRegex(fetch.RefusedDownload, "limit"):

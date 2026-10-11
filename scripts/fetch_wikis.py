@@ -61,6 +61,8 @@ MAX_IMAGE_BYTES = 64 * 1024 * 1024
 # The most bytes read from one response of get(): an API query, the DeemoSongs JSON or the illustrator index page.
 MAX_RESPONSE_BYTES = 64 * 1024 * 1024
 CHUNK_BYTES = 1024 * 1024
+# The public attributes of a requests.Response other than its body: those requests itself keeps when it pickles one.
+RESPONSE_FIELDS = ("status_code", "headers", "url", "history", "encoding", "reason", "cookies", "elapsed", "request")
 # The most continuation requests one MediaWiki list (or one batch of titles) may take, far above any real list: each
 # request brings up to 500 rows, so as many requests would list half a million.
 MAX_CONTINUATIONS = 1000
@@ -163,10 +165,21 @@ def on_host(url, host):
     )
 
 
+def with_body(response, body):
+    """A requests.Response like response (its RESPONSE_FIELDS) whose body is body. requests reads that body from raw,
+    the response's file-like body, as it reads any other, so .content, .text and .json() serve these bytes decoded as
+    requests decodes them. Only public attributes are set: nothing depends on where requests keeps a body it has read."""
+    served = requests.Response()
+    for field in RESPONSE_FIELDS:
+        setattr(served, field, getattr(response, field))
+    served.raw = BytesIO(body)
+    return served
+
+
 def page_response(url, params, headers):
     """One request of get(), following no redirect, its body read here up to MAX_RESPONSE_BYTES, so a connection lost
-    mid-body is retried like any other request. requests keeps a body it has read in _content, where .content, .text
-    and .json() find it, so the response is set up as if requests had read these bytes itself."""
+    mid-body is retried like any other request. A response that is not a redirect is returned with the bytes read as
+    its body (see with_body())."""
     response = requests.get(
         url,
         params=params,
@@ -177,9 +190,7 @@ def page_response(url, params, headers):
     )
     try:
         response.raise_for_status()
-        if not response.is_redirect:
-            response._content = read_body(response, MAX_RESPONSE_BYTES)
-        return response
+        return response if response.is_redirect else with_body(response, read_body(response, MAX_RESPONSE_BYTES))
     finally:
         response.close()
 
