@@ -262,11 +262,19 @@ def pages(source, titles):
     return list(merged.values())
 
 
+def awaits_imageinfo(page):
+    """Whether an imageinfo response page names a file MediaWiki can describe: any page but a missing one that no file
+    repository knows ("known" marks a file kept in a shared repository without a local description page)."""
+    return "missing" not in page or "known" in page
+
+
 def imageinfo(source, titles):
+    """The current revision's imageinfo of each file in titles that has one, keyed by page title."""
     infos = {}
     for start in range(0, len(titles), 50):
         continuation = {}
-        # At its result-size limit MediaWiki answers only part of the batch and returns `continue` for the rest.
+        # At its result-size limit MediaWiki answers only part of the batch and returns `continue` for the rest; for a
+        # one-title batch that `continue` can bring the current revision (iistart set to its own timestamp).
         while True:
             result = api(
                 source,
@@ -276,10 +284,14 @@ def imageinfo(source, titles):
                 iilimit=1,
                 **continuation,
             )
-            for page in result.get("query", {}).get("pages", {}).values():
+            listed = result.get("query", {}).get("pages", {}).values()
+            for page in listed:
                 if page.get("imageinfo"):
                     infos.setdefault(page["title"], page["imageinfo"][0])
-            if "continue" not in result:
+            # A one-title batch is also continued (iistart) through every older revision of its file, one request
+            # each, which setdefault() would discard: stop once each file of the batch has its current revision.
+            waiting = [page for page in listed if awaits_imageinfo(page) and page["title"] not in infos]
+            if "continue" not in result or not waiting:
                 break
             continuation = result["continue"]
     return infos
