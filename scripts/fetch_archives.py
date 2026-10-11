@@ -11,6 +11,7 @@ from __future__ import annotations
 import concurrent.futures
 import hashlib
 import io
+import ipaddress
 import json
 import os
 import re
@@ -43,6 +44,9 @@ TUMBLR_MEDIA_HOSTS = ("media.tumblr.com",)
 OFFICIAL_HOSTS = ("deemo.com",)
 PROMO_HOSTS = ("rayark.promo",)
 ARCHIVE_ORG_HOSTS = ("archive.org",)
+# Second-level labels that are public under a two-letter country code ("co.jp", "com.cn", "ac.uk"): there a site's
+# registrable domain is its last three labels (see registrable_domain()).
+PUBLIC_SECOND_LEVELS = frozenset({"co", "com", "net", "org", "gov", "ac", "edu", "ne", "or", "go"})
 
 
 def reset():
@@ -579,18 +583,44 @@ CATALOG_ENTRIES = [
 ]
 
 
+def registrable_domain(host):
+    """The registrable domain of a host name: its last two labels ("wublaze.tumblr.com": "tumblr.com"), or its last
+    three when the second-level label is one of PUBLIC_SECOND_LEVELS under a two-letter country code
+    ("www.kadokawa.co.jp": "kadokawa.co.jp"). None for an IP address, an empty host, or a host that is itself such a
+    public suffix ("co.jp"), none of which has one."""
+    host = (host or "").rstrip(".").lower()
+    try:
+        ipaddress.ip_address(host)
+        return None
+    except ValueError:
+        pass
+    labels = host.split(".")
+    if not host:
+        return None
+    if len(labels) >= 2 and len(labels[-1]) == 2 and labels[-2] in PUBLIC_SECOND_LEVELS:
+        return ".".join(labels[-3:]) if len(labels) >= 3 else None
+    return ".".join(labels[-2:])
+
+
 def reach(url):
-    """The final response of url, following at most MAX_REDIRECTS redirects that stay on https within its own site
-    (its hostname without a leading "www.", or a subdomain of it), and the Location of the first redirect that would
-    leave it (not requested), or None. Only the status line and headers are read: the body is never downloaded."""
-    site = ((urlsplit(url).hostname or "").rstrip(".").removeprefix("www."),)
+    """The final response of url, following at most MAX_REDIRECTS redirects that stay on https within its registrable
+    domain (see registrable_domain(); a sibling host such as www.tumblr.com for wublaze.tumblr.com counts, an IP
+    address never does), and the Location of the first redirect that would leave it (not requested), or None. Only the
+    status line and headers are read: the body is never downloaded."""
+    site = registrable_domain(urlsplit(url).hostname)
     for _ in range(MAX_REDIRECTS + 1):
         r = session().get(url, timeout=(12, 35), allow_redirects=False, stream=True)
         r.close()
         if not r.is_redirect:
             return r, None
         location = urljoin(r.url, r.headers["location"])
-        if not host_allowed(location, site):
+        # host_allowed() checks the scheme, port and user info too; the registrable domain itself rules out an IP
+        # address, whose labels could end like a numeric site's.
+        if (
+            site is None
+            or not host_allowed(location, (site,))
+            or registrable_domain(urlsplit(location).hostname) != site
+        ):
             return r, location
         url = location
     raise requests.TooManyRedirects(f"Too many redirects: {url}")
