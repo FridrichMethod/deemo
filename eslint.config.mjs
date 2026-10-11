@@ -29,4 +29,11 @@ export default [
     files: ["src/archive.css"],
     rules: { "css/no-invalid-properties": "off" },
   },
+  {
+    // The inherited slideshow stylesheet uses valid CSS that the CSSTree data behind css/no-invalid-properties cannot
+    // check: math sums directly inside clamp()/min()/calc(), and mask-image values given through custom properties.
+    // Its font stack is the original's single Coprhtl face; adding a generic fallback would change how it renders.
+    files: ["src/slideshow.css"],
+    rules: { "css/font-family-fallbacks": "off", "css/no-invalid-properties": "off" },
+  },
 ];
