@@ -28,21 +28,37 @@ jobs:
         id: install
         run: |
           python3 -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet -r requirements.txt
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet -r requirements.txt -r requirements-lint.txt
       # The remaining checks run even when an earlier one fails, so one run reports every failure.
-      - name: Unit tests (every tests/test_*.py)
+      - name: Unit tests (every tests/test_*.py, under coverage)
+        # coverage.py measures scripts/ while each test file runs, including every script a test starts as a
+        # subprocess ([tool.coverage] in pyproject.toml); each process writes its own data file, combined below.
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        env:
+          COVERAGE_FILE: ${{ runner.temp }}/coverage/.coverage
         run: |
+          mkdir -p "$RUNNER_TEMP/coverage"
           failed=()
           for test in tests/test_*.py; do
             echo "::group::$test"
-            "$RUNNER_TEMP/venv/bin/python" -I "$test" || failed+=("$test")
+            "$RUNNER_TEMP/venv/bin/python" -I -m coverage run "$test" || failed+=("$test")
             echo "::endgroup::"
           done
           for test in "${failed[@]}"; do
             echo "::error file=$test::$test failed"
           done
           [ "${#failed[@]}" -eq 0 ]
+      - name: Coverage of scripts/ by the unit tests (fails below fail_under in pyproject.toml)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        env:
+          COVERAGE_FILE: ${{ runner.temp }}/coverage/.coverage
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -I -m coverage combine --quiet "$RUNNER_TEMP/coverage"
+          {
+            echo "### Coverage of scripts/ by the unit tests"
+            "$RUNNER_TEMP/venv/bin/python" -I -m coverage report --format=markdown --fail-under=0
+          } >> "$GITHUB_STEP_SUMMARY"
+          "$RUNNER_TEMP/venv/bin/python" -I -m coverage report
       - name: Generated files match their sources
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: '"$RUNNER_TEMP/venv/bin/python" scripts/build_catalog.py --verify --check'
@@ -77,3 +93,51 @@ jobs:
             sleep 0.2
           done
           "$RUNNER_TEMP/venv/bin/python" -I tests/browser_smoke.py --base http://127.0.0.1:8765 --browser "$(command -v google-chrome)"
+
+  lint:
+    # Every hook of .pre-commit-config.yaml on every file, as `pre-commit run --all-files` runs them locally:
+    # whitespace and file checks, ruff, mypy, actionlint and ESLint (check only), each one pinned. A hook that has to
+    # rewrite a file fails the run and shows the diff; the byte-pinned and generated files are excluded from them all.
+    name: Lint, format and type checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the pinned lint tools
+        id: install
+        # pre-commit, ruff and mypy from requirements-lint.txt; ESLint exactly as package-lock.json pins it, without
+        # running any package's install scripts.
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --quiet -r requirements-lint.txt
+          node_version="$(node --version)"
+          echo "Node.js $node_version"
+          major=0 minor=0
+          if [[ "$node_version" =~ ^v([0-9]+)\.([0-9]+)\.[0-9]+$ ]]; then
+            major="${BASH_REMATCH[1]}" minor="${BASH_REMATCH[2]}"
+          fi
+          if ! (( (major == 20 && minor >= 19) || (major == 22 && minor >= 13) || major >= 24 )); then
+            echo "::error::Node.js $node_version does not satisfy ^20.19.0 || ^22.13.0 || >=24 (engines in package.json), which the pinned ESLint needs."
+            exit 1
+          fi
+          npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run every pre-commit hook on every file
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        env:
+          PRE_COMMIT_HOME: ${{ runner.temp }}/pre-commit
+        run: '"$RUNNER_TEMP/venv/bin/python" -I -m pre_commit run --all-files --show-diff-on-failure'
+      - name: Lint left the checkout unchanged
+        # Catches a hook or tool that rewrote or added a file; caches and node_modules/ are in .gitignore.
+        if: ${{ !cancelled() }}
+        run: |
+          changed="$(git status --porcelain --untracked-files=all)"
+          if [ -n "$changed" ]; then
+            echo "::error::Linting changed or added these files. Run pre-commit run --all-files locally and commit the reviewed result."
+            printf '%s\n' "$changed"
+            exit 1
+          fi
