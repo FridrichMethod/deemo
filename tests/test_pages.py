@@ -1,16 +1,39 @@
 """Ensure only tracked, allowlisted website files reach the GitHub Pages payload."""
 
 import importlib.util
+import re
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-SPEC = importlib.util.spec_from_file_location(
-    "prepare_pages", Path(__file__).resolve().parents[1] / "scripts/prepare_pages.py"
-)
+ROOT = Path(__file__).resolve().parents[1]
+SPEC = importlib.util.spec_from_file_location("prepare_pages", ROOT / "scripts/prepare_pages.py")
 pages = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(pages)
+
+
+def workflow_jobs(relative):
+    """{job id: its lines} of a workflow, split at the two-space job keys under `jobs:` (the layout these files use)."""
+    lines = (ROOT / relative).read_text(encoding="utf-8").splitlines()
+    body = lines[lines.index("jobs:") + 1 :]
+    starts = [index for index, line in enumerate(body) if re.fullmatch(r"  [A-Za-z_][\w-]*:", line)]
+    return {
+        body[start].strip().rstrip(":"): body[start + 1 : end]
+        for start, end in zip(starts, [*starts[1:], len(body)], strict=True)
+    }
+
+
+class WorkflowTests(unittest.TestCase):
+    def test_only_main_is_ever_deployed(self):
+        # workflow_dispatch runs on any ref the maintainer picks; the deploy job itself refuses all but main, whatever
+        # the github-pages environment's branch policy would allow.
+        jobs = workflow_jobs(".github/workflows/pages.yml")
+        deployers = [
+            name for name, lines in jobs.items() if any("uses: actions/deploy-pages@" in line for line in lines)
+        ]
+        self.assertEqual(deployers, ["deploy"])
+        self.assertIn("    if: github.ref == 'refs/heads/main'", jobs["deploy"])
 
 
 class PagesTests(unittest.TestCase):
