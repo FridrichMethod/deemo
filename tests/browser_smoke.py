@@ -530,6 +530,47 @@ def check_viewer_scroll_and_focus(browser):
     checks.append("viewer scroll lock and focus return")
 
 
+def check_viewer_keys(browser):
+    """The arrow keys turn the viewer's image once per press, as in the slideshow: a held key does not race through the
+    gallery, and an arrow with a modifier (Alt+Left and Alt+Right are Back and Forward) is left to the browser."""
+    page = new_page(browser, 1440, 900)
+    page.route(
+        re.compile(r"/assets/(public|legacy)/"),
+        lambda route: route.fulfill(status=200, content_type="image/png", body=PIXEL),
+    )
+    navigate(page, "archive.html")
+    page.wait_for_selector(".card")
+    # Runs after the page's own listener, so it sees whether the page took the key.
+    page.evaluate(
+        "window.__keys = []; document.addEventListener('keydown', (event) => { if (event.key.startsWith('Arrow')) window.__keys.push([event.key, event.repeat, event.defaultPrevented]); })"
+    )
+
+    def position():
+        page.wait_for_function(IMAGE_SHOWN)
+        return page.evaluate("parseInt(document.getElementById('position').textContent, 10)")
+
+    page.locator(".card-image").nth(3).click()
+    url = page.url
+    assert position() == 4
+    chords = ["Alt+ArrowRight", "Control+ArrowLeft", "Meta+ArrowRight", "Shift+ArrowLeft"]
+    for chord in chords:
+        page.keyboard.press(chord)
+        assert [position(), page.url] == [4, url], chord
+    keys = page.evaluate("window.__keys.splice(0)")
+    assert keys == [[chord.split("+")[1], False, False] for chord in chords], keys
+    for _ in range(5):
+        page.keyboard.down("ArrowRight")
+    page.keyboard.up("ArrowRight")
+    assert position() == 5, "A held key turns one image"
+    page.keyboard.press("ArrowLeft")
+    assert position() == 4
+    keys = page.evaluate("window.__keys.splice(0)")
+    assert keys == [["ArrowRight", False, True], *[["ArrowRight", True, False]] * 4, ["ArrowLeft", False, True]], keys
+    page.keyboard.press("Escape")
+    finish(page)
+    checks.append("viewer arrow keys: one image per press, modifier chords left to the browser")
+
+
 def check_deep_link_filters(browser):
     page = new_page(browser)
     # Values that match no option are ignored, so each select keeps showing the default it applies.
@@ -1188,6 +1229,7 @@ with sync_playwright() as p:
     check_explicit_language_persists(browser)
     check_search_folding(browser)
     check_viewer_scroll_and_focus(browser)
+    check_viewer_keys(browser)
     check_deep_link_filters(browser)
     check_viewer_provenance(browser)
     check_hostile_catalog(browser)
