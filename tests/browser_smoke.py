@@ -75,6 +75,19 @@ NOTES_CASES = {
     "wikis:fandom:07a098acfa802dd9": [["Knots Way", ""], ["Crossknotsway", "file"]],
 }
 NOTES_TITLES = "[...document.querySelectorAll('.slide-notes .notes-title')].map((title) => [title.textContent.replace(/\\u00a0/g, ' '), title.dataset.length || ''])"
+# Catalog text comes from wiki editors, Tumblr posts and artists' captions, and its URLs from the source pages. Each
+# hostile value records in window.__xss that it ran; the archive must show the text verbatim and link only http(s).
+XSS = "(window.__xss = window.__xss || []).push"
+HOSTILE = {
+    "title": f"Hostile <img src=x onerror=\"{XSS}('title')\"> title",
+    "artist": f"<b onmouseover=\"{XSS}('artist')\">Hostile artist</b>",
+    "notes": f"Hostile notes <img src=x onerror=\"{XSS}('notes')\">",
+    "source_id": f"<img src=x onerror=\"{XSS}('failure text')\">",
+    "page_url": f"javascript:{XSS}('page')",
+    "download_url": f"data:text/html,<script>{XSS}('download')</script>",
+    "source_url": "vbscript:msgbox(1)",
+    "failure_url": f"JaVaScRiPt:{XSS}('failure')",
+}
 
 
 def title_words(text):
@@ -689,6 +702,65 @@ def check_viewer_provenance(browser):
     checks.append("viewer composer, provenance class and upstream status, in both languages")
 
 
+def hostile_catalog_script(page):
+    """data/catalog.js with markup and event handlers in the first gallery image's text, and javascript:, data: and
+    vbscript: URLs in each URL field the page links: a record's source page and download, a source, a failure."""
+    prefix = "window.DEEMO_CATALOG = "
+    text = page.request.get(mounted_url("data/catalog.js")).text()
+    assert text.startswith(prefix), text[:40]
+    catalog = json.loads(text[len(prefix) :].rstrip().removesuffix(";"))
+    asset = next(asset for asset in catalog["assets"] if asset["gallery"])
+    record = asset["provenance"][0]
+    asset["title"] = record["title"] = HOSTILE["title"]
+    asset["artist"] = record["artist"] = HOSTILE["artist"]
+    record.update(notes=HOSTILE["notes"], page_url=HOSTILE["page_url"], download_url=HOSTILE["download_url"])
+    catalog["sources"][0]["url"] = HOSTILE["source_url"]
+    catalog["failures"] = [
+        {"source_id": HOSTILE["source_id"], "url": HOSTILE["failure_url"], "error": HOSTILE["notes"]}
+    ]
+    return prefix + json.dumps(catalog, ensure_ascii=False) + ";\n"
+
+
+def check_hostile_catalog(browser):
+    """Markup in catalog text stays text and runs nothing, and a URL that is not http(s) becomes no link: the cards,
+    the viewer and the source inventory (sourceLink() in src/archive.js), in both languages."""
+    page = new_page(browser, 1440, 900)
+    body = hostile_catalog_script(page)
+    page.route(mounted_url("data/catalog.js"), lambda route: route.fulfill(content_type="text/javascript", body=body))
+    page.route(
+        re.compile(r"/assets/(public|legacy)/"),
+        lambda route: route.fulfill(status=200, content_type="image/png", body=PIXEL),
+    )
+    navigate(page, "archive.html")
+    page.wait_for_selector(".card")
+    page.locator(".card-image").first.click()
+    page.wait_for_function(IMAGE_SHOWN)
+    for lang in ("en", "zh-CN"):
+        # The modal viewer covers the toggle; a language change redraws the viewer and the inventory.
+        page.evaluate("(lang) => DEEMO_I18N.setLang(lang)", lang)
+        monitor.settle(page)
+        state = page.evaluate(
+            """(artist) => { const {t} = window.DEEMO_I18N, block = document.querySelector('#provenance .provenance-item');
+            const remote = [...block.children].find((node) => node.textContent === t('provenance.remote'));
+            const failure = document.querySelector('#failures li').firstElementChild;
+            return {xss: window.__xss ?? null, injected: document.querySelectorAll('img[src="x"], [onerror], [onmouseover]').length,
+                    links: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')).filter((href) => /^\\s*(javascript|data|vbscript):/i.test(href)),
+                    titles: [document.querySelector('#grid .card h2').textContent, document.getElementById('viewer-title').textContent],
+                    paragraphs: [...block.querySelectorAll('p')].map((p) => p.textContent), artist: t('provenance.artist', {artist}),
+                    unlinked: [block.firstElementChild, remote, document.querySelector('#sources td').firstElementChild, failure].map((node) => node && node.tagName),
+                    failure: failure.textContent}; }""",
+            HOSTILE["artist"],
+        )
+        assert state["xss"] is None and not state["injected"] and not state["links"], (lang, state)
+        assert state["titles"] == [HOSTILE["title"]] * 2, (lang, state["titles"])
+        for text in (HOSTILE["title"], state["artist"], HOSTILE["notes"]):
+            assert text in state["paragraphs"], (lang, text, state["paragraphs"])
+        assert state["unlinked"] == ["SPAN"] * 4 and state["failure"] == HOSTILE["source_id"], (lang, state)
+    page.keyboard.press("Escape")
+    finish(page)
+    checks.append("hostile catalog text shown verbatim, no script runs, non-http(s) URLs unlinked, in both languages")
+
+
 def check_previews(browser):
     """Grid cards show the derived previews and request no original; the viewer, its download link and its link
     to the original serve the original file; a card whose preview fails falls back to the original."""
@@ -1118,6 +1190,7 @@ with sync_playwright() as p:
     check_viewer_scroll_and_focus(browser)
     check_deep_link_filters(browser)
     check_viewer_provenance(browser)
+    check_hostile_catalog(browser)
     check_card_tags(browser)
     check_no_repeated_names(browser)
     check_inventory_table(browser)
