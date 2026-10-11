@@ -84,6 +84,10 @@ def thumb_size(width: int, height: int) -> tuple[int, int] | None:
 
 
 def thumb_path(sha256: str) -> str:
+    """The preview's path, named by the first NAME_DIGITS hex digits of its original's SHA-256. Anything but a
+    lowercase SHA-256 is refused, so the name can never leave assets/thumbs/."""
+    if not build_catalog.SHA256.fullmatch(sha256):
+        raise ValueError(f"Invalid SHA-256: {sha256!r}")
     return f"{THUMB_DIR}/{sha256[:NAME_DIGITS]}.webp"
 
 
@@ -249,6 +253,8 @@ def build(root: Path, prune: bool = False, rebuild: bool = False, workers: int |
 
 def check_entry(root: Path, sha256: str, entry: dict, original: dict | None) -> tuple[list[str], bytes | None]:
     """Problems with one recorded preview, and its bytes when they are intact."""
+    if not build_catalog.SHA256.fullmatch(sha256):
+        return [f"Thumbnail key {sha256!r} in {MANIFEST} is not a lowercase SHA-256"], None
     path = entry.get("path")
     if path != thumb_path(sha256):
         return [f"Thumbnail for {sha256} should be {thumb_path(sha256)}, not {path}"], None

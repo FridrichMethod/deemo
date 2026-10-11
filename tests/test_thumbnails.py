@@ -255,6 +255,25 @@ class BuildTests(Fixture):
         self.assertTrue(bottom[2] > 200 and bottom[0] < 60, bottom)
         self.assertEqual(thumbs.problems(self.root, reencode=True), [])
 
+    def test_a_hash_with_path_characters_never_names_a_file(self):
+        # A preview is named after its original's SHA-256 and this build runs without --verify: a crafted 64-character
+        # value in a manifest stops it before anything is written, inside the checkout or outside it.
+        crafted = "../../../esc/a01" + "0" * 48
+        self.write_manifest(
+            [
+                {**record, "sha256": crafted} if record["path"].endswith("/wide.png") else record
+                for record in self.records
+            ]
+        )
+        with self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+            thumbs.build(self.root)
+        self.assertEqual([path.name for path in self.base.iterdir()], ["checkout"])
+        self.assertFalse((self.root / thumbs.THUMB_DIR).exists())
+        self.assertFalse((self.root / thumbs.MANIFEST).exists())
+        for value in (crafted, self.sha("wide.png").upper()):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+                thumbs.thumb_path(value)
+
     def test_changed_encoder_settings_need_an_explicit_rebuild(self):
         thumbs.build(self.root)
         manifest = self.manifest()
@@ -383,6 +402,14 @@ class CheckTests(Fixture):
         self.assert_problem("Unreferenced file in assets/thumbs: assets/thumbs/stray.webp.tmp")
         self.write_manifest([record for record in self.records if not record["path"].endswith("/wide.png")])
         self.assert_problem("belongs to no current gallery original")
+
+    def test_a_manifest_key_that_is_not_a_hash_is_reported(self):
+        # The check reports such an entry instead of building a path from it (or stopping with a traceback).
+        manifest = self.manifest()
+        crafted = "../../../esc/a01" + "0" * 48
+        manifest["thumbnails"][crafted] = dict(manifest["thumbnails"][self.sha("wide.png")])
+        (self.root / thumbs.MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
+        self.assert_problem(f"Thumbnail key {crafted!r} in {thumbs.MANIFEST} is not a lowercase SHA-256")
 
     def test_undecodable_preview_is_detected(self):
         self.rewrite_entry("wide.png", b"RIFF\x00\x00\x00\x00WEBPVP8 broken")

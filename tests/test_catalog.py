@@ -207,6 +207,23 @@ class CatalogTests(unittest.TestCase):
             with self.subTest(missing=key), self.assertRaisesRegex(ValueError, f"Missing {key}"):
                 build.validate_asset(self.root, record, True)
 
+    def test_sha256_must_be_lowercase_hex_in_every_build_mode(self):
+        # scripts/build_thumbnails.py names each preview after the hash and builds without --verify, so a 64-character
+        # value with path characters must fail before any path is made from it. An uppercase digest would also keep
+        # byte-identical files apart in a build without --verify.
+        raw = (self.root / self.asset["path"]).read_bytes()
+        for value in ("../../../esc/a01" + "0" * 48, hashlib.sha256(raw).hexdigest().upper(), "g" * 64, None):
+            for verify in (False, True):
+                with self.subTest(value=value, verify=verify), self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+                    build.validate_asset(self.root, {**self.asset, "sha256": value}, verify)
+            self.manifest("artists", {**self.asset, "sha256": value})
+            with self.subTest(value=value, record="combine"), self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+                build.combine(self.root)
+            variant = {**self.asset, "id": "artist:sample:copy", "sha256": value}
+            self.manifest("artists", {**self.asset, "variants": [variant]})
+            with self.subTest(value=value, record="variant"), self.assertRaisesRegex(ValueError, "Invalid SHA-256"):
+                build.combine(self.root)
+
     def test_corrupt_image_data_fails_verification(self):
         raw = (self.root / self.asset["path"]).read_bytes()
         offset, length = png_chunk(raw, b"IDAT")

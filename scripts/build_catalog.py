@@ -28,6 +28,9 @@ COVER_KEY = re.compile(r"booksprite|bookcover|^deemo1[ab]$", re.IGNORECASE)
 UPSTREAM_STATUSES = ("removed", "superseded", "fetch_failed")
 # Every tracked file here must be a record's or a variant's path (assets/thumbs/ has its own check).
 ORPHAN_CHECK_DIRECTORIES = ("assets/public", "assets/legacy")
+# A SHA-256 as hashlib's hexdigest() writes it. Builds without --verify trust it, and scripts/build_thumbnails.py
+# names each preview file after it, so nothing else may pass for one.
+SHA256 = re.compile(r"[0-9a-f]{64}")
 
 
 def attr(value: object) -> str:
@@ -264,7 +267,7 @@ def validate_asset(root: Path, asset: dict, verify: bool = False) -> None:
     path = safe_path(root, asset["path"])
     if path.stat().st_size != asset["bytes"]:
         raise ValueError(f"Byte count mismatch: {path}")
-    if len(asset["sha256"]) != 64:
+    if not isinstance(asset["sha256"], str) or not SHA256.fullmatch(asset["sha256"]):
         raise ValueError(f"Invalid SHA-256: {path}")
     if verify:
         if hashlib.sha256(path.read_bytes()).hexdigest() != asset["sha256"]:
