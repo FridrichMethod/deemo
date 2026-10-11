@@ -22,8 +22,11 @@ env:
   # The pull request from this repository's snapshot branch, whether the bot or a maintainer opened it
   # (a maintainer has to when the bot may not create pull requests). Anyone can open a pull request from
   # a fork whose branch has the same name, so those are ignored; only users with write access can push
-  # the branch here, and GitHub allows one open pull request per head branch and base.
-  SNAPSHOT_PR_QUERY: '[.[] | select(.isCrossRepository == false)][0].number // empty'
+  # the branch here, and GitHub allows one open pull request per head branch and base. The lookup asks
+  # the REST API for head=<owner>:<branch>, which GitHub filters on the server: gh pr list fetches only
+  # the 30 newest pull requests and filters by branch name, so 30 fork pull requests could hide this one.
+  # The query then keeps a pull request only if its head repository is this one.
+  SNAPSHOT_PR_QUERY: '[.[] | select(.head.repo.id == .base.repo.id)][0].number // empty'
 
 jobs:
   discover:
@@ -151,8 +154,8 @@ jobs:
             GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
             git push --force-with-lease="refs/heads/$SNAPSHOT_BRANCH:$lease" origin "HEAD:refs/heads/$SNAPSHOT_BRANCH"
           printf '\n---\nSource · 来源: %s\n' "$RUN_URL" >> "$RUNNER_TEMP/report.md"
-          number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open \
-            --json number,isCrossRepository --jq "$SNAPSHOT_PR_QUERY")"
+          number="$(gh api "repos/$GITHUB_REPOSITORY/pulls?head=$GITHUB_REPOSITORY_OWNER:$SNAPSHOT_BRANCH&base=main&state=open" \
+            --jq "$SNAPSHOT_PR_QUERY")"
           if [ -n "$number" ]; then
             gh pr edit "$number" --title "$title" --body-file "$RUNNER_TEMP/report.md"
             gh pr comment "$number" --body "Snapshot refreshed by a new check run · 快照已由新的检查运行刷新: $RUN_URL"
@@ -176,10 +179,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          number="$(gh pr list --head "$SNAPSHOT_BRANCH" --base main --state open \
-            --json number,isCrossRepository --jq "$SNAPSHOT_PR_QUERY")"
+          number="$(gh api "repos/$GITHUB_REPOSITORY/pulls?head=$GITHUB_REPOSITORY_OWNER:$SNAPSHOT_BRANCH&base=main&state=open" \
+            --jq "$SNAPSHOT_PR_QUERY")"
           if [ -z "$number" ]; then
             echo "No open snapshot pull request."
             exit 0
           fi
-          gh pr close "$number" --comment "The latest check found no differences from the snapshot on main, so this snapshot is outdated; closing it. The next run that finds changes opens a new pull request. · 最新检查未发现与 main 上快照的差异，此快照已过时，现关闭；之后的运行发现变化时会创建新的 PR。 $RUN_URL"
+          gh pr close "$number" --comment "The latest check found no file added, re-uploaded or removed compared with the snapshot on main, so this snapshot is outdated; closing it. Metadata-only changes, if any, are listed in the run summary. The next run that finds file changes opens a new pull request. · 最新检查未发现与 main 上快照相比有新增、重新上传或移除的文件，此快照已过时，现关闭；仅元数据的变化（如有）列在运行摘要中。之后的运行发现文件变化时会创建新的 PR。 $RUN_URL"

@@ -4,6 +4,7 @@ Nothing touches the network: requests.get is replaced by a fake that serves cann
 temporary directory, so the repository's own manifests are never read or written.
 """
 
+import _thread
 import concurrent.futures
 import email.utils
 import hashlib
@@ -11,9 +12,11 @@ import importlib.util
 import io
 import json
 import os
+import struct
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -29,6 +32,10 @@ fetch = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(fetch)
 MANIFEST = "data/sources/wikis.json"
 DISCOVERY = "data/sources/wiki-discovery.json"
+ILLUSTRATOR_INDEX = "data/sources/wiki-illustrator-index.json"
+ILLUSTRATOR_URL = "https://wikiwiki.jp/deemo/アーティスト別リスト2"
+# FetcherRun replaces it with a no-op; the illustrator index tests put it back.
+FETCH_ILLUSTRATOR_INDEX = fetch.fetch_illustrator_index
 
 
 def dump(path, data):
@@ -120,6 +127,10 @@ class FakeResponse:
 
     def json(self):
         return json.loads(self.content)
+
+    @property
+    def text(self):
+        return self.content.decode("utf-8")
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -273,6 +284,70 @@ class CarryForwardTests(FetcherRun):
         # Resuming the reverted snapshot again changes nothing.
         self.assertEqual(self.resume(self.offer("Art.png", png("red")))["assets"], manifest["assets"])
 
+    def test_verified_rerun_takes_the_mapping_fields_of_the_snapshot(self):
+        # A wiki edit can change the illustrator credit, the variant note, the mapping or the file metadata without
+        # touching the file. A verified re-run follows the snapshot in every direction, with the key order a fresh
+        # download of the same candidate has.
+        payload = png("red")
+        steps = [
+            {"artist": "A", "variant_note": "v", "extmetadata": {"ObjectName": {"value": "Old"}}},
+            {"artist": "B", "extmetadata": {"ObjectName": {"value": "New"}}},
+            {"mapping_method": "Exact normalized song title / image filename match"},
+            {},
+            {"artist": "A", "variant_note": "v", "extmetadata": {"ObjectName": {"value": "Old"}}},
+        ]
+        for index, fields in enumerate(steps):
+            with self.subTest(step=index):
+                extra = {key: value for key, value in fields.items() if key != "extmetadata"}
+                offered = self.offer("Art.png", payload, **extra)
+                if "extmetadata" in fields:
+                    offered["info"]["extmetadata"] = fields["extmetadata"]
+                calls = len(self.web.calls)
+                record = self.resume(offered)["assets"][0]
+                if index:
+                    self.assertEqual(len(self.web.calls), calls)  # verified from the file on disk
+                for field in ("artist", "variant_note", "mapping_method"):
+                    self.assertEqual(record.get(field), offered.get(field), field)
+                self.assertEqual(record.get("wiki_extmetadata"), fields.get("extmetadata"))
+                fresh = fetch.download(offered, {})
+                self.assertEqual(list(record), list(fresh))
+                self.assertEqual({**record, "fetched_at": None}, {**fresh, "fetched_at": None})
+
+    def test_revert_does_not_rewrite_the_file_of_another_record(self):
+        # The superseded record of the first upload still points at its file, which holds the reverted bytes already:
+        # rewriting it would truncate another record's file if the run died mid-write.
+        first = self.resume(self.offer("Art.png", png("red")))["assets"][0]
+        self.resume(self.offer("Art.png", png("green")))
+        written, write_bytes, replace = [], Path.write_bytes, os.replace
+
+        def spy_write_bytes(path, data):
+            written.append(Path(path))
+            return write_bytes(path, data)
+
+        def spy_replace(source, target):
+            written.append(Path(target))
+            return replace(source, target)
+
+        with patch.object(Path, "write_bytes", spy_write_bytes), patch.object(fetch.os, "replace", spy_replace):
+            manifest = self.resume(self.offer("Art.png", png("red")))
+        self.assertIn(first["path"], [record["path"] for record in manifest["assets"]])
+        self.assertNotIn(self.root / first["path"], written)
+        self.assertEqual(hashlib.sha256((self.root / first["path"]).read_bytes()).hexdigest(), first["sha256"])
+
+    def test_an_interrupted_image_write_leaves_no_partial_file(self):
+        candidate = self.offer("Art.png", png("red"))
+        with patch.object(fetch.os, "replace", side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+            fetch.download(candidate, {})
+        self.assertEqual([path for path in (self.root / "assets").rglob("*") if path.is_file()], [])
+        # A target that already holds other bytes (a damaged copy being replaced) keeps them, untruncated.
+        record = fetch.download(candidate, {})
+        target = self.root / record["path"]
+        target.write_bytes(b"damaged copy")
+        with patch.object(fetch.os, "replace", side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+            fetch.download(candidate, {})
+        self.assertEqual(target.read_bytes(), b"damaged copy")
+        self.assertEqual([path.name for path in target.parent.iterdir()], [target.name])
+
     def test_failed_redownload_keeps_the_verified_record(self):
         old = self.offer("Art.png", png("red"))
         first = self.resume(old)["assets"][0]
@@ -305,6 +380,36 @@ class CheckpointTests(FetcherRun):
         with patch.object(fetch, "download", interrupted), self.assertRaises(KeyboardInterrupt):
             self.resume(*candidates)
         self.assertEqual(len(self.read(MANIFEST)["assets"]), 60)
+
+    def test_ctrl_c_cancels_the_queued_downloads_and_keeps_the_finished_ones(self):
+        # Ctrl-C reaches the main thread while a worker downloads. The queued downloads are cancelled instead of all
+        # running to the end, and every download that finished has its record: none is left as a file without one.
+        candidates = [self.offer(f"Art {index:02}.png", png((index * 4, 0, 0))) for index in range(60)]
+        web, saved, write_json = self.web, threading.Event(), fetch.write_json
+
+        def saving(relative, data):
+            write_json(relative, data)
+            saved.set()
+
+        def interrupting(url, **options):
+            if len(web.calls) >= 5:
+                saved.wait(0.5)  # a request after Ctrl-C waits until the run has saved the manifest
+            response = web(url, **options)
+            if len(web.calls) == 5:
+                _thread.interrupt_main()
+            return response
+
+        with (
+            patch.object(fetch.requests, "get", interrupting),
+            patch.object(fetch, "write_json", saving),
+            self.assertRaises(KeyboardInterrupt),
+        ):
+            self.resume(*candidates)
+        # The interrupted download and the one the worker had started (one more if the save took over 0.5 s).
+        self.assertLessEqual(len(self.web.calls), 5 + 2)
+        files = {path.relative_to(self.root).as_posix() for path in (self.root / "assets").rglob("*") if path.is_file()}
+        self.assertGreaterEqual(len(files), 5)
+        self.assertEqual({record["path"] for record in self.read(MANIFEST)["assets"]}, files)
 
     def test_manifest_write_is_atomic(self):
         fetch.write_json(MANIFEST, {"assets": ["kept"]})
@@ -346,6 +451,77 @@ class ModeTests(DiscoveryRun):
     def test_full_discovery_still_refreshes_song_keys(self):
         self.discover().assert_called_once_with()
         self.assertEqual([record["title"] for record in self.read(MANIFEST)["assets"]], ["Art"])
+
+
+class IllustratorIndexTests(DiscoveryRun):
+    """The Japanese wiki's illustrator directory, saved as reference data next to the wiki manifest."""
+
+    ENTRY = {
+        "id": "wikis:wikiwiki-illustrators",
+        "name": "Japanese DEEMO Wiki illustrator directory",
+        "url": ILLUSTRATOR_URL,
+        "status": "complete",
+        "notes": "Reference directory for illustrator provenance; availability is checked without authentication or "
+        "challenge bypass.",
+        "index_path": ILLUSTRATOR_INDEX,
+    }
+    INDEX = {
+        "schema_version": 1,
+        "fetched_at": "2026-10-08T00:00:00Z",
+        "source_url": ILLUSTRATOR_URL,
+        "rows": [{"type": "h2", "text": "illustrator", "links": []}],
+    }
+
+    def setUp(self):
+        super().setUp()
+        manifest = self.read(MANIFEST)
+        dump(self.root / MANIFEST, {**manifest, "sources": [*manifest["sources"], self.ENTRY]})
+        dump(self.root / ILLUSTRATOR_INDEX, self.INDEX)
+        patcher = patch.object(fetch, "fetch_illustrator_index", FETCH_ILLUSTRATOR_INDEX)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def entry(self):
+        (entry,) = [source for source in self.read(MANIFEST)["sources"] if source["id"] == self.ENTRY["id"]]
+        return entry
+
+    def test_resume_leaves_the_reference_index_alone(self):
+        # --resume works from the saved snapshot; like the song keys, the unrelated reference index is not refetched.
+        self.web.routes[ILLUSTRATOR_URL] = (403, b"Forbidden", {})
+        manifest = self.resume(self.offer("Art.png", png("red")))
+        self.assertNotIn(ILLUSTRATOR_URL, self.web.calls)
+        self.assertEqual(self.entry(), self.ENTRY)
+        self.assertEqual(self.read(ILLUSTRATOR_INDEX), self.INDEX)
+        self.assertEqual(manifest["failures"], [])
+
+    def test_a_failed_or_empty_refresh_keeps_the_saved_index(self):
+        # A Cloudflare 403, or a 200 challenge page without the directory, must not replace a good index.
+        challenge = b"<html><body><p>Checking your browser...</p></body></html>"
+        for status, body in ((403, b"Forbidden"), (200, challenge)):
+            with self.subTest(status=status):
+                self.web.routes[ILLUSTRATOR_URL] = (status, body, {"Content-Type": "text/html"})
+                self.discover()
+                self.assertEqual(self.entry(), self.ENTRY)
+                self.assertEqual(self.read(ILLUSTRATOR_INDEX), self.INDEX)
+                failures = self.read(MANIFEST)["failures"]
+                self.assertEqual(
+                    [(row["source_id"], row["stage"]) for row in failures], [(self.ENTRY["id"], "reference_index")]
+                )
+
+    def test_full_run_refreshes_the_index(self):
+        page = '<div id="body"><h2>illustrator</h2><table><tr><td><a href="/deemo/X">X</a></td></tr></table></div>'
+        self.web.routes[ILLUSTRATOR_URL] = (200, page.encode("utf-8"), {"Content-Type": "text/html"})
+        self.discover()
+        self.assertEqual(
+            self.read(ILLUSTRATOR_INDEX)["rows"],
+            [
+                {"type": "h2", "text": "illustrator", "links": []},
+                {"type": "tr", "text": "X", "links": [{"text": "X", "url": "/deemo/X"}]},
+            ],
+        )
+        self.assertEqual(self.entry(), self.ENTRY)
+        self.assertEqual([source["id"] for source in self.read(MANIFEST)["sources"]][-1], self.ENTRY["id"])
+        self.assertEqual(self.read(MANIFEST)["failures"], [])
 
 
 class DiscoveryStatsTests(DiscoveryRun):
@@ -412,6 +588,57 @@ class RetryTests(FetcherRun):
         with self.assertRaises(requests.HTTPError):
             fetch.get(self.URL)
         self.assertEqual((len(self.web.calls), self.sleeps), (1, []))
+
+
+class DownloadIntegrityTests(FetcherRun):
+    """The checks download() makes before it archives bytes, and --resume makes before it reuses a local file."""
+
+    def files(self):
+        return sorted(
+            path.relative_to(self.root).as_posix() for path in self.root.rglob("assets/**/*") if path.is_file()
+        )
+
+    def test_a_smaller_rendition_than_the_wiki_publishes_is_refused(self):
+        # A CDN that serves a downscaled rendition (a thumbnail, a negotiated WebP) must not be archived as the file:
+        # the record would claim a full-size file that matches the published dimensions.
+        offered = self.offer("Art.png", png("red", 32, 24))
+        smaller = {**offered, "info": {**offered["info"], "width": 64, "height": 48}}
+        with self.assertRaisesRegex(ValueError, r"Unexpected dimensions: \(32, 24\) != \(64, 48\)"):
+            fetch.download(smaller, {})
+        self.assertEqual(self.files(), [])
+        # In a run, the title is a failure and the verified record of the previous upload is carried forward.
+        first = self.resume(self.offer("Art.png", png("red")))["assets"][0]
+        reupload = self.offer("Art.png", png("green", 32, 24))
+        manifest = self.resume({**reupload, "info": {**reupload["info"], "width": 64, "height": 48}})
+        self.assertEqual(manifest["assets"], [{**first, "upstream_status": "fetch_failed"}])
+        self.assertEqual([failure["title"] for failure in manifest["failures"]], ["文件:Art.png"])
+        self.assertIn("Unexpected dimensions", manifest["failures"][0]["error"])
+        self.assertEqual(self.files(), [first["path"]])
+
+    def test_resume_downloads_a_damaged_local_file_again(self):
+        candidate = self.offer("Art.png", png("red"))
+        first = self.resume(candidate)["assets"][0]
+        path = self.root / first["path"]
+        damaged = bytearray(path.read_bytes())
+        damaged[len(damaged) // 2] ^= 1
+        path.write_bytes(bytes(damaged))
+        calls = len(self.web.calls)
+        again = self.resume(candidate)["assets"][0]
+        self.assertGreater(len(self.web.calls), calls)  # the SHA-256 of the local file no longer matches
+        self.assertEqual(again["sha256"], first["sha256"])
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), again["sha256"])
+
+    def test_a_payload_with_a_broken_checksum_is_refused(self):
+        # A PNG whose IDAT checksum is wrong opens, and reports its size, but fails Image.verify().
+        raw = bytearray(png("red"))
+        start = raw.index(b"IDAT") - 4
+        (length,) = struct.unpack(">I", raw[start : start + 4])
+        raw[start + 8 + length] ^= 0xFF
+        manifest = self.resume(self.offer("Art.png", bytes(raw)))
+        self.assertEqual(manifest["assets"], [])
+        self.assertEqual([failure["title"] for failure in manifest["failures"]], ["文件:Art.png"])
+        self.assertIn("broken PNG file", manifest["failures"][0]["error"])
+        self.assertEqual(self.files(), [])
 
 
 class DeliveryNoteTests(FetcherRun):
@@ -728,6 +955,69 @@ class DiscoveryFilterTests(unittest.TestCase):
             {"File:Song A.png": "song_art", "File:Etude booksprites.png": "collection_cover"},
         )
         self.assertEqual([row["title"] for row in stats["excluded"]], ["File:Tiny booksprite.png"])
+
+
+class ContinuationTests(unittest.TestCase):
+    """MediaWiki stops a query at its result-size limit and returns `continue`; the rest arrives in later responses."""
+
+    def test_imageinfo_follows_the_continuation(self):
+        page = fandom_page("Song A", "{{Song|img=Alpha.png}}", "File:Alpha.png", "File:Beta.png", "File:Gamma.png")
+        names = ("Alpha.png", "Beta.png", "Gamma.png")
+        requested = []
+
+        def api(source, **params):
+            requested.append(params)
+            # The first response holds Alpha's imageinfo only, the continued one the other two.
+            listed = names[:1] if "iicontinue" not in params else names[1:]
+            pages = {
+                str(index): {
+                    "title": "File:" + name,
+                    **({"imageinfo": [image_info(1024, 1024, name)]} if name in listed else {}),
+                }
+                for index, name in enumerate(names)
+            }
+            more = (
+                {}
+                if "iicontinue" in params
+                else {"continue": {"iicontinue": "Beta.png|20210901000000", "continue": "||"}}
+            )
+            return {**more, "query": {"pages": pages}}
+
+        with (
+            patch.object(
+                fetch,
+                "category",
+                lambda source, title: [{"title": "Song A", "ns": 0}] if title == "Category:Songs" else [],
+            ),
+            patch.object(fetch, "pages", lambda source, titles: [page] if titles == ["Song A"] else []),
+            patch.object(fetch, "api", api),
+        ):
+            selected, _, stats = fetch.discover_fandom()
+        self.assertEqual([row["file_title"] for row in selected], ["File:" + name for name in names])
+        self.assertEqual(stats["excluded"], [])
+        self.assertEqual([params.get("iicontinue") for params in requested], [None, "Beta.png|20210901000000"])
+
+    def test_pages_keep_revisions_that_arrive_in_a_continuation(self):
+        complete = {
+            "A": fandom_page("A", "{{Song|Artist=Composer A}}"),
+            "B": fandom_page("B", "{{Song|Artist=Composer B}}"),
+        }
+
+        def without_revisions(title):
+            return {key: value for key, value in complete[title].items() if key != "revisions"}
+
+        def api(source, **params):
+            if "rvcontinue" not in params:
+                pages = {"1": complete["A"], "2": without_revisions("B")}
+                return {"continue": {"rvcontinue": "2|0", "continue": "||"}, "query": {"pages": pages}}
+            return {"query": {"pages": {"1": without_revisions("A"), "2": complete["B"]}}}
+
+        with patch.object(fetch, "api", api):
+            pages = fetch.pages("fandom", ["A", "B"])
+        self.assertEqual(
+            {page["title"]: fetch.song_metadata("fandom", page).get("composer") for page in pages},
+            {"A": "Composer A", "B": "Composer B"},
+        )
 
 
 class EncodingTests(unittest.TestCase):

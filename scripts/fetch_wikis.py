@@ -8,24 +8,24 @@ The manifests preserve source metadata separately from measured downloaded bytes
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
+import math
+import os
+import re
+import threading
+import time
+import unicodedata
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
-import hashlib
 from io import BytesIO
-import json
-import math
-import os
 from pathlib import Path
-import re
-import time
-import unicodedata
 from urllib.parse import quote
 
-from PIL import Image
 import requests
-
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = {
@@ -57,10 +57,16 @@ UI = re.compile(r"^(arrow|bbook|ac-icon|fc-icon|logo|wikilogo)(\.|$)|titletab|sc
 MIN_COVER_EDGE = 100
 # Characters MediaWiki forbids in page titles, so a link built from a name containing one cannot resolve.
 ILLEGAL_TITLE = re.compile(r"[#<>\[\]{}|]")
+# The manifest's entry for the Japanese wiki's illustrator directory, reference data kept next to the wiki sources.
+ILLUSTRATOR_SOURCE_ID = "wikis:wikiwiki-illustrators"
 # Optional record fields describing how a carried-forward record relates to the current upstream file.
 UPSTREAM_FIELDS = ("upstream_status", "superseded_by")
 # Optional candidate fields a record copies at its end, in this order (then delivery_note), on download and re-run.
 SONG_INDEX_FIELDS = ("composer", "composer_source", "collection_aliases")
+# Optional candidate fields a record copies after "provenance", in this order, on download and re-run.
+CANDIDATE_FIELDS = ("artist", "variant_note", "mapping_method")
+# The optional fields download() writes after "provenance", in its order; a re-run puts a new one in the same place.
+AFTER_PROVENANCE = ("provenance", *CANDIDATE_FIELDS, "layout_note", "wiki_extmetadata")
 
 
 def now():
@@ -152,6 +158,10 @@ def pages(source, titles):
                 for field in ("images", "categories"):
                     seen = {row["title"] for row in target[field]}
                     target[field].extend(row for row in page.get(field, []) if row["title"] not in seen)
+                # A continued response can bring what the first copy of the page lacked, such as its revisions
+                # (the wikitext) when the result-size limit stopped the first one.
+                for key, value in page.items():
+                    target.setdefault(key, value)
             if "continue" not in result:
                 break
             continuation = result["continue"]
@@ -161,16 +171,23 @@ def pages(source, titles):
 def imageinfo(source, titles):
     infos = {}
     for start in range(0, len(titles), 50):
-        result = api(
-            source,
-            titles="|".join(titles[start : start + 50]),
-            prop="imageinfo",
-            iiprop="size|url|mime|timestamp|sha1|extmetadata",
-            iilimit=1,
-        )
-        for page in result.get("query", {}).get("pages", {}).values():
-            if page.get("imageinfo"):
-                infos[page["title"]] = page["imageinfo"][0]
+        continuation = {}
+        # At its result-size limit MediaWiki answers only part of the batch and returns `continue` for the rest.
+        while True:
+            result = api(
+                source,
+                titles="|".join(titles[start : start + 50]),
+                prop="imageinfo",
+                iiprop="size|url|mime|timestamp|sha1|extmetadata",
+                iilimit=1,
+                **continuation,
+            )
+            for page in result.get("query", {}).get("pages", {}).values():
+                if page.get("imageinfo"):
+                    infos.setdefault(page["title"], page["imageinfo"][0])
+            if "continue" not in result:
+                break
+            continuation = result["continue"]
     return infos
 
 
@@ -292,7 +309,8 @@ def discover_fandom():
     songs = [song_metadata("fandom", page) for page in song_pages]
     candidates = {}
     # Merge in title order, so the lists and artist of an image shared by several pages do not depend on API order.
-    for page, song in sorted(zip(song_pages, songs), key=lambda pair: pair[1]["title"]):
+    # strict=True: songs is built from song_pages one row per page just above, so the lengths are always equal.
+    for page, song in sorted(zip(song_pages, songs, strict=True), key=lambda pair: pair[1]["title"]):
         content = wikitext(page)
         primary = normalized(parameter(content, "img") or page["title"])
         for image in page.get("images", []):
@@ -467,6 +485,22 @@ def candidate_id(candidate):
     return "wikis:" + candidate["source"] + ":" + hashlib.sha256(candidate["file_title"].encode()).hexdigest()[:16]
 
 
+def placed(record, fields):
+    """record with fields applied, each a key of AFTER_PROVENANCE with its value, or None to drop the key.
+
+    A key the record already holds keeps its place, so a record whose fields did not change keeps its key order. A new
+    key goes where download() writes it: after the nearest key before it in AFTER_PROVENANCE that the record holds."""
+    result = {key: fields.get(key, value) for key, value in record.items()}
+    for index, key in enumerate(AFTER_PROVENANCE):
+        if key in result or fields.get(key) is None:
+            continue
+        items = list(result.items())
+        anchor = next((name for name in reversed(AFTER_PROVENANCE[:index]) if name in result), None)
+        position = len(items) if anchor is None else list(result).index(anchor) + 1
+        result = dict(items[:position] + [(key, fields[key])] + items[position:])
+    return {key: value for key, value in result.items() if value is not None}
+
+
 def download(candidate, existing):
     source = candidate["source"]
     info = candidate["info"]
@@ -485,6 +519,15 @@ def download(candidate, existing):
                 for key, value in previous.items()
                 if key not in UPSTREAM_FIELDS + SONG_INDEX_FIELDS + ("delivery_note",)
             }
+            # The mapping fields and the wiki's file metadata come from the snapshot, like the song-index fields: a
+            # corrected or removed credit or note reaches the record without the file changing.
+            current = placed(
+                current,
+                {
+                    **{field: candidate.get(field) for field in CANDIDATE_FIELDS},
+                    "wiki_extmetadata": info.get("extmetadata") or None,
+                },
+            )
             record = {
                 **current,
                 "kind": candidate["kind"],
@@ -539,8 +582,11 @@ def download(candidate, existing):
         raise ValueError(f"Unexpected dimensions: {(width, height)} != {(info['width'], info['height'])}")
     digest = hashlib.sha256(payload).hexdigest()
     relative = Path("assets/public/wikis") / source / asset_filename(candidate["file_title"], digest, image_format)
-    (ROOT / relative).parent.mkdir(parents=True, exist_ok=True)
-    (ROOT / relative).write_bytes(payload)
+    target = ROOT / relative
+    # The name ends in the SHA-256, so the file may hold these bytes already: upstream reverted to an earlier upload
+    # whose superseded record keeps that file. Leave it alone rather than rewrite another record's file.
+    if not (target.is_file() and hashlib.sha256(target.read_bytes()).hexdigest() == digest):
+        write_atomic(target, payload)
     record = {
         "id": asset_id,
         "source_id": SOURCES[source]["id"],
@@ -570,7 +616,7 @@ def download(candidate, existing):
         "related_pages": candidate["related_pages"],
         "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
     }
-    for field in ("artist", "variant_note", "mapping_method"):
+    for field in CANDIDATE_FIELDS:
         if field in candidate:
             record[field] = candidate[field]
     if width == 2 * height or height == 2 * width:
@@ -636,6 +682,72 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
     return [merged[asset_id] for asset_id in sorted(merged) if not restored(merged[asset_id])]
 
 
+def download_all(candidates, existing, manifest, workers):
+    """Download or verify every candidate; returns (candidate ids, results by id, ids whose download failed).
+
+    The manifest is saved after every 25 results. On Ctrl-C, or any other exception that stops the run, the queued
+    downloads are cancelled, the running ones finish writing their files, and the manifest is saved with every
+    download that finished before the exception propagates, so no downloaded file is left without its record."""
+    candidate_ids = {candidate_id(item) for item in candidates}
+    results, failed_ids, jobs = {}, set(), {}
+
+    def checkpoint():
+        # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest.
+        manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
+        manifest["failures"].sort(key=failure_key)  # completion order varies between runs
+        write_json("data/sources/wikis.json", manifest)
+
+    def collect(future):
+        item = jobs[future]
+        try:
+            record = future.result()
+            results[record["id"]] = record
+        except Exception as error:
+            failed_ids.add(candidate_id(item))
+            manifest["failures"].append(
+                {
+                    "source_id": SOURCES[item["source"]]["id"],
+                    "url": item["info"]["url"],
+                    "title": item["file_title"],
+                    "error": str(error),
+                }
+            )
+
+    def harvest():
+        """Add the record of every finished download that is not collected yet; True when there was one."""
+        found = False
+        for future in jobs:
+            if future.done() and not future.cancelled() and future.exception() is None:
+                record = future.result()
+                found = found or results.get(record["id"]) is not record
+                results[record["id"]] = record
+        return found
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        try:
+            for item in candidates:
+                jobs[executor.submit(download, item, existing)] = item
+            for index, future in enumerate(as_completed(jobs), 1):
+                collect(future)
+                if index % 25 == 0 or index == len(candidates):
+                    print(
+                        f"Downloaded/verified {index}/{len(candidates)}; failures={len(manifest['failures'])}",
+                        flush=True,
+                    )
+                    checkpoint()
+        except BaseException:
+            # Without this, leaving the with block would wait for every queued download (each with its retries),
+            # and the downloads finished since the last checkpoint would lose their records.
+            executor.shutdown(wait=False, cancel_futures=True)
+            harvest()
+            checkpoint()
+            executor.shutdown(wait=True)  # the running downloads finish writing their files
+            if harvest():
+                checkpoint()
+            raise
+    return candidate_ids, results, failed_ids
+
+
 def resumed_sources(sources, snapshot):
     """The previous manifest's sources, each with the discovery statistics of the snapshot being resumed when the
     snapshot recorded them; for an older snapshot without statistics the previous ones are kept."""
@@ -649,12 +761,11 @@ def resumed_sources(sources, snapshot):
     ]
 
 
-def write_json(relative, data):
-    path = ROOT / relative
+def write_atomic(path, payload):
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-    # Write next to the target, then rename over it: an interrupted run never leaves a truncated file behind.
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    # Write next to the target, then rename over it: an interrupted run never leaves a truncated file behind. The name
+    # is unique per thread, since the download workers write images concurrently.
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     try:
         with open(temporary, "wb") as stream:
             stream.write(payload)
@@ -664,6 +775,10 @@ def write_json(relative, data):
     except BaseException:
         temporary.unlink(missing_ok=True)
         raise
+
+
+def write_json(relative, data):
+    write_atomic(ROOT / relative, (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
 
 
 def fetch_song_keys():
@@ -687,8 +802,13 @@ def fetch_song_keys():
 
 
 def fetch_illustrator_index(manifest):
+    """Refresh the saved illustrator directory and its source entry in the manifest.
+
+    A failed fetch, or a page without the directory (a challenge or maintenance page), is recorded in the failures and
+    keeps the entry the manifest already holds, so a transient block never replaces a good index or drops its path."""
+    previous = next((s for s in manifest["sources"] if s["id"] == ILLUSTRATOR_SOURCE_ID), None)
     source = {
-        "id": "wikis:wikiwiki-illustrators",
+        "id": ILLUSTRATOR_SOURCE_ID,
         "name": "Japanese DEEMO Wiki illustrator directory",
         "url": "https://wikiwiki.jp/deemo/アーティスト別リスト2",
         "status": "unavailable",
@@ -712,6 +832,8 @@ def fetch_illustrator_index(manifest):
                     ],
                 }
             )
+        if not rows:
+            raise ValueError("The page holds no headings or table rows of the illustrator directory")
         write_json(
             "data/sources/wiki-illustrator-index.json",
             {"schema_version": 1, "fetched_at": now(), "source_url": source["url"], "rows": rows},
@@ -721,6 +843,7 @@ def fetch_illustrator_index(manifest):
         manifest["failures"].append(
             {"source_id": source["id"], "url": source["url"], "error": str(error), "stage": "reference_index"}
         )
+        source = previous or source
     manifest["sources"] = [s for s in manifest["sources"] if s["id"] != source["id"]] + [source]
 
 
@@ -763,6 +886,8 @@ def main():
                     "notes": "Only original DEEMO and its ports. DEEMO II categories, audio, charts, screenshots and unrelated UI are excluded.",
                 }
             )
+        # The reference index keeps its entry until fetch_illustrator_index() refreshes it, checkpoints included.
+        manifest["sources"] += [s for s in previous.get("sources", []) if s["id"] == ILLUSTRATOR_SOURCE_ID]
         songs = fandom_songs + bwiki_songs
         write_json("data/sources/wiki-song-index.json", {"schema_version": 1, "fetched_at": now(), "songs": songs})
         candidates = with_composers(with_collection_aliases(fandom + bwiki, songs), songs)
@@ -784,39 +909,18 @@ def main():
             candidate["try_canonical_first"] = True
             if str(previous_failures[candidate["file_title"]].get("error", "")).startswith("[{"):
                 candidate["try_png_first"] = True
-    candidate_ids = {candidate_id(item) for item in candidates}
-    results, failed_ids = {}, set()
-    with ThreadPoolExecutor(max_workers=args.workers) as executor:
-        jobs = {executor.submit(download, item, existing): item for item in candidates}
-        for index, future in enumerate(as_completed(jobs), 1):
-            item = jobs[future]
-            try:
-                record = future.result()
-                results[record["id"]] = record
-            except Exception as error:
-                failed_ids.add(candidate_id(item))
-                manifest["failures"].append(
-                    {
-                        "source_id": SOURCES[item["source"]]["id"],
-                        "url": item["info"]["url"],
-                        "title": item["file_title"],
-                        "error": str(error),
-                    }
-                )
-            if index % 25 == 0 or index == len(candidates):
-                print(
-                    f"Downloaded/verified {index}/{len(candidates)}; failures={len(manifest['failures'])}", flush=True
-                )
-                # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest.
-                manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
-                manifest["failures"].sort(key=failure_key)  # completion order varies between runs
-                write_json("data/sources/wikis.json", manifest)
+    candidate_ids, results, failed_ids = download_all(candidates, existing, manifest, args.workers)
     manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
+    wiki_ids = {source["id"] for source in SOURCES.values()}
     for source in manifest["sources"]:
+        if source["id"] not in wiki_ids:
+            continue  # the reference index has no assets; its entry keeps the status of its last refresh
         source["asset_count"] = sum(asset["source_id"] == source["id"] for asset in manifest["assets"])
         source["failure_count"] = sum(failure["source_id"] == source["id"] for failure in manifest["failures"])
         source["status"] = "partial" if source["failure_count"] else "complete"
-    fetch_illustrator_index(manifest)
+    if not args.resume:
+        # Like the song keys, the reference index is unrelated to the saved snapshot, so only a full run refreshes it.
+        fetch_illustrator_index(manifest)
     manifest["fetched_at"] = now()
     manifest["assets"].sort(key=lambda row: row["id"])
     manifest["failures"].sort(key=failure_key)

@@ -5,9 +5,16 @@ Standard library only; nothing is downloaded or modified:
         --manifest data/sources/wikis.json --report report.md --summary summary.json
 The report lists wiki candidates that were added, re-uploaded (different SHA-1 or size)
 or removed since the baseline, whether each was uploaded after the baseline snapshot,
-and whether a local download already exists for it. The report is written in English,
+and whether a local download already exists for it. Only those file changes open a pull
+request; candidates whose mapping metadata (song titles, collections, composers and the
+like) changed are counted and listed as well, since a merge carries those changes to the
+records. The report is written in English,
 followed by the same report in Simplified Chinese inside a collapsed <details> block;
 if both together would exceed REPORT_LIMIT characters, each table lists fewer rows.
+
+A current snapshot whose download URL (info.url, which fetch_wikis.py --resume requests)
+is not under its wiki's own image path is refused with an error, so the workflow's
+publishing job fails instead of opening a pull request for it.
 
 Wiki editors control file titles, song titles and collection names, and the report becomes
 the body of a bot pull request and a run summary. Every value taken from a snapshot is
@@ -23,12 +30,20 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from urllib.parse import quote, urlsplit
+from typing import Any
+from urllib.parse import quote, unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_LABELS = {"fandom": "Fandom", "bwiki": "BWIKI"}
 # The report links a candidate's file page only when it is an https URL on that source's wiki.
 SOURCE_HOSTS = {"fandom": "deemo.fandom.com", "bwiki": "wiki.biligame.com"}
+# Where each wiki serves its image files. fetch_wikis.py --resume downloads every candidate's info.url, and the snapshot
+# is produced by a job that installs and runs third-party code, so a proposed snapshot must keep to these. The path
+# prefix matters as much as the host: each CDN serves every wiki of its farm.
+DOWNLOAD_LOCATIONS = {
+    "fandom": ("static.wikia.nocookie.net", "/deemo/images/"),
+    "bwiki": ("patchwiki.biligame.com", "/images/deemo/"),
+}
 # Characters kept as-is in a linked URL; anything else (spaces, < > | ` \ " and non-ASCII) is percent-encoded.
 URL_SAFE = ":/?#[]@!$&'()*+,;=%"
 # Control characters and line or paragraph separators would end a table row; bidirectional controls could
@@ -38,6 +53,19 @@ BIDI_CONTROL = re.compile(r"[\u202a-\u202e\u2066-\u2069]")
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?(?:Z|[+-]\d{2}:?\d{2})?")
 FINGERPRINT_FIELDS = ("sha1", "size", "width", "height")
+# Candidate fields that fetch_wikis.py --resume copies into the record of a verified file.
+METADATA_FIELDS = (
+    "kind",
+    "song_titles",
+    "collections",
+    "collection_aliases",
+    "related_pages",
+    "composer",
+    "composer_source",
+    "artist",
+    "variant_note",
+    "mapping_method",
+)
 SMALL_IMAGE_EDGE = 300
 ROW_LIMIT = 100
 # GitHub rejects pull request bodies over 65,536 characters; leave room for the footer the workflow appends.
@@ -45,21 +73,32 @@ REPORT_LIMIT = 60000
 ADDED_COLUMNS = ("source", "file", "kind", "dims", "size", "uploaded", "names")
 REUPLOADED_COLUMNS = ("source", "file", "dims", "size", "sha1", "uploaded", "local")
 REMOVED_COLUMNS = ("source", "file", "local")
-# Report strings per language; a ("singular", "plural") pair is picked by count (see plural()).
-TEXT = {
+METADATA_COLUMNS = ("source", "file", "changes")
+# Report strings per language; a ("singular", "plural") pair is picked by count (see plural()). The values are strings,
+# pairs of strings and small lookup tables, so each language maps to Any rather than to the union mypy would infer.
+TEXT: dict[str, dict[str, Any]] = {
     "en": {
         "heading": "## Wiki source check",
         "snapshots": "Baseline snapshot {baseline_at} ({baseline}) → current discovery {current_at} ({current}).",
         "candidates": ("{} candidate", "{} candidates"),
         "counts": (
             "- {added} added ({added_after_baseline} of them uploaded after the baseline) · "
-            "{reuploaded} re-uploaded · {removed} removed"
+            "{reuploaded} re-uploaded · {removed} removed · {metadata_changed} with changed metadata"
         ),
         "unchanged": "The candidate set has not changed; nothing to do.",
+        "unchanged_files": (
+            "No file was added, re-uploaded or removed, so no pull request is opened. {} candidate has changed "
+            "metadata (song titles, collections, composers or other mapping fields); the next snapshot pull request "
+            "carries the change.",
+            "No file was added, re-uploaded or removed, so no pull request is opened. {} candidates have changed "
+            "metadata (song titles, collections, composers or other mapping fields); the next snapshot pull request "
+            "carries the changes.",
+        ),
         "section": "### {} ({})",
         "added": "Added",
         "reuploaded": "Re-uploaded",
         "removed": "Removed",
+        "metadata": "Changed metadata",
         "columns": {
             "source": "Source",
             "file": "File",
@@ -70,6 +109,7 @@ TEXT = {
             "names": "Song title / collection",
             "sha1": "Wiki SHA-1",
             "local": "Local file",
+            "changes": "Changes (before → after)",
         },
         "more": (
             "{} more entry is not listed; see the diff of `data/sources/wiki-discovery.json`.",
@@ -91,19 +131,27 @@ Merging this PR only updates the discovery snapshot; it includes no images. Afte
 for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done
 ```
 
-`--resume` verifies the SHA-256 and Wiki SHA-1 of existing files against the snapshot and downloads only added and re-uploaded files. `--resume` never deletes files and keeps every previously verified record, marked with `upstream_status`: a re-uploaded file is saved under a new file name and keeps the asset id, while the previous version keeps its file and record as `"upstream_status": "superseded"`; a removed file keeps its record as `"upstream_status": "removed"`; a failed re-download keeps the old record as `"upstream_status": "fetch_failed"`. `build_thumbnails.py --prune` then writes the grid previews of new and re-uploaded images and deletes the previews whose original left the gallery; it runs before the catalog build, which records the previews, and `tests/test_thumbnails.py` fails without them. "Added" entries uploaded before the baseline snapshot are usually changes in the wiki enumeration or the song-title mapping, not newly published artwork. Check the `failures`, `upstream_status` and checksum comparison fields in `data/sources/wikis.json`, then commit the images, the previews (`assets/thumbs/`, `data/thumbs.json`), the manifests (`data/sources/`) and the rebuilt catalog (`data/catalog.json`, `data/catalog.js`, `index.html`).
+`--resume` verifies the SHA-256 and Wiki SHA-1 of existing files against the snapshot and downloads only added and re-uploaded files; the records of the files it verifies take the snapshot's song titles, collections, composers and other mapping fields (the changes are listed under "Changed metadata"). `--resume` never deletes files and keeps every previously verified record, marked with `upstream_status`: a re-uploaded file is saved under a new file name and keeps the asset id, while the previous version keeps its file and record as `"upstream_status": "superseded"`; a removed file keeps its record as `"upstream_status": "removed"`; a failed re-download keeps the old record as `"upstream_status": "fetch_failed"`. `build_thumbnails.py --prune` then writes the grid previews of new and re-uploaded images and deletes the previews whose original left the gallery; it runs before the catalog build, which records the previews, and `tests/test_thumbnails.py` fails without them. "Added" entries uploaded before the baseline snapshot are usually changes in the wiki enumeration or the song-title mapping, not newly published artwork. Check the `failures`, `upstream_status` and checksum comparison fields in `data/sources/wikis.json`, then commit the images, the previews (`assets/thumbs/`, `data/thumbs.json`), the manifests (`data/sources/`) and the rebuilt catalog (`data/catalog.json`, `data/catalog.js`, `index.html`).
 """,
     },
     "zh-CN": {
         "heading": "## Wiki 来源检查",
         "snapshots": "基线快照 {baseline_at}（{baseline}）→ 本次发现 {current_at}（{current}）。",
         "candidates": "{} 个候选",
-        "counts": "- 新增 {added}（其中 {added_after_baseline} 个在基线之后上传）· 重新上传 {reuploaded} · 移除 {removed}",
+        "counts": (
+            "- 新增 {added}（其中 {added_after_baseline} 个在基线之后上传）· 重新上传 {reuploaded} · 移除 {removed}"
+            " · 元数据变化 {metadata_changed}"
+        ),
         "unchanged": "候选集合没有变化，无需处理。",
+        "unchanged_files": (
+            "没有新增、重新上传或移除的文件，因此不会创建 PR。{} 个候选的元数据（曲名、曲包、作曲者等映射字段）有变化，"
+            "下一个快照 PR 会带上这些变化。"
+        ),
         "section": "### {}（{}）",
         "added": "新增",
         "reuploaded": "重新上传",
         "removed": "移除",
+        "metadata": "元数据变化",
         "columns": {
             "source": "来源",
             "file": "文件",
@@ -114,6 +162,7 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
             "names": "曲名 / 曲包",
             "sha1": "Wiki SHA-1",
             "local": "本地文件",
+            "changes": "变化（之前 → 之后）",
         },
         "more": "另有 {} 项未列出，见 `data/sources/wiki-discovery.json` 的 diff。",
         "small": " ⚠小图",
@@ -132,7 +181,7 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
 for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $test"; done
 ```
 
-`--resume` 按快照校验已有文件的 SHA-256 与 Wiki SHA-1，只下载新增和重新上传的文件。`--resume` 不会删除任何文件，并保留所有已校验的记录，以 `upstream_status` 标记：重新上传的文件以新文件名保存并沿用原资产 ID，旧版本保留文件和记录，标记为 `"upstream_status": "superseded"`；已移除的文件保留记录，标记为 `"upstream_status": "removed"`；重新下载失败时保留旧记录，标记为 `"upstream_status": "fetch_failed"`。随后 `build_thumbnails.py --prune` 为新增和重新上传的图片生成网格预览图，并删除原图已不在图库中的预览图；它须在构建目录之前运行（目录会记录预览图），缺少预览图时 `tests/test_thumbnails.py` 会失败。上传时间早于基线快照的"新增"条目通常是 Wiki 枚举或曲名映射的变化，而不是新发布的曲绘。检查 `data/sources/wikis.json` 中的 `failures`、`upstream_status` 与 checksum 比较字段，然后提交图片、预览图（`assets/thumbs/`、`data/thumbs.json`）、清单（`data/sources/`）与重新生成的目录（`data/catalog.json`、`data/catalog.js`、`index.html`）。
+`--resume` 按快照校验已有文件的 SHA-256 与 Wiki SHA-1，只下载新增和重新上传的文件；校验通过的文件，其记录采用快照中的曲名、曲包、作曲者等映射字段（变化列在"元数据变化"下）。`--resume` 不会删除任何文件，并保留所有已校验的记录，以 `upstream_status` 标记：重新上传的文件以新文件名保存并沿用原资产 ID，旧版本保留文件和记录，标记为 `"upstream_status": "superseded"`；已移除的文件保留记录，标记为 `"upstream_status": "removed"`；重新下载失败时保留旧记录，标记为 `"upstream_status": "fetch_failed"`。随后 `build_thumbnails.py --prune` 为新增和重新上传的图片生成网格预览图，并删除原图已不在图库中的预览图；它须在构建目录之前运行（目录会记录预览图），缺少预览图时 `tests/test_thumbnails.py` 会失败。上传时间早于基线快照的"新增"条目通常是 Wiki 枚举或曲名映射的变化，而不是新发布的曲绘。检查 `data/sources/wikis.json` 中的 `failures`、`upstream_status` 与 checksum 比较字段，然后提交图片、预览图（`assets/thumbs/`、`data/thumbs.json`）、清单（`data/sources/`）与重新生成的目录（`data/catalog.json`、`data/catalog.js`、`index.html`）。
 """,
     },
 }
@@ -155,6 +204,43 @@ def index_candidates(snapshot: dict) -> dict[tuple[str, str], dict]:
             raise ValueError(f"Duplicate candidate in snapshot: {key}")
         candidates[key] = candidate
     return candidates
+
+
+def download_url_allowed(source: str, url: object) -> bool:
+    """Whether url is an https URL under the image path of the source's own wiki: the exact host, with no user, port,
+    whitespace, backslash or control character, and no "." or ".." path segment (also percent-encoded)."""
+    location = DOWNLOAD_LOCATIONS.get(source)
+    if location is None or not isinstance(url, str) or CONTROL.search(url) or re.search(r"[\s\\]", url):
+        return False
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    host, prefix = location
+    segments = unquote(parts.path).split("/")
+    return (
+        parts.scheme == "https"
+        and parts.netloc == host
+        and parts.path.startswith(prefix)
+        and "." not in segments
+        and ".." not in segments
+    )
+
+
+def check_download_urls(snapshot: dict) -> None:
+    """Raise ValueError if a candidate's download URL is not under its wiki's image path (see DOWNLOAD_LOCATIONS)."""
+    refused = [
+        f"{candidate.get('source')!r} {candidate.get('file_title')!r}: {candidate['info']['url']!r}"
+        for candidate in snapshot.get("candidates", [])
+        if "url" in candidate.get("info", {})
+        and not download_url_allowed(candidate.get("source"), candidate["info"]["url"])
+    ]
+    if refused:
+        # repr() keeps the snapshot's text on one line, so it cannot forge a workflow command in the job log.
+        raise ValueError(
+            "Download URL not under its wiki's image path (DOWNLOAD_LOCATIONS in scripts/check_sources.py): "
+            + "; ".join(refused)
+        )
 
 
 def fingerprint(candidate: dict) -> tuple:
@@ -188,7 +274,17 @@ def describe(candidate: dict, previous: dict | None, assets: dict[str, dict], ba
     return row
 
 
+def metadata_changes(candidate: dict, previous: dict) -> list[dict]:
+    """The METADATA_FIELDS whose value differs between the previous and the current candidate, in that order."""
+    return [
+        {"field": field, "old": previous.get(field), "new": candidate.get(field)}
+        for field in METADATA_FIELDS
+        if candidate.get(field) != previous.get(field)
+    ]
+
+
 def compare(baseline: dict, current: dict, manifest: dict) -> dict:
+    check_download_urls(current)
     old = index_candidates(baseline)
     new = index_candidates(current)
     assets = {asset["id"]: asset for asset in manifest.get("assets", [])}
@@ -200,10 +296,17 @@ def compare(baseline: dict, current: dict, manifest: dict) -> dict:
         for key in sorted(new)
         if key in old and fingerprint(new[key]) != fingerprint(old[key])
     ]
+    # Mapping changes open no pull request on their own (the candidate set is the files), but a merge carries them.
+    metadata_changed = [
+        {**describe(new[key], None, assets, baseline_time), "changes": metadata_changes(new[key], old[key])}
+        for key in sorted(new)
+        if key in old and metadata_changes(new[key], old[key])
+    ]
     counts = {
         "added": len(added),
         "reuploaded": len(reuploaded),
         "removed": len(removed),
+        "metadata_changed": len(metadata_changed),
         "added_after_baseline": sum(row["uploaded_after_baseline"] for row in added),
         "baseline": len(old),
         "current": len(new),
@@ -222,6 +325,7 @@ def compare(baseline: dict, current: dict, manifest: dict) -> dict:
         "added": added,
         "reuploaded": reuploaded,
         "removed": removed,
+        "metadata_changed": metadata_changed,
     }
 
 
@@ -343,6 +447,21 @@ def removed_row(row: dict, lang: str = "en") -> list[str]:
     return [source(row), link(row), local(row, lang)]
 
 
+def field_value(value) -> str:
+    """A metadata value as code spans: a list joined with " / ", and a missing or empty value as a dash."""
+    if value is None or value == [] or value == "":
+        return "—"
+    return " / ".join(code(item) for item in value) if isinstance(value, list) else code(value)
+
+
+def metadata_row(row: dict, lang: str = "en") -> list[str]:
+    changes = "; ".join(
+        f"{code(change['field'])}: {field_value(change['old'])} → {field_value(change['new'])}"
+        for change in row["changes"]
+    )
+    return [source(row), link(row), changes]
+
+
 def table(section: str, rows: list[dict], columns: tuple[str, ...], render_row, lang: str, limit: int) -> list[str]:
     if not rows:
         return []
@@ -377,12 +496,15 @@ def render(report: dict, lang: str = "en", limit: int | None = None) -> str:
         text["counts"].format(**counts),
         "",
     ]
+    metadata = table("metadata", report["metadata_changed"], METADATA_COLUMNS, metadata_row, lang, limit)
     if not report["changed"]:
-        return "\n".join(lines + [text["unchanged"], ""])
+        if not report["metadata_changed"]:
+            return "\n".join(lines + [text["unchanged"], ""])
+        return "\n".join(lines + [plural(text["unchanged_files"], counts["metadata_changed"]), ""] + metadata)
     lines += table("added", report["added"], ADDED_COLUMNS, added_row, lang, limit)
     lines += table("reuploaded", report["reuploaded"], REUPLOADED_COLUMNS, reuploaded_row, lang, limit)
     lines += table("removed", report["removed"], REMOVED_COLUMNS, removed_row, lang, limit)
-    return "\n".join(lines + [text["next_steps"]])
+    return "\n".join(lines + metadata + [text["next_steps"]])
 
 
 def render_bilingual(report: dict) -> str:

@@ -4,19 +4,21 @@ import hashlib
 import importlib.util
 import json
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-SPEC = importlib.util.spec_from_file_location(
-    "check_sources", Path(__file__).resolve().parents[1] / "scripts/check_sources.py"
-)
+REPO = Path(__file__).resolve().parents[1]
+WORKFLOW = REPO / ".github/workflows/check-sources.yml"
+SPEC = importlib.util.spec_from_file_location("check_sources", REPO / "scripts/check_sources.py")
 check = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(check)
 
-NO_CHANGE = {"added": 0, "reuploaded": 0, "removed": 0, "added_after_baseline": 0}
+NO_CHANGE = {"added": 0, "reuploaded": 0, "removed": 0, "metadata_changed": 0, "added_after_baseline": 0}
 # Han characters plus CJK / full-width punctuation such as （）：，。
 CHINESE = re.compile(r"[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]")
 DETAILS = "\n<details>\n<summary>简体中文</summary>\n\n"
@@ -74,6 +76,7 @@ def table_cells(line):
 def candidate(
     source, name, sha1="a" * 40, size=1000, width=1024, height=1024, timestamp="2026-01-01T00:00:00Z", **extra
 ):
+    """A snapshot candidate; url (the download URL, info.url) is left out unless given."""
     return {
         "source": source,
         "file_title": f"File:{name}",
@@ -85,6 +88,7 @@ def candidate(
             "height": height,
             "timestamp": timestamp,
             "descriptionurl": extra.pop("page_url", f"{WIKI[source]}File:{name}"),
+            **({"url": extra.pop("url")} if "url" in extra else {}),
         },
         "song_titles": extra.pop("song_titles", [name.rsplit(".", 1)[0]]),
         "collections": extra.pop("collections", []),
@@ -125,7 +129,7 @@ class CompareTests(unittest.TestCase):
             (
                 "## Wiki source check\n\n"
                 "Baseline snapshot 2026-02-02T00:00:00Z (1 candidate) → current discovery 2026-03-03T00:00:00Z (1 candidate).\n\n"
-                "- 0 added (0 of them uploaded after the baseline) · 0 re-uploaded · 0 removed\n\n"
+                "- 0 added (0 of them uploaded after the baseline) · 0 re-uploaded · 0 removed · 0 with changed metadata\n\n"
                 "The candidate set has not changed; nothing to do.\n"
             ),
         )
@@ -134,13 +138,49 @@ class CompareTests(unittest.TestCase):
             (
                 "## Wiki 来源检查\n\n"
                 "基线快照 2026-02-02T00:00:00Z（1 个候选）→ 本次发现 2026-03-03T00:00:00Z（1 个候选）。\n\n"
-                "- 新增 0（其中 0 个在基线之后上传）· 重新上传 0 · 移除 0\n\n"
+                "- 新增 0（其中 0 个在基线之后上传）· 重新上传 0 · 移除 0 · 元数据变化 0\n\n"
                 "候选集合没有变化，无需处理。\n"
             ),
         )
         self.assertEqual(report["title"], "Wiki source update: 0 added · 0 re-uploaded · 0 removed (2026-03-03)")
         for markdown in split_languages(check.render_bilingual(report)):
             self.assertNotIn("### ", markdown)
+
+    def test_metadata_changes_are_counted_and_listed(self):
+        # A wiki edit that changes a credit or a collection without touching the file opens no pull request, but the
+        # report says so instead of "nothing to do", and a pull request report lists the metadata changes its merge
+        # carries, which --resume then applies to the records of verified files.
+        baseline = snapshot(candidate("fandom", "Kept.png", composer="Old", collections=["Etude Collection"]))
+        drifted = candidate("fandom", "Kept.png", artist="Someone", collections=["RAC Collection #1"])
+        report = check.compare(baseline, snapshot(drifted), self.manifest)
+        self.assertFalse(report["changed"])
+        self.assertEqual(report["counts"], {**NO_CHANGE, "metadata_changed": 1, "baseline": 1, "current": 1})
+        (row,) = report["metadata_changed"]
+        self.assertEqual(
+            row["changes"],
+            [
+                {"field": "collections", "old": ["Etude Collection"], "new": ["RAC Collection #1"]},
+                {"field": "composer", "old": "Old", "new": None},
+                {"field": "artist", "old": None, "new": "Someone"},
+            ],
+        )
+        cell = "`collections`: `Etude Collection` → `RAC Collection #1`; `composer`: `Old` → —; `artist`: — → `Someone`"
+        markdown = check.render(report)
+        self.assertNotIn("nothing to do", markdown)
+        self.assertIn("No file was added, re-uploaded or removed, so no pull request is opened.", markdown)
+        self.assertIn("### Changed metadata (1)", markdown)
+        self.assertIn("| Source | File | Changes (before → after) |", markdown)
+        self.assertIn(f"| Fandom | [`Kept.png`](<https://deemo.fandom.com/wiki/File:Kept.png>) | {cell} |", markdown)
+        self.assertIn("没有新增、重新上传或移除的文件", check.render(report, "zh-CN"))
+        # With a file change too, the pull request report lists the metadata change in both languages.
+        changed = check.compare(baseline, snapshot(drifted, candidate("bwiki", "New.png")), self.manifest)
+        self.assertTrue(changed["changed"])
+        english, chinese = split_languages(check.render_bilingual(changed))
+        self.assertIn("- 1 added (0 of them uploaded after the baseline) · 0 re-uploaded · 0 removed · 1 with", english)
+        for part, heading in ((english, "### Changed metadata (1)"), (chinese, "### 元数据变化（1）")):
+            self.assertIn(heading, part)
+            self.assertIn(cell, part)
+        self.assertIn("| 来源 | 文件 | 变化（之前 → 之后） |", chinese)
 
     def test_added_reuploaded_and_removed_candidates(self):
         baseline = snapshot(
@@ -166,7 +206,15 @@ class CompareTests(unittest.TestCase):
         self.assertTrue(report["changed"])
         self.assertEqual(
             report["counts"],
-            {"added": 2, "reuploaded": 1, "removed": 1, "added_after_baseline": 1, "baseline": 3, "current": 4},
+            {
+                "added": 2,
+                "reuploaded": 1,
+                "removed": 1,
+                "metadata_changed": 0,
+                "added_after_baseline": 1,
+                "baseline": 3,
+                "current": 4,
+            },
         )
         self.assertEqual(report["title"], "Wiki source update: 2 added · 1 re-uploaded · 1 removed (2026-02-02)")
         self.assertNotRegex(report["title"], CHINESE)
@@ -272,7 +320,11 @@ class CompareTests(unittest.TestCase):
         baseline = snapshot(candidate("fandom", "Kept.png"), candidate("bwiki", f"{file_name}.png"))
         current = snapshot(
             candidate(
-                "fandom", "Kept.png", sha1="`<img src=x>` @octocat #3", timestamp="@octocat [x](https://evil.example)"
+                "fandom",
+                "Kept.png",
+                sha1="`<img src=x>` @octocat #3",
+                timestamp="@octocat [x](https://evil.example)",
+                composer=HOSTILE,
             ),
             candidate(
                 "fandom",
@@ -309,7 +361,7 @@ class CompareTests(unittest.TestCase):
                 for cell in cells:
                     self.assertNotRegex(OWN_LINK.sub("", without_code_spans(cell)), ACTIVE, line)
                 rows += 1
-        self.assertEqual(rows, 2 * ((2 + 3) + (2 + 1) + (2 + 1)))
+        self.assertEqual(rows, 2 * ((2 + 3) + (2 + 1) + (2 + 1) + (2 + 1)))
         for part in (english, chinese):
             self.assertIn(
                 "| BWIKI | [``A b\\|c<d>`e`(f.png``](<https://wiki.biligame.com/deemo/File:A%20b%7Cc%3Cd%3E%60e%60(f.png>) |",
@@ -453,7 +505,7 @@ class CompareTests(unittest.TestCase):
                 block = re.search(r"```sh\n(.*?)```", check.TEXT[lang]["next_steps"], re.DOTALL).group(1)
                 lines = block.splitlines()
                 self.assertEqual(len(lines), len(commands), block)
-                for line, command in zip(lines, commands):
+                for line, command in zip(lines, commands, strict=True):
                     self.assertIn(command, line)
                 self.assertIn("tests/test_thumbnails.py", check.TEXT[lang]["next_steps"])
 
@@ -504,6 +556,7 @@ class CompareTests(unittest.TestCase):
                     "added",
                     "reuploaded",
                     "removed",
+                    "metadata_changed",
                 ],
             )
             self.assertTrue(summary["changed"])
@@ -521,6 +574,111 @@ class CompareTests(unittest.TestCase):
             printed_summary = json.loads(printed.call_args[0][0])
             self.assertEqual(list(printed_summary), ["changed", "title", "counts"])
             self.assertEqual(printed_summary["title"], summary["title"])
+
+
+class DownloadLocationTests(unittest.TestCase):
+    """fetch_wikis.py --resume downloads each candidate's info.url, and the snapshot comes from a job that installs and
+    runs third-party code. compare() refuses a current snapshot whose download URL leaves the wiki's own image path, so
+    the publishing job fails instead of opening a pull request that would send the maintainer's fetcher there."""
+
+    GOOD = {
+        "fandom": "https://static.wikia.nocookie.net/deemo/images/a/ab/X.png/revision/latest?cb=20210901000000",
+        "bwiki": "https://patchwiki.biligame.com/images/deemo/a/ab/0123456789abcdefghijklmnopqrstu.png",
+    }
+
+    def test_download_urls_off_the_wiki_image_path_are_refused(self):
+        for source, url in (
+            ("bwiki", "http://127.0.0.1/start/Magnolia.png"),
+            ("bwiki", "https://evil.example.test/images/deemo/x.png"),
+            ("bwiki", "http://patchwiki.biligame.com/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com/images/otherwiki/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com/images/deemo/../../otherwiki/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com/images/deemo/%2e%2e/%2E%2E/otherwiki/x.png"),
+            ("bwiki", "https://user@patchwiki.biligame.com/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com:8443/images/deemo/x.png"),
+            ("bwiki", "https://PATCHWIKI.biligame.com/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com.evil.test/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com\\@evil.test/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com/images/deemo/x.png\n::error::forged"),
+            ("bwiki", None),
+            ("fandom", self.GOOD["bwiki"]),  # the other wiki's host
+            ("fandom", "https://static.wikia.nocookie.net/otherwiki/images/x.png"),
+            ("unknown", self.GOOD["fandom"]),
+        ):
+            with self.subTest(source=source, url=url):
+                row = {**candidate("fandom", "X.png", url=url), "source": source}
+                with self.assertRaisesRegex(ValueError, "not under its wiki's image path") as caught:
+                    check.compare(snapshot(), snapshot(row), {})
+                # The message quotes the snapshot's text with repr(), so it cannot start a log line (::error:: ...).
+                self.assertNotIn("\n", str(caught.exception))
+
+    def test_wiki_image_paths_are_accepted(self):
+        current = snapshot(*(candidate(source, f"{source}.png", url=url) for source, url in self.GOOD.items()))
+        self.assertEqual(check.compare(snapshot(), current, {})["counts"]["added"], 2)
+        # The baseline is main's committed snapshot; only the snapshot being proposed is checked.
+        baseline = snapshot(candidate("bwiki", "Old.png", url="http://127.0.0.1/x.png"))
+        self.assertEqual(check.compare(baseline, current, {})["counts"]["removed"], 1)
+
+    def test_committed_snapshot_downloads_from_the_wiki_image_paths(self):
+        committed = check.load(REPO / "data/sources/wiki-discovery.json")
+        report = check.compare(committed, committed, check.load(REPO / "data/sources/wikis.json"))
+        self.assertFalse(report["changed"])
+        self.assertEqual(report["counts"]["metadata_changed"], 0)
+        self.assertGreater(report["counts"]["current"], 800)
+
+    def test_cli_fails_without_writing_a_report(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "old.json").write_text(json.dumps(snapshot()), encoding="utf-8")
+            hostile = snapshot(candidate("bwiki", "X.png", url="http://127.0.0.1/internal/secret.png"))
+            (root / "new.json").write_text(json.dumps(hostile), encoding="utf-8")
+            argv = ["check_sources", "--baseline", str(root / "old.json"), "--current", str(root / "new.json")]
+            argv += ["--manifest", str(root / "missing.json"), "--report", str(root / "report.md")]
+            argv += ["--summary", str(root / "summary.json")]
+            with patch.object(sys, "argv", argv), patch("builtins.print"), self.assertRaises(ValueError):
+                check.main()
+            self.assertEqual(sorted(path.name for path in root.iterdir()), ["new.json", "old.json"])
+
+
+class SnapshotPullRequestLookupTests(unittest.TestCase):
+    """The workflow finds the open snapshot pull request of this repository, however many forks reuse its branch name."""
+
+    def setUp(self):
+        self.text = WORKFLOW.read_text(encoding="utf-8")
+
+    def test_both_jobs_filter_on_the_server(self):
+        # gh pr list fetches at most 30 pull requests, newest first, and filters by branch name only: 30 fork pull
+        # requests from a branch of the same name hid the snapshot pull request. The REST head filter takes owner:branch.
+        commands = "\n".join(line for line in self.text.splitlines() if not line.lstrip().startswith("#"))
+        self.assertEqual(commands.count("gh pr list"), 0, "gh pr list cannot filter by owner")
+        lookups = re.findall(r'number="\$\((.*?)\)"$', self.text, re.MULTILINE | re.DOTALL)
+        self.assertEqual(len(lookups), 2, lookups)  # publish and close-stale
+        endpoint = (
+            '"repos/$GITHUB_REPOSITORY/pulls?head=$GITHUB_REPOSITORY_OWNER:$SNAPSHOT_BRANCH&base=main&state=open"'
+        )
+        for lookup in lookups:
+            self.assertTrue(lookup.startswith(f"gh api {endpoint}"), lookup)
+            self.assertIn('--jq "$SNAPSHOT_PR_QUERY"', lookup)
+
+    @unittest.skipUnless(shutil.which("jq"), "jq is not installed")
+    def test_query_keeps_only_a_pull_request_from_this_repository(self):
+        (query,) = re.findall(r"^  SNAPSHOT_PR_QUERY: '([^']*)'$", self.text, re.MULTILINE)
+
+        def pull(number, head_repository):
+            head = {"repo": {"id": head_repository} if head_repository else None}
+            return {"number": number, "head": head, "base": {"repo": {"id": 1}}}
+
+        for pulls, expected in (
+            ([], ""),
+            ([pull(9, 2), pull(7, 1)], "7"),  # a fork's pull request, then this repository's
+            ([pull(9, None)], ""),  # the fork was deleted
+            ([pull(9, 2)], ""),
+        ):
+            with self.subTest(pulls=pulls):
+                result = subprocess.run(
+                    ["jq", query], input=json.dumps(pulls), capture_output=True, text=True, check=True
+                )
+                self.assertEqual(result.stdout.strip(), expected)
 
 
 if __name__ == "__main__":
