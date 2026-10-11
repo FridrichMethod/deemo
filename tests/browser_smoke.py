@@ -10,6 +10,7 @@ import base64
 import hashlib
 import json
 import re
+import sys
 import time
 import unicodedata
 import xml.etree.ElementTree as ET
@@ -19,11 +20,15 @@ from urllib.parse import quote, unquote, urljoin, urlparse
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
+# Every check below is an assert, which python -O strips: such a run would check nothing and still pass.
+if not __debug__:
+    sys.exit("browser_smoke.py checks with assert; run it without -O")
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument("--base", default="http://127.0.0.1:8765")
 parser.add_argument("--browser", default="/usr/bin/google-chrome")
 args = parser.parse_args()
-assert urlparse(args.base).hostname in {"127.0.0.1", "localhost"}, "Use a local test server"
+if urlparse(args.base).hostname not in {"127.0.0.1", "localhost"}:
+    parser.error("Use a local test server")
 base = args.base.rstrip("/") + "/"
 mount_path = urlparse(base).path
 checks = []

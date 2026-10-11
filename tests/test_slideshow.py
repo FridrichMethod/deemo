@@ -3,10 +3,13 @@ languages, a bottom row whose DOM order follows its layout, a screenshot overlay
 slides that crossfade without a keyframe fade and take no hits while hidden, an artist credit that no tier
 drops, arrows kept below the language toggle on short landscape screens, a signature whose box leaves the
 toggle its taps, and the visible attribution link. They read the sources only; real hit-testing, focus,
-keyboard handling and layout need a browser (tests/browser_smoke.py)."""
+keyboard handling and layout need a browser (tests/browser_smoke.py), whose own guards are checked last."""
 
 import json
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
 from html.parser import HTMLParser
 from pathlib import Path
@@ -18,6 +21,16 @@ MESSAGES = ROOT / "src/i18n/slideshow.js"
 NOTICE_URL = "https://github.com/FridrichMethod/deemo/blob/main/NOTICE"
 REGISTER = re.compile(r"DEEMO_I18N\.register\((\{.*\})\);\s*$", re.DOTALL)
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+SMOKE = ROOT / "tests/browser_smoke.py"
+# Stands in for Playwright when the guard tests run tests/browser_smoke.py: reaching it means the run got past them.
+PLAYWRIGHT_STUB = """
+class TimeoutError(Exception):
+    pass
+
+
+def sync_playwright():
+    raise SystemExit("playwright stub reached")
+"""
 # The round controls of the bottom row, left to right on screen.
 BOTTOM_ROW = ["photo", "github", "archive-link", "iplayer", "random"]
 # Icon-only controls, found by their own or their container's class: whether each is a toggle (aria-pressed).
@@ -329,6 +342,45 @@ class SlideshowTemplateTests(unittest.TestCase):
                     (ROOT / readme).read_text(encoding="utf-8"),
                 )
                 self.assertIn(name, online.group(1))
+
+
+class BrowserSmokeGuardTests(unittest.TestCase):
+    """tests/browser_smoke.py runs only against a local server, and never with its assert-based checks stripped
+    (python -O), which would report success without checking anything. Playwright is a stub here, so nothing launches
+    and no request is made."""
+
+    def run_smoke(self, base, *flags):
+        with tempfile.TemporaryDirectory() as stub:
+            (Path(stub) / "playwright").mkdir()
+            (Path(stub) / "playwright/__init__.py").write_text("", encoding="utf-8")
+            (Path(stub) / "playwright/sync_api.py").write_text(PLAYWRIGHT_STUB, encoding="utf-8")
+            code = (
+                f"import runpy, sys; sys.path.insert(0, {stub!r}); "
+                f"sys.argv = [{str(SMOKE)!r}, '--base', {base!r}, '--browser', '/nonexistent/chrome']; "
+                f"runpy.run_path({str(SMOKE)!r}, run_name='__main__')"
+            )
+            return subprocess.run(
+                [sys.executable, "-I", *flags, "-c", code], cwd=stub, capture_output=True, text=True, timeout=60
+            )
+
+    def test_a_local_server_reaches_the_browser(self):
+        # The stub really is the next step, so the refusals below are not vacuous.
+        result = self.run_smoke("http://127.0.0.1:9/")
+        self.assertIn("playwright stub reached", result.stderr)
+
+    def test_a_server_elsewhere_is_refused(self):
+        result = self.run_smoke("http://127.0.0.2:1/")
+        self.assertEqual(result.returncode, 2, result.stderr)  # argparse's usage error
+        self.assertIn("Use a local test server", result.stderr)
+        self.assertNotIn("playwright stub reached", result.stderr)
+
+    def test_an_optimized_run_refuses_to_start(self):
+        for base in ("http://127.0.0.1:9/", "http://127.0.0.2:1/"):
+            with self.subTest(base=base):
+                result = self.run_smoke(base, "-O")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("run it without -O", result.stderr)
+                self.assertNotIn("playwright stub reached", result.stderr)
 
 
 if __name__ == "__main__":
