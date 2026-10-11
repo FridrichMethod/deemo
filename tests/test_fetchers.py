@@ -53,6 +53,14 @@ def truncated(fmt):
     return buffer.getvalue()[: len(buffer.getvalue()) // 2]
 
 
+def corrupt_chunk_png():
+    """A 4x4 PNG whose IDAT checksum is wrong: it decodes, but verify() rejects it."""
+    data = bytearray(png("red"))
+    idat = data.index(b"IDAT")
+    data[idat + 4 + int.from_bytes(data[idat - 4 : idat], "big")] ^= 0xFF
+    return bytes(data)
+
+
 def sha(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -522,6 +530,39 @@ class ArtistsTests(TempRoot):
             self.assertEqual(by_id["artists:pixiv:9:p0"]["path"], "assets/public/artists/x/pixiv-9-p00.png")
             self.assertNotIn("duplicate_of", by_id["artists:pixiv:9:p0"])
             self.assertEqual(by_id["artists:pixiv:9:p1"]["duplicate_of"], "artists:pixiv:9:p0")
+
+    def test_an_image_that_does_not_verify_or_decode_is_not_saved(self):
+        job = {**self.pixiv_job(9), "kind": "song_art"}
+        for data, error in ((corrupt_chunk_png(), "broken PNG"), (truncated("JPEG"), "truncated")):
+            with self.subTest(error):
+                manifest = {"assets": [], "failures": []}
+                with (
+                    patch.object(artists, "download", lambda job, cache, refresh, data=data: (job, data, "2026")),
+                    contextlib.redirect_stdout(io.StringIO()),
+                ):
+                    artists.fetch_all(manifest, [job], {}, False, 1)
+                self.assertEqual(manifest["assets"], [])
+                self.assertEqual(
+                    [(f["asset_id"], f["url"]) for f in manifest["failures"]], [(job["id"], job["download_url"])]
+                )
+                self.assertIn(error, manifest["failures"][0]["error"])
+                self.assertEqual(self.archived_files(), set())
+
+    def test_a_cached_file_that_no_longer_holds_its_bytes_is_downloaded_again(self):
+        self.seed()
+        p1_url = OLD_P0.replace("_p0", "_p1")
+        (self.root / "assets/public/artists/snowegg/pixiv-1-p01.png").write_bytes(png("white"))  # changed locally
+        web = FakeWeb({**pixiv_routes([OLD_P0, p1_url]), p1_url: self.old[1]})
+        self.assertEqual(self.run_main(web), 0)
+        self.assertIn(p1_url, web.requested)
+        self.assertNotIn(OLD_P0, web.requested, "the intact cached file of page 1 was not reused")
+        assets = self.read_manifest("artists")["assets"]
+        self.assertEqual(
+            [(a["id"], a["sha256"]) for a in assets],
+            [("artists:pixiv:1:p0", sha(self.old[0])), ("artists:pixiv:1:p1", sha(self.old[1]))],
+        )
+        for asset in assets:
+            self.assertEqual(sha((self.root / asset["path"]).read_bytes()), asset["sha256"], asset["id"])
 
     def pixiv_job(self, post):
         return {
@@ -1443,6 +1484,44 @@ class ArchivesTests(TempRoot):
             self.write_manifest("archives", bad)
             with self.assertRaises(AssertionError), contextlib.redirect_stdout(io.StringIO()):
                 archives.verify()
+        # The recorded file itself: its byte count, SHA-256, dimensions and format.
+        for change in (
+            {"bytes": record["bytes"] + 1},
+            {"sha256": sha(png("blue"))},
+            {"width": 5},
+            {"height": 3},
+            {"format": "JPEG"},
+        ):
+            self.write_manifest("archives", {**good, "assets": [{**record, **change}, version]})
+            with (
+                self.subTest(change),
+                self.assertRaises(AssertionError),
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                archives.verify()
+
+    def test_an_image_that_fails_verification_is_not_archived(self):
+        # Its IDAT checksum is wrong: the image decodes, so only verify() rejects it.
+        url, data = "https://deemo.com/img/index_pic.png", corrupt_chunk_png()
+        with patch.object(archives, "session", return_value=FakeWeb({url: data})):
+            row = archives.download(
+                "official-deemo", "index_pic", "T", "https://deemo.com/", url, "illustration", hosts=("deemo.com",)
+            )
+        self.assertIsNone(row)
+        failures = archives.MANIFEST["failures"]
+        self.assertEqual([(f["asset_id"], f["url"]) for f in failures], [("archives:official-deemo:index_pic", url)])
+        self.assertIn("broken PNG", failures[0]["error"])
+        self.assertEqual(self.archived_files(), set())
+        source = {
+            "id": "archives:cover-art-archive",
+            "name": "CAA",
+            "url": "https://musicbrainz.org/x",
+            "status": "fetched",
+        }
+        record = self.caa_record(11, data)
+        self.write_manifest("archives", {"schema_version": 1, "sources": [source], "assets": [record], "failures": []})
+        with self.assertRaisesRegex(SyntaxError, "broken PNG"), contextlib.redirect_stdout(io.StringIO()):
+            archives.verify()
 
     def test_an_image_that_does_not_decode_completely_is_not_archived(self):
         source = {"id": "archives:official-deemo", "name": "Official", "url": "https://deemo.com/", "status": "partial"}
