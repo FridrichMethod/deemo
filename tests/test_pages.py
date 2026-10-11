@@ -57,17 +57,43 @@ class PagesTests(unittest.TestCase):
             self.tracked.add(relative)
 
     def test_only_tracked_allowlisted_files_are_copied(self):
-        self.add("assets/public/art.png")
-        self.add("data/catalog.js")
-        self.add("scripts/build_catalog.py")
-        self.add(".github/workflows/pages.yml")
-        self.add(".git/config")
-        self.add("assets/.env")
-        self.add("src/__pycache__/cached.pyc")
+        published = {
+            "assets/public/art.png",
+            "data/catalog.js",
+            "src/archive.js",
+            "docs/sources-wikis.md",
+            "licenses/README.md",
+        }
+        unpublished = {
+            "scripts/build_catalog.py",
+            "templates/slideshow.html",
+            "tests/test_pages.py",
+            ".github/workflows/pages.yml",
+            ".git/config",
+            "assets/.env",
+            "src/__pycache__/cached.pyc",
+            "requirements.txt",
+            "pyproject.toml",
+            ".gitattributes",
+        }
+        for relative in sorted(published | unpublished):
+            self.add(relative)
         self.add("assets/local-only.png", tracked=False)
         result = pages.prepare(self.root, self.output, self.tracked)
         actual = {path.relative_to(self.output).as_posix() for path in self.output.rglob("*") if path.is_file()}
-        expected = pages.PUBLIC_FILES | {"assets/public/art.png", "data/catalog.js"}
+        # The root files are spelled out rather than taken from pages.PUBLIC_FILES, so widening the allowlist fails.
+        root_files = {
+            ".nojekyll",
+            "archive.html",
+            "index.html",
+            "site.webmanifest",
+            "browserconfig.xml",
+            "LICENSE",
+            "NOTICE",
+            "README.md",
+            "README.zh-CN.md",
+        }
+        expected = root_files | published
         self.assertEqual(actual, expected)
         self.assertEqual(result["files"], len(expected))
         for name in actual:
@@ -84,6 +110,26 @@ class PagesTests(unittest.TestCase):
         self.tracked.add("assets/leak")
         with self.assertRaisesRegex(ValueError, "Symlinks"):
             pages.prepare(self.root, self.output, self.tracked)
+
+    def test_a_file_under_a_symlinked_directory_is_rejected(self):
+        # The file itself is no symlink; a directory on its path is, and leads to a directory that is not published.
+        self.add("templates/notes.txt")
+        (self.root / "assets").mkdir()
+        (self.root / "assets/linked").symlink_to(self.root / "templates", target_is_directory=True)
+        self.tracked.add("assets/linked/notes.txt")
+        with self.assertRaisesRegex(ValueError, "Symlinks must not be published: assets/linked/notes.txt"):
+            pages.prepare(self.root, self.output, self.tracked)
+        self.assertFalse(self.output.exists())
+
+    def test_the_budget_counts_every_published_byte(self):
+        self.add("assets/public/large.png")
+        (self.root / "assets/public/large.png").write_bytes(bytes(4096))
+        total = sum((self.root / name).stat().st_size for name in self.tracked)
+        with patch.object(pages, "MAX_SITE_BYTES", total - 1), self.assertRaisesRegex(ValueError, f"budget: {total}$"):
+            pages.prepare(self.root, self.output, self.tracked)
+        self.assertFalse(self.output.exists())
+        with patch.object(pages, "MAX_SITE_BYTES", total):
+            self.assertEqual(pages.prepare(self.root, self.output, self.tracked)["bytes"], total)
 
     def test_existing_output_is_never_overwritten(self):
         self.output.mkdir()
