@@ -12,6 +12,10 @@ records. The report is written in English,
 followed by the same report in Simplified Chinese inside a collapsed <details> block;
 if both together would exceed REPORT_LIMIT characters, each table lists fewer rows.
 
+A current snapshot whose download URL (info.url, which fetch_wikis.py --resume requests)
+is not under its wiki's own image path is refused with an error, so the workflow's
+publishing job fails instead of opening a pull request for it.
+
 Wiki editors control file titles, song titles and collection names, and the report becomes
 the body of a bot pull request and a run summary. Every value taken from a snapshot is
 therefore shown as an inline code span (see code()), so it cannot add mentions, issue
@@ -27,12 +31,19 @@ import json
 import re
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_LABELS = {"fandom": "Fandom", "bwiki": "BWIKI"}
 # The report links a candidate's file page only when it is an https URL on that source's wiki.
 SOURCE_HOSTS = {"fandom": "deemo.fandom.com", "bwiki": "wiki.biligame.com"}
+# Where each wiki serves its image files. fetch_wikis.py --resume downloads every candidate's info.url, and the snapshot
+# is produced by a job that installs and runs third-party code, so a proposed snapshot must keep to these. The path
+# prefix matters as much as the host: each CDN serves every wiki of its farm.
+DOWNLOAD_LOCATIONS = {
+    "fandom": ("static.wikia.nocookie.net", "/deemo/images/"),
+    "bwiki": ("patchwiki.biligame.com", "/images/deemo/"),
+}
 # Characters kept as-is in a linked URL; anything else (spaces, < > | ` \ " and non-ASCII) is percent-encoded.
 URL_SAFE = ":/?#[]@!$&'()*+,;=%"
 # Control characters and line or paragraph separators would end a table row; bidirectional controls could
@@ -195,6 +206,43 @@ def index_candidates(snapshot: dict) -> dict[tuple[str, str], dict]:
     return candidates
 
 
+def download_url_allowed(source: str, url: object) -> bool:
+    """Whether url is an https URL under the image path of the source's own wiki: the exact host, with no user, port,
+    whitespace, backslash or control character, and no "." or ".." path segment (also percent-encoded)."""
+    location = DOWNLOAD_LOCATIONS.get(source)
+    if location is None or not isinstance(url, str) or CONTROL.search(url) or re.search(r"[\s\\]", url):
+        return False
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    host, prefix = location
+    segments = unquote(parts.path).split("/")
+    return (
+        parts.scheme == "https"
+        and parts.netloc == host
+        and parts.path.startswith(prefix)
+        and "." not in segments
+        and ".." not in segments
+    )
+
+
+def check_download_urls(snapshot: dict) -> None:
+    """Raise ValueError if a candidate's download URL is not under its wiki's image path (see DOWNLOAD_LOCATIONS)."""
+    refused = [
+        f"{candidate.get('source')!r} {candidate.get('file_title')!r}: {candidate['info']['url']!r}"
+        for candidate in snapshot.get("candidates", [])
+        if "url" in candidate.get("info", {})
+        and not download_url_allowed(candidate.get("source"), candidate["info"]["url"])
+    ]
+    if refused:
+        # repr() keeps the snapshot's text on one line, so it cannot forge a workflow command in the job log.
+        raise ValueError(
+            "Download URL not under its wiki's image path (DOWNLOAD_LOCATIONS in scripts/check_sources.py): "
+            + "; ".join(refused)
+        )
+
+
 def fingerprint(candidate: dict) -> tuple:
     info = candidate.get("info", {})
     return tuple(info.get(field) for field in FINGERPRINT_FIELDS)
@@ -236,6 +284,7 @@ def metadata_changes(candidate: dict, previous: dict) -> list[dict]:
 
 
 def compare(baseline: dict, current: dict, manifest: dict) -> dict:
+    check_download_urls(current)
     old = index_candidates(baseline)
     new = index_candidates(current)
     assets = {asset["id"]: asset for asset in manifest.get("assets", [])}

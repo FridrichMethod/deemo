@@ -76,6 +76,7 @@ def table_cells(line):
 def candidate(
     source, name, sha1="a" * 40, size=1000, width=1024, height=1024, timestamp="2026-01-01T00:00:00Z", **extra
 ):
+    """A snapshot candidate; url (the download URL, info.url) is left out unless given."""
     return {
         "source": source,
         "file_title": f"File:{name}",
@@ -87,6 +88,7 @@ def candidate(
             "height": height,
             "timestamp": timestamp,
             "descriptionurl": extra.pop("page_url", f"{WIKI[source]}File:{name}"),
+            **({"url": extra.pop("url")} if "url" in extra else {}),
         },
         "song_titles": extra.pop("song_titles", [name.rsplit(".", 1)[0]]),
         "collections": extra.pop("collections", []),
@@ -572,6 +574,70 @@ class CompareTests(unittest.TestCase):
             printed_summary = json.loads(printed.call_args[0][0])
             self.assertEqual(list(printed_summary), ["changed", "title", "counts"])
             self.assertEqual(printed_summary["title"], summary["title"])
+
+
+class DownloadLocationTests(unittest.TestCase):
+    """fetch_wikis.py --resume downloads each candidate's info.url, and the snapshot comes from a job that installs and
+    runs third-party code. compare() refuses a current snapshot whose download URL leaves the wiki's own image path, so
+    the publishing job fails instead of opening a pull request that would send the maintainer's fetcher there."""
+
+    GOOD = {
+        "fandom": "https://static.wikia.nocookie.net/deemo/images/a/ab/X.png/revision/latest?cb=20210901000000",
+        "bwiki": "https://patchwiki.biligame.com/images/deemo/a/ab/0123456789abcdefghijklmnopqrstu.png",
+    }
+
+    def test_download_urls_off_the_wiki_image_path_are_refused(self):
+        for source, url in (
+            ("bwiki", "http://127.0.0.1/start/Magnolia.png"),
+            ("bwiki", "https://evil.example.test/images/deemo/x.png"),
+            ("bwiki", "http://patchwiki.biligame.com/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com/images/otherwiki/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com/images/deemo/../../otherwiki/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com/images/deemo/%2e%2e/%2E%2E/otherwiki/x.png"),
+            ("bwiki", "https://user@patchwiki.biligame.com/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com:8443/images/deemo/x.png"),
+            ("bwiki", "https://PATCHWIKI.biligame.com/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com.evil.test/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com\\@evil.test/images/deemo/x.png"),
+            ("bwiki", "https://patchwiki.biligame.com/images/deemo/x.png\n::error::forged"),
+            ("bwiki", None),
+            ("fandom", self.GOOD["bwiki"]),  # the other wiki's host
+            ("fandom", "https://static.wikia.nocookie.net/otherwiki/images/x.png"),
+            ("unknown", self.GOOD["fandom"]),
+        ):
+            with self.subTest(source=source, url=url):
+                row = {**candidate("fandom", "X.png", url=url), "source": source}
+                with self.assertRaisesRegex(ValueError, "not under its wiki's image path") as caught:
+                    check.compare(snapshot(), snapshot(row), {})
+                # The message quotes the snapshot's text with repr(), so it cannot start a log line (::error:: ...).
+                self.assertNotIn("\n", str(caught.exception))
+
+    def test_wiki_image_paths_are_accepted(self):
+        current = snapshot(*(candidate(source, f"{source}.png", url=url) for source, url in self.GOOD.items()))
+        self.assertEqual(check.compare(snapshot(), current, {})["counts"]["added"], 2)
+        # The baseline is main's committed snapshot; only the snapshot being proposed is checked.
+        baseline = snapshot(candidate("bwiki", "Old.png", url="http://127.0.0.1/x.png"))
+        self.assertEqual(check.compare(baseline, current, {})["counts"]["removed"], 1)
+
+    def test_committed_snapshot_downloads_from_the_wiki_image_paths(self):
+        committed = check.load(REPO / "data/sources/wiki-discovery.json")
+        report = check.compare(committed, committed, check.load(REPO / "data/sources/wikis.json"))
+        self.assertFalse(report["changed"])
+        self.assertEqual(report["counts"]["metadata_changed"], 0)
+        self.assertGreater(report["counts"]["current"], 800)
+
+    def test_cli_fails_without_writing_a_report(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "old.json").write_text(json.dumps(snapshot()), encoding="utf-8")
+            hostile = snapshot(candidate("bwiki", "X.png", url="http://127.0.0.1/internal/secret.png"))
+            (root / "new.json").write_text(json.dumps(hostile), encoding="utf-8")
+            argv = ["check_sources", "--baseline", str(root / "old.json"), "--current", str(root / "new.json")]
+            argv += ["--manifest", str(root / "missing.json"), "--report", str(root / "report.md")]
+            argv += ["--summary", str(root / "summary.json")]
+            with patch.object(sys, "argv", argv), patch("builtins.print"), self.assertRaises(ValueError):
+                check.main()
+            self.assertEqual(sorted(path.name for path in root.iterdir()), ["new.json", "old.json"])
 
 
 class SnapshotPullRequestLookupTests(unittest.TestCase):
