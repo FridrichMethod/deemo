@@ -403,6 +403,21 @@ class CheckTests(Fixture):
         self.write_manifest([record for record in self.records if not record["path"].endswith("/wide.png")])
         self.assert_problem("belongs to no current gallery original")
 
+    def test_dot_files_and_caches_are_not_previews(self):
+        # Skipped as build_catalog.tracked_files() and prepare_pages.select_files() skip them: --check does not report
+        # them and --prune never deletes them. A stray non-dot file is still reported (the test above).
+        extras = {".gitattributes": b"* -text\n", ".DS_Store": b"Finder", "__pycache__/cached.pyc": b"cache"}
+        for name, data in extras.items():
+            path = self.root / thumbs.THUMB_DIR / name
+            path.parent.mkdir(exist_ok=True)
+            path.write_bytes(data)
+        self.assertEqual(thumbs.problems(self.root), [])
+        summary = thumbs.build(self.root, prune=True)
+        self.assertEqual((summary["orphans"], summary["pruned"]), ([], []))
+        for name, data in extras.items():
+            with self.subTest(name=name):
+                self.assertEqual((self.root / thumbs.THUMB_DIR / name).read_bytes(), data)
+
     def test_a_manifest_key_that_is_not_a_hash_is_reported(self):
         # The check reports such an entry instead of building a path from it (or stopping with a traceback).
         manifest = self.manifest()

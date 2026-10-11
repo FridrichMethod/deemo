@@ -187,10 +187,17 @@ def write_atomic(path: Path, data: bytes) -> None:
 
 
 def stored_files(root: Path) -> list[str]:
+    """Files in assets/thumbs/ that --check accounts for and --prune may delete. Dot-files (.gitattributes, .DS_Store)
+    and __pycache__ are skipped, as build_catalog.tracked_files() and prepare_pages.py skip them."""
     directory = root / THUMB_DIR
     if not directory.exists():
         return []
-    return sorted(path.relative_to(root).as_posix() for path in directory.rglob("*") if path.is_file())
+    return sorted(
+        path.relative_to(root).as_posix()
+        for path in directory.rglob("*")
+        if path.is_file()
+        and not any(part.startswith(".") or part == "__pycache__" for part in path.relative_to(directory).parts)
+    )
 
 
 def workers_for(workers: int | None) -> int:
