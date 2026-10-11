@@ -1,0 +1,52 @@
+# Configuration of the code-quality tools (ruff, mypy, coverage.py). This repository is not a Python package: there is
+# no [project] table and nothing is installed from it. Tool versions are pinned in requirements-lint.txt,
+# .pre-commit-config.yaml and package.json; tests/test_tooling.py keeps them equal and checks the exclusions.
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+src = ["scripts", "tests"]
+# Byte-pinned and generated files (.gitattributes -text entries, build outputs) are never linted or formatted, even
+# when a hook passes their paths explicitly.
+force-exclude = true
+extend-exclude = ["assets", "data", "scripts/legacy", "src/vendor"]
+
+[tool.ruff.lint]
+# Stage 1: syntax and runtime errors, pyflakes, pycodestyle warnings, import order, bugbear, pyupgrade, pylint errors.
+select = ["E4", "E7", "E9", "F", "W", "I", "B", "UP", "PLE"]
+
+[tool.ruff.format]
+# ruff's defaults (double quotes, spaces, magic trailing commas) already match the code.
+
+[tool.mypy]
+# Stage 1: the build and publication scripts, without strict mode. Later stages add the fetchers, then the tests,
+# then stricter options (see "Development" in README.md).
+python_version = "3.10"
+files = [
+    "scripts/build_catalog.py",
+    "scripts/build_legacy_inventory.py",
+    "scripts/build_thumbnails.py",
+    "scripts/check_sources.py",
+    "scripts/prepare_pages.py",
+]
+check_untyped_defs = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[tool.coverage.run]
+# Measures scripts/ while the unit tests run, including every script they start as a subprocess (python -I, any cwd).
+source = ["scripts"]
+# The inherited upstream experiments are never run (they have import-time side effects).
+omit = ["scripts/legacy/*"]
+branch = true
+parallel = true
+patch = ["subprocess"]
+disable_warnings = ["module-not-imported", "module-not-measured", "no-data-collected"]
+
+[tool.coverage.report]
+# The measured baseline, rounded down; raise it when coverage rises, never lower it to pass.
+fail_under = 83
+precision = 1
+skip_empty = true

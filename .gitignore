@@ -5,3 +5,9 @@ __pycache__/
 .DS_Store
 *.part
 test-results/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+node_modules/
