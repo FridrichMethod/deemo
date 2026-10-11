@@ -817,6 +817,45 @@ class DownloadGuardTests(FetcherRun):
         self.assertEqual(self.files(), [record["path"]])
         self.assertEqual(self.web.options, [{"allow_redirects": False, "stream": True}] * len(self.web.calls))
 
+    def test_a_utf8_redirect_location_is_followed_as_requests_reads_it(self):
+        # http.client decodes header bytes as latin-1, so a raw UTF-8 file name in a Location arrives as mojibake;
+        # requests encodes it back and reads it as UTF-8, and so must the hand-made redirect loop.
+        payload = png("red")
+        start = BWIKI_IMAGES + "a/ab/Art.png"
+        location = "/images/deemo/b/bc/中文曲绘 1.png".encode().decode("latin-1")
+        target = BWIKI_IMAGES + "b/bc/%E4%B8%AD%E6%96%87%E6%9B%B2%E7%BB%98%201.png"
+        self.serve({start: (302, b"", {"Location": location}), target: payload})
+        offered = self.offer("Art.png", payload)
+        (record,) = self.resume({**offered, "info": {**offered["info"], "url": start}})["assets"]
+        self.assertEqual((record["download_url"], record["resolved_download_url"]), (start, target))
+        self.assertEqual(self.web.calls, [start, target])
+
+    def test_redirect_targets_are_the_ones_requests_would_follow(self):
+        start = BWIKI_IMAGES + "a/ab/Art.png"
+        for location in (
+            "/images/deemo/b/bc/中文.png",
+            "b/Ünïcode name.png",
+            "https://patchwiki.biligame.com/images/deemo/c/cd/%E4%B8%AD 文.png",
+            "//patchwiki.biligame.com/images/deemo/d/de/Art.png",
+            "../../deemo/e/ef/100%25 (b).png",
+            "%2e%2e/x.png",
+        ):
+            with self.subTest(location=location):
+                redirect = requests.Response()
+                redirect.status_code, redirect.url = 302, start
+                redirect.headers["Location"] = location.encode().decode("latin-1")  # as http.client hands it over
+                # requests.Session.resolve_redirects: the decoded target, requoted, then resolved against the URL.
+                expected = urljoin(start, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
+                self.assertEqual(fetch.redirect_target(redirect), expected)
+
+    def test_a_redirect_location_that_is_not_utf8_is_refused(self):
+        start = BWIKI_IMAGES + "a/ab/Art.png"
+        offered = self.offer("Art.png", png("red"))
+        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
+        self.serve({start: (302, b"", {"Location": "/images/deemo/b/bc/Caf\xe9.png"})})
+        self.refused({**offered, "info": {**offered["info"], "url": start}}, reason="not UTF-8")
+        self.assertEqual(self.web.calls, [start])
+
     def test_a_redirect_loop_is_cut_off(self):
         start = BWIKI_IMAGES + "a/ab/Art.png"
         offered = self.offer("Art.png", png("red"))

@@ -103,8 +103,9 @@ class IncompleteList(RuntimeError):
 
 
 class RefusedDownload(ValueError):
-    """An image download not made or not finished: a URL outside the wiki's image path, too many redirects, or a
-    response over MAX_IMAGE_BYTES. It is not retried, and no other URL of the candidate is tried."""
+    """An image download not made or not finished: a URL outside the wiki's image path, a redirect whose Location is
+    not UTF-8, too many redirects, or a response over MAX_IMAGE_BYTES. It is not retried, and no other URL of the
+    candidate is tried."""
 
 
 def now():
@@ -192,11 +193,24 @@ def image_response(url, headers):
         response.close()
 
 
+def redirect_target(response):
+    """The absolute URL a redirect response sends to, read from its Location as requests reads it: http.client decodes
+    header bytes as latin-1, so the header is encoded back and decoded as UTF-8 (a raw UTF-8 file name stays itself
+    instead of turning into mojibake), requoted, and resolved against the response's URL. A Location that is not UTF-8
+    raises RefusedDownload."""
+    header = response.headers["Location"]
+    try:
+        location = header.encode("latin-1").decode("utf-8")
+    except UnicodeError:
+        raise RefusedDownload(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
+    return urljoin(response.url, requests.utils.requote_uri(location))
+
+
 def get_image(source, url, headers):
     """The final response of an image download of source, and its body.
 
     Every URL requested, the first and each redirect target, must pass download_allowed(); redirects are followed by
-    hand, at most MAX_REDIRECTS of them, and the body is read up to MAX_IMAGE_BYTES. Otherwise RefusedDownload is
+    hand (see redirect_target()), at most MAX_REDIRECTS of them, and the body is read up to MAX_IMAGE_BYTES. Otherwise RefusedDownload is
     raised before anything more is requested or read. Connection errors and RETRY_STATUSES are retried like get()."""
     for _ in range(MAX_REDIRECTS + 1):
         if not download_allowed(source, url):
@@ -204,7 +218,7 @@ def get_image(source, url, headers):
         response, body = retried(image_response, url, headers)
         if body is not None:
             return response, body
-        url = urljoin(response.url, response.headers["Location"])
+        url = redirect_target(response)
     raise RefusedDownload(f"Refusing to follow more than {MAX_REDIRECTS} redirects: {url!r}")
 
 
