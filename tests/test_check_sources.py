@@ -639,6 +639,52 @@ class DownloadLocationTests(unittest.TestCase):
                 # The message quotes the snapshot's text with repr(), so it cannot start a log line (::error:: ...).
                 self.assertNotIn("\n", str(caught.exception))
 
+    def test_dot_segments_a_server_could_still_resolve_are_refused(self):
+        # A server may drop a ";" path parameter, read a backslash as "/" or percent-decode the path once more, so each
+        # of these can climb out of the wiki's directory as surely as "..".
+        bwiki = "https://patchwiki.biligame.com/images/deemo/"
+        fandom = "https://static.wikia.nocookie.net/deemo/images/"
+        for source, url in (
+            ("bwiki", bwiki + "..;/otherwiki/x.png"),
+            ("bwiki", bwiki + "..;jsessionid=1/..;x=y/otherwiki/x.png"),
+            ("bwiki", bwiki + "a/.;/..%3B/..%3b/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%5c..%5cotherwiki/x.png"),
+            ("bwiki", bwiki + "a/ab/..%5C..%5C..%5Cotherwiki/x.png"),
+            ("bwiki", bwiki + "%252e%252e/%252e%252e/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%252f..%252fotherwiki/x.png"),
+            ("bwiki", bwiki + "..%255c..%255cotherwiki/x.png"),
+            ("bwiki", bwiki + "%25252e%25252E/%25252e%25252E/otherwiki/x.png"),
+            ("fandom", fandom + "..;/..;/otherwiki/images/a/ab/X.png/revision/latest?cb=20210901000000"),
+            ("fandom", fandom + "%252E%252E/%252E%252E/otherwiki/images/a/ab/X.png/revision/latest"),
+        ):
+            with self.subTest(source=source, url=url):
+                self.assertFalse(check.download_url_allowed(source, url))
+                row = {**candidate("fandom", "X.png", url=url), "source": source}
+                with self.assertRaisesRegex(ValueError, "not under its wiki's image path"):
+                    check.compare(snapshot(), snapshot(row), {})
+
+    def test_file_names_with_semicolons_backslashes_and_percent_signs_are_accepted(self):
+        # MediaWiki file names may hold ";", "\" and "%" ("100%.png" is served as 100%25.png): only a segment that
+        # reads as "." or ".." is refused, not the characters around one.
+        urls = {
+            "bwiki": (
+                "https://patchwiki.biligame.com/images/deemo/a/ab/100%25_Love;_Remix.png",
+                "https://patchwiki.biligame.com/images/deemo/c/cd/AC%5CDC_%252e%252e_..._.%25.png",
+            ),
+            "fandom": (
+                "https://static.wikia.nocookie.net/deemo/images/e/ef/Rock;n;Roll_%25252e.png/revision/latest?cb=1",
+            ),
+        }
+        rows = [
+            candidate(source, f"{source}-{index}.png", url=url)
+            for source, listed in urls.items()
+            for index, url in enumerate(listed)
+        ]
+        for row in rows:
+            with self.subTest(url=row["info"]["url"]):
+                self.assertTrue(check.download_url_allowed(row["source"], row["info"]["url"]))
+        self.assertEqual(check.compare(snapshot(), snapshot(*rows), {})["counts"]["added"], len(rows))
+
     def test_wiki_image_paths_are_accepted(self):
         current = snapshot(*(candidate(source, f"{source}.png", url=url) for source, url in self.GOOD.items()))
         self.assertEqual(check.compare(snapshot(), current, {})["counts"]["added"], 2)

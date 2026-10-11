@@ -771,6 +771,10 @@ class DownloadGuardTests(FetcherRun):
             ("bwiki", "https://patchwiki.biligame.com/images/otherwiki/a/ab/Art.png"),
             ("bwiki", FANDOM_IMAGES + "a/ab/Art.png"),  # the other wiki's image path
             ("fandom", "http://static.wikia.nocookie.net/deemo/images/a/ab/Art.png/revision/latest?cb=1"),
+            # Dot segments a server could still resolve: a ";" parameter, a backslash, a second percent-decode.
+            ("bwiki", BWIKI_IMAGES + "..;/otherwiki/a/ab/Art.png"),
+            ("bwiki", BWIKI_IMAGES + "..%5c..%5cotherwiki/a/ab/Art.png"),
+            ("fandom", FANDOM_IMAGES + "%252e%252e/%252e%252e/otherwiki/images/a/ab/Art.png/revision/latest?cb=1"),
         ):
             with self.subTest(source=source, url=url):
                 offered = self.offer("Art.png", payload)
@@ -786,6 +790,7 @@ class DownloadGuardTests(FetcherRun):
             "https://evil.example.test/images/deemo/a/ab/Art.png",
             "http://patchwiki.biligame.com/images/deemo/b/bc/Art.png",  # a downgrade to plain http
             "../../../otherwiki/a/ab/Art.png",  # relative: /images/otherwiki/a/ab/Art.png
+            "..;/..;/..;/otherwiki/a/ab/Art.png",  # urljoin keeps "..;", which a server may still resolve as ".."
             "https://patchwiki.biligame.com:8443/images/deemo/b/bc/Art.png",
         ):
             with self.subTest(location=location):
