@@ -8,24 +8,23 @@ The manifests preserve source metadata separately from measured downloaded bytes
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
+import math
+import os
+import re
+import time
+import unicodedata
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
-import hashlib
 from io import BytesIO
-import json
-import math
-import os
 from pathlib import Path
-import re
-import time
-import unicodedata
 from urllib.parse import quote
 
-from PIL import Image
 import requests
-
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = {
@@ -292,7 +291,8 @@ def discover_fandom():
     songs = [song_metadata("fandom", page) for page in song_pages]
     candidates = {}
     # Merge in title order, so the lists and artist of an image shared by several pages do not depend on API order.
-    for page, song in sorted(zip(song_pages, songs), key=lambda pair: pair[1]["title"]):
+    # strict=True: songs is built from song_pages one row per page just above, so the lengths are always equal.
+    for page, song in sorted(zip(song_pages, songs, strict=True), key=lambda pair: pair[1]["title"]):
         content = wikitext(page)
         primary = normalized(parameter(content, "img") or page["title"])
         for image in page.get("images", []):
