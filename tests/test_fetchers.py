@@ -454,6 +454,28 @@ class ArtistsTests(TempRoot):
         )
         self.assertEqual([(f["source_id"], f["url"]) for f in manifest["failures"]], [("artists:pixiv:1", PAGE_URL)])
 
+    def test_pixiv_artwork_of_another_owner_or_restricted_is_refused(self):
+        for change in ({"userId": "8"}, {"xRestrict": 1}, {"isMasked": True}):
+            with self.subTest(change):
+                routes = pixiv_routes([OLD_P0])
+                metadata = json.loads(routes["https://www.pixiv.net/ajax/illust/1"])
+                metadata["body"].update(change)
+                routes["https://www.pixiv.net/ajax/illust/1"] = json.dumps(metadata)
+                manifest, jobs = {"sources": [], "failures": []}, []
+                with patch.object(artists.requests, "get", FakeWeb(routes)):
+                    artists.collect_pixiv(manifest, jobs)
+                self.assertEqual(jobs, [])
+                self.assertEqual(manifest["sources"][0]["status"], "failed")
+                self.assertEqual(
+                    [(f["source_id"], f["url"]) for f in manifest["failures"]], [("artists:pixiv:1", PAGE_URL)]
+                )
+                self.assertRegex(manifest["failures"][0]["error"], "Unexpected artwork owner|Restricted artwork")
+        # The unchanged metadata is accepted, so each refusal above is the check it names.
+        manifest, jobs = {"sources": [], "failures": []}, []
+        with patch.object(artists.requests, "get", FakeWeb(pixiv_routes([OLD_P0]))):
+            artists.collect_pixiv(manifest, jobs)
+        self.assertEqual(([job["download_url"] for job in jobs], manifest["failures"]), ([OLD_P0], []))
+
     def test_failures_are_written_in_a_stable_order(self):
         posts = {"snowegg": {**PIXIV["snowegg"], "posts": {"3": "C", "2": "B", "1": "A"}}}
         with patch.object(artists, "PIXIV_POSTS", posts):
@@ -688,8 +710,15 @@ class ArtistsTests(TempRoot):
             with patch.object(artists.requests, "get", web), self.assertRaisesRegex(ValueError, "expected hosts"):
                 artists.download({**job, "download_url": url}, {}, False)
             self.assertEqual(web.requested, [])
-        for location in ("http://169.254.169.254/latest", "https://169.254.169.254\\@i.pximg.net/1_p0.png"):
-            web = FakeWeb({NEW_P0: (302, b"", {"Location": location})})
+        # Every hop is checked against the platform's image host, not only the first: an https redirect to another
+        # host, or to another platform's image host, is refused too.
+        for location in (
+            "http://169.254.169.254/latest",
+            "https://169.254.169.254\\@i.pximg.net/1_p0.png",
+            "https://attacker.example/1_p0.png",
+            "https://image.jimcdn.com/app/cms/image/transf/none/1_p0.png",
+        ):
+            web = FakeWeb({NEW_P0: (302, b"", {"Location": location}), location: png("red")})
             with patch.object(artists.requests, "get", web), self.assertRaisesRegex(ValueError, "expected hosts"):
                 artists.download({**job, "download_url": NEW_P0}, {}, False)
             self.assertEqual(web.requested, [NEW_P0])
@@ -888,6 +917,31 @@ class TumblrPayloadTests(ArtistRunTests):
                     {"artists:pixiv:1": "complete", failure: "failed", f"artists:tumblr:{self.OTHER}": "complete"},
                 )
 
+    def test_posts_outside_the_known_list_are_ignored(self):
+        def post(post_id, image):
+            return {
+                "id": post_id,
+                "url-with-slug": f"https://wublaze.tumblr.com/post/{post_id}/x",
+                "photos": [{"photo-url-1280": image}],
+            }
+
+        other_image, unknown_image = (
+            TUMBLR_IMAGE.replace("tumblr_x", "tumblr_o"),
+            TUMBLR_IMAGE.replace("tumblr_x", "tumblr_u"),
+        )
+        web = self.web(
+            {"posts": [post("555", unknown_image), post(TUMBLR_POST, TUMBLR_IMAGE), post(self.OTHER, other_image)]}
+        )
+        web.routes.update({other_image: png("green"), unknown_image: png("white")})
+        self.assertEqual(self.run_main(web), 0)
+        manifest, assets = self.manifest()
+        self.assertNotIn(unknown_image, web.requested)
+        self.assertEqual(
+            sorted(assets),
+            ["artists:pixiv:1:p0", f"artists:tumblr:{TUMBLR_POST}:p0", f"artists:tumblr:{self.OTHER}:p0"],
+        )
+        self.assertNotIn("artists:tumblr:555", {row["id"] for row in manifest["sources"]})
+
     def test_a_payload_without_posts_fails_every_known_post(self):
         self.assertEqual(self.run_main(self.web({"items": []})), 1)
         manifest, assets = self.manifest()
@@ -959,6 +1013,15 @@ class JimdoTests(TempRoot):
         )
         self.assertEqual(len({job["id"] for job in jobs}), 4)
         self.assertTrue(all(job["id"].endswith(":" + job["stem"]) for job in jobs))
+
+    def test_only_images_labelled_deemo_become_jobs(self):
+        other = {
+            **self.image("Other", "i0000000000000002"),
+            "caption": "【Rayark様 音楽ゲーム「Cytus」】楽曲「Other」アートワーク",
+        }
+        manifest, jobs = self.collect([self.image("Glaciology", "i0000000000000001"), other])
+        self.assertEqual(manifest["failures"], [])
+        self.assertEqual([job["title"] for job in jobs], ["Glaciology"])
 
     def test_duplicate_image_fails_fast(self):
         manifest, jobs = self.collect([self.image("A", "i0000000000000001"), self.image("B", "i0000000000000001")])
