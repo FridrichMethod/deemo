@@ -443,6 +443,10 @@ class PreCommitTests(unittest.TestCase):
         for hook in FORBIDDEN_HOOKS:
             self.assertNotIn(hook, self.text)
 
+    def test_ruff_format_hook_receives_python_files_only(self):
+        # The hook's default types_or includes markdown; ruff would reformat code blocks in the documents.
+        self.assertEqual(self.hooks["ruff-format"]["types_or"], ["python", "pyi"])
+
     def test_eslint_only_checks_src(self):
         eslint = self.hooks["eslint"]
         repo = next(repo for repo in self.repos if eslint in repo["hooks"])
@@ -483,6 +487,8 @@ class PyprojectTests(unittest.TestCase):
         self.assertEqual(ruff["line-length"], 120)
         self.assertEqual(ruff["target-version"], "py310")
         self.assertIs(ruff["force-exclude"], True)
+        # ruff 0.17 would otherwise also reformat Python code blocks in the hand-edited, published Markdown.
+        self.assertEqual(ruff["include"], ["*.py", "*.pyi", "**/pyproject.toml"])
         self.assertLessEqual({"assets", "data", "scripts/legacy", "src/vendor"}, set(ruff["extend-exclude"]))
         self.assertEqual(ruff["lint"]["select"], ["E4", "E7", "E9", "F", "W", "I", "B", "UP", "PLE"])
         self.assertIs(ruff.get("fix", False), False)
