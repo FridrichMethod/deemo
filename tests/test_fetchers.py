@@ -740,17 +740,19 @@ TUMBLR_IMAGE = "https://64.media.tumblr.com/abc/tumblr_x_1280.png"
 
 
 class ArtistRunTests(TempRoot):
-    """Runs fetch_artists.main() with only the LIVE collector; the others find nothing."""
+    """Runs fetch_artists.main() with only the LIVE collector and the PIXIV posts; the others find nothing."""
 
     LIVE = None
+    PIXIV = {}
+    TUMBLR = {TUMBLR_POST: "Mili Collection Vol. 2"}
 
     def run_main(self, web, *flags):
         with contextlib.ExitStack() as stack:
             for name in {"collect_jimdo", "collect_tumblr", "collect_reference"} - {self.LIVE}:
                 stack.enter_context(patch.object(artists, name, lambda *args, **kwargs: None))
             stack.enter_context(patch.object(artists, "ROOT", self.root))
-            stack.enter_context(patch.object(artists, "PIXIV_POSTS", {}))
-            stack.enter_context(patch.object(artists, "TUMBLR_POSTS", {TUMBLR_POST: "Mili Collection Vol. 2"}))
+            stack.enter_context(patch.object(artists, "PIXIV_POSTS", self.PIXIV))
+            stack.enter_context(patch.object(artists, "TUMBLR_POSTS", self.TUMBLR))
             stack.enter_context(patch.object(artists.time, "sleep", lambda seconds: None))
             stack.enter_context(patch.object(artists.requests, "get", web))
             stack.enter_context(patch.object(sys, "argv", ["fetch_artists.py", *flags]))
@@ -839,6 +841,61 @@ class TumblrRefetchTests(ArtistRunTests):
         self.assertEqual(self.run_main(web), 0)
         self.assertNotIn(second, web.requested)
         self.assertEqual(self.manifest()[0], refreshed)
+
+
+class TumblrPayloadTests(ArtistRunTests):
+    """A Tumblr API payload shaped unlike the usual one fails the posts it concerns, never the whole run."""
+
+    LIVE = "collect_tumblr"
+    PIXIV = PIXIV
+    OTHER = "99918307835"
+    TUMBLR = {TUMBLR_POST: "Mili Collection Vol. 2", OTHER: "Eshen Chen Collection Vol. 1"}
+
+    def web(self, payload):
+        return FakeWeb(
+            {
+                artists.TUMBLR_API: "var tumblr_api_read = " + json.dumps(payload) + ";",
+                TUMBLR_IMAGE: png("red"),
+                **pixiv_routes([OLD_P0]),
+                OLD_P0: png("blue"),
+            }
+        )
+
+    def test_a_malformed_known_post_fails_only_that_post(self):
+        good = {
+            "id": self.OTHER,
+            "url-with-slug": f"https://wublaze.tumblr.com/post/{self.OTHER}/x",
+            "photos": [{"photo-url-1280": TUMBLR_IMAGE}],
+        }
+        photo = {"photo-url-1280": TUMBLR_IMAGE.replace("tumblr_x", "tumblr_y")}
+        page = f"https://wublaze.tumblr.com/post/{TUMBLR_POST}/x"
+        for label, broken in (
+            ("url-with-slug", {"id": TUMBLR_POST, "photos": [photo]}),
+            ("get", {"id": TUMBLR_POST, "url-with-slug": page, "photos": [photo, "not a photo"]}),
+        ):
+            with self.subTest(label):
+                self.assertEqual(self.run_main(self.web({"posts": [broken, good]})), 1)
+                manifest, assets = self.manifest()
+                # Pixiv and the other post are archived; no job of the broken post started.
+                self.assertEqual(sorted(assets), ["artists:pixiv:1:p0", f"artists:tumblr:{self.OTHER}:p0"])
+                failure = f"artists:tumblr:{TUMBLR_POST}"
+                self.assertEqual(
+                    [(f["source_id"], f["url"]) for f in manifest["failures"]], [(failure, artists.TUMBLR_API)]
+                )
+                self.assertIn(label, manifest["failures"][0]["error"])
+                self.assertEqual(
+                    {row["id"]: row["status"] for row in manifest["sources"]},
+                    {"artists:pixiv:1": "complete", failure: "failed", f"artists:tumblr:{self.OTHER}": "complete"},
+                )
+
+    def test_a_payload_without_posts_fails_every_known_post(self):
+        self.assertEqual(self.run_main(self.web({"items": []})), 1)
+        manifest, assets = self.manifest()
+        self.assertEqual(sorted(assets), ["artists:pixiv:1:p0"])
+        self.assertEqual(
+            [(f["source_id"], f["url"]) for f in manifest["failures"]],
+            [(f"artists:tumblr:{post}", artists.TUMBLR_API) for post in sorted(self.TUMBLR)],
+        )
 
 
 JIMDO_HTML = '<a data-href="{lightbox}"><img alt="{caption}" data-orig-width="{w}" data-orig-height="{h}"></a>'

@@ -331,73 +331,93 @@ def collect_jimdo(manifest, jobs, previous_assets=()):
         record_failure(manifest, source_id, JIMDO_URL, error)
 
 
+def fail_tumblr_post(manifest, post_id, error):
+    """File error under a known post's own source, so its archived records are kept as fetch_failed."""
+    source_id = f"artists:tumblr:{post_id}"
+    manifest["sources"].append(
+        {
+            "id": source_id,
+            "name": TUMBLR_POSTS[post_id],
+            "url": f"https://wublaze.tumblr.com/post/{post_id}",
+            "status": "failed",
+        }
+    )
+    record_failure(manifest, source_id, TUMBLR_API, error)
+
+
+def tumblr_post(post, post_id):
+    """The source row, the download jobs and the indices of the photos with no public large image URL of one known
+    post from the legacy API. Raises (KeyError, AttributeError, ...) when the post is not shaped as expected."""
+    source_id = f"artists:tumblr:{post_id}"
+    collection = TUMBLR_POSTS[post_id]
+    page = post["url-with-slug"]
+    source = {
+        "id": source_id,
+        "name": collection,
+        "url": page,
+        "artist": "Blaze Wu",
+        "platform": "Tumblr",
+        "status": "discovered",
+        "access": "public_without_login",
+        "metadata_url": TUMBLR_API,
+        "published_at": post.get("date-gmt"),
+        "description": text_content(post.get("photo-caption")),
+        "notes": "Largest image URL advertised by Tumblr's public legacy API; may be a platform-sized upload.",
+    }
+    found, unlisted = [], []
+    photos = post.get("photos") or [post]
+    for index, photo in enumerate(photos):
+        original = photo.get("photo-url-1280")
+        if not original:
+            unlisted.append(index)
+            continue
+        kind = "contact_sheet" if post_id != "129276170315" else ("collection_cover" if index == 5 else "song_art")
+        found.append(
+            {
+                "id": f"{source_id}:p{index}",
+                "source_id": source_id,
+                "artist": "Blaze Wu",
+                "directory": "blaze-wu",
+                "stem": f"tumblr-{post_id}-p{index:02d}",
+                "title": f"{collection} — page {index + 1}",
+                "collection": collection,
+                "kind": kind,
+                "page_url": page,
+                "download_url": original,
+                "source_page_index": index,
+                "published_at": post.get("date-gmt"),
+                "song_titles": [],
+                "mapping_status": "unmapped",
+                "quality": "artist_public_platform_image",
+            }
+        )
+    return source, found, unlisted
+
+
 def collect_tumblr(manifest, jobs):
     try:
         response = request(TUMBLR_API).text
         data = json.loads(response.split("=", 1)[1].strip().rstrip(";"))
+        posts = [post for post in data["posts"] if str(post.get("id")) in TUMBLR_POSTS]
     except Exception as error:
         # Attribute the failure to every known post, so their archived records are kept as fetch_failed.
-        for post_id, collection in sorted(TUMBLR_POSTS.items()):
-            source_id = f"artists:tumblr:{post_id}"
-            manifest["sources"].append(
-                {
-                    "id": source_id,
-                    "name": collection,
-                    "url": f"https://wublaze.tumblr.com/post/{post_id}",
-                    "status": "failed",
-                }
-            )
-            record_failure(manifest, source_id, TUMBLR_API, error)
+        for post_id in sorted(TUMBLR_POSTS):
+            fail_tumblr_post(manifest, post_id, error)
         return
     seen = set()
-    for post in data["posts"]:
+    for post in posts:
         post_id = str(post["id"])
-        if post_id not in TUMBLR_POSTS:
-            continue
         seen.add(post_id)
-        source_id = f"artists:tumblr:{post_id}"
-        collection = TUMBLR_POSTS[post_id]
-        page = post["url-with-slug"]
-        source = {
-            "id": source_id,
-            "name": collection,
-            "url": page,
-            "artist": "Blaze Wu",
-            "platform": "Tumblr",
-            "status": "discovered",
-            "access": "public_without_login",
-            "metadata_url": TUMBLR_API,
-            "published_at": post.get("date-gmt"),
-            "description": text_content(post.get("photo-caption")),
-            "notes": "Largest image URL advertised by Tumblr's public legacy API; may be a platform-sized upload.",
-        }
+        try:
+            source, found, unlisted = tumblr_post(post, post_id)
+        except Exception as error:
+            # A known post shaped unlike the API's usual output fails on its own; the other sources still run.
+            fail_tumblr_post(manifest, post_id, error)
+            continue
         manifest["sources"].append(source)
-        photos = post.get("photos") or [post]
-        for index, photo in enumerate(photos):
-            original = photo.get("photo-url-1280")
-            if not original:
-                record_failure(manifest, source_id, page, "No public large image URL", source_page_index=index)
-                continue
-            kind = "contact_sheet" if post_id != "129276170315" else ("collection_cover" if index == 5 else "song_art")
-            jobs.append(
-                {
-                    "id": f"{source_id}:p{index}",
-                    "source_id": source_id,
-                    "artist": "Blaze Wu",
-                    "directory": "blaze-wu",
-                    "stem": f"tumblr-{post_id}-p{index:02d}",
-                    "title": f"{collection} — page {index + 1}",
-                    "collection": collection,
-                    "kind": kind,
-                    "page_url": page,
-                    "download_url": original,
-                    "source_page_index": index,
-                    "published_at": post.get("date-gmt"),
-                    "song_titles": [],
-                    "mapping_status": "unmapped",
-                    "quality": "artist_public_platform_image",
-                }
-            )
+        jobs.extend(found)
+        for index in unlisted:
+            record_failure(manifest, source["id"], source["url"], "No public large image URL", source_page_index=index)
     for missing in sorted(TUMBLR_POSTS.keys() - seen):
         source_id = f"artists:tumblr:{missing}"
         page = f"https://wublaze.tumblr.com/post/{missing}"
