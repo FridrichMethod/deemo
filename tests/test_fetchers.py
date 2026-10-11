@@ -2188,6 +2188,55 @@ class RedirectLocationTests(unittest.TestCase):
         self.assertNotIn("redirect_location", row)
 
 
+class ArtistRedirectLocationTests(unittest.TestCase):
+    """fetch_artists' get_within() reads a redirect's Location as fetch_archives does, which is how requests reads it."""
+
+    JOB = {"id": "artists:pixiv:1:p0", "source_id": "artists:pixiv:1", "page_url": PAGE_URL, "download_url": NEW_P0}
+
+    def download(self, web):
+        with patch.object(artists.requests, "get", web):
+            return artists.download(self.JOB, {}, False)[1]
+
+    def test_a_download_follows_a_utf8_location_as_requests_reads_it(self):
+        target = "https://i.pximg.net/img-original/img/2022/%E4%B8%AD%E6%96%87%E6%9B%B2%E7%BB%98%201_p0.png"
+        location = as_received("/img-original/img/2022/中文曲绘 1_p0.png")
+        web = FakeWeb({NEW_P0: (302, b"", {"Location": location}), target: png("red")})
+        self.assertEqual(self.download(web), png("red"))
+        self.assertEqual(web.requested, [NEW_P0, target])
+        # The host check judges that same target: a UTF-8 Location off the image host is refused and named as such.
+        web = FakeWeb({NEW_P0: (302, b"", {"Location": as_received("https://attacker.example/曲绘.png")})})
+        with self.assertRaisesRegex(ValueError, "expected hosts.*: https://attacker.example/%E6%9B%B2%E7%BB%98.png$"):
+            self.download(web)
+        self.assertEqual(web.requested, [NEW_P0])
+
+    def test_redirect_targets_are_the_ones_the_archive_fetcher_and_requests_follow(self):
+        for location in (
+            "/img-original/中文.png",
+            "img/Ünïcode name.png",
+            "https://i.pximg.net/%E4%B8%AD 文.png",
+            "//i.pximg.net/1_p0.png",
+            "../../x/100%25 (b).png",
+            "%2e%2e/x.png",
+            "https://attacker.example\\@i.pximg.net/",
+            "?query=é#fragment",
+            "/%zz/",
+        ):
+            with self.subTest(location=location):
+                redirect = response(NEW_P0, 302, headers={"Location": as_received(location)})
+                expected = urljoin(NEW_P0, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
+                self.assertEqual(artists.redirect_target(redirect), expected)
+                self.assertEqual(artists.redirect_target(redirect), archives.redirect_target(redirect))
+
+    def test_a_location_that_is_not_utf8_is_refused_without_a_retry(self):
+        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
+        location = "/img-original/Caf\xe9.png"
+        web = FakeWeb({NEW_P0: (302, b"", {"Location": location}), urljoin(NEW_P0, location): png("red")})
+        with patch.object(artists.time, "sleep") as sleep, self.assertRaisesRegex(ValueError, "Location is not UTF-8"):
+            self.download(web)
+        self.assertEqual(web.requested, [NEW_P0])
+        sleep.assert_not_called()
+
+
 class RetryStatusTests(unittest.TestCase):
     """The real HTTPAdapter/Retry stack against a loopback server: the final 429/5xx must reach the caller."""
 
