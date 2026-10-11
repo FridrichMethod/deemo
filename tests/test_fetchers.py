@@ -673,6 +673,37 @@ class TumblrRefetchTests(ArtistRunTests):
         self.assertEqual(self.run_main(web), 0)
         self.assertEqual(self.manifest()[0], reverted)
 
+    def test_a_removed_record_with_the_same_url_never_stands_in_for_the_canonical_one(self):
+        def api(*urls):
+            post = {
+                "id": TUMBLR_POST,
+                "url-with-slug": f"https://wublaze.tumblr.com/post/{TUMBLR_POST}/x",
+                "photos": [{"photo-url-1280": url} for url in urls],
+            }
+            return "var tumblr_api_read = " + json.dumps({"posts": [post]}) + ";"
+
+        first, second = TUMBLR_IMAGE, TUMBLR_IMAGE.replace("_1280.", "_b_1280.")
+        web = FakeWeb({artists.TUMBLR_API: api(first, second), first: png("red"), second: png("green")})
+        self.assertEqual(self.run_main(web), 0)
+        # The first photo is deleted: page 1 now has the second photo's URL, and page 2's record stays as removed
+        # with that same URL. The second photo is then re-uploaded as blue under its URL.
+        web.routes[artists.TUMBLR_API] = api(second)
+        self.assertEqual(self.run_main(web), 0)
+        web.routes[second] = png("blue")
+        self.assertEqual(self.run_main(web, "--refresh"), 0)
+        refreshed, assets = self.manifest()
+        canonical, removed = f"artists:tumblr:{TUMBLR_POST}:p0", f"artists:tumblr:{TUMBLR_POST}:p1"
+        self.assertEqual(
+            (assets[canonical]["sha256"], assets[removed]["upstream_status"]), (sha(png("blue")), "removed")
+        )
+        self.assertEqual(assets[removed]["download_url"], second)
+
+        # A plain rerun against the same upstream reuses the canonical record's bytes, not the removed record's.
+        web.requested.clear()
+        self.assertEqual(self.run_main(web), 0)
+        self.assertNotIn(second, web.requested)
+        self.assertEqual(self.manifest()[0], refreshed)
+
 
 JIMDO_HTML = '<a data-href="{lightbox}"><img alt="{caption}" data-orig-width="{w}" data-orig-height="{h}"></a>'
 LIGHTBOX = "https://image.jimcdn.com/app/cms/image/transf/dimension=2048x2048:format=png/path/s1/image/{key}/version/1/image.png"

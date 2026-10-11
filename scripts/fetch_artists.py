@@ -649,7 +649,13 @@ def main():
     previous = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
     # Superseded versions stay in the manifest but are no longer the cached copy of their URL.
     current = [asset for asset in previous.get("assets", []) if asset.get("upstream_status") != "superseded"]
-    cache = {asset["download_url"]: asset for asset in current}
+    # A removed or fetch_failed record can keep a URL that a current record now has (a Tumblr photoset loses an
+    # earlier photo), so the current record's bytes win: it is inserted last. The sort is stable, so id order is
+    # kept within each group.
+    cache = {
+        asset["download_url"]: asset
+        for asset in sorted(current, key=lambda asset: asset.get("upstream_status") is None)
+    }
     manifest = {
         "schema_version": 1,
         "fetched_at": now(),
