@@ -134,6 +134,9 @@ def download(sid, key, title, page, url, kind, hosts, **extra):
             with Image.open(io.BytesIO(blob)) as im:
                 width, height, fmt = im.width, im.height, im.format
                 im.verify()
+            # verify() reads little beyond the header of a JPEG or GIF; decoding the whole image rejects a truncated one.
+            with Image.open(io.BytesIO(blob)) as im:
+                im.load()
             ext = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp", "GIF": ".gif"}.get(fmt)
             if not ext:
                 raise ValueError(f"Unsupported original format: {fmt}")
@@ -373,6 +376,24 @@ def tumblr_cleaned():
     record["notes"] = cleaned_note(len(posts), downloaded)
 
 
+def unique_official_images(sid, urls):
+    """The image URLs whose file stem, the key of their asset id, no other URL shares, sorted by stem.
+
+    Two URLs with one stem (a desktop and a mobile copy) would be one asset id: neither is downloaded, and each is
+    recorded as a failure of that id, so its archived record is kept as fetch_failed and the run exits non-zero."""
+    by_key = {}
+    for url in sorted(urls):
+        by_key.setdefault(Path(urlparse(url).path).stem, []).append(url)
+    unique = []
+    for key, same in sorted(by_key.items()):
+        if len(same) == 1:
+            unique.extend(same)
+            continue
+        for url in same:
+            failure(sid, url, f"Duplicate image name {key}: {', '.join(same)}", asset_id=f"archives:{sid}:{key}")
+    return unique
+
+
 def official():
     sid, page = "official-deemo", "https://deemo.com/"
     source(
@@ -391,6 +412,7 @@ def official():
             for img in soup.find_all("img", src=True)
             if Path(urlparse(img["src"]).path).name in names
         }
+        images = unique_official_images(sid, images)
         pool(
             lambda url: download(
                 sid,
@@ -557,12 +579,32 @@ CATALOG_ENTRIES = [
 ]
 
 
+def reach(url):
+    """The final response of url, following at most MAX_REDIRECTS redirects that stay on https within its own site
+    (its hostname without a leading "www.", or a subdomain of it), and the Location of the first redirect that would
+    leave it (not requested), or None. Only the status line and headers are read: the body is never downloaded."""
+    site = ((urlsplit(url).hostname or "").rstrip(".").removeprefix("www."),)
+    for _ in range(MAX_REDIRECTS + 1):
+        r = session().get(url, timeout=(12, 35), allow_redirects=False, stream=True)
+        r.close()
+        if not r.is_redirect:
+            return r, None
+        location = urljoin(r.url, r.headers["location"])
+        if not host_allowed(location, site):
+            return r, location
+        url = location
+    raise requests.TooManyRedirects(f"Too many redirects: {url}")
+
+
 def check_entry(entry):
     sid, name, url, status, notes = entry
     row = source(sid, name, url, status, notes)
     try:
-        r = session().get(url, timeout=(12, 35))
+        r, off_site = reach(url)
         row.update(http_status=r.status_code, resolved_url=r.url, checked_at=STAMP)
+        if off_site is not None:
+            row.update(access_status="redirected_off_site", redirect_location=off_site)
+            return row
         if r.status_code >= 400:
             row["access_status"] = "blocked" if r.status_code in (401, 403, 429) else "http_error"
         else:
@@ -759,6 +801,8 @@ def verify():
                     asset["format"],
                 ), asset["path"]
                 image.verify()
+            with Image.open(io.BytesIO(blob)) as image:
+                image.load()  # raises on an image that does not decode completely
     for asset in manifest["assets"]:
         assert asset.get("superseded_by", asset["id"]) in ids, asset["id"]
     print(f"Verified {len(ids)} assets; checksums, bytes, dimensions, formats, IDs and source references valid.")

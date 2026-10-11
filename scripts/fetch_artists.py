@@ -8,23 +8,22 @@ Images retain their downloaded bytes; Pillow only validates and reads metadata.
 from __future__ import annotations
 
 import argparse
+import json
+import os
+import re
+import threading
+import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from hashlib import sha256
 from io import BytesIO
-import json
-import os
 from pathlib import Path
-import re
-import threading
-import time
 from urllib.parse import urljoin, urlsplit
 
+import requests
 from bs4 import BeautifulSoup
 from PIL import Image
-import requests
-
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = "data/sources/artists.json"
@@ -332,73 +331,93 @@ def collect_jimdo(manifest, jobs, previous_assets=()):
         record_failure(manifest, source_id, JIMDO_URL, error)
 
 
+def fail_tumblr_post(manifest, post_id, error):
+    """File error under a known post's own source, so its archived records are kept as fetch_failed."""
+    source_id = f"artists:tumblr:{post_id}"
+    manifest["sources"].append(
+        {
+            "id": source_id,
+            "name": TUMBLR_POSTS[post_id],
+            "url": f"https://wublaze.tumblr.com/post/{post_id}",
+            "status": "failed",
+        }
+    )
+    record_failure(manifest, source_id, TUMBLR_API, error)
+
+
+def tumblr_post(post, post_id):
+    """The source row, the download jobs and the indices of the photos with no public large image URL of one known
+    post from the legacy API. Raises (KeyError, AttributeError, ...) when the post is not shaped as expected."""
+    source_id = f"artists:tumblr:{post_id}"
+    collection = TUMBLR_POSTS[post_id]
+    page = post["url-with-slug"]
+    source = {
+        "id": source_id,
+        "name": collection,
+        "url": page,
+        "artist": "Blaze Wu",
+        "platform": "Tumblr",
+        "status": "discovered",
+        "access": "public_without_login",
+        "metadata_url": TUMBLR_API,
+        "published_at": post.get("date-gmt"),
+        "description": text_content(post.get("photo-caption")),
+        "notes": "Largest image URL advertised by Tumblr's public legacy API; may be a platform-sized upload.",
+    }
+    found, unlisted = [], []
+    photos = post.get("photos") or [post]
+    for index, photo in enumerate(photos):
+        original = photo.get("photo-url-1280")
+        if not original:
+            unlisted.append(index)
+            continue
+        kind = "contact_sheet" if post_id != "129276170315" else ("collection_cover" if index == 5 else "song_art")
+        found.append(
+            {
+                "id": f"{source_id}:p{index}",
+                "source_id": source_id,
+                "artist": "Blaze Wu",
+                "directory": "blaze-wu",
+                "stem": f"tumblr-{post_id}-p{index:02d}",
+                "title": f"{collection} — page {index + 1}",
+                "collection": collection,
+                "kind": kind,
+                "page_url": page,
+                "download_url": original,
+                "source_page_index": index,
+                "published_at": post.get("date-gmt"),
+                "song_titles": [],
+                "mapping_status": "unmapped",
+                "quality": "artist_public_platform_image",
+            }
+        )
+    return source, found, unlisted
+
+
 def collect_tumblr(manifest, jobs):
     try:
         response = request(TUMBLR_API).text
         data = json.loads(response.split("=", 1)[1].strip().rstrip(";"))
+        posts = [post for post in data["posts"] if str(post.get("id")) in TUMBLR_POSTS]
     except Exception as error:
         # Attribute the failure to every known post, so their archived records are kept as fetch_failed.
-        for post_id, collection in sorted(TUMBLR_POSTS.items()):
-            source_id = f"artists:tumblr:{post_id}"
-            manifest["sources"].append(
-                {
-                    "id": source_id,
-                    "name": collection,
-                    "url": f"https://wublaze.tumblr.com/post/{post_id}",
-                    "status": "failed",
-                }
-            )
-            record_failure(manifest, source_id, TUMBLR_API, error)
+        for post_id in sorted(TUMBLR_POSTS):
+            fail_tumblr_post(manifest, post_id, error)
         return
     seen = set()
-    for post in data["posts"]:
+    for post in posts:
         post_id = str(post["id"])
-        if post_id not in TUMBLR_POSTS:
-            continue
         seen.add(post_id)
-        source_id = f"artists:tumblr:{post_id}"
-        collection = TUMBLR_POSTS[post_id]
-        page = post["url-with-slug"]
-        source = {
-            "id": source_id,
-            "name": collection,
-            "url": page,
-            "artist": "Blaze Wu",
-            "platform": "Tumblr",
-            "status": "discovered",
-            "access": "public_without_login",
-            "metadata_url": TUMBLR_API,
-            "published_at": post.get("date-gmt"),
-            "description": text_content(post.get("photo-caption")),
-            "notes": "Largest image URL advertised by Tumblr's public legacy API; may be a platform-sized upload.",
-        }
+        try:
+            source, found, unlisted = tumblr_post(post, post_id)
+        except Exception as error:
+            # A known post shaped unlike the API's usual output fails on its own; the other sources still run.
+            fail_tumblr_post(manifest, post_id, error)
+            continue
         manifest["sources"].append(source)
-        photos = post.get("photos") or [post]
-        for index, photo in enumerate(photos):
-            original = photo.get("photo-url-1280")
-            if not original:
-                record_failure(manifest, source_id, page, "No public large image URL", source_page_index=index)
-                continue
-            kind = "contact_sheet" if post_id != "129276170315" else ("collection_cover" if index == 5 else "song_art")
-            jobs.append(
-                {
-                    "id": f"{source_id}:p{index}",
-                    "source_id": source_id,
-                    "artist": "Blaze Wu",
-                    "directory": "blaze-wu",
-                    "stem": f"tumblr-{post_id}-p{index:02d}",
-                    "title": f"{collection} — page {index + 1}",
-                    "collection": collection,
-                    "kind": kind,
-                    "page_url": page,
-                    "download_url": original,
-                    "source_page_index": index,
-                    "published_at": post.get("date-gmt"),
-                    "song_titles": [],
-                    "mapping_status": "unmapped",
-                    "quality": "artist_public_platform_image",
-                }
-            )
+        jobs.extend(found)
+        for index in unlisted:
+            record_failure(manifest, source["id"], source["url"], "No public large image URL", source_page_index=index)
     for missing in sorted(TUMBLR_POSTS.keys() - seen):
         source_id = f"artists:tumblr:{missing}"
         page = f"https://wublaze.tumblr.com/post/{missing}"
@@ -475,7 +494,11 @@ def write_json(path, data):
     replace_file(path, (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
 
 
-def save_asset(job, data, fetched_at, hashes):
+def save_asset(job, data, fetched_at, hashes, copies=None):
+    """The record of job's verified image bytes, stored once per SHA-256.
+
+    hashes maps SHA-256 -> (path, id) of each primary, the record that owns the file of those bytes; copies maps the
+    SHA-256 of bytes no primary holds to an archived file that still holds them (archived_copies)."""
     with Image.open(BytesIO(data)) as img:
         width, height, fmt, mode = img.width, img.height, img.format, img.mode
         img.verify()
@@ -492,7 +515,11 @@ def save_asset(job, data, fetched_at, hashes):
         duplicate_of = None if primary == job["id"] else primary
     else:
         beside = f"assets/public/artists/{job['directory']}/{job['stem']}-{digest[:12]}{extension}"
-        if (ROOT / relative).exists():
+        if digest in (copies or {}):
+            # Only a superseded version (or a duplicate) still holds these bytes: this record owns that file now,
+            # rather than writing a second copy.
+            relative = copies[digest]
+        elif (ROOT / relative).exists():
             # Upstream bytes changed: keep the archived file and store the new version beside it.
             if not holds(ROOT / relative, digest):
                 relative = beside
@@ -535,20 +562,37 @@ def archived_primaries(previous):
     return primaries
 
 
+def archived_copies(previous):
+    """SHA-256 -> path of the previous manifest's superseded versions and duplicates whose file still holds those
+    bytes, the first by id for each: archived_primaries leaves them out, but their files are archived too."""
+    copies = {}
+    for row in sorted(previous, key=lambda row: row["id"]):
+        primary = row.get("upstream_status") != "superseded" and not row.get("duplicate_of")
+        if primary or row["sha256"] in copies:
+            continue
+        if holds(ROOT / row["path"], row["sha256"]):
+            copies[row["sha256"]] = row["path"]
+    return copies
+
+
 def fetch_all(manifest, jobs, cache, refresh, workers, previous=()):
     """Download in parallel but save in asset-id order, so the SHA-256 dedup primary is deterministic.
 
     Bytes already archived keep their record and file as the primary (previous: the last manifest's records), so a
     new upstream image with the same bytes becomes a duplicate of that record instead of a second copy, whatever its
     id. If that primary itself now has other bytes, the first record of this run that still has these bytes stands
-    in as their primary, on the archived file, so duplicate_of always names a record with the same bytes."""
+    in as their primary, on the archived file, so duplicate_of always names a record with the same bytes. Bytes that
+    only a superseded version (or a duplicate) still holds keep that file too: the first record of this run with them
+    owns it, so an identical new upload never writes a second copy."""
     hashes = archived_primaries(previous)
+    copies = archived_copies(previous)
     ordered = sorted(jobs, key=lambda job: job["id"])
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(download, job, cache, refresh) for job in ordered]
-        for job, future in zip(ordered, futures):
+        # strict: futures is built from ordered one job at a time, so the lengths are always equal.
+        for job, future in zip(ordered, futures, strict=True):
             try:
-                result = save_asset(*future.result(), hashes)
+                result = save_asset(*future.result(), hashes, copies)
                 manifest["assets"].append(result)
                 print(f"Saved {result['id']} {result['width']}x{result['height']}", flush=True)
             except Exception as error:
@@ -578,6 +622,66 @@ def require_unique(jobs):
             raise SystemExit(f"Duplicate {label}: {', '.join(duplicates)}")
 
 
+def relink_duplicates(rows):
+    """The rows with every duplicate_of naming a record that has the same bytes and file and is no duplicate itself.
+
+    carry_forward keeps previous rows as they were, so a removed, fetch_failed or superseded row can still name a
+    record whose bytes have changed since. Such a stale link is moved to the record that owns those bytes and that
+    file: the first current record by id, else a current row whose link is stale (it then owns the file itself), else
+    the first superseded version, else the row itself. A current record owns before a superseded version because
+    only current records are dedup primaries (archived_primaries). Rows with a sound link are returned unchanged."""
+    by_id = {row["id"]: row for row in rows}
+
+    def sound(row):
+        target = by_id.get(row["duplicate_of"])
+        return (
+            target is not None
+            and "duplicate_of" not in target
+            and (target["sha256"], target["path"]) == (row["sha256"], row["path"])
+        )
+
+    stale = {row["id"] for row in rows if "duplicate_of" in row and not sound(row)}
+    owners = {}
+    for row in sorted(
+        rows, key=lambda row: (row.get("upstream_status") == "superseded", row["id"] in stale, row["id"])
+    ):
+        if "duplicate_of" not in row or row["id"] in stale:
+            owners.setdefault((row["sha256"], row["path"]), row["id"])
+    relinked = []
+    for row in rows:
+        owner = owners.get((row["sha256"], row["path"])) if row["id"] in stale else None
+        if owner is None:
+            relinked.append(row)
+        elif owner == row["id"]:
+            relinked.append({key: value for key, value in row.items() if key != "duplicate_of"})
+        else:
+            relinked.append({**row, "duplicate_of": owner})
+    return relinked
+
+
+def reinstate_orphaned_versions(records, dropped, failed_assets, failed_sources):
+    """records (id -> row) with no superseded version naming a canonical id that is not among them.
+
+    Such a version's canonical record was dropped and this run did not reproduce its id, so the newest version of it
+    (by fetched_at, then id) becomes the record with that id again, its superseded_by removed, and with the
+    upstream_status carry_forward gives a record it keeps: "fetch_failed" when the id or its source failed this run
+    (unless the dropped record was already "removed"), else "removed". Any older versions then name it again."""
+    orphans = {}
+    for row in sorted(records.values(), key=lambda row: (row.get("fetched_at", ""), row["id"])):
+        if row.get("upstream_status") == "superseded" and row.get("superseded_by") not in records:
+            orphans[row["superseded_by"]] = row
+    result = dict(records)
+    for canonical, version in sorted(orphans.items()):
+        lost = dropped.get(canonical, {})
+        failed = canonical in failed_assets or version["source_id"] in failed_sources
+        status = "fetch_failed" if failed and lost.get("upstream_status") != "removed" else "removed"
+        del result[version["id"]]
+        kept = {key: value for key, value in version.items() if key != "superseded_by"}
+        result[canonical] = {**kept, "id": canonical, "upstream_status": status}
+        print(f"Reinstated {version['id']} as {canonical}: its canonical record was dropped", flush=True)
+    return result
+
+
 def carry_forward(previous, manifest):
     """Merge the previous manifest into this run's result so no verified record is dropped.
 
@@ -588,15 +692,21 @@ def carry_forward(previous, manifest):
     naming the canonical id. When upstream reverts to an earlier version, the canonical record holds
     those bytes and that file again, so the superseded copy of it is not kept twice. Files are never
     deleted; sources of kept records are kept too. The one record dropped is one whose file was
-    missing, so that this run stored other bytes at its path: its bytes are gone.
+    missing, so that this run stored other bytes at its path: its bytes are gone. Deduplicated
+    records share a file, so a dropped record can be the canonical record of a superseded version
+    whose file is intact: that version then takes the canonical id (reinstate_orphaned_versions).
+    A kept row whose duplicate_of names a record that now holds other bytes is relinked
+    (relink_duplicates).
     """
     records = {row["id"]: row for row in manifest["assets"]}
     held = {row["path"]: row["sha256"] for row in manifest["assets"]}
     failed_assets = {row["asset_id"] for row in manifest["failures"] if row.get("asset_id")}
     failed_sources = {row["source_id"] for row in manifest["failures"]}
+    dropped = {}
     for old in previous.get("assets", []):
         if held.get(old["path"], old["sha256"]) != old["sha256"]:
             print(f"Dropped {old['id']}: its file {old['path']} was missing and now holds other bytes", flush=True)
+            dropped[old["id"]] = old
             continue
         new = records.get(old["id"])
         if new is not None:
@@ -615,6 +725,7 @@ def carry_forward(previous, manifest):
             records[old["id"]] = {**old, "upstream_status": status}
         else:
             records[old["id"]] = {**old, "upstream_status": "removed"}
+    records = reinstate_orphaned_versions(records, dropped, failed_assets, failed_sources)
 
     def restored(row):
         canonical = records.get(row.get("superseded_by"))
@@ -624,7 +735,7 @@ def carry_forward(previous, manifest):
             and (canonical["sha256"], canonical["path"]) == (row["sha256"], row["path"])
         )
 
-    manifest["assets"] = [row for row in records.values() if not restored(row)]
+    manifest["assets"] = relink_duplicates([row for row in records.values() if not restored(row)])
     missing = {row["source_id"] for row in manifest["assets"]} - {row["id"] for row in manifest["sources"]}
     manifest["sources"].extend(row for row in previous.get("sources", []) if row["id"] in missing)
 
@@ -649,7 +760,13 @@ def main():
     previous = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
     # Superseded versions stay in the manifest but are no longer the cached copy of their URL.
     current = [asset for asset in previous.get("assets", []) if asset.get("upstream_status") != "superseded"]
-    cache = {asset["download_url"]: asset for asset in current}
+    # A removed or fetch_failed record can keep a URL that a current record now has (a Tumblr photoset loses an
+    # earlier photo), so the current record's bytes win: it is inserted last. The sort is stable, so id order is
+    # kept within each group.
+    cache = {
+        asset["download_url"]: asset
+        for asset in sorted(current, key=lambda asset: asset.get("upstream_status") is None)
+    }
     manifest = {
         "schema_version": 1,
         "fetched_at": now(),
@@ -666,7 +783,7 @@ def main():
     collect_reference(manifest)
     keep_source_details(previous, manifest)
     require_unique(jobs)
-    hashes = fetch_all(manifest, jobs, cache, args.refresh, args.workers, current)
+    hashes = fetch_all(manifest, jobs, cache, args.refresh, args.workers, previous.get("assets", []))
     successes = Counter(asset["source_id"] for asset in manifest["assets"])
     failures = Counter(failure["source_id"] for failure in manifest["failures"])
     for source in manifest["sources"]:
