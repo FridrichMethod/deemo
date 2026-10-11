@@ -589,6 +589,32 @@ class RetryTests(FetcherRun):
         self.assertEqual((len(self.web.calls), self.sleeps), (1, []))
 
 
+class DownloadIntegrityTests(FetcherRun):
+    """The checks download() makes before it archives bytes, and --resume makes before it reuses a local file."""
+
+    def files(self):
+        return sorted(
+            path.relative_to(self.root).as_posix() for path in self.root.rglob("assets/**/*") if path.is_file()
+        )
+
+    def test_a_smaller_rendition_than_the_wiki_publishes_is_refused(self):
+        # A CDN that serves a downscaled rendition (a thumbnail, a negotiated WebP) must not be archived as the file:
+        # the record would claim a full-size file that matches the published dimensions.
+        offered = self.offer("Art.png", png("red", 32, 24))
+        smaller = {**offered, "info": {**offered["info"], "width": 64, "height": 48}}
+        with self.assertRaisesRegex(ValueError, r"Unexpected dimensions: \(32, 24\) != \(64, 48\)"):
+            fetch.download(smaller, {})
+        self.assertEqual(self.files(), [])
+        # In a run, the title is a failure and the verified record of the previous upload is carried forward.
+        first = self.resume(self.offer("Art.png", png("red")))["assets"][0]
+        reupload = self.offer("Art.png", png("green", 32, 24))
+        manifest = self.resume({**reupload, "info": {**reupload["info"], "width": 64, "height": 48}})
+        self.assertEqual(manifest["assets"], [{**first, "upstream_status": "fetch_failed"}])
+        self.assertEqual([failure["title"] for failure in manifest["failures"]], ["文件:Art.png"])
+        self.assertIn("Unexpected dimensions", manifest["failures"][0]["error"])
+        self.assertEqual(self.files(), [first["path"]])
+
+
 class DeliveryNoteTests(FetcherRun):
     OLD_NOTE = (
         "Public full-size CDN PNG delivery fallback used after original endpoints failed; may be CDN-reencoded. "
