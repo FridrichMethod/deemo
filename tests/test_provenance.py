@@ -225,17 +225,19 @@ class ComposerJoinTests(unittest.TestCase):
 
 
 class FakeWeb:
-    """Stands in for requests.get: a known URL serves its bytes, any other behaves as if the network were down."""
+    """Stands in for requests.get: a known URL serves its bytes, any other behaves as if the network were down. The
+    response can be streamed, as image downloads are (allow_redirects=False, stream=True)."""
 
     def __init__(self):
         self.routes, self.calls = {}, []
 
-    def __call__(self, url, params=None, headers=None, timeout=None):
+    def __call__(self, url, params=None, headers=None, timeout=None, **options):
         self.calls.append(url)
         if url not in self.routes:
             raise requests.ConnectionError(f"offline: {url}")
         response = requests.Response()
         response.status_code, response._content, response.url = 200, self.routes[url], url
+        response.raw = io.BytesIO(self.routes[url])
         response.headers["Content-Type"] = "image/png"
         return response
 
@@ -268,8 +270,8 @@ class ComposerRecordTests(unittest.TestCase):
         )
 
     def offer(self, name, payload, **extra):
-        """A BWIKI song-art candidate for the file name whose download URL serves payload."""
-        url = f"https://images.example.test/{hashlib.sha1(payload).hexdigest()}/{name}"
+        """A BWIKI song-art candidate for the file name whose download URL, under BWIKI's image path, serves payload."""
+        url = f"https://patchwiki.biligame.com/images/deemo/{hashlib.sha1(payload).hexdigest()}/{name}"
         self.web.routes[url] = payload
         with Image.open(io.BytesIO(payload)) as image:
             width, height = image.size
@@ -358,7 +360,11 @@ class ComposerRecordTests(unittest.TestCase):
         first = self.resume(art)["assets"][0]
         unreachable = {
             **art,
-            "info": {**art["info"], "sha1": "e" * 40, "url": "https://images.example.test/gone/Altale.png"},
+            "info": {
+                **art["info"],
+                "sha1": "e" * 40,
+                "url": "https://patchwiki.biligame.com/images/deemo/gone/Altale.png",
+            },
         }
         failed = self.resume(unreachable)["assets"]
         reupload = self.offer(

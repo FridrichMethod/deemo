@@ -39,7 +39,8 @@ SOURCE_LABELS = {"fandom": "Fandom", "bwiki": "BWIKI"}
 SOURCE_HOSTS = {"fandom": "deemo.fandom.com", "bwiki": "wiki.biligame.com"}
 # Where each wiki serves its image files. fetch_wikis.py --resume downloads every candidate's info.url, and the snapshot
 # is produced by a job that installs and runs third-party code, so a proposed snapshot must keep to these. The path
-# prefix matters as much as the host: each CDN serves every wiki of its farm.
+# prefix matters as much as the host: each CDN serves every wiki of its farm. fetch_wikis.py loads this table and
+# download_url_allowed() to check every download URL and redirect target, one definition for both.
 DOWNLOAD_LOCATIONS = {
     "fandom": ("static.wikia.nocookie.net", "/deemo/images/"),
     "bwiki": ("patchwiki.biligame.com", "/images/deemo/"),
