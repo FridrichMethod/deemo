@@ -206,7 +206,9 @@ def build(root: Path, prune: bool = False, rebuild: bool = False, workers: int |
         else:
             pending.append((sha256, original))
     with ThreadPoolExecutor(workers_for(workers)) as pool:
-        for (sha256, _), (data, (width, height)) in zip(pending, pool.map(lambda item: render(root, item[1]), pending)):
+        # pool.map gives exactly one rendering per pending item, in order.
+        rendered = pool.map(lambda item: render(root, item[1]), pending)
+        for (sha256, _), (data, (width, height)) in zip(pending, rendered, strict=True):
             write_atomic(root / thumb_path(sha256), data)
             entries[sha256] = {
                 "path": thumb_path(sha256),
@@ -316,10 +318,11 @@ def problems(root: Path, reencode: bool = False, workers: int | None = None) -> 
     )
     if reencode:
         with ThreadPoolExecutor(workers_for(workers)) as pool:
+            # pool.map gives exactly one re-encoding per intact preview, in order.
             rendered = pool.map(lambda item: render(root, item[0])[0], intact)
             found.extend(
                 f"Re-encoding {original['path']} does not reproduce {path}"
-                for (original, path, data), fresh in zip(intact, rendered)
+                for (original, path, data), fresh in zip(intact, rendered, strict=True)
                 if fresh != data
             )
     return found

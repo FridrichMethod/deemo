@@ -7,8 +7,8 @@ pre-migration commit and refuses any changed file contents.
 import argparse
 import hashlib
 import json
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_COMMIT = "193055eb9df7f8aa1197d413810f59b6bf4eb9a4"

@@ -508,7 +508,8 @@ def render_slideshow(root: Path, catalog: dict) -> str:
     with ThreadPoolExecutor() as pool:
         layouts = list(pool.map(lambda asset: art_layout(root, asset), assets))
     slides = []
-    for asset, layout in zip(assets, layouts):
+    # pool.map gives exactly one layout per asset, in order.
+    for asset, layout in zip(assets, layouts, strict=True):
         fields = {
             "class": "deemo-draw",
             "data-src": asset["url"],
