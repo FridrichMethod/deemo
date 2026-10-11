@@ -636,6 +636,33 @@ class ArtistsTests(TempRoot):
                 )
                 self.assertEqual({a["path"] for a in result}, self.archived_files())
 
+    def test_a_new_upload_of_bytes_kept_only_as_a_superseded_version_reuses_its_file(self):
+        p00, red, blue = "assets/public/artists/snowegg/pixiv-1-p00.png", png("red"), png("blue")
+        p1_url = NEW_P0.replace("_p0", "_p1")
+        web = FakeWeb({**pixiv_routes([OLD_P0]), OLD_P0: red, NEW_P0: blue, p1_url: red})
+        self.assertEqual(self.run_main(web), 0)
+        # Page 1 is re-uploaded as blue, so red stays only as p0's superseded version; then red is added as page 2.
+        web.routes.update(pixiv_routes([NEW_P0]))
+        self.assertEqual(self.run_main(web), 0)
+        web.routes.update(pixiv_routes([NEW_P0, p1_url]))
+        self.assertEqual(self.run_main(web), 0)
+        added = self.read_manifest("artists")
+        assets = {asset["id"]: asset for asset in added["assets"]}
+        self.assertEqual(
+            {asset["id"]: asset["path"] for asset in assets.values() if asset["sha256"] == sha(red)},
+            {f"artists:pixiv:1:p0:{sha(red)[:12]}": p00, "artists:pixiv:1:p1": p00},
+        )
+        self.assertNotIn("duplicate_of", assets["artists:pixiv:1:p1"])
+        self.assertEqual(
+            self.archived_files(), {p00, f"assets/public/artists/snowegg/pixiv-1-p00-{sha(blue)[:12]}.png"}
+        )
+        self.assertEqual(catalog_problems(self.root, added["assets"]), [])
+        # A rerun against the same upstream leaves the manifest unchanged.
+        self.assertEqual(self.run_main(web), 0)
+        rerun = self.read_manifest("artists")
+        added.pop("fetched_at"), rerun.pop("fetched_at")
+        self.assertEqual(rerun, added)
+
     def test_download_refuses_other_hosts_and_redirects(self):
         job = {"id": "artists:pixiv:1:p0", "source_id": "artists:pixiv:1", "page_url": PAGE_URL}
         # urllib3 reads the backslash as the start of the path, so the second URL goes to 169.254.169.254.
