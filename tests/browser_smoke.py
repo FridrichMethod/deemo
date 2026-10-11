@@ -690,8 +690,10 @@ def check_inventory_table(browser):
 
 
 def check_without_javascript(browser):
-    """With JavaScript off, a phone's first screen explains it, in both languages, and no status line claims that the
-    catalog is loading."""
+    """With JavaScript off, a phone's first screen explains it, in both languages, on both pages. On the archive no
+    status line claims that the catalog is loading. The slideshow, whose view stays transparent and loads no slide,
+    links the archive once in each language, and each link takes the tap: the transparent view is a fixed full-screen
+    box, and Playwright clicks only an element that is the hit target at its centre."""
     page = new_page(browser, 375, 667, java_script_enabled=False)
     navigate(page, "archive.html")
     notice = page.locator(".noscript")
@@ -700,8 +702,26 @@ def check_without_javascript(browser):
     )
     assert "JavaScript" in notice.inner_text() and "需要 JavaScript" in notice.inner_text()
     assert not page.locator("#count").is_visible() and not page.get_by_text("Loading local catalog").is_visible()
+    for index, lang in enumerate(("en", "zh-CN")):
+        navigate(page, "index.html")
+        notice = page.locator(".noscript")
+        box = notice.bounding_box()
+        assert notice.is_visible() and box["y"] >= 0 and box["y"] + box["height"] <= 667, box
+        assert "requires JavaScript" in notice.inner_text() and "需要 JavaScript" in notice.inner_text()
+        links = notice.locator("a")
+        assert links.evaluate_all(
+            "(links) => links.map((link) => [link.closest('[lang]').lang, link.getAttribute('href')])"
+        ) == [["en", "archive.html"], ["zh-CN", "archive.html"]], links.evaluate_all("(links) => links.map(String)")
+        # The click leaves the page, cutting short what it still loads.
+        monitor.leave(page)
+        links.nth(index).click(timeout=5000)
+        page.wait_for_url(mounted_url("archive.html"))
+        assert page.locator(".noscript").is_visible(), lang
     finish(page)
-    checks.append("without JavaScript the notice is on a phone's first screen and nothing claims to load")
+    checks.append(
+        "without JavaScript the archive's and the slideshow's notices are on a phone's first screen, nothing claims "
+        "to load, and the slideshow's links open the archive in both languages"
+    )
 
 
 def check_viewer_provenance(browser):
