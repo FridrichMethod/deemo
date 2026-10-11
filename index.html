@@ -65,6 +65,9 @@ https://github.com/FridrichMethod/deemo
 </head>
 
 <body>
+    <!-- Without JavaScript the view below stays transparent and no slide gets its image, so this notice, outside the
+         view and above it (see .noscript in src/slideshow.css), says why and leads to the archive's own notice. -->
+    <noscript><p class="noscript">The slideshow requires JavaScript. Without it, the <a href="archive.html">Artwork Archive</a> links the list of every file, with its path and source, and the files themselves on GitHub. <span lang="zh-CN">幻灯片需要 JavaScript。未启用 JavaScript 时，<a href="archive.html">曲绘档案</a>页面提供列有每个文件路径和来源的清单，以及 GitHub 上文件本身的链接。</span></p></noscript>
     <main class="deemo-view">
         <div class="slideshow-container">
                     <div class="mySlides fade"><img class="deemo-draw" data-src="assets/public/artists/kolokolsan/berlin-station-chief.png" data-id="artists:jimdo:kolokolsan:berlin-station-chief" data-title="Berlin Station Chief" data-source="ころころさん / 鳩紫ぽっぽ — 仕事の制作物" data-source-id="artists:jimdo:kolokolsan" data-page="https://kolokolsan.jimdofree.com/仕事の制作物/" data-size="3030 × 3030" data-kind="song_art" data-songs="Berlin Station Chief" data-artist="ころころさん / 鳩紫ぽっぽ" alt="Berlin Station Chief"></div>
@@ -1650,8 +1653,13 @@ https://github.com/FridrichMethod/deemo
             if (!target) return;
             document.getElementById("asset-title").textContent = target.dataset.title;
             document.getElementById("asset-size").textContent = target.dataset.size;
-            document.getElementById("asset-source").textContent = DEEMO_I18N.sourceName(target.dataset.sourceId, target.dataset.source);
-            document.getElementById("asset-source").href = target.dataset.page;
+            // The catalog build admits only http(s) source pages (scripts/build_catalog.py); like sourceLink() in
+            // src/archive.js, the caption checks again, and any other value leaves the link without an href.
+            var source = document.getElementById("asset-source");
+            var page = webPage(target.dataset.page);
+            source.textContent = DEEMO_I18N.sourceName(target.dataset.sourceId, target.dataset.source);
+            if (page) source.href = page;
+            else source.removeAttribute("href");
             document.getElementById("asset-original").href = target.dataset.src;
             // A community copy (an unofficial repost, edit or scan) is named as such after its source, whose name can
             // read like the official channel's ("Tunes of Rayark — DEEMO"), so it is said even where the notes' eyebrow
@@ -1663,6 +1671,17 @@ https://github.com/FridrichMethod/deemo
                 var label = element("span", null, DEEMO_I18N.t("slideshow.provenance." + token));
                 label.style.whiteSpace = "nowrap";
                 origin.append("\u00a0· ", label);
+            }
+        }
+
+        // An http(s) URL in its absolute form, or "" for anything else: another scheme (javascript:, data:, ...), a
+        // relative URL or no URL at all.
+        function webPage(value) {
+            try {
+                var url = new URL(value);
+                return url.protocol === "http:" || url.protocol === "https:" ? url.href : "";
+            } catch (err) {
+                return "";
             }
         }
 

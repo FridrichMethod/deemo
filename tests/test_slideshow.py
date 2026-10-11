@@ -2,8 +2,9 @@
 languages, a bottom row whose DOM order follows its layout, a screenshot overlay that does not live in the URL,
 slides that crossfade without a keyframe fade and take no hits while hidden, an artist credit that no tier
 drops, arrows kept below the language toggle on short landscape screens, a signature whose box leaves the
-toggle its taps, and the visible attribution link. They read the sources only; real hit-testing, focus,
-keyboard handling and layout need a browser (tests/browser_smoke.py), whose own guards are checked last."""
+toggle its taps, the visible attribution link and the notice shown without JavaScript. They read the sources
+only; real hit-testing, focus, keyboard handling and layout need a browser (tests/browser_smoke.py), whose own
+guards are checked last."""
 
 import json
 import re
@@ -52,6 +53,20 @@ class Node:
     @property
     def classes(self):
         return (self.attrs.get("class") or "").split()
+
+    @property
+    def lang(self):
+        """The language the node's text is in: its own lang attribute or its nearest ancestor's."""
+        node = self
+        while node is not None and "lang" not in node.attrs:
+            node = node.parent
+        return node.attrs["lang"] if node is not None else None
+
+    def inside(self, tag):
+        node = self.parent
+        while node is not None and node.tag != tag:
+            node = node.parent
+        return node is not None
 
     def walk(self):
         yield self
@@ -138,6 +153,20 @@ def px(value):
     return float(match.group(1) or 0) if match else None
 
 
+def function_body(code, name):
+    """The body of the JavaScript function declared as `function name(...)` in code. Braces are counted as they come,
+    which holds for the functions checked here: their strings and regular expressions keep braces balanced."""
+    declaration = re.search(rf"\bfunction {name}\(", code)
+    if declaration is None:
+        raise AssertionError(f"The slideshow's script defines no function {name}")
+    start, depth = code.index("{", declaration.end()), 0
+    for index in range(start, len(code)):
+        depth += {"{": 1, "}": -1}.get(code[index], 0)
+        if not depth:
+            return code[start + 1 : index]
+    raise AssertionError(f"function {name} is not closed")
+
+
 def i18n_attrs(node):
     pairs = (pair.split(":", 1) for pair in (node.attrs.get("data-i18n-attr") or "").split(";") if ":" in pair)
     return {attribute.strip(): key.strip() for attribute, key in pairs}
@@ -193,6 +222,26 @@ class SlideshowTemplateTests(unittest.TestCase):
         for node in self.nodes:
             with self.subTest(tag=node.tag, href=node.attrs.get("href")):
                 self.assertFalse((node.attrs.get("href") or "").strip().lower().startswith("javascript:"))
+
+    def test_the_caption_links_only_web_pages(self):
+        """The caption's Source link takes a slide's data-page as its href only when that is an http(s) URL, as
+        sourceLink() in src/archive.js does: scripts/build_catalog.py already refuses any other source page, and the
+        page checks again. Anything else (javascript:, data:, a relative or broken URL) leaves the link without an
+        href, also after a slide whose link had one. tests/browser_smoke.py turns through such slides."""
+        script = next(
+            code
+            for code in re.findall(r"<script>(.*?)</script>", self.html, re.DOTALL)
+            if "function showCaption(" in code
+        )
+        caption = function_body(script, "showCaption")
+        self.assertEqual(
+            re.findall(r"(\w*\(?)target\.dataset\.page\b", caption), ["webPage("], "data-page goes through webPage()"
+        )
+        self.assertIn('removeAttribute("href")', caption, "A refused URL leaves the link without an href")
+        check = function_body(script, "webPage")
+        self.assertIn("new URL(", check)
+        self.assertEqual(sorted(re.findall(r'\.protocol === "([^"]*)"', check)), ["http:", "https:"])
+        self.assertRegex(check, r'\bcatch \(\w+\) \{\s*return "";')
 
     def test_template_images_have_alt_text(self):
         for node in self.nodes:
@@ -316,11 +365,15 @@ class SlideshowTemplateTests(unittest.TestCase):
         self.assertEqual(links[0].text.strip(), self.messages["en"][key])
 
     def test_the_archive_page_has_one_name(self):
-        """The slideshow's archive button (whose label stays in its tooltip, WCAG 2.5.3), its caption link and the
-        README links call archive.html by the name the page gives itself, in each language. The caption link is that
-        name alone: a longer one wraps onto a line of its own, under the bottom control row of a phone held sideways."""
+        """The slideshow's archive button (whose label stays in its tooltip, WCAG 2.5.3), its caption link, the
+        no-JavaScript notice (once in each language) and the README links call archive.html by the name the page gives
+        itself, in each language. The caption link is that name alone: a longer one wraps onto a line of its own, under
+        the bottom control row of a phone held sideways."""
         archive = json.loads(REGISTER.search((ROOT / "src/i18n/archive.js").read_text(encoding="utf-8")).group(1))
         links = [node for node in self.nodes if node.tag == "a" and node.attrs.get("href") == "archive.html"]
+        # Without JavaScript nothing translates the notice, so it names the page in English and in Chinese.
+        notice = [node for node in links if node.inside("noscript")]
+        links = [node for node in links if not node.inside("noscript")]
         self.assertEqual(
             {node.attrs.get("data-i18n") for node in links}, {"slideshow.archive.text", "slideshow.caption.browse"}
         )
@@ -328,6 +381,10 @@ class SlideshowTemplateTests(unittest.TestCase):
             self.assertEqual(
                 node.text.strip(), self.messages["en"][node.attrs["data-i18n"]], "static text is the English string"
             )
+        self.assertEqual(sorted(node.lang for node in notice), ["en", "zh-CN"], "One notice link in each language")
+        for node in notice:
+            with self.subTest(notice=node.lang):
+                self.assertEqual(node.text.strip(), archive[node.lang]["header.title"].removeprefix("DEEMO 1 "))
         for lang, readme in (("en", "README.md"), ("zh-CN", "README.zh-CN.md")):
             with self.subTest(lang=lang):
                 name = archive[lang]["header.title"].removeprefix("DEEMO 1 ")  # "Artwork Archive" / "曲绘档案"
@@ -343,6 +400,29 @@ class SlideshowTemplateTests(unittest.TestCase):
                     (ROOT / readme).read_text(encoding="utf-8"),
                 )
                 self.assertIn(name, online.group(1))
+
+    def test_without_javascript_a_notice_links_the_archive(self):
+        """Without JavaScript the view (main.deemo-view) stays transparent and no slide gets its image, so the page
+        would show nothing. A <noscript> notice outside that view says why in English and in Chinese and links
+        archive.html, and it sits above the view: the transparent, fixed, full-screen view still takes every tap.
+        The generated index.html carries the same notice."""
+        blocks = [node for node in self.nodes if node.tag == "noscript"]
+        self.assertEqual(len(blocks), 1, "The template has one <noscript> notice")
+        self.assertFalse(blocks[0].inside("main"), "The notice is outside the transparent view")
+        notices = [node for node in blocks[0].walk() if "noscript" in node.classes]
+        self.assertEqual(len(notices), 1, "The notice is one .noscript element")
+        chinese = [node for node in notices[0].walk() if node.attrs.get("lang") == "zh-CN"]
+        self.assertEqual(len(chinese), 1, 'The Chinese text is one lang="zh-CN" element')
+        self.assertIn("requires JavaScript", notices[0].text.replace(chinese[0].text, ""))
+        self.assertIn("需要 JavaScript", chinese[0].text)
+        links = [(node.lang, node.attrs.get("href")) for node in notices[0].walk() if node.tag == "a"]
+        self.assertEqual(sorted(links), [("en", "archive.html"), ("zh-CN", "archive.html")])
+        base = top_level_css(self.css)
+        self.assertIn(css_value(base, [".noscript"], "position"), {"relative", "absolute", "fixed"})
+        self.assertGreaterEqual(int(css_value(base, [".noscript"], "z-index") or 0), 1, "The notice is above the view")
+        markup = re.search(r"<noscript>.*?</noscript>", self.html, re.DOTALL).group()
+        index = (ROOT / "index.html").read_text(encoding="utf-8")
+        self.assertIn(markup, index, "Rebuild index.html with scripts/build_catalog.py --verify")
 
 
 class BrowserSmokeGuardTests(unittest.TestCase):
