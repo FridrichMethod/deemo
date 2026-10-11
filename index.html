@@ -1653,8 +1653,13 @@ https://github.com/FridrichMethod/deemo
             if (!target) return;
             document.getElementById("asset-title").textContent = target.dataset.title;
             document.getElementById("asset-size").textContent = target.dataset.size;
-            document.getElementById("asset-source").textContent = DEEMO_I18N.sourceName(target.dataset.sourceId, target.dataset.source);
-            document.getElementById("asset-source").href = target.dataset.page;
+            // The catalog build admits only http(s) source pages (scripts/build_catalog.py); like sourceLink() in
+            // src/archive.js, the caption checks again, and any other value leaves the link without an href.
+            var source = document.getElementById("asset-source");
+            var page = webPage(target.dataset.page);
+            source.textContent = DEEMO_I18N.sourceName(target.dataset.sourceId, target.dataset.source);
+            if (page) source.href = page;
+            else source.removeAttribute("href");
             document.getElementById("asset-original").href = target.dataset.src;
             // A community copy (an unofficial repost, edit or scan) is named as such after its source, whose name can
             // read like the official channel's ("Tunes of Rayark — DEEMO"), so it is said even where the notes' eyebrow
@@ -1666,6 +1671,17 @@ https://github.com/FridrichMethod/deemo
                 var label = element("span", null, DEEMO_I18N.t("slideshow.provenance." + token));
                 label.style.whiteSpace = "nowrap";
                 origin.append("\u00a0· ", label);
+            }
+        }
+
+        // An http(s) URL in its absolute form, or "" for anything else: another scheme (javascript:, data:, ...), a
+        // relative URL or no URL at all.
+        function webPage(value) {
+            try {
+                var url = new URL(value);
+                return url.protocol === "http:" || url.protocol === "https:" ? url.href : "";
+            } catch (err) {
+                return "";
             }
         }
 

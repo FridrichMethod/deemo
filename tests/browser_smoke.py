@@ -15,6 +15,8 @@ import time
 import unicodedata
 import xml.etree.ElementTree as ET
 from collections import Counter
+from html import escape, unescape
+from itertools import count
 from urllib.parse import quote, unquote, urljoin, urlparse
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
@@ -93,6 +95,17 @@ HOSTILE = {
     "source_url": "vbscript:msgbox(1)",
     "failure_url": f"JaVaScRiPt:{XSS}('failure')",
 }
+# Slide source pages (data-page) the slideshow must not link: other schemes, in any letter case or after a space, and a
+# value that is no absolute URL. Each script records in window.__xss that it ran.
+HOSTILE_PAGES = [
+    f"javascript:{XSS}('slide page')",
+    f" JaVaScRiPt:{XSS}('slide page')",
+    f"data:text/html,<script>{XSS}('slide page')</script>",
+    "vbscript:msgbox(1)",
+    "relative/page.html",
+]
+# The caption's Source link as [its href, or None without one; the shown slide's data-page].
+SOURCE_LINK = "[document.getElementById('asset-source'), imgTargets[slideIndex - 1]].map((node, index) => index ? node.dataset.page : node.hasAttribute('href') ? node.href : null)"
 
 
 def title_words(text):
@@ -1011,6 +1024,58 @@ def check_slideshow_controls(browser):
     )
 
 
+def check_slideshow_source_link(browser):
+    """The caption's Source link leads to a slide's source page only when that is an http(s) URL: the catalog build
+    refuses any other, and the slideshow checks again (webPage() in templates/slideshow.html), as the archive does.
+    Slides whose data-page is another scheme or no absolute URL leave the link without an href, in either language and
+    also after a slide whose link had one, and nothing runs; the web page of the slide after them is linked again."""
+    page = new_page(browser, 1440, 900)
+    markup = page.request.get(mounted_url("index.html")).text()
+    first = unescape(re.search(r'<img class="deemo-draw" [^>]*?data-id="([^"]*)"', markup).group(1))
+    slides = count()
+
+    def hostile_page(match):
+        index = next(slides)
+        if 1 <= index <= len(HOSTILE_PAGES):
+            return f'data-page="{escape(HOSTILE_PAGES[index - 1])}"'
+        return match.group()
+
+    # The first slide keeps its page, the next ones get the hostile values, and the one after them keeps its own.
+    body = re.sub(
+        r'(?<=<img class="deemo-draw" )[^>]*',
+        lambda img: re.sub(r'data-page="[^"]*"', hostile_page, img.group()),
+        markup,
+    )
+    page.route(
+        re.compile(re.escape(mounted_url("index.html")) + r"(\?.*)?$"),
+        lambda route: route.fulfill(content_type="text/html; charset=utf-8", body=body),
+    )
+    page.route(
+        re.compile(r"/assets/(public|legacy)/"),
+        lambda route: route.fulfill(status=200, content_type="image/png", body=PIXEL),
+    )
+    navigate(page, "index.html?asset=" + quote(first))
+    page.wait_for_function("document.querySelector('.deemo-view').style.opacity === '1'")
+    page.wait_for_function(SLIDE_SHOWN)
+    assert page.evaluate(SHOWN_ID) == first and page.evaluate("slideIndex") == 1
+    page.evaluate("document.activeElement.blur()")
+    for step in range(len(HOSTILE_PAGES) + 2):
+        if step:
+            page.keyboard.press("ArrowRight")
+        # A language change redraws the caption.
+        for lang in ("en", "zh-CN"):
+            page.evaluate("(lang) => DEEMO_I18N.setLang(lang)", lang)
+            href, data_page = page.evaluate(SOURCE_LINK)
+            if 1 <= step <= len(HOSTILE_PAGES):
+                assert data_page == HOSTILE_PAGES[step - 1] and href is None, (step, lang, data_page, href)
+            else:
+                expected = page.evaluate("(url) => new URL(url).href", data_page)
+                assert urlparse(data_page).scheme in {"http", "https"} and href == expected, (step, lang, href)
+    assert page.evaluate("window.__xss ?? null") is None, page.evaluate("window.__xss")
+    finish(page)
+    checks.append("slideshow Source link: only http(s) pages, none after or for a hostile data-page, both languages")
+
+
 def check_screenshot_overlay(browser):
     """A shared or reloaded #screenshot URL opens nothing. The camera opens the overlay with the focus inside and the
     arrow keys idle; Escape closes and empties it and hands the focus back, with no history entry or URL change."""
@@ -1272,6 +1337,7 @@ with sync_playwright() as p:
     check_previews(browser)
     check_attribution(browser)
     check_slideshow_controls(browser)
+    check_slideshow_source_link(browser)
     check_screenshot_overlay(browser)
     check_slide_hit_testing(browser)
     check_small_screens(browser)

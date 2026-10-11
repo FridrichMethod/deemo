@@ -153,6 +153,20 @@ def px(value):
     return float(match.group(1) or 0) if match else None
 
 
+def function_body(code, name):
+    """The body of the JavaScript function declared as `function name(...)` in code. Braces are counted as they come,
+    which holds for the functions checked here: their strings and regular expressions keep braces balanced."""
+    declaration = re.search(rf"\bfunction {name}\(", code)
+    if declaration is None:
+        raise AssertionError(f"The slideshow's script defines no function {name}")
+    start, depth = code.index("{", declaration.end()), 0
+    for index in range(start, len(code)):
+        depth += {"{": 1, "}": -1}.get(code[index], 0)
+        if not depth:
+            return code[start + 1 : index]
+    raise AssertionError(f"function {name} is not closed")
+
+
 def i18n_attrs(node):
     pairs = (pair.split(":", 1) for pair in (node.attrs.get("data-i18n-attr") or "").split(";") if ":" in pair)
     return {attribute.strip(): key.strip() for attribute, key in pairs}
@@ -208,6 +222,26 @@ class SlideshowTemplateTests(unittest.TestCase):
         for node in self.nodes:
             with self.subTest(tag=node.tag, href=node.attrs.get("href")):
                 self.assertFalse((node.attrs.get("href") or "").strip().lower().startswith("javascript:"))
+
+    def test_the_caption_links_only_web_pages(self):
+        """The caption's Source link takes a slide's data-page as its href only when that is an http(s) URL, as
+        sourceLink() in src/archive.js does: scripts/build_catalog.py already refuses any other source page, and the
+        page checks again. Anything else (javascript:, data:, a relative or broken URL) leaves the link without an
+        href, also after a slide whose link had one. tests/browser_smoke.py turns through such slides."""
+        script = next(
+            code
+            for code in re.findall(r"<script>(.*?)</script>", self.html, re.DOTALL)
+            if "function showCaption(" in code
+        )
+        caption = function_body(script, "showCaption")
+        self.assertEqual(
+            re.findall(r"(\w*\(?)target\.dataset\.page\b", caption), ["webPage("], "data-page goes through webPage()"
+        )
+        self.assertIn('removeAttribute("href")', caption, "A refused URL leaves the link without an href")
+        check = function_body(script, "webPage")
+        self.assertIn("new URL(", check)
+        self.assertEqual(sorted(re.findall(r'\.protocol === "([^"]*)"', check)), ["http:", "https:"])
+        self.assertRegex(check, r'\bcatch \(\w+\) \{\s*return "";')
 
     def test_template_images_have_alt_text(self):
         for node in self.nodes:
