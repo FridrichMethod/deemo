@@ -665,6 +665,72 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
     return [merged[asset_id] for asset_id in sorted(merged) if not restored(merged[asset_id])]
 
 
+def download_all(candidates, existing, manifest, workers):
+    """Download or verify every candidate; returns (candidate ids, results by id, ids whose download failed).
+
+    The manifest is saved after every 25 results. On Ctrl-C, or any other exception that stops the run, the queued
+    downloads are cancelled, the running ones finish writing their files, and the manifest is saved with every
+    download that finished before the exception propagates, so no downloaded file is left without its record."""
+    candidate_ids = {candidate_id(item) for item in candidates}
+    results, failed_ids, jobs = {}, set(), {}
+
+    def checkpoint():
+        # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest.
+        manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
+        manifest["failures"].sort(key=failure_key)  # completion order varies between runs
+        write_json("data/sources/wikis.json", manifest)
+
+    def collect(future):
+        item = jobs[future]
+        try:
+            record = future.result()
+            results[record["id"]] = record
+        except Exception as error:
+            failed_ids.add(candidate_id(item))
+            manifest["failures"].append(
+                {
+                    "source_id": SOURCES[item["source"]]["id"],
+                    "url": item["info"]["url"],
+                    "title": item["file_title"],
+                    "error": str(error),
+                }
+            )
+
+    def harvest():
+        """Add the record of every finished download that is not collected yet; True when there was one."""
+        found = False
+        for future in jobs:
+            if future.done() and not future.cancelled() and future.exception() is None:
+                record = future.result()
+                found = found or results.get(record["id"]) is not record
+                results[record["id"]] = record
+        return found
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        try:
+            for item in candidates:
+                jobs[executor.submit(download, item, existing)] = item
+            for index, future in enumerate(as_completed(jobs), 1):
+                collect(future)
+                if index % 25 == 0 or index == len(candidates):
+                    print(
+                        f"Downloaded/verified {index}/{len(candidates)}; failures={len(manifest['failures'])}",
+                        flush=True,
+                    )
+                    checkpoint()
+        except BaseException:
+            # Without this, leaving the with block would wait for every queued download (each with its retries),
+            # and the downloads finished since the last checkpoint would lose their records.
+            executor.shutdown(wait=False, cancel_futures=True)
+            harvest()
+            checkpoint()
+            executor.shutdown(wait=True)  # the running downloads finish writing their files
+            if harvest():
+                checkpoint()
+            raise
+    return candidate_ids, results, failed_ids
+
+
 def resumed_sources(sources, snapshot):
     """The previous manifest's sources, each with the discovery statistics of the snapshot being resumed when the
     snapshot recorded them; for an older snapshot without statistics the previous ones are kept."""
@@ -813,33 +879,7 @@ def main():
             candidate["try_canonical_first"] = True
             if str(previous_failures[candidate["file_title"]].get("error", "")).startswith("[{"):
                 candidate["try_png_first"] = True
-    candidate_ids = {candidate_id(item) for item in candidates}
-    results, failed_ids = {}, set()
-    with ThreadPoolExecutor(max_workers=args.workers) as executor:
-        jobs = {executor.submit(download, item, existing): item for item in candidates}
-        for index, future in enumerate(as_completed(jobs), 1):
-            item = jobs[future]
-            try:
-                record = future.result()
-                results[record["id"]] = record
-            except Exception as error:
-                failed_ids.add(candidate_id(item))
-                manifest["failures"].append(
-                    {
-                        "source_id": SOURCES[item["source"]]["id"],
-                        "url": item["info"]["url"],
-                        "title": item["file_title"],
-                        "error": str(error),
-                    }
-                )
-            if index % 25 == 0 or index == len(candidates):
-                print(
-                    f"Downloaded/verified {index}/{len(candidates)}; failures={len(manifest['failures'])}", flush=True
-                )
-                # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest.
-                manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
-                manifest["failures"].sort(key=failure_key)  # completion order varies between runs
-                write_json("data/sources/wikis.json", manifest)
+    candidate_ids, results, failed_ids = download_all(candidates, existing, manifest, args.workers)
     manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
     for source in manifest["sources"]:
         source["asset_count"] = sum(asset["source_id"] == source["id"] for asset in manifest["assets"])

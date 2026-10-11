@@ -4,6 +4,7 @@ Nothing touches the network: requests.get is replaced by a fake that serves cann
 temporary directory, so the repository's own manifests are never read or written.
 """
 
+import _thread
 import concurrent.futures
 import email.utils
 import hashlib
@@ -14,6 +15,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -334,6 +336,36 @@ class CheckpointTests(FetcherRun):
         with patch.object(fetch, "download", interrupted), self.assertRaises(KeyboardInterrupt):
             self.resume(*candidates)
         self.assertEqual(len(self.read(MANIFEST)["assets"]), 60)
+
+    def test_ctrl_c_cancels_the_queued_downloads_and_keeps_the_finished_ones(self):
+        # Ctrl-C reaches the main thread while a worker downloads. The queued downloads are cancelled instead of all
+        # running to the end, and every download that finished has its record: none is left as a file without one.
+        candidates = [self.offer(f"Art {index:02}.png", png((index * 4, 0, 0))) for index in range(60)]
+        web, saved, write_json = self.web, threading.Event(), fetch.write_json
+
+        def saving(relative, data):
+            write_json(relative, data)
+            saved.set()
+
+        def interrupting(url, **options):
+            if len(web.calls) >= 5:
+                saved.wait(0.5)  # a request after Ctrl-C waits until the run has saved the manifest
+            response = web(url, **options)
+            if len(web.calls) == 5:
+                _thread.interrupt_main()
+            return response
+
+        with (
+            patch.object(fetch.requests, "get", interrupting),
+            patch.object(fetch, "write_json", saving),
+            self.assertRaises(KeyboardInterrupt),
+        ):
+            self.resume(*candidates)
+        # The interrupted download and the one the worker had started (one more if the save took over 0.5 s).
+        self.assertLessEqual(len(self.web.calls), 5 + 2)
+        files = {path.relative_to(self.root).as_posix() for path in (self.root / "assets").rglob("*") if path.is_file()}
+        self.assertGreaterEqual(len(files), 5)
+        self.assertEqual({record["path"] for record in self.read(MANIFEST)["assets"]}, files)
 
     def test_manifest_write_is_atomic(self):
         fetch.write_json(MANIFEST, {"assets": ["kept"]})
