@@ -1530,6 +1530,49 @@ class ArchiveSiteTests(TempRoot):
         ia = next(row for row in manifest["sources"] if row["id"] == "archives:internet-archive-202606")
         self.assertEqual(ia["file_formats"], {"Flac": 1, "PNG": 2})
 
+    def test_two_official_images_with_one_name_are_both_refused(self):
+        # Both would be archives:official-deemo:index_pic: neither is downloaded, and the archived record is kept.
+        web, base = self.web(), "https://deemo.com/res/img"
+        web.routes.update(
+            {
+                "https://deemo.com/": f'<img src="{base}/index_pic.png"><img src="{base}/sp/index_pic.png"><img src="{base}/about_pic.png">',
+                f"{base}/index_pic.png": png("red"),
+                f"{base}/sp/index_pic.png": png("blue"),
+                f"{base}/about_pic.png": png("green"),
+            }
+        )
+        data, sid = png("white"), "official-deemo"
+        previous = {
+            "id": f"archives:{sid}:index_pic",
+            "source_id": f"archives:{sid}",
+            "title": "index_pic",
+            "kind": "illustration",
+            "page_url": "https://deemo.com/",
+            "download_url": f"{base}/index_pic.png",
+            "path": self.put(f"assets/public/archives/{sid}/index_pic.png", data),
+            "width": 4,
+            "height": 4,
+            "format": "PNG",
+            "bytes": len(data),
+            "sha256": sha(data),
+            "fetched_at": "2026-01-01T00:00:00+00:00",
+            "game": "DEEMO",
+        }
+        self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [previous], "failures": []})
+        code, manifest = self.run_steps(web, "official")
+        self.assertEqual(code, 1)
+        self.assertEqual(
+            [(f["asset_id"], f["url"]) for f in manifest["failures"]],
+            [(previous["id"], f"{base}/index_pic.png"), (previous["id"], f"{base}/sp/index_pic.png")],
+        )
+        self.assertTrue(all("Duplicate image name" in f["error"] for f in manifest["failures"]), manifest["failures"])
+        assets = {asset["id"]: asset for asset in manifest["assets"]}
+        self.assertEqual(assets[previous["id"]], {**previous, "upstream_status": "fetch_failed"})
+        self.assertEqual(assets[f"archives:{sid}:about_pic"]["sha256"], sha(png("green")))
+        self.assertEqual({asset["path"] for asset in assets.values()}, self.archived_files())
+        status = {row["id"]: row["status"] for row in manifest["sources"]}
+        self.assertEqual(status[f"archives:{sid}"], "partial")
+
     def test_redirects_off_the_official_and_archive_hosts_are_refused(self):
         web = self.web()
         web.routes["https://deemo.com/"] = (302, b"", {"Location": "https://attacker.example/"})

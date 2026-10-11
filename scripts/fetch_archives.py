@@ -376,6 +376,24 @@ def tumblr_cleaned():
     record["notes"] = cleaned_note(len(posts), downloaded)
 
 
+def unique_official_images(sid, urls):
+    """The image URLs whose file stem, the key of their asset id, no other URL shares, sorted by stem.
+
+    Two URLs with one stem (a desktop and a mobile copy) would be one asset id: neither is downloaded, and each is
+    recorded as a failure of that id, so its archived record is kept as fetch_failed and the run exits non-zero."""
+    by_key = {}
+    for url in sorted(urls):
+        by_key.setdefault(Path(urlparse(url).path).stem, []).append(url)
+    unique = []
+    for key, same in sorted(by_key.items()):
+        if len(same) == 1:
+            unique.extend(same)
+            continue
+        for url in same:
+            failure(sid, url, f"Duplicate image name {key}: {', '.join(same)}", asset_id=f"archives:{sid}:{key}")
+    return unique
+
+
 def official():
     sid, page = "official-deemo", "https://deemo.com/"
     source(
@@ -394,6 +412,7 @@ def official():
             for img in soup.find_all("img", src=True)
             if Path(urlparse(img["src"]).path).name in names
         }
+        images = unique_official_images(sid, images)
         pool(
             lambda url: download(
                 sid,
