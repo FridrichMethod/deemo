@@ -67,6 +67,74 @@ SHOWN = {
     "sha256",
     "fetched_at",
 }
+# Where src/archive.js shows the SHOWN fields: the functions that show them (with the helpers below that they call), and
+# the fields each set must read. A field read only elsewhere (by a card or the search, say) does not reach the viewer.
+SHOWN_BY = {
+    # Each record's block in the viewer.
+    ("provenanceBlock",): {
+        "source_id",
+        "source_name",
+        "page_url",
+        "download_url",
+        "title",
+        "artist",
+        "composer",
+        "composer_source",
+        "collection",
+        "collection_scope",
+        "collections",
+        "song_titles",
+        "notes",
+        "quality",
+        "provenance",
+        "quality_notes",
+        "source_dimensions",
+        "source_dimensions_kind",
+        "variant_note",
+        "layout_note",
+        "delivery_note",
+        "rights",
+        "rights_holder",
+        "wiki_original_sha1_matches",
+        "upstream_status",
+        "superseded_by",
+        "mapping_status",
+        "title_status",
+        "variants",
+    },
+    # The file facts, once per asset, in the viewer.
+    ("open", "localizeViewer"): {"path", "width", "height", "format", "bytes", "sha256", "fetched_at"},
+    # The cards: title, size line, source line and tag.
+    ("more", "localizeCard"): {
+        "title",
+        "artist",
+        "source_id",
+        "source_name",
+        "family",
+        "kind",
+        "width",
+        "height",
+        "format",
+        "bytes",
+    },
+    # The search index.
+    ("searchable",): {
+        "title",
+        "artist",
+        "composer",
+        "collection",
+        "collections",
+        "collection_aliases",
+        "song_titles",
+        "source_name",
+        "page_url",
+        "internal_key",
+    },
+    # The source and type filters.
+    ("filter",): {"family", "kind"},
+}
+# Helpers that read record fields for the functions above; a helper's code counts only where it is called.
+HELPERS = ("composerLines", "upstreamNotes", "dimensionsNote", "provenanceClass", "sourceName")
 # Fields the page leaves out on purpose, with the reason. A new manifest field fails the test until it is added to one
 # of the two lists, so a caveat cannot be dropped silently.
 IGNORED = {
@@ -100,6 +168,30 @@ IGNORED = {
 
 def message_tables():
     return json.loads(REGISTER.search((ROOT / "src/i18n/archive.js").read_text(encoding="utf-8")).group(1))
+
+
+def definition(script, name):
+    """The code of a function in src/archive.js: a declaration's body, or the expression of an arrow function."""
+    declaration = re.search(rf"\bfunction {name}\(", script)
+    if declaration is None:
+        arrow = re.search(rf"\bconst {name} = \([^)]*\) => ([^\n]*)", script)
+        if arrow is None:
+            raise AssertionError(f"src/archive.js defines no function {name}")
+        return arrow.group(1)
+    opening, depth = script.index("{", declaration.end()), 0
+    for index in range(opening, len(script)):
+        depth += {"{": 1, "}": -1}.get(script[index], 0)
+        if depth == 0:
+            return script[opening + 1 : index]
+    raise AssertionError(f"function {name}() is not closed")
+
+
+def shown_code(script, functions):
+    """The code of these functions and of the HELPERS they call, also in a spread (...upstreamNotes(p)), but not the
+    methods of the same name (i18n.sourceName)."""
+    code = "".join(definition(script, name) for name in functions)
+    called = [name for name in HELPERS if re.search(rf"(?:\.\.\.|(?<![\w.$])){name}\(", code)]
+    return code + "".join(definition(script, name) for name in called)
 
 
 class ArchiveLabelTests(unittest.TestCase):
@@ -168,9 +260,31 @@ class ArchiveLabelTests(unittest.TestCase):
                 )
 
     def test_shown_fields_are_read_by_the_page(self):
+        self.assertEqual(set().union(*SHOWN_BY.values()), SHOWN, "Say in SHOWN_BY where each SHOWN field is shown")
         script = (ROOT / "src/archive.js").read_text(encoding="utf-8")
-        unread = sorted(key for key in SHOWN if not re.search(rf'\.{key}\b|"{key}"', script))
-        self.assertEqual(unread, [], "src/archive.js no longer reads these SHOWN fields")
+        for functions, fields in SHOWN_BY.items():
+            with self.subTest(functions=functions):
+                code = shown_code(script, functions)
+                unread = sorted(key for key in fields if not re.search(rf'\.{key}\b|"{key}"', code))
+                self.assertEqual(unread, [], f"src/archive.js no longer reads these SHOWN fields in {functions}")
+
+    def test_shown_code_follows_only_the_helpers_called(self):
+        script = (
+            "const sourceName = (record) => i18n.sourceName(record.source_id, record.source_name);\n"
+            "function composerLines(p) { return [p.composer_source]; }\n"
+            "function provenanceBlock(p) { if (p.x) { block.append(sourceName(p)); } }\n"
+            "function upstreamNotes(p) { return [p.superseded_by]; }\n"
+            "function show(p) { block.append(...upstreamNotes(p)); }\n"
+            "function localizeCard(card, asset) { i18n.sourceName(asset.id); return composerLines; }\n"
+        )
+        self.assertEqual(definition(script, "provenanceBlock"), " if (p.x) { block.append(sourceName(p)); } ")
+        self.assertIn("record.source_id", shown_code(script, ["provenanceBlock"]))
+        self.assertNotIn("composer_source", shown_code(script, ["provenanceBlock"]))
+        self.assertNotIn("record.source_id", shown_code(script, ["localizeCard"]))
+        self.assertNotIn("composer_source", shown_code(script, ["localizeCard"]))
+        self.assertIn("p.superseded_by", shown_code(script, ["show"]))
+        with self.assertRaisesRegex(AssertionError, "defines no function missing"):
+            definition(script, "missing")
 
     def test_ignored_caveats_stay_harmless(self):
         self.assertFalse([record["id"] for record in self.records if record.get("transformed")], "transformed files")
