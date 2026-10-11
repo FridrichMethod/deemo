@@ -209,9 +209,27 @@ def index_candidates(snapshot: dict) -> dict[tuple[str, str], dict]:
     return candidates
 
 
+def has_dot_segment(path: str) -> bool:
+    """Whether a server could read a segment of the URL path as "." or "..", and so leave the directory it names.
+
+    The path is checked as written and after each round of percent-decoding, repeated until nothing changes (a server
+    that decodes twice reads "%252e" as "."). In every form a backslash counts as "/" and a ";" path parameter is
+    dropped ("..;x=1" is ".."). The characters themselves are allowed: MediaWiki file names may hold ";", "\\" and "%".
+    """
+    while True:
+        if any(piece.split(";", 1)[0] in (".", "..") for piece in re.split(r"[/\\]", path)):
+            return True
+        # Each round that changes the path shortens it (three characters "%XX" become one), so the loop ends.
+        decoded = unquote(path)
+        if decoded == path:
+            return False
+        path = decoded
+
+
 def download_url_allowed(source: str, url: object) -> bool:
     """Whether url is an https URL under the image path of the source's own wiki: the exact host, with no user, port,
-    whitespace, backslash or control character, and no "." or ".." path segment (also percent-encoded)."""
+    whitespace, backslash or control character, and no path segment a server could read as "." or ".." (see
+    has_dot_segment())."""
     location = DOWNLOAD_LOCATIONS.get(source)
     if location is None or not isinstance(url, str) or CONTROL.search(url) or re.search(r"[\s\\]", url):
         return False
@@ -220,13 +238,11 @@ def download_url_allowed(source: str, url: object) -> bool:
     except ValueError:
         return False
     host, prefix = location
-    segments = unquote(parts.path).split("/")
     return (
         parts.scheme == "https"
         and parts.netloc == host
         and parts.path.startswith(prefix)
-        and "." not in segments
-        and ".." not in segments
+        and not has_dot_segment(parts.path)
     )
 
 

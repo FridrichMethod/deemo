@@ -771,6 +771,10 @@ class DownloadGuardTests(FetcherRun):
             ("bwiki", "https://patchwiki.biligame.com/images/otherwiki/a/ab/Art.png"),
             ("bwiki", FANDOM_IMAGES + "a/ab/Art.png"),  # the other wiki's image path
             ("fandom", "http://static.wikia.nocookie.net/deemo/images/a/ab/Art.png/revision/latest?cb=1"),
+            # Dot segments a server could still resolve: a ";" parameter, a backslash, a second percent-decode.
+            ("bwiki", BWIKI_IMAGES + "..;/otherwiki/a/ab/Art.png"),
+            ("bwiki", BWIKI_IMAGES + "..%5c..%5cotherwiki/a/ab/Art.png"),
+            ("fandom", FANDOM_IMAGES + "%252e%252e/%252e%252e/otherwiki/images/a/ab/Art.png/revision/latest?cb=1"),
         ):
             with self.subTest(source=source, url=url):
                 offered = self.offer("Art.png", payload)
@@ -786,6 +790,7 @@ class DownloadGuardTests(FetcherRun):
             "https://evil.example.test/images/deemo/a/ab/Art.png",
             "http://patchwiki.biligame.com/images/deemo/b/bc/Art.png",  # a downgrade to plain http
             "../../../otherwiki/a/ab/Art.png",  # relative: /images/otherwiki/a/ab/Art.png
+            "..;/..;/..;/otherwiki/a/ab/Art.png",  # urljoin keeps "..;", which a server may still resolve as ".."
             "https://patchwiki.biligame.com:8443/images/deemo/b/bc/Art.png",
         ):
             with self.subTest(location=location):
@@ -1231,6 +1236,70 @@ class ContinuationTests(unittest.TestCase):
         self.assertEqual([row["file_title"] for row in selected], ["File:" + name for name in names])
         self.assertEqual(stats["excluded"], [])
         self.assertEqual([params.get("iicontinue") for params in requested], [None, "Beta.png|20210901000000"])
+
+    @staticmethod
+    def history(name, count):
+        """imageinfo rows of the file name, newest first, one per upload."""
+        return [
+            {**image_info(1024 + index, 1024, name), "timestamp": f"{2024 - index}-01-01T00:00:00Z"}
+            for index in range(count)
+        ]
+
+    @staticmethod
+    def imageinfo_api(histories, requested, *, unfitted=(), page_fields=None):
+        """api() answering prop=imageinfo&iilimit=1 as MediaWiki's ApiQueryImageInfo does (REL1_39). Each title gets
+        the newest revision at or before iistart. A one-title batch whose file has an older revision is continued with
+        iistart set to it ("Only set a query-continue if there was only one title"). A title in unfitted is the one
+        whose current revision does not fit the first result: that response lists the page without it and continues
+        from the revision's own timestamp."""
+
+        def api(source, **params):
+            requested.append(params)
+            titles, start = params["titles"].split("|"), params.get("iistart")
+            pages, more = {}, {}
+            for index, title in enumerate(titles):
+                page = {"title": title, **(page_fields or {})}
+                shown = [row for row in histories[title] if start is None or row["timestamp"] <= start]
+                if title in unfitted and start is None:
+                    more = {"iistart": shown[0]["timestamp"]}
+                else:
+                    page["imageinfo"] = shown[:1]
+                    if len(titles) == 1 and len(shown) > 1:
+                        more = {"iistart": shown[1]["timestamp"]}
+                pages[str(index)] = page
+            return {**({"continue": {**more, "continue": "||"}} if more else {}), "query": {"pages": pages}}
+
+        return api
+
+    def test_a_file_with_several_revisions_takes_one_request(self):
+        # Only the current revision is wanted; the older ones an iistart continuation brings would be discarded.
+        histories = {"File:Alpha.png": self.history("Alpha.png", 4)}
+        requested = []
+        with patch.object(fetch, "api", self.imageinfo_api(histories, requested)):
+            infos = fetch.imageinfo("fandom", ["File:Alpha.png"])
+        self.assertEqual(infos, {"File:Alpha.png": histories["File:Alpha.png"][0]})
+        self.assertEqual(len(requested), 1)
+        # Discovery meets this whenever the candidate count leaves one title for the last batch of 50.
+        titles = [f"File:{index:02}.png" for index in range(51)]
+        histories = {title: self.history(title[5:], 5 if title == titles[-1] else 1) for title in titles}
+        requested.clear()
+        with patch.object(fetch, "api", self.imageinfo_api(histories, requested)):
+            infos = fetch.imageinfo("fandom", titles)
+        self.assertEqual(infos, {title: rows[0] for title, rows in histories.items()})
+        self.assertEqual([params["titles"] for params in requested], ["|".join(titles[:50]), titles[-1]])
+
+    def test_a_current_revision_that_arrives_after_a_continuation_is_kept(self):
+        # An existing file page, and a file of a shared repository whose local description page is missing.
+        for page_fields in ({}, {"missing": "", "known": ""}):
+            with self.subTest(page_fields=page_fields):
+                histories = {"File:Alpha.png": self.history("Alpha.png", 3)}
+                requested = []
+                api = self.imageinfo_api(histories, requested, unfitted={"File:Alpha.png"}, page_fields=page_fields)
+                with patch.object(fetch, "api", api):
+                    infos = fetch.imageinfo("fandom", ["File:Alpha.png"])
+                self.assertEqual(infos, {"File:Alpha.png": histories["File:Alpha.png"][0]})
+                current = histories["File:Alpha.png"][0]["timestamp"]
+                self.assertEqual([params.get("iistart") for params in requested], [None, current])
 
     def test_pages_keep_revisions_that_arrive_in_a_continuation(self):
         complete = {
