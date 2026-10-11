@@ -403,6 +403,26 @@ class CheckTests(Fixture):
         self.write_manifest([record for record in self.records if not record["path"].endswith("/wide.png")])
         self.assert_problem("belongs to no current gallery original")
 
+    def test_an_entry_naming_another_preview_is_detected(self):
+        # Two same-size originals with their entries' path, bytes and sha256 swapped: each file still matches what is
+        # recorded next to it and has the right size, so only the path check (the name comes from the original's hash)
+        # sees that the grid would show the other artwork's preview.
+        self.add_encoded("plain.png", Image.new("RGB", (1000, 600), (0, 0, 255)), "PNG")
+        self.write_manifest()
+        thumbs.build(self.root)
+        self.assertEqual(thumbs.problems(self.root), [])
+        manifest = self.manifest()
+        first, second = (manifest["thumbnails"][self.sha(name)] for name in ("wide.png", "plain.png"))
+        for key in ("path", "bytes", "sha256"):
+            first[key], second[key] = second[key], first[key]
+        (self.root / thumbs.MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
+        expected = [
+            f"Thumbnail for {self.sha(name)} should be {thumbs.thumb_path(self.sha(name))}, "
+            f"not {thumbs.thumb_path(self.sha(other))}"
+            for name, other in (("wide.png", "plain.png"), ("plain.png", "wide.png"))
+        ]
+        self.assertEqual(sorted(thumbs.problems(self.root)), sorted(expected))
+
     def test_dot_files_and_caches_are_not_previews(self):
         # Skipped as build_catalog.tracked_files() and prepare_pages.select_files() skip them: --check does not report
         # them and --prune never deletes them. A stray non-dot file is still reported (the test above).
@@ -542,6 +562,16 @@ class CatalogHookTests(Fixture):
         path.unlink()
         with self.assertRaisesRegex(ValueError, "build_thumbnails"):
             self.catalog()
+
+    def test_a_truncated_preview_fails_the_catalog_build_without_verify(self):
+        # A build without --verify does not hash previews, so the recorded size is what catches a cut-off file.
+        thumbs.build(self.root)
+        path = self.root / self.manifest()["thumbnails"][self.sha("wide.png")]["path"]
+        path.write_bytes(path.read_bytes()[:-1])
+        with self.assertRaisesRegex(
+            ValueError, f"Missing or stale thumbnail {thumbs.thumb_path(self.sha('wide.png'))}"
+        ):
+            self.catalog(verify=False)
 
     def test_previews_must_live_under_assets_thumbs(self):
         thumbs.build(self.root)
