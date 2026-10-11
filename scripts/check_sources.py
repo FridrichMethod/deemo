@@ -23,6 +23,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from typing import Any
 from urllib.parse import quote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,8 +46,9 @@ REPORT_LIMIT = 60000
 ADDED_COLUMNS = ("source", "file", "kind", "dims", "size", "uploaded", "names")
 REUPLOADED_COLUMNS = ("source", "file", "dims", "size", "sha1", "uploaded", "local")
 REMOVED_COLUMNS = ("source", "file", "local")
-# Report strings per language; a ("singular", "plural") pair is picked by count (see plural()).
-TEXT = {
+# Report strings per language; a ("singular", "plural") pair is picked by count (see plural()). The values are strings,
+# pairs of strings and small lookup tables, so each language maps to Any rather than to the union mypy would infer.
+TEXT: dict[str, dict[str, Any]] = {
     "en": {
         "heading": "## Wiki source check",
         "snapshots": "Baseline snapshot {baseline_at} ({baseline}) → current discovery {current_at} ({current}).",
