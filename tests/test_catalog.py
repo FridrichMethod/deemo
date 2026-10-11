@@ -8,6 +8,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import struct
 import subprocess
 import tempfile
@@ -302,6 +303,34 @@ class CatalogTests(unittest.TestCase):
         build.combine(self.root)  # only --verify checks
         # The legacy pair (original and variant), dot-files and assets/thumbs/ are not orphans.
         self.git("rm", "-q", "--cached", orphan)
+        build.combine(self.root, verify=True)
+
+    def test_verify_rejects_tracked_files_outside_the_known_asset_directories(self):
+        # assets/ holds public/ and legacy/ (records and variants), thumbs/ (checked by build_thumbnails.py) and site/
+        # (checked by build_legacy_inventory.py). A file anywhere else would pass every other check and be published.
+        self.manifest("artists", self.asset)
+        self.git("init", "-q")
+        strays = sorted(
+            self.image(relative, colour)["path"]
+            for relative, colour in (
+                ("assets/stray.png", "black"),
+                ("assets/tmp/scratch.png", "gray"),
+                ("assets/wikis/forgotten.png", "red"),
+            )
+        )
+        for relative in ("assets/thumbs/sample.webp", "assets/site/icons/favicon.png", "assets/.gitattributes"):
+            (self.root / relative).parent.mkdir(parents=True, exist_ok=True)
+            (self.root / relative).write_bytes(b"checked elsewhere")
+        self.git("add", "assets", "data")
+        with self.assertRaisesRegex(
+            ValueError,
+            r"3 tracked file\(s\) outside assets/public, assets/legacy, assets/thumbs and assets/site: "
+            + ", ".join(map(re.escape, strays))
+            + "$",
+        ):
+            build.combine(self.root, verify=True)
+        build.combine(self.root)  # only --verify checks
+        self.git("rm", "-q", "--cached", *strays)
         build.combine(self.root, verify=True)
 
     def test_orphan_check_needs_the_root_of_a_git_checkout(self):

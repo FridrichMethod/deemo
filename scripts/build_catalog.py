@@ -28,6 +28,10 @@ COVER_KEY = re.compile(r"booksprite|bookcover|^deemo1[ab]$", re.IGNORECASE)
 UPSTREAM_STATUSES = ("removed", "superseded", "fetch_failed")
 # Every tracked file here must be a record's or a variant's path (assets/thumbs/ has its own check).
 ORPHAN_CHECK_DIRECTORIES = ("assets/public", "assets/legacy")
+# The only subdirectories of assets/ a tracked file may be in, each with a check that accounts for its files: records
+# and variants (public/, legacy/; the orphan check), data/thumbs.json (thumbs/; scripts/build_thumbnails.py --check)
+# and data/legacy-inventory.json (site/; scripts/build_legacy_inventory.py).
+ASSET_DIRECTORIES = ("public", "legacy", "thumbs", "site")
 # A SHA-256 as hashlib's hexdigest() writes it. Builds without --verify trust it, and scripts/build_thumbnails.py
 # names each preview file after it, so nothing else may pass for one.
 SHA256 = re.compile(r"[0-9a-f]{64}")
@@ -347,10 +351,21 @@ def combine(root: Path, verify: bool = False) -> dict:
         referenced = {
             Path(record["path"]).as_posix() for asset in assets for record in (asset, *asset.get("variants", []))
         }
-        orphans = [name for name in tracked_files(root, ORPHAN_CHECK_DIRECTORIES) or [] if name not in referenced]
+        tracked = tracked_files(root, ("assets",)) or []
+        checked = tuple(f"{directory}/" for directory in ORPHAN_CHECK_DIRECTORIES)
+        orphans = [name for name in tracked if name.startswith(checked) and name not in referenced]
         if orphans:
             raise ValueError(
                 f"{len(orphans)} tracked file(s) referenced by no manifest record or variant: {', '.join(orphans)}"
+            )
+        unexpected = [
+            name for name in tracked if len(parts := name.split("/")) < 3 or parts[1] not in ASSET_DIRECTORIES
+        ]
+        if unexpected:
+            known = ", ".join(f"assets/{directory}" for directory in ASSET_DIRECTORIES[:-1])
+            raise ValueError(
+                f"{len(unexpected)} tracked file(s) outside {known} and assets/{ASSET_DIRECTORIES[-1]}: "
+                f"{', '.join(unexpected)}"
             )
     entries = list(by_hash.values())
     for entry in entries:
@@ -566,7 +581,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--verify",
         action="store_true",
-        help="Verify every hash, image header and format, and that every tracked file under assets/public and assets/legacy is referenced",
+        help="Verify every hash, image header and format, that every tracked file under assets/public and assets/legacy is referenced, and that assets/ tracks files only in public/, legacy/, thumbs/ and site/",
     )
     parser.add_argument("--check", action="store_true", help="Check generated files without writing")
     args = parser.parse_args(argv)
