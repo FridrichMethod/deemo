@@ -182,4 +182,4 @@ jobs:
             echo "No open snapshot pull request."
             exit 0
           fi
-          gh pr close "$number" --comment "The latest check found no differences from the snapshot on main, so this snapshot is outdated; closing it. The next run that finds changes opens a new pull request. · 最新检查未发现与 main 上快照的差异，此快照已过时，现关闭；之后的运行发现变化时会创建新的 PR。 $RUN_URL"
+          gh pr close "$number" --comment "The latest check found no file added, re-uploaded or removed compared with the snapshot on main, so this snapshot is outdated; closing it. Metadata-only changes, if any, are listed in the run summary. The next run that finds file changes opens a new pull request. · 最新检查未发现与 main 上快照相比有新增、重新上传或移除的文件，此快照已过时，现关闭；仅元数据的变化（如有）列在运行摘要中。之后的运行发现文件变化时会创建新的 PR。 $RUN_URL"

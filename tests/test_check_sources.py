@@ -16,7 +16,7 @@ SPEC = importlib.util.spec_from_file_location(
 check = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(check)
 
-NO_CHANGE = {"added": 0, "reuploaded": 0, "removed": 0, "added_after_baseline": 0}
+NO_CHANGE = {"added": 0, "reuploaded": 0, "removed": 0, "metadata_changed": 0, "added_after_baseline": 0}
 # Han characters plus CJK / full-width punctuation such as （）：，。
 CHINESE = re.compile(r"[\u3000-\u303f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff00-\uffef]")
 DETAILS = "\n<details>\n<summary>简体中文</summary>\n\n"
@@ -125,7 +125,7 @@ class CompareTests(unittest.TestCase):
             (
                 "## Wiki source check\n\n"
                 "Baseline snapshot 2026-02-02T00:00:00Z (1 candidate) → current discovery 2026-03-03T00:00:00Z (1 candidate).\n\n"
-                "- 0 added (0 of them uploaded after the baseline) · 0 re-uploaded · 0 removed\n\n"
+                "- 0 added (0 of them uploaded after the baseline) · 0 re-uploaded · 0 removed · 0 with changed metadata\n\n"
                 "The candidate set has not changed; nothing to do.\n"
             ),
         )
@@ -134,13 +134,49 @@ class CompareTests(unittest.TestCase):
             (
                 "## Wiki 来源检查\n\n"
                 "基线快照 2026-02-02T00:00:00Z（1 个候选）→ 本次发现 2026-03-03T00:00:00Z（1 个候选）。\n\n"
-                "- 新增 0（其中 0 个在基线之后上传）· 重新上传 0 · 移除 0\n\n"
+                "- 新增 0（其中 0 个在基线之后上传）· 重新上传 0 · 移除 0 · 元数据变化 0\n\n"
                 "候选集合没有变化，无需处理。\n"
             ),
         )
         self.assertEqual(report["title"], "Wiki source update: 0 added · 0 re-uploaded · 0 removed (2026-03-03)")
         for markdown in split_languages(check.render_bilingual(report)):
             self.assertNotIn("### ", markdown)
+
+    def test_metadata_changes_are_counted_and_listed(self):
+        # A wiki edit that changes a credit or a collection without touching the file opens no pull request, but the
+        # report says so instead of "nothing to do", and a pull request report lists the metadata changes its merge
+        # carries, which --resume then applies to the records of verified files.
+        baseline = snapshot(candidate("fandom", "Kept.png", composer="Old", collections=["Etude Collection"]))
+        drifted = candidate("fandom", "Kept.png", artist="Someone", collections=["RAC Collection #1"])
+        report = check.compare(baseline, snapshot(drifted), self.manifest)
+        self.assertFalse(report["changed"])
+        self.assertEqual(report["counts"], {**NO_CHANGE, "metadata_changed": 1, "baseline": 1, "current": 1})
+        (row,) = report["metadata_changed"]
+        self.assertEqual(
+            row["changes"],
+            [
+                {"field": "collections", "old": ["Etude Collection"], "new": ["RAC Collection #1"]},
+                {"field": "composer", "old": "Old", "new": None},
+                {"field": "artist", "old": None, "new": "Someone"},
+            ],
+        )
+        cell = "`collections`: `Etude Collection` → `RAC Collection #1`; `composer`: `Old` → —; `artist`: — → `Someone`"
+        markdown = check.render(report)
+        self.assertNotIn("nothing to do", markdown)
+        self.assertIn("No file was added, re-uploaded or removed, so no pull request is opened.", markdown)
+        self.assertIn("### Changed metadata (1)", markdown)
+        self.assertIn("| Source | File | Changes (before → after) |", markdown)
+        self.assertIn(f"| Fandom | [`Kept.png`](<https://deemo.fandom.com/wiki/File:Kept.png>) | {cell} |", markdown)
+        self.assertIn("没有新增、重新上传或移除的文件", check.render(report, "zh-CN"))
+        # With a file change too, the pull request report lists the metadata change in both languages.
+        changed = check.compare(baseline, snapshot(drifted, candidate("bwiki", "New.png")), self.manifest)
+        self.assertTrue(changed["changed"])
+        english, chinese = split_languages(check.render_bilingual(changed))
+        self.assertIn("- 1 added (0 of them uploaded after the baseline) · 0 re-uploaded · 0 removed · 1 with", english)
+        for part, heading in ((english, "### Changed metadata (1)"), (chinese, "### 元数据变化（1）")):
+            self.assertIn(heading, part)
+            self.assertIn(cell, part)
+        self.assertIn("| 来源 | 文件 | 变化（之前 → 之后） |", chinese)
 
     def test_added_reuploaded_and_removed_candidates(self):
         baseline = snapshot(
@@ -166,7 +202,15 @@ class CompareTests(unittest.TestCase):
         self.assertTrue(report["changed"])
         self.assertEqual(
             report["counts"],
-            {"added": 2, "reuploaded": 1, "removed": 1, "added_after_baseline": 1, "baseline": 3, "current": 4},
+            {
+                "added": 2,
+                "reuploaded": 1,
+                "removed": 1,
+                "metadata_changed": 0,
+                "added_after_baseline": 1,
+                "baseline": 3,
+                "current": 4,
+            },
         )
         self.assertEqual(report["title"], "Wiki source update: 2 added · 1 re-uploaded · 1 removed (2026-02-02)")
         self.assertNotRegex(report["title"], CHINESE)
@@ -272,7 +316,11 @@ class CompareTests(unittest.TestCase):
         baseline = snapshot(candidate("fandom", "Kept.png"), candidate("bwiki", f"{file_name}.png"))
         current = snapshot(
             candidate(
-                "fandom", "Kept.png", sha1="`<img src=x>` @octocat #3", timestamp="@octocat [x](https://evil.example)"
+                "fandom",
+                "Kept.png",
+                sha1="`<img src=x>` @octocat #3",
+                timestamp="@octocat [x](https://evil.example)",
+                composer=HOSTILE,
             ),
             candidate(
                 "fandom",
@@ -309,7 +357,7 @@ class CompareTests(unittest.TestCase):
                 for cell in cells:
                     self.assertNotRegex(OWN_LINK.sub("", without_code_spans(cell)), ACTIVE, line)
                 rows += 1
-        self.assertEqual(rows, 2 * ((2 + 3) + (2 + 1) + (2 + 1)))
+        self.assertEqual(rows, 2 * ((2 + 3) + (2 + 1) + (2 + 1) + (2 + 1)))
         for part in (english, chinese):
             self.assertIn(
                 "| BWIKI | [``A b\\|c<d>`e`(f.png``](<https://wiki.biligame.com/deemo/File:A%20b%7Cc%3Cd%3E%60e%60(f.png>) |",
@@ -504,6 +552,7 @@ class CompareTests(unittest.TestCase):
                     "added",
                     "reuploaded",
                     "removed",
+                    "metadata_changed",
                 ],
             )
             self.assertTrue(summary["changed"])
