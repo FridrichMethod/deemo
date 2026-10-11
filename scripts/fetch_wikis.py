@@ -13,6 +13,7 @@ import json
 import math
 import os
 import re
+import threading
 import time
 import unicodedata
 from collections import Counter, defaultdict
@@ -568,8 +569,11 @@ def download(candidate, existing):
         raise ValueError(f"Unexpected dimensions: {(width, height)} != {(info['width'], info['height'])}")
     digest = hashlib.sha256(payload).hexdigest()
     relative = Path("assets/public/wikis") / source / asset_filename(candidate["file_title"], digest, image_format)
-    (ROOT / relative).parent.mkdir(parents=True, exist_ok=True)
-    (ROOT / relative).write_bytes(payload)
+    target = ROOT / relative
+    # The name ends in the SHA-256, so the file may hold these bytes already: upstream reverted to an earlier upload
+    # whose superseded record keeps that file. Leave it alone rather than rewrite another record's file.
+    if not (target.is_file() and hashlib.sha256(target.read_bytes()).hexdigest() == digest):
+        write_atomic(target, payload)
     record = {
         "id": asset_id,
         "source_id": SOURCES[source]["id"],
@@ -744,12 +748,11 @@ def resumed_sources(sources, snapshot):
     ]
 
 
-def write_json(relative, data):
-    path = ROOT / relative
+def write_atomic(path, payload):
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
-    # Write next to the target, then rename over it: an interrupted run never leaves a truncated file behind.
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    # Write next to the target, then rename over it: an interrupted run never leaves a truncated file behind. The name
+    # is unique per thread, since the download workers write images concurrently.
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     try:
         with open(temporary, "wb") as stream:
             stream.write(payload)
@@ -759,6 +762,10 @@ def write_json(relative, data):
     except BaseException:
         temporary.unlink(missing_ok=True)
         raise
+
+
+def write_json(relative, data):
+    write_atomic(ROOT / relative, (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
 
 
 def fetch_song_keys():

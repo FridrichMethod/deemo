@@ -304,6 +304,41 @@ class CarryForwardTests(FetcherRun):
                 self.assertEqual(list(record), list(fresh))
                 self.assertEqual({**record, "fetched_at": None}, {**fresh, "fetched_at": None})
 
+    def test_revert_does_not_rewrite_the_file_of_another_record(self):
+        # The superseded record of the first upload still points at its file, which holds the reverted bytes already:
+        # rewriting it would truncate another record's file if the run died mid-write.
+        first = self.resume(self.offer("Art.png", png("red")))["assets"][0]
+        self.resume(self.offer("Art.png", png("green")))
+        written, write_bytes, replace = [], Path.write_bytes, os.replace
+
+        def spy_write_bytes(path, data):
+            written.append(Path(path))
+            return write_bytes(path, data)
+
+        def spy_replace(source, target):
+            written.append(Path(target))
+            return replace(source, target)
+
+        with patch.object(Path, "write_bytes", spy_write_bytes), patch.object(fetch.os, "replace", spy_replace):
+            manifest = self.resume(self.offer("Art.png", png("red")))
+        self.assertIn(first["path"], [record["path"] for record in manifest["assets"]])
+        self.assertNotIn(self.root / first["path"], written)
+        self.assertEqual(hashlib.sha256((self.root / first["path"]).read_bytes()).hexdigest(), first["sha256"])
+
+    def test_an_interrupted_image_write_leaves_no_partial_file(self):
+        candidate = self.offer("Art.png", png("red"))
+        with patch.object(fetch.os, "replace", side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+            fetch.download(candidate, {})
+        self.assertEqual([path for path in (self.root / "assets").rglob("*") if path.is_file()], [])
+        # A target that already holds other bytes (a damaged copy being replaced) keeps them, untruncated.
+        record = fetch.download(candidate, {})
+        target = self.root / record["path"]
+        target.write_bytes(b"damaged copy")
+        with patch.object(fetch.os, "replace", side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):
+            fetch.download(candidate, {})
+        self.assertEqual(target.read_bytes(), b"damaged copy")
+        self.assertEqual([path.name for path in target.parent.iterdir()], [target.name])
+
     def test_failed_redownload_keeps_the_verified_record(self):
         old = self.offer("Art.png", png("red"))
         first = self.resume(old)["assets"][0]
