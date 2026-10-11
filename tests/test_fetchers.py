@@ -89,6 +89,7 @@ def response(url, status=200, body=b"", headers=None):
     result = requests.Response()
     result.status_code = status
     result._content = body if isinstance(body, bytes) else body.encode("utf-8")
+    result._content_consumed = True  # the body is already read, so close() has no connection to release
     result.headers.update(headers or {})
     result.url = url
     result.encoding = "utf-8"
@@ -1728,6 +1729,60 @@ class ManifestWriteTests(TempRoot):
                 module.write_json(path, {"partial": True})
             self.assertEqual(path.read_bytes(), before, module.__name__)
             self.assertEqual(list(path.parent.glob(".*")), [], module.__name__)
+
+
+class CatalogCheckTests(unittest.TestCase):
+    """A reachability check of a catalogued page follows redirects only on https within that page's own site."""
+
+    URL = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/"
+
+    def setUp(self):
+        archives.reset()
+        self.addCleanup(archives.reset)
+
+    def check(self, web):
+        with patch.object(archives, "session", return_value=web):
+            return archives.check_entry(("reddit-34", "Thread", self.URL, "index_only", ""))
+
+    def test_a_redirect_off_the_site_is_recorded_but_not_followed(self):
+        for location in (
+            "http://169.254.169.254/latest/meta-data/",
+            "https://169.254.169.254/latest/meta-data/",
+            "https://attacker.example/c3dw62/",
+            "http://www.reddit.com/r/TrueDeemo/comments/c3dw62/",
+            "https://www.reddit.com.attacker.example/",
+            "https://attacker.example\\@www.reddit.com/",
+        ):
+            web = FakeWeb({self.URL: (302, b"", {"Location": location}), location: "bait"})
+            row = self.check(web)
+            self.assertEqual(web.requested, [self.URL], location)
+            self.assertEqual(
+                (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
+                ("redirected_off_site", 302, self.URL, location),
+            )
+
+    def test_a_redirect_within_the_site_is_followed(self):
+        title = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/title/"
+        hops = {
+            self.URL: (301, b"", {"Location": "/r/TrueDeemo/comments/c3dw62/title/"}),
+            title: (302, b"", {"Location": "https://old.reddit.com/r/TrueDeemo/comments/c3dw62/"}),
+            "https://old.reddit.com/r/TrueDeemo/comments/c3dw62/": "page",
+        }
+        web = FakeWeb(hops)
+        row = self.check(web)
+        self.assertEqual(web.requested, list(hops))
+        self.assertEqual(
+            (row["access_status"], row["http_status"], row["resolved_url"]),
+            ("page_reachable", 200, "https://old.reddit.com/r/TrueDeemo/comments/c3dw62/"),
+        )
+        self.assertNotIn("redirect_location", row)
+
+    def test_a_redirect_loop_is_a_failed_request(self):
+        web = FakeWeb({self.URL: (302, b"", {"Location": self.URL})})
+        row = self.check(web)
+        self.assertEqual(row["access_status"], "request_failed")
+        self.assertIn("Too many redirects", row["access_error"])
+        self.assertEqual(len(web.requested), archives.MAX_REDIRECTS + 1)
 
 
 class RetryStatusTests(unittest.TestCase):

@@ -579,12 +579,32 @@ CATALOG_ENTRIES = [
 ]
 
 
+def reach(url):
+    """The final response of url, following at most MAX_REDIRECTS redirects that stay on https within its own site
+    (its hostname without a leading "www.", or a subdomain of it), and the Location of the first redirect that would
+    leave it (not requested), or None. Only the status line and headers are read: the body is never downloaded."""
+    site = ((urlsplit(url).hostname or "").rstrip(".").removeprefix("www."),)
+    for _ in range(MAX_REDIRECTS + 1):
+        r = session().get(url, timeout=(12, 35), allow_redirects=False, stream=True)
+        r.close()
+        if not r.is_redirect:
+            return r, None
+        location = urljoin(r.url, r.headers["location"])
+        if not host_allowed(location, site):
+            return r, location
+        url = location
+    raise requests.TooManyRedirects(f"Too many redirects: {url}")
+
+
 def check_entry(entry):
     sid, name, url, status, notes = entry
     row = source(sid, name, url, status, notes)
     try:
-        r = session().get(url, timeout=(12, 35))
+        r, off_site = reach(url)
         row.update(http_status=r.status_code, resolved_url=r.url, checked_at=STAMP)
+        if off_site is not None:
+            row.update(access_status="redirected_off_site", redirect_location=off_site)
+            return row
         if r.status_code >= 400:
             row["access_status"] = "blocked" if r.status_code in (401, 403, 429) else "http_error"
         else:
