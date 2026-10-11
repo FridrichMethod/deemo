@@ -44,6 +44,20 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def duplicate_problems(assets):
+    """Records whose duplicate_of does not name another record with the same bytes and file that owns that file."""
+    problems = []
+    for asset in assets.values():
+        target = assets.get(asset.get("duplicate_of"))
+        if "duplicate_of" in asset and (
+            target is None
+            or "duplicate_of" in target
+            or (target["sha256"], target["path"]) != (asset["sha256"], asset["path"])
+        ):
+            problems.append(f"{asset['id']} -> {asset['duplicate_of']}")
+    return problems
+
+
 def response(url, status=200, body=b"", headers=None):
     result = requests.Response()
     result.status_code = status
@@ -539,6 +553,34 @@ class ArtistsTests(TempRoot):
             },
         )
         self.assertEqual(self.archived_files(), {archived["path"], blue_path})
+
+    def test_a_carried_forward_duplicate_never_names_a_record_with_other_bytes(self):
+        # p1 is a duplicate of p0. In one run p0 is re-uploaded as blue while p1 fails, is no longer listed or is
+        # re-uploaded too: p1's green row is carried forward, and its duplicate_of must not keep naming p0, which now
+        # holds blue.
+        green, p1_url, new_p1 = png("green"), OLD_P0.replace("_p0", "_p1"), NEW_P0.replace("_p0", "_p1")
+        p0_green, p1_green = f"artists:pixiv:1:p0:{sha(green)[:12]}", f"artists:pixiv:1:p1:{sha(green)[:12]}"
+        for pages, served, flags, code, linked in (
+            # p1 is the current record of the green file, so it owns it rather than naming p0's superseded version.
+            ([NEW_P0, p1_url], {p1_url: (503, b"", {})}, ("--refresh",), 1, ("artists:pixiv:1:p1", None)),
+            ([NEW_P0], {}, (), 0, ("artists:pixiv:1:p1", None)),
+            # Both pages moved on, so only superseded versions hold green: the first of them owns the file.
+            ([NEW_P0, new_p1], {new_p1: png("yellow")}, (), 0, (p1_green, p0_green)),
+        ):
+            with self.subTest(pages=pages, served=list(served)):
+                p0 = self.previous_record(0, green, OLD_P0)
+                p1 = {**p0, "id": "artists:pixiv:1:p1", "download_url": p1_url, "duplicate_of": p0["id"]}
+                self.write_manifest("artists", {"schema_version": 1, "sources": [], "assets": [p0, p1], "failures": []})
+                web = FakeWeb({**pixiv_routes(pages), NEW_P0: png("blue"), **served})
+                self.assertEqual(self.run_main(web, *flags), code)
+                assets = {asset["id"]: asset for asset in self.read_manifest("artists")["assets"]}
+                self.assertEqual(duplicate_problems(assets), [])
+                self.assertEqual(assets[p0["id"]]["sha256"], sha(png("blue")))
+                row, owner = linked
+                self.assertEqual((assets[row]["path"], assets[row].get("duplicate_of")), (p0["path"], owner))
+                self.assertEqual({asset["path"] for asset in assets.values()}, self.archived_files())
+                for path in self.archived_files():
+                    (self.root / path).unlink()
 
     def test_download_refuses_other_hosts_and_redirects(self):
         job = {"id": "artists:pixiv:1:p0", "source_id": "artists:pixiv:1", "page_url": PAGE_URL}

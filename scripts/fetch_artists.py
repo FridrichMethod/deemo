@@ -578,6 +578,43 @@ def require_unique(jobs):
             raise SystemExit(f"Duplicate {label}: {', '.join(duplicates)}")
 
 
+def relink_duplicates(rows):
+    """The rows with every duplicate_of naming a record that has the same bytes and file and is no duplicate itself.
+
+    carry_forward keeps previous rows as they were, so a removed, fetch_failed or superseded row can still name a
+    record whose bytes have changed since. Such a stale link is moved to the record that owns those bytes and that
+    file: the first current record by id, else a current row whose link is stale (it then owns the file itself), else
+    the first superseded version, else the row itself. A current record owns before a superseded version because
+    only current records are dedup primaries (archived_primaries). Rows with a sound link are returned unchanged."""
+    by_id = {row["id"]: row for row in rows}
+
+    def sound(row):
+        target = by_id.get(row["duplicate_of"])
+        return (
+            target is not None
+            and "duplicate_of" not in target
+            and (target["sha256"], target["path"]) == (row["sha256"], row["path"])
+        )
+
+    stale = {row["id"] for row in rows if "duplicate_of" in row and not sound(row)}
+    owners = {}
+    for row in sorted(
+        rows, key=lambda row: (row.get("upstream_status") == "superseded", row["id"] in stale, row["id"])
+    ):
+        if "duplicate_of" not in row or row["id"] in stale:
+            owners.setdefault((row["sha256"], row["path"]), row["id"])
+    relinked = []
+    for row in rows:
+        owner = owners.get((row["sha256"], row["path"])) if row["id"] in stale else None
+        if owner is None:
+            relinked.append(row)
+        elif owner == row["id"]:
+            relinked.append({key: value for key, value in row.items() if key != "duplicate_of"})
+        else:
+            relinked.append({**row, "duplicate_of": owner})
+    return relinked
+
+
 def carry_forward(previous, manifest):
     """Merge the previous manifest into this run's result so no verified record is dropped.
 
@@ -588,7 +625,8 @@ def carry_forward(previous, manifest):
     naming the canonical id. When upstream reverts to an earlier version, the canonical record holds
     those bytes and that file again, so the superseded copy of it is not kept twice. Files are never
     deleted; sources of kept records are kept too. The one record dropped is one whose file was
-    missing, so that this run stored other bytes at its path: its bytes are gone.
+    missing, so that this run stored other bytes at its path: its bytes are gone. A kept row whose
+    duplicate_of names a record that now holds other bytes is relinked (relink_duplicates).
     """
     records = {row["id"]: row for row in manifest["assets"]}
     held = {row["path"]: row["sha256"] for row in manifest["assets"]}
@@ -624,7 +662,7 @@ def carry_forward(previous, manifest):
             and (canonical["sha256"], canonical["path"]) == (row["sha256"], row["path"])
         )
 
-    manifest["assets"] = [row for row in records.values() if not restored(row)]
+    manifest["assets"] = relink_duplicates([row for row in records.values() if not restored(row)])
     missing = {row["source_id"] for row in manifest["assets"]} - {row["id"] for row in manifest["sources"]}
     manifest["sources"].extend(row for row in previous.get("sources", []) if row["id"] in missing)
 
