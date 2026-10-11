@@ -615,6 +615,29 @@ def relink_duplicates(rows):
     return relinked
 
 
+def reinstate_orphaned_versions(records, dropped, failed_assets, failed_sources):
+    """records (id -> row) with no superseded version naming a canonical id that is not among them.
+
+    Such a version's canonical record was dropped and this run did not reproduce its id, so the newest version of it
+    (by fetched_at, then id) becomes the record with that id again, its superseded_by removed, and with the
+    upstream_status carry_forward gives a record it keeps: "fetch_failed" when the id or its source failed this run
+    (unless the dropped record was already "removed"), else "removed". Any older versions then name it again."""
+    orphans = {}
+    for row in sorted(records.values(), key=lambda row: (row.get("fetched_at", ""), row["id"])):
+        if row.get("upstream_status") == "superseded" and row.get("superseded_by") not in records:
+            orphans[row["superseded_by"]] = row
+    result = dict(records)
+    for canonical, version in sorted(orphans.items()):
+        lost = dropped.get(canonical, {})
+        failed = canonical in failed_assets or version["source_id"] in failed_sources
+        status = "fetch_failed" if failed and lost.get("upstream_status") != "removed" else "removed"
+        del result[version["id"]]
+        kept = {key: value for key, value in version.items() if key != "superseded_by"}
+        result[canonical] = {**kept, "id": canonical, "upstream_status": status}
+        print(f"Reinstated {version['id']} as {canonical}: its canonical record was dropped", flush=True)
+    return result
+
+
 def carry_forward(previous, manifest):
     """Merge the previous manifest into this run's result so no verified record is dropped.
 
@@ -625,16 +648,21 @@ def carry_forward(previous, manifest):
     naming the canonical id. When upstream reverts to an earlier version, the canonical record holds
     those bytes and that file again, so the superseded copy of it is not kept twice. Files are never
     deleted; sources of kept records are kept too. The one record dropped is one whose file was
-    missing, so that this run stored other bytes at its path: its bytes are gone. A kept row whose
-    duplicate_of names a record that now holds other bytes is relinked (relink_duplicates).
+    missing, so that this run stored other bytes at its path: its bytes are gone. Deduplicated
+    records share a file, so a dropped record can be the canonical record of a superseded version
+    whose file is intact: that version then takes the canonical id (reinstate_orphaned_versions).
+    A kept row whose duplicate_of names a record that now holds other bytes is relinked
+    (relink_duplicates).
     """
     records = {row["id"]: row for row in manifest["assets"]}
     held = {row["path"]: row["sha256"] for row in manifest["assets"]}
     failed_assets = {row["asset_id"] for row in manifest["failures"] if row.get("asset_id")}
     failed_sources = {row["source_id"] for row in manifest["failures"]}
+    dropped = {}
     for old in previous.get("assets", []):
         if held.get(old["path"], old["sha256"]) != old["sha256"]:
             print(f"Dropped {old['id']}: its file {old['path']} was missing and now holds other bytes", flush=True)
+            dropped[old["id"]] = old
             continue
         new = records.get(old["id"])
         if new is not None:
@@ -653,6 +681,7 @@ def carry_forward(previous, manifest):
             records[old["id"]] = {**old, "upstream_status": status}
         else:
             records[old["id"]] = {**old, "upstream_status": "removed"}
+    records = reinstate_orphaned_versions(records, dropped, failed_assets, failed_sources)
 
     def restored(row):
         canonical = records.get(row.get("superseded_by"))

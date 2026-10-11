@@ -32,6 +32,7 @@ def load(name):
 
 artists = load("fetch_artists")
 archives = load("fetch_archives")
+catalog = load("build_catalog")
 
 
 def png(color, size=(4, 4)):
@@ -55,6 +56,20 @@ def duplicate_problems(assets):
             or (target["sha256"], target["path"]) != (asset["sha256"], asset["path"])
         ):
             problems.append(f"{asset['id']} -> {asset['duplicate_of']}")
+    return problems
+
+
+def catalog_problems(root, assets):
+    """What scripts/build_catalog.py --verify rejects in these records: each record's own checks, then superseded_by."""
+    problems, ids = [], {asset["id"] for asset in assets}
+    for asset in assets:
+        try:
+            catalog.validate_asset(root, asset, verify=True)
+        except (OSError, ValueError) as error:
+            problems.append(f"{asset['id']}: {error}")
+        successor = asset.get("superseded_by")
+        if successor is not None and (successor == asset["id"] or successor not in ids):
+            problems.append(f"superseded_by names no other asset: {asset['id']} -> {successor}")
     return problems
 
 
@@ -581,6 +596,45 @@ class ArtistsTests(TempRoot):
                 self.assertEqual({asset["path"] for asset in assets.values()}, self.archived_files())
                 for path in self.archived_files():
                     (self.root / path).unlink()
+
+    def test_a_superseded_version_whose_canonical_record_is_dropped_becomes_that_record(self):
+        p00, p01 = "assets/public/artists/snowegg/pixiv-1-p00.png", "assets/public/artists/snowegg/pixiv-1-p01.png"
+        p1_old, p1_new = OLD_P0.replace("_p0", "_p1"), NEW_P0.replace("_p0", "_p1")
+        green_url = NEW_P0.replace("/2022/", "/2023/")
+        # In the last run page 2 is deleted, or its download fails.
+        for pages, flags, code, status in (
+            ([green_url], (), 0, "removed"),
+            ([green_url, p1_new], ("--refresh",), 1, "fetch_failed"),
+        ):
+            with self.subTest(status=status):
+                for path in self.archived_files():
+                    (self.root / path).unlink()
+                (self.root / "data/sources/artists.json").unlink(missing_ok=True)
+                web = FakeWeb({**pixiv_routes([OLD_P0, p1_old]), OLD_P0: png("red"), p1_old: png("white")})
+                self.assertEqual(self.run_main(web), 0)
+                # Page 2 is re-uploaded with page 1's bytes: p1 shares p00.png, and white stays as p1's superseded
+                # version.
+                web.routes.update({**pixiv_routes([OLD_P0, p1_new]), p1_new: png("red")})
+                self.assertEqual(self.run_main(web), 0)
+                assets = {asset["id"]: asset for asset in self.read_manifest("artists")["assets"]}
+                self.assertEqual(assets["artists:pixiv:1:p1"]["path"], p00)
+                white = f"artists:pixiv:1:p1:{sha(png('white'))[:12]}"
+                self.assertEqual(assets[white]["superseded_by"], "artists:pixiv:1:p1")
+                # p00.png is lost and page 1 is re-uploaded as green. Green is stored at the lost path, so p0 and
+                # p1, whose bytes are gone, are dropped; p1's white version is then p1 again.
+                (self.root / p00).unlink()
+                web.routes.update({**pixiv_routes(pages), green_url: png("green"), p1_new: (503, b"", {})})
+                self.assertEqual(self.run_main(web, *flags), code)
+                result = self.read_manifest("artists")["assets"]
+                self.assertEqual(catalog_problems(self.root, result), [])
+                self.assertEqual(
+                    [(a["id"], a["path"], a["sha256"], a.get("upstream_status")) for a in result],
+                    [
+                        ("artists:pixiv:1:p0", p00, sha(png("green")), None),
+                        ("artists:pixiv:1:p1", p01, sha(png("white")), status),
+                    ],
+                )
+                self.assertEqual({a["path"] for a in result}, self.archived_files())
 
     def test_download_refuses_other_hosts_and_redirects(self):
         job = {"id": "artists:pixiv:1:p0", "source_id": "artists:pixiv:1", "page_url": PAGE_URL}
