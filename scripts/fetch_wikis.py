@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urljoin, urlsplit
 
 import requests
 from PIL import Image
@@ -54,10 +54,12 @@ RETRY_STATUSES = {429, 500, 502, 503, 504, 567}
 ATTEMPTS = 3
 MAX_RETRY_AFTER = 30  # seconds; a longer Retry-After is capped so a run stays bounded
 TIMEOUT = (10, 25)  # seconds to connect, and to wait for each read
-# An image download follows at most this many redirects, each checked like the first URL (see download_allowed()).
+# A request follows at most this many redirects, each checked like the first URL (see download_allowed() and get()).
 MAX_REDIRECTS = 5
 # The most bytes read from one image response, read in CHUNK_BYTES pieces; the largest wiki image is about 2.1 MiB.
 MAX_IMAGE_BYTES = 64 * 1024 * 1024
+# The most bytes read from one response of get(): an API query, the DeemoSongs JSON or the illustrator index page.
+MAX_RESPONSE_BYTES = 64 * 1024 * 1024
 CHUNK_BYTES = 1024 * 1024
 # The most continuation requests one MediaWiki list (or one batch of titles) may take, far above any real list: each
 # request brings up to 500 rows, so as many requests would list half a million.
@@ -103,9 +105,9 @@ class IncompleteList(RuntimeError):
 
 
 class RefusedDownload(ValueError):
-    """An image download not made or not finished: a URL outside the wiki's image path, a redirect whose Location is
-    not UTF-8, too many redirects, or a response over MAX_IMAGE_BYTES. It is not retried, and no other URL of the
-    candidate is tried."""
+    """A request not made or a response not read: an image URL outside the wiki's image path, a URL of get() off its
+    first URL's https host, a redirect whose Location is not UTF-8, too many redirects, or a body over its byte limit
+    (MAX_IMAGE_BYTES or MAX_RESPONSE_BYTES). It is not retried, and no other URL of an image candidate is tried."""
 
 
 def now():
@@ -144,13 +146,60 @@ def retried(call, *args, **kwargs):
             time.sleep(retry_delay(error, attempt))
 
 
-def get(url, *, params=None, headers=None):
-    def attempt():
-        response = requests.get(url, params=params, headers={**HEADERS, **(headers or {})}, timeout=TIMEOUT)
-        response.raise_for_status()
-        return response
+def on_host(url, host):
+    """Whether url is an https URL on exactly host, with no user or port other than 443, both as written and as requests
+    sends it (urllib3 reads a backslash as the start of the path, so "https://a\\@b/" goes to a)."""
+    try:
+        raw = urlsplit(url)
+        sent = urlsplit(requests.Request("GET", url).prepare().url)
+        ports = {raw.port, sent.port}
+    except (ValueError, requests.RequestException):
+        return False
+    return (
+        raw.scheme == sent.scheme == "https"
+        and raw.hostname == sent.hostname == host
+        and ports <= {None, 443}
+        and "@" not in raw.netloc + sent.netloc
+    )
 
-    return retried(attempt)
+
+def page_response(url, params, headers):
+    """One request of get(), following no redirect, its body read here up to MAX_RESPONSE_BYTES, so a connection lost
+    mid-body is retried like any other request. requests keeps a body it has read in _content, where .content, .text
+    and .json() find it, so the response is set up as if requests had read these bytes itself."""
+    response = requests.get(
+        url,
+        params=params,
+        headers={**HEADERS, **(headers or {})},
+        timeout=TIMEOUT,
+        allow_redirects=False,
+        stream=True,
+    )
+    try:
+        response.raise_for_status()
+        if not response.is_redirect:
+            response._content = read_body(response, MAX_RESPONSE_BYTES)
+        return response
+    finally:
+        response.close()
+
+
+def get(url, *, params=None, headers=None):
+    """The response of url, one of this script's fixed https URLs (the wikis' api.php, the DeemoSongs JSON, the
+    illustrator index), with its body read.
+
+    Redirects are followed by hand (see redirect_target()), at most MAX_REDIRECTS of them and only to https URLs on url's
+    own host, and the body is read up to MAX_RESPONSE_BYTES; otherwise RefusedDownload is raised before anything more is
+    requested or read. Connection errors and RETRY_STATUSES are retried (see retried())."""
+    host = urlsplit(url).hostname
+    for _ in range(MAX_REDIRECTS + 1):
+        if not on_host(url, host):
+            raise RefusedDownload(f"Refusing a request off {host}: {url!r}")
+        response = retried(page_response, url, params, headers)
+        if not response.is_redirect:
+            return response
+        url, params = redirect_target(response), None  # the Location carries its own query
+    raise RefusedDownload(f"Refusing to follow more than {MAX_REDIRECTS} redirects: {url!r}")
 
 
 def download_allowed(source, url):
@@ -165,19 +214,19 @@ def download_allowed(source, url):
     return check_sources.download_url_allowed(source, sent)
 
 
-def read_image(response):
-    """The body of a streamed image response. Past MAX_IMAGE_BYTES it raises RefusedDownload: at once when the
-    Content-Length says so, otherwise at the chunk that crosses the limit, so no more is read or kept."""
+def read_body(response, limit):
+    """The body of a streamed response. Past limit bytes it raises RefusedDownload: at once when the Content-Length
+    says so, otherwise at the chunk that crosses the limit, so no more is read or kept."""
     declared = str(response.headers.get("Content-Length") or "")
-    if re.fullmatch(r"[0-9]+", declared) and int(declared) > MAX_IMAGE_BYTES:
+    if re.fullmatch(r"[0-9]+", declared) and int(declared) > limit:
         raise RefusedDownload(
-            f"Refusing a response of {int(declared)} bytes, over the {MAX_IMAGE_BYTES}-byte limit: {response.url!r}"
+            f"Refusing a response of {int(declared)} bytes, over the {limit}-byte limit: {response.url!r}"
         )
     chunks, size = [], 0
     for chunk in response.iter_content(chunk_size=CHUNK_BYTES):
         size += len(chunk)
-        if size > MAX_IMAGE_BYTES:
-            raise RefusedDownload(f"Refusing a response over the {MAX_IMAGE_BYTES}-byte limit: {response.url!r}")
+        if size > limit:
+            raise RefusedDownload(f"Refusing a response over the {limit}-byte limit: {response.url!r}")
         chunks.append(chunk)
     return b"".join(chunks)
 
@@ -188,7 +237,7 @@ def image_response(url, headers):
     response = requests.get(url, headers={**HEADERS, **headers}, timeout=TIMEOUT, allow_redirects=False, stream=True)
     try:
         response.raise_for_status()
-        return response, None if response.is_redirect else read_image(response)
+        return response, None if response.is_redirect else read_body(response, MAX_IMAGE_BYTES)
     finally:
         response.close()
 

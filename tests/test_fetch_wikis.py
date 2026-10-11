@@ -604,6 +604,26 @@ class IllustratorIndexTests(DiscoveryRun):
                     [(row["source_id"], row["stage"]) for row in failures], [(self.ENTRY["id"], "reference_index")]
                 )
 
+    def test_a_refresh_redirected_off_the_site_or_too_large_is_recorded(self):
+        # The page is fetched like the API: redirects only to https on wikiwiki.jp, a body of at most 64 MiB.
+        page = b'<div id="body"><h2>illustrator</h2></div>'
+        for name, route, limit in (
+            ("off the site", (302, b"", {"Location": "https://evil.example.test/deemo/"}), fetch.MAX_RESPONSE_BYTES),
+            ("too large", (200, page, {"Content-Type": "text/html"}), len(page) - 1),
+        ):
+            with self.subTest(name), patch.object(fetch, "MAX_RESPONSE_BYTES", limit):
+                self.web.routes = {ILLUSTRATOR_URL: route, "https://evil.example.test/deemo/": page}
+                self.web.calls.clear()
+                self.discover()
+                # Requested once, never retried, and the redirect target never requested.
+                pages = [url for url in self.web.calls if not url.startswith(BWIKI_IMAGES)]  # not the image downloads
+                self.assertEqual(pages, [ILLUSTRATOR_URL])
+                self.assertEqual(self.entry(), self.ENTRY)
+                self.assertEqual(self.read(ILLUSTRATOR_INDEX), self.INDEX)
+                (failure,) = self.read(MANIFEST)["failures"]
+                self.assertEqual((failure["source_id"], failure["stage"]), (self.ENTRY["id"], "reference_index"))
+                self.assertIn("Refusing", failure["error"])
+
     def test_full_run_refreshes_the_index(self):
         page = '<div id="body"><h2>illustrator</h2><table><tr><td><a href="/deemo/X">X</a></td></tr></table></div>'
         self.web.routes[ILLUSTRATOR_URL] = (200, page.encode("utf-8"), {"Content-Type": "text/html"})
@@ -648,6 +668,100 @@ class DiscoveryStatsTests(DiscoveryRun):
         dump(self.root / MANIFEST, manifest)
         self.resume()
         self.assertEqual(self.read(MANIFEST)["sources"][1]["discovery"], manifest["sources"][1]["discovery"])
+
+
+class GetTests(FetcherRun):
+    """get() fetches this script's fixed URLs (the wikis' api.php, the DeemoSongs JSON, the illustrator index): it
+    follows redirects only to https on the URL's own host, at most MAX_REDIRECTS of them, and reads at most
+    MAX_RESPONSE_BYTES of a body. Anything else is refused at once, before more is requested or read, and not retried."""
+
+    URL = "https://wiki.biligame.com/deemo/api.php"
+
+    def test_a_response_over_the_size_limit_is_refused_before_more_is_read(self):
+        self.assertEqual(fetch.MAX_RESPONSE_BYTES, 64 * 1024 * 1024)
+        body = json.dumps({"query": {"pages": {}}}).encode()
+        with patch.object(fetch, "MAX_RESPONSE_BYTES", len(body) - 1):
+            # Streamed: the read stops at the chunk that crosses the limit.
+            self.web.routes[self.URL] = (200, body + bytes(3 * fetch.CHUNK_BYTES), {})
+            with self.assertRaisesRegex(fetch.RefusedDownload, "limit"):
+                fetch.api("bwiki", list="allimages")
+            (response,) = self.web.responses
+            self.assertLessEqual(response.consumed, fetch.CHUNK_BYTES)
+            # Declared: a Content-Length over the limit is refused before the body is read.
+            self.web.routes[self.URL] = (200, body, {"Content-Length": str(len(body))})
+            with self.assertRaisesRegex(fetch.RefusedDownload, "limit"):
+                fetch.get(self.URL)
+            self.assertEqual(self.web.responses[-1].consumed, 0)
+        self.assertEqual((len(self.web.calls), self.sleeps), (2, []))  # never retried
+        with patch.object(fetch, "MAX_RESPONSE_BYTES", len(body)):
+            self.assertEqual(fetch.api("bwiki", list="allimages"), {"query": {"pages": {}}})
+        self.assertEqual(self.web.options[-1], {"allow_redirects": False, "stream": True})
+
+    def test_a_real_response_serves_the_bytes_read_under_the_limit(self):
+        # requests.Response objects with a body stream, as requests builds them: .content, .text and .json() must serve
+        # the bytes read under the limit, decoded as requests decodes them.
+        def answer(body, content_type):
+            def get(url, **options):
+                response = requests.Response()
+                response.status_code, response.url, response.raw = 200, url, io.BytesIO(body)
+                response.headers["Content-Type"] = content_type
+                response.encoding = requests.utils.get_encoding_from_headers(response.headers)
+                return response
+
+            return patch.object(fetch.requests, "get", get)
+
+        page = "<h2>アーティスト別リスト</h2>".encode()
+        with answer(page, "text/html; charset=UTF-8"):
+            response = fetch.get(ILLUSTRATOR_URL)
+        self.assertEqual((response.content, response.text), (page, page.decode()))
+        with answer(page, "text/html"):  # no charset: requests reads text/* as ISO-8859-1
+            self.assertEqual(fetch.get(ILLUSTRATOR_URL).text, page.decode("latin-1"))
+        data = {"query": {"pages": {"1": {"title": "文件:A.png"}}}}
+        with answer(json.dumps(data, ensure_ascii=False).encode(), "application/json"):
+            self.assertEqual(fetch.api("bwiki", list="allimages"), data)
+        with answer(page, "text/html"), patch.object(fetch, "MAX_RESPONSE_BYTES", len(page) - 1):
+            with self.assertRaisesRegex(fetch.RefusedDownload, "limit"):
+                fetch.get(ILLUSTRATOR_URL)
+
+    def test_a_redirect_on_the_same_host_is_followed(self):
+        moved = "https://wiki.biligame.com/deemo/w/api.php?action=query&format=json"
+        self.web.routes = {
+            self.URL: (301, b"", {"Location": "/deemo/w/api.php?action=query&format=json"}),
+            moved: b"{}",
+        }
+        self.assertEqual(fetch.api("bwiki", list="allimages"), {})
+        self.assertEqual(self.web.calls, [self.URL, moved])
+        # The Location carries its own query; the parameters are sent with the first request only.
+        self.assertEqual(self.web.params[0]["list"], "allimages")
+        self.assertIsNone(self.web.params[1])
+        self.assertEqual(self.web.options, [{"allow_redirects": False, "stream": True}] * 2)
+
+    def test_a_redirect_off_the_host_or_off_https_is_refused(self):
+        for location in (
+            "https://evil.example.test/deemo/api.php",
+            "//evil.example.test/deemo/api.php",
+            "http://wiki.biligame.com/deemo/api.php",
+            "https://wiki.biligame.com:8443/deemo/api.php",
+            "https://user@wiki.biligame.com/deemo/api.php",
+            "https://patchwiki.biligame.com/deemo/api.php",  # a sibling host of the same site
+            "https://wiki.biligame.com.evil.example.test/deemo/api.php",
+            "https://wiki.biligame.com\\@evil.example.test/deemo/api.php",
+            "https://127.0.0.1/deemo/api.php",
+        ):
+            with self.subTest(location=location):
+                target = urljoin(self.URL, location)
+                self.web.routes = {self.URL: (302, b"", {"Location": location}), target: b"{}"}
+                self.web.calls.clear()
+                with self.assertRaisesRegex(fetch.RefusedDownload, "Refusing a request off wiki.biligame.com"):
+                    fetch.api("bwiki", list="allimages")
+                self.assertEqual(self.web.calls, [self.URL])
+                self.assertEqual(self.sleeps, [])
+
+    def test_a_redirect_loop_is_cut_off(self):
+        self.web.routes[self.URL] = (302, b"", {"Location": self.URL})
+        with self.assertRaisesRegex(fetch.RefusedDownload, "redirects"):
+            fetch.get(self.URL)
+        self.assertEqual(self.web.calls, [self.URL] * (fetch.MAX_REDIRECTS + 1))
 
 
 class RetryTests(FetcherRun):
