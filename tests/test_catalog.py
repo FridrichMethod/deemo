@@ -843,8 +843,31 @@ class CatalogTests(unittest.TestCase):
                 build.safe_path(self.root, path)
 
     def test_source_urls_are_web_pages(self):
-        with self.assertRaisesRegex(ValueError, "Unsafe source URL"):
-            build.validate_asset(self.root, {**self.asset, "page_url": "javascript:alert(1)"})
+        # page_url becomes the slideshow's Source link (data-page, used as an href with no check of its own), so the
+        # build is its only guard. Each value defeats one clause: a host with another scheme (urlsplit lower-cases
+        # JaVaScRiPt), or http(s) with no host.
+        unsafe = {
+            "javascript:alert(1)": "no scheme allowed, no host",
+            "javascript://x/%0Aalert(1)": "a host, but the javascript scheme",
+            "JaVaScRiPt://x/%0A1": "a host, but the javascript scheme in mixed case",
+            "data://x/,a": "a host, but the data scheme",
+            "vbscript://x/": "a host, but the vbscript scheme",
+            "ftp://example.com/x": "a host, but not http(s)",
+            "//example.com/x": "a host, but no scheme",
+            "https:///x": "https, but no host",
+            "http:x": "http, but no host",
+        }
+        for value, reason in unsafe.items():
+            with self.subTest(value=value, reason=reason):
+                with self.assertRaisesRegex(ValueError, "Unsafe source URL"):
+                    build.validate_asset(self.root, {**self.asset, "page_url": value})
+                self.manifest("artists", {**self.asset, "page_url": value})
+                with self.assertRaisesRegex(ValueError, "Unsafe source URL"):
+                    build.combine(self.root)
+        for value in ("https://example.com/art", "http://example.com/art"):
+            with self.subTest(value=value):
+                self.manifest("artists", {**self.asset, "page_url": value})
+                self.assertEqual(self.slides(build.combine(self.root))[0]["data-page"], value)
 
     def test_html_escapes_remote_metadata(self):
         # Scraped titles and names go into double-quoted attributes: none may end the attribute or the tag, add an
