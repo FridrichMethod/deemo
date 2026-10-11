@@ -10,8 +10,10 @@ import email.utils
 import hashlib
 import importlib.util
 import io
+import itertools
 import json
 import os
+import signal
 import struct
 import subprocess
 import sys
@@ -413,18 +415,25 @@ class CheckpointTests(FetcherRun):
     def test_ctrl_c_cancels_the_queued_downloads_and_keeps_the_finished_ones(self):
         # Ctrl-C reaches the main thread while a worker downloads. The queued downloads are cancelled instead of all
         # running to the end, and every download that finished has its record: none is left as a file without one.
+        # A shell starts a background job with SIGINT ignored, and interrupt_main() then does nothing at all. Ctrl-C at
+        # a terminal reaches Python's own handler, so the test installs it, whoever started the run.
+        previous = signal.signal(signal.SIGINT, signal.default_int_handler)
+        self.addCleanup(signal.signal, signal.SIGINT, previous)
         candidates = [self.offer(f"Art {index:02}.png", png((index * 4, 0, 0))) for index in range(60)]
         web, saved, write_json = self.web, threading.Event(), fetch.write_json
+        requests_made, lock = itertools.count(1), threading.Lock()
 
         def saving(relative, data):
             write_json(relative, data)
             saved.set()
 
         def interrupting(url, **options):
-            if len(web.calls) >= 5:
-                saved.wait(0.5)  # a request after Ctrl-C waits until the run has saved the manifest
+            with lock:  # each request takes its own number, whichever thread makes it, so exactly one is the fifth
+                number = next(requests_made)
+            if number == 6:
+                saved.wait(10)  # the request after Ctrl-C waits until the run has saved the manifest
             response = web(url, **options)
-            if len(web.calls) == 5:
+            if number == 5:
                 _thread.interrupt_main()
             return response
 
@@ -434,8 +443,8 @@ class CheckpointTests(FetcherRun):
             self.assertRaises(KeyboardInterrupt),
         ):
             self.resume(*candidates)
-        # The interrupted download and the one the worker had started (one more if the save took over 0.5 s).
-        self.assertLessEqual(len(self.web.calls), 5 + 2)
+        # The interrupted download and at most the one the worker had started; the queued ones were cancelled.
+        self.assertLessEqual(len(self.web.calls), 5 + 1)
         files = {path.relative_to(self.root).as_posix() for path in (self.root / "assets").rglob("*") if path.is_file()}
         self.assertGreaterEqual(len(files), 5)
         self.assertEqual({record["path"] for record in self.read(MANIFEST)["assets"]}, files)
