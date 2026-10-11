@@ -224,9 +224,10 @@ class SlideshowTemplateTests(unittest.TestCase):
 
     def test_only_the_current_slide_takes_hits_and_reaches_assistive_tech(self):
         """Hidden slides stack over the shown one; opacity alone leaves them hit-testable and in the AX tree."""
-        rule = lambda selector: re.search(r"(?m)^" + re.escape(selector) + r" \{(.*?)\n\}", self.css, re.DOTALL).group(
-            1
-        )
+
+        def rule(selector):
+            return re.search(r"(?m)^" + re.escape(selector) + r" \{(.*?)\n\}", self.css, re.DOTALL).group(1)
+
         self.assertRegex(rule(".mySlides"), r"pointer-events:\s*none")
         self.assertRegex(rule(".mySlides"), r"visibility:\s*hidden")
         self.assertRegex(rule(".mySlides.is-current"), r"pointer-events:\s*auto")

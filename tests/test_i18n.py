@@ -5,6 +5,7 @@ import re
 import unittest
 from collections import namedtuple
 from html.parser import HTMLParser
+from itertools import pairwise
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -98,7 +99,7 @@ def script_order_problems(scripts, callers):
     if problems:
         return problems
     rank = {"runtime": 0, "table": 1, "caller": 2}
-    for (before, first), (after, second) in zip(group, group[1:]):
+    for (before, first), (after, second) in pairwise(group):
         if rank[before] > rank[after]:
             problems.append(
                 f"{name(first)} ({before}) runs before {name(second)} ({after}); expected the runtime, then every message table, then the code that calls t()"
