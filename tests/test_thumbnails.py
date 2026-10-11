@@ -51,15 +51,29 @@ SRGB = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
 def grey_profile(gamma):
     """A minimal ICC v2 greyscale display profile (a gamma curve and a D50 white point); Pillow can only create RGB,
     Lab and XYZ profiles."""
+
     def xyz(x, y, z):
         return b"XYZ " + bytes(4) + struct.pack(">3i", *(round(value * 65536) for value in (x, y, z)))
-    tags = [(b"kTRC", b"curv" + bytes(4) + struct.pack(">IH", 1, round(gamma * 256))), (b"wtpt", xyz(0.9642, 1.0, 0.8249))]
+
+    tags = [
+        (b"kTRC", b"curv" + bytes(4) + struct.pack(">IH", 1, round(gamma * 256))),
+        (b"wtpt", xyz(0.9642, 1.0, 0.8249)),
+    ]
     offset, table, body = 128 + 4 + 12 * len(tags), b"", b""
     for signature, data in tags:
         table += signature + struct.pack(">II", offset + len(body), len(data))
         body += data + bytes(-len(data) % 4)
-    header = (struct.pack(">I", offset + len(body)) + bytes(4) + bytes([2, 0x10, 0, 0]) + b"mntrGRAYXYZ " + bytes(12)
-              + b"acsp" + bytes(28) + xyz(0.9642, 1.0, 0.8249)[8:] + bytes(48))
+    header = (
+        struct.pack(">I", offset + len(body))
+        + bytes(4)
+        + bytes([2, 0x10, 0, 0])
+        + b"mntrGRAYXYZ "
+        + bytes(12)
+        + b"acsp"
+        + bytes(28)
+        + xyz(0.9642, 1.0, 0.8249)[8:]
+        + bytes(48)
+    )
     return header + struct.pack(">I", len(tags)) + table + body
 
 
@@ -79,8 +93,12 @@ class Fixture(unittest.TestCase):
         # Every input scripts/build_catalog.py requires: the other source manifests, the song mapping and both
         # legacy directories, all empty, so combine() sees only the artist records below.
         for family in ("wikis", "archives"):
-            (self.root / f"data/sources/{family}.json").write_text(json.dumps({"sources": [], "assets": []}), encoding="utf-8")
-        (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {"songs": {}, "books": []}}), encoding="utf-8")
+            (self.root / f"data/sources/{family}.json").write_text(
+                json.dumps({"sources": [], "assets": []}), encoding="utf-8"
+            )
+        (self.root / "data/sources/song-mapping.json").write_text(
+            json.dumps({"data": {"songs": {}, "books": []}}), encoding="utf-8"
+        )
         for directory in ("assets/legacy/trans", "assets/legacy/tiny"):
             (self.root / directory).mkdir(parents=True)
         self.records = []
@@ -95,11 +113,20 @@ class Fixture(unittest.TestCase):
         path = self.root / "assets/public/artists" / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(raw)
-        self.records.append({
-            "id": f"artist:{name}", "source_id": "artist", "title": name, "kind": "song_art",
-            "page_url": "https://example.com/art", "path": path.relative_to(self.root).as_posix(),
-            "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(), "game": "DEEMO", **extra,
-        })
+        self.records.append(
+            {
+                "id": f"artist:{name}",
+                "source_id": "artist",
+                "title": name,
+                "kind": "song_art",
+                "page_url": "https://example.com/art",
+                "path": path.relative_to(self.root).as_posix(),
+                "bytes": len(raw),
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "game": "DEEMO",
+                **extra,
+            }
+        )
 
     def add_image(self, name, size, mode, format_name):
         image = pattern(size, mode)
@@ -119,7 +146,10 @@ class Fixture(unittest.TestCase):
         return self.records[-1]["path"]
 
     def write_manifest(self, records=None):
-        content = {"sources": [{"id": "artist", "name": "Artist", "url": "https://example.com"}], "assets": records if records is not None else self.records}
+        content = {
+            "sources": [{"id": "artist", "name": "Artist", "url": "https://example.com"}],
+            "assets": records if records is not None else self.records,
+        }
         (self.root / "data/sources/artists.json").write_text(json.dumps(content), encoding="utf-8")
 
     def sha(self, name):
@@ -258,8 +288,12 @@ class ColourModeTests(Fixture):
     def test_greyscale_profile_is_applied_not_embedded(self):
         # A linear (gamma 1.0) greyscale profile: mid-grey 128 is much lighter in sRGB, so applying it is visible.
         flat = Image.new("L", (800, 600), 128)
-        expected = ImageCms.profileToProfile(flat, ImageCms.ImageCmsProfile(io.BytesIO(grey_profile(1.0))),
-                                             ImageCms.createProfile("sRGB"), outputMode="RGB").getpixel((0, 0))
+        expected = ImageCms.profileToProfile(
+            flat,
+            ImageCms.ImageCmsProfile(io.BytesIO(grey_profile(1.0))),
+            ImageCms.createProfile("sRGB"),
+            outputMode="RGB",
+        ).getpixel((0, 0))
         self.assertGreater(expected[0], 170)
         for name, mode, format_name in (("grey.jpg", "L", "JPEG"), ("grey-cutout.png", "LA", "PNG")):
             with self.subTest(mode=mode):
@@ -285,7 +319,13 @@ class ColourModeTests(Fixture):
         cases = [
             ("lab.png", flat, "PNG", {"icc_profile": lab}, "Lab ICC profile on a L image"),
             ("rgb-on-grey.png", flat, "PNG", {"icc_profile": SRGB}, "RGB ICC profile on a L image"),
-            ("grey-on-rgb.png", flat.convert("RGB"), "PNG", {"icc_profile": grey_profile(2.2)}, "GRAY ICC profile on a RGB image"),
+            (
+                "grey-on-rgb.png",
+                flat.convert("RGB"),
+                "PNG",
+                {"icc_profile": grey_profile(2.2)},
+                "GRAY ICC profile on a RGB image",
+            ),
             ("broken-profile.png", flat, "PNG", {"icc_profile": b"not a profile" * 10}, "unreadable ICC profile"),
             ("print.jpg", Image.new("CMYK", (800, 600), (0, 255, 255, 0)), "JPEG", {}, "unsupported image mode CMYK"),
             ("deep-cutout.png", deep, "PNG", {"transparency": 0}, "unsupported image mode I;16"),
@@ -372,7 +412,9 @@ class CheckTests(Fixture):
                 # Same size as the real preview, valid WebP, hash recorded: only the metadata check can catch it.
                 self.rewrite_entry("wide.png", self.webp((480, 288), **options))
                 found = thumbs.problems(self.root)
-                self.assertEqual(found, [f"Thumbnail carries EXIF or XMP metadata: {thumbs.thumb_path(self.sha('wide.png'))}"])
+                self.assertEqual(
+                    found, [f"Thumbnail carries EXIF or XMP metadata: {thumbs.thumb_path(self.sha('wide.png'))}"]
+                )
 
     def test_changed_encoder_settings_are_detected(self):
         manifest = self.manifest()
@@ -478,7 +520,7 @@ def function_body(source, name):
     for index in range(opening, len(source)):
         depth += {"{": 1, "}": -1}.get(source[index], 0)
         if depth == 0:
-            return source[opening + 1:index]
+            return source[opening + 1 : index]
     raise AssertionError(f"function {name}() is not closed")
 
 
@@ -495,8 +537,11 @@ class ArchiveScriptTests(unittest.TestCase):
         self.assertRegex(self.cards, r"\bimage\.src\s*=\s*asset\.thumb\s*\|\|\s*asset\.url\s*;")
 
     def test_a_failed_preview_falls_back_to_the_original_once(self):
-        self.assertRegex(self.cards, r"\bimage\.addEventListener\(\s*[\"']error[\"']\s*,\s*\(\)\s*=>\s*\{?\s*"
-                                     r"image\.src\s*=\s*asset\.url\s*;?\s*\}?\s*,\s*\{\s*once\s*:\s*true\s*\}\s*\)")
+        self.assertRegex(
+            self.cards,
+            r"\bimage\.addEventListener\(\s*[\"']error[\"']\s*,\s*\(\)\s*=>\s*\{?\s*"
+            r"image\.src\s*=\s*asset\.url\s*;?\s*\}?\s*,\s*\{\s*once\s*:\s*true\s*\}\s*\)",
+        )
 
     def test_viewer_download_and_original_links_use_the_original(self):
         for target in ('$("full-image").src', '$("download").href', '$("original").href'):
@@ -518,14 +563,23 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(thumbs.problems(ROOT), [])
 
     def test_catalog_grid_entries_use_the_committed_previews(self):
-        wrong = [asset["id"] for asset in self.gallery if asset.get("thumb") != (
-            quote(self.manifest[asset["sha256"]]["path"], safe="/") if asset["sha256"] in self.manifest else None)]
-        self.assertEqual(wrong, [], f"{len(wrong)} catalog entries disagree with {thumbs.MANIFEST}: run scripts/build_catalog.py")
+        wrong = [
+            asset["id"]
+            for asset in self.gallery
+            if asset.get("thumb")
+            != (quote(self.manifest[asset["sha256"]]["path"], safe="/") if asset["sha256"] in self.manifest else None)
+        ]
+        self.assertEqual(
+            wrong, [], f"{len(wrong)} catalog entries disagree with {thumbs.MANIFEST}: run scripts/build_catalog.py"
+        )
 
     def test_first_page_of_the_grid_stays_light(self):
         # archive.js renders 60 cards per page in catalog order by default; before previews this was about 82 MB.
         first_page = self.gallery[:60]
-        grid_bytes = sum(self.manifest[asset["sha256"]]["bytes"] if asset["sha256"] in self.manifest else asset["bytes"] for asset in first_page)
+        grid_bytes = sum(
+            self.manifest[asset["sha256"]]["bytes"] if asset["sha256"] in self.manifest else asset["bytes"]
+            for asset in first_page
+        )
         self.assertLess(grid_bytes, 4_000_000)
 
 

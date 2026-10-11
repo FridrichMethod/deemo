@@ -52,16 +52,24 @@ def tracked_files(root: Path, directories: tuple[str, ...]) -> list[str] | None:
     """Git-tracked files under these directories, as sorted POSIX paths relative to root, skipping dot-files and
     __pycache__ as scripts/prepare_pages.py does. None when root is not the top of a git checkout."""
     try:
-        top = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
+        top = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True
+        )
         if Path(top.stdout.strip()).resolve() != root.resolve():
             return None
-        listed = subprocess.run(["git", "-C", str(root), "ls-files", "-z", "--", *directories], capture_output=True, check=True)
+        listed = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "-z", "--", *directories], capture_output=True, check=True
+        )
     except (OSError, subprocess.CalledProcessError) as error:
         if (root / ".git").exists():
-            print(f"warning: cannot list tracked files, so unreferenced assets are not checked: {error}", file=sys.stderr)
+            print(
+                f"warning: cannot list tracked files, so unreferenced assets are not checked: {error}", file=sys.stderr
+            )
         return None
     names = (name.decode("utf-8") for name in listed.stdout.split(b"\0") if name)
-    return sorted(name for name in names if not any(part.startswith(".") or part == "__pycache__" for part in name.split("/")))
+    return sorted(
+        name for name in names if not any(part.startswith(".") or part == "__pycache__" for part in name.split("/"))
+    )
 
 
 def required_input(root: Path, relative: str, directory: bool = False) -> Path:
@@ -134,24 +142,37 @@ def legacy_assets(root: Path, wiki_records: list[dict] | None = None) -> list[di
             format_name = image.format
         key = path.stem
         song, title_status = mapped_song(songs, key)
-        titles, mapping_source = ([song["name"]] if song.get("name") else []), (mapping.get("source_url") if song else None)
+        titles, mapping_source = (
+            ([song["name"]] if song.get("name") else []),
+            (mapping.get("source_url") if song else None),
+        )
         if not song and fold(key) in wiki_songs:
             (titles, mapping_source), title_status = wiki_songs[fold(key)], "mapped_wiki_file_key"
         book_index = song.get("book")
         book = books[book_index].get("name") if isinstance(book_index, int) and 0 <= book_index < len(books) else None
         is_cover = bool(COVER_KEY.search(key))
         asset = {
-            "id": f"legacy:{key}", "source_id": "legacy",
-            "title": song.get("name") or " / ".join(titles) or key, "internal_key": key, "artist": None,
-            "composer": song.get("artist"), "collection": book,
+            "id": f"legacy:{key}",
+            "source_id": "legacy",
+            "title": song.get("name") or " / ".join(titles) or key,
+            "internal_key": key,
+            "artist": None,
+            "composer": song.get("artist"),
+            "collection": book,
             "song_titles": titles,
             "mapping_source": mapping_source,
             "kind": "song_art" if song or titles else "collection_cover" if is_cover else "illustration",
             "page_url": "https://github.com/mashirozx/deemo",
-            "download_url": None, "path": path.relative_to(root).as_posix(),
-            "width": width, "height": height, "format": format_name,
-            "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(),
-            "fetched_at": None, "game": "DEEMO", "title_status": title_status,
+            "download_url": None,
+            "path": path.relative_to(root).as_posix(),
+            "width": width,
+            "height": height,
+            "format": format_name,
+            "bytes": len(raw),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "fetched_at": None,
+            "game": "DEEMO",
+            "title_status": title_status,
             "notes": "Inherited game texture; upstream made pure-white pixels transparent.",
         }
         quantized_path = quantized_dir / path.name
@@ -160,11 +181,16 @@ def legacy_assets(root: Path, wiki_records: list[dict] | None = None) -> list[di
             tiny_width, tiny_height = image.size
             tiny_format = image.format
         variant = {
-            **asset, "id": f"legacy:tiny:{key}", "role": "palette_quantized",
+            **asset,
+            "id": f"legacy:tiny:{key}",
+            "role": "palette_quantized",
             "path": quantized_path.relative_to(root).as_posix(),
             "url": quote(quantized_path.relative_to(root).as_posix(), safe="/"),
-            "width": tiny_width, "height": tiny_height, "format": tiny_format,
-            "bytes": len(quantized), "sha256": hashlib.sha256(quantized).hexdigest(),
+            "width": tiny_width,
+            "height": tiny_height,
+            "format": tiny_format,
+            "bytes": len(quantized),
+            "sha256": hashlib.sha256(quantized).hexdigest(),
             "notes": "Historical palette-quantized copy from the upstream tiny directory; retained as an alternative, not used for gallery display.",
         }
         asset["variants"] = [variant]
@@ -187,10 +213,15 @@ def shared_collection_spellings(assets: list[dict]) -> list[dict]:
     pick theirs. A record whose own spelling is replaced keeps it in collection_aliases, which the archive searches
     but does not show. An artist post's grouping (collection_scope "source_post_grouping") is quoted as the post
     spells it and is left out. Records with nothing to change are returned as they are."""
+
     def names(asset: dict) -> list[str]:
         if asset.get("collection_scope") == "source_post_grouping":
             return []
-        return [name for name in [asset.get("collection"), *(asset.get("collections") or [])] if isinstance(name, str) and name]
+        return [
+            name
+            for name in [asset.get("collection"), *(asset.get("collections") or [])]
+            if isinstance(name, str) and name
+        ]
 
     wiki, every = defaultdict(set), defaultdict(set)
     for asset in assets:
@@ -252,11 +283,16 @@ def validate_asset(root: Path, asset: dict, verify: bool = False) -> None:
 
 
 def combine(root: Path, verify: bool = False) -> dict:
-    sources = [{
-        "id": "legacy", "name": "Original repository · game textures", "family": "legacy",
-        "url": "https://github.com/mashirozx/deemo", "status": "inherited",
-        "notes": "Original PNGs are in assets/legacy/trans/. Paired palette-quantized copies in assets/legacy/tiny/ are available as alternate downloads.",
-    }]
+    sources = [
+        {
+            "id": "legacy",
+            "name": "Original repository · game textures",
+            "family": "legacy",
+            "url": "https://github.com/mashirozx/deemo",
+            "status": "inherited",
+            "notes": "Original PNGs are in assets/legacy/trans/. Paired palette-quantized copies in assets/legacy/tiny/ are available as alternate downloads.",
+        }
+    ]
     assets, failures, snapshots = [], [], {}
     for family in SOURCE_MANIFESTS:
         path = required_input(root, f"data/sources/{family}.json")
@@ -265,7 +301,10 @@ def combine(root: Path, verify: bool = False) -> dict:
         sources.extend({**source, "family": family} for source in manifest["sources"])
         assets.extend({**asset, "family": family} for asset in manifest["assets"])
         failures.extend(manifest.get("failures", []))
-    assets.extend({**asset, "family": "legacy"} for asset in legacy_assets(root, [asset for asset in assets if asset["family"] == "wikis"]))
+    assets.extend(
+        {**asset, "family": "legacy"}
+        for asset in legacy_assets(root, [asset for asset in assets if asset["family"] == "wikis"])
+    )
     assets = shared_collection_spellings(assets)
     priority = {"artists": 0, "wikis": 1, "legacy": 2, "archives": 3}
     assets.sort(key=lambda asset: priority[asset["family"]])
@@ -289,34 +328,48 @@ def combine(root: Path, verify: bool = False) -> dict:
             by_hash[asset["sha256"]]["provenance"].append(provenance)
         else:
             by_hash[asset["sha256"]] = {
-                **asset, "source_name": source["name"], "provenance": [provenance],
+                **asset,
+                "source_name": source["name"],
+                "provenance": [provenance],
             }
     for asset in assets:
         successor = asset.get("superseded_by")
         if successor is not None and (successor == asset["id"] or successor not in seen_ids):
             raise ValueError(f"superseded_by names no other asset: {asset['id']} -> {successor}")
     if verify:
-        referenced = {Path(record["path"]).as_posix() for asset in assets for record in (asset, *asset.get("variants", []))}
+        referenced = {
+            Path(record["path"]).as_posix() for asset in assets for record in (asset, *asset.get("variants", []))
+        }
         orphans = [name for name in tracked_files(root, ORPHAN_CHECK_DIRECTORIES) or [] if name not in referenced]
         if orphans:
-            raise ValueError(f"{len(orphans)} tracked file(s) referenced by no manifest record or variant: {', '.join(orphans)}")
+            raise ValueError(
+                f"{len(orphans)} tracked file(s) referenced by no manifest record or variant: {', '.join(orphans)}"
+            )
     entries = list(by_hash.values())
     for entry in entries:
         entry["gallery"] = bool(entry.get("width") and entry.get("height"))
         entry["url"] = quote(entry["path"], safe="/")
     counts = Counter(asset["family"] for asset in assets)
     return {
-        "schema_version": 1, "owner": "FridrichMethod", "game": "DEEMO 1",
+        "schema_version": 1,
+        "owner": "FridrichMethod",
+        "game": "DEEMO 1",
         "repository": "https://github.com/FridrichMethod/deemo",
-        "snapshots": snapshots, "sources": sources, "assets": entries,
+        "snapshots": snapshots,
+        "sources": sources,
+        "assets": entries,
         "failures": failures,
         "summary": {
-            "source_count": len(sources), "source_asset_records": len(assets),
+            "source_count": len(sources),
+            "source_asset_records": len(assets),
             "unique_files": len(entries),
             "gallery_images": sum(entry["gallery"] for entry in entries),
             "exact_duplicate_records": len(assets) - len(entries),
-            "legacy_quantized_files": sum(len(asset.get("variants", [])) for asset in assets if asset["family"] == "legacy"),
-            "by_family": dict(counts), "failure_count": len(failures),
+            "legacy_quantized_files": sum(
+                len(asset.get("variants", [])) for asset in assets if asset["family"] == "legacy"
+            ),
+            "by_family": dict(counts),
+            "failure_count": len(failures),
             "downloaded_bytes": sum(asset["bytes"] for asset in assets if asset["family"] != "legacy"),
         },
     }
@@ -378,11 +431,16 @@ def art_layout(root: Path, asset: dict) -> dict:
         left, top, right, bottom = box
         fractions = (left / width, top / height, (right - left) / width, (bottom - top) / height)
         fields["data-art-box"] = " ".join(f"{round(value, 4):g}" for value in fractions)
-    bands = {"left": (0, 0, 2, height), "top": (0, 0, width, 2), "right": (width - 2, 0, width, height), "bottom": (0, height - 2, width, height)}
+    bands = {
+        "left": (0, 0, 2, height),
+        "top": (0, 0, width, 2),
+        "right": (width - 2, 0, width, height),
+        "bottom": (0, height - 2, width, height),
+    }
     cut = []
     for edge, band in bands.items():
         strip = opaque.crop(band)
-        if strip.histogram()[255] > .02 * strip.width * strip.height:
+        if strip.histogram()[255] > 0.02 * strip.width * strip.height:
             cut.append(edge)
     if cut and len(cut) < 4:
         fields["data-bleed"] = " ".join(cut)
@@ -393,7 +451,11 @@ def slide_kind(asset: dict) -> str:
     """The kind the slide's eyebrow names. An unmapped legacy texture is "illustration" in the catalog only as the
     archive's "Illustration / unmapped" catch-all, and most of them are song textures, so its slide says "unmapped",
     a kind with no label: the eyebrow then names no kind rather than call it an illustration."""
-    if asset.get("family") == "legacy" and asset.get("title_status") == "internal_key" and asset["kind"] == "illustration":
+    if (
+        asset.get("family") == "legacy"
+        and asset.get("title_status") == "internal_key"
+        and asset["kind"] == "illustration"
+    ):
         return "unmapped"
     return asset["kind"]
 
@@ -429,8 +491,10 @@ def slide_composer_source(asset: dict, names: dict) -> dict:
             if source and source not in suppliers:
                 suppliers.append(source)
     caption = records[0].get("source_id")
-    credits = [[] if caption in suppliers else [[source, names.get(source, source)] for source in suppliers]
-               for suppliers in lines.values()]
+    credits = [
+        [] if caption in suppliers else [[source, names.get(source, source)] for source in suppliers]
+        for suppliers in lines.values()
+    ]
     if not any(credits):
         return {}
     return {"data-composer-sources": json.dumps(credits, ensure_ascii=False, separators=(",", ":"))}
@@ -446,12 +510,19 @@ def render_slideshow(root: Path, catalog: dict) -> str:
     slides = []
     for asset, layout in zip(assets, layouts):
         fields = {
-            "class": "deemo-draw", "data-src": asset["url"],
-            "data-id": asset["id"], "data-title": asset["title"],
-            "data-source": asset["source_name"], "data-source-id": asset["source_id"],
+            "class": "deemo-draw",
+            "data-src": asset["url"],
+            "data-id": asset["id"],
+            "data-title": asset["title"],
+            "data-source": asset["source_name"],
+            "data-source-id": asset["source_id"],
             "data-page": asset["page_url"],
-            "data-size": f"{asset['width']} × {asset['height']}", "data-kind": slide_kind(asset),
-            **slide_provenance(asset), **layout, **slide_notes(asset), **slide_composer_source(asset, names),
+            "data-size": f"{asset['width']} × {asset['height']}",
+            "data-kind": slide_kind(asset),
+            **slide_provenance(asset),
+            **layout,
+            **slide_notes(asset),
+            **slide_composer_source(asset, names),
             "alt": asset["title"],
         }
         attributes = " ".join(f'{key}="{attr(value)}"' for key, value in fields.items())
@@ -484,13 +555,24 @@ def attach_thumbnails(root: Path, catalog: dict, verify: bool = False, required:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--verify", action="store_true", help="Verify every hash, image header and format, and that every tracked file under assets/public and assets/legacy is referenced")
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="Verify every hash, image header and format, and that every tracked file under assets/public and assets/legacy is referenced",
+    )
     parser.add_argument("--check", action="store_true", help="Check generated files without writing")
     args = parser.parse_args(argv)
     catalog = combine(ROOT, args.verify)
     attach_thumbnails(ROOT, catalog, args.verify)
     encoded = json.dumps(catalog, ensure_ascii=False, indent=2) + "\n"
-    script = "window.DEEMO_CATALOG = " + json.dumps(catalog, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029") + ";\n"
+    script = (
+        "window.DEEMO_CATALOG = "
+        + json.dumps(catalog, ensure_ascii=False, separators=(",", ":"))
+        .replace("<", "\\u003c")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+        + ";\n"
+    )
     outputs = {
         ROOT / "data" / "catalog.json": encoded,
         ROOT / "data" / "catalog.js": script,

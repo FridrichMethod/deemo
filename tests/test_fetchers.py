@@ -116,12 +116,23 @@ NEW_P0 = "https://i.pximg.net/img-original/img/2022/01/01/00/00/00/1_p0.png"
 
 
 def pixiv_routes(pages):
-    metadata = {"error": False, "body": {"userId": "7", "userName": "SnowEgg", "illustTitle": "Live title",
-                                         "createDate": "2021-01-01T00:00:00+00:00", "uploadDate": "2022-01-01T00:00:00+00:00",
-                                         "illustComment": "", "tags": {"tags": []}}}
+    metadata = {
+        "error": False,
+        "body": {
+            "userId": "7",
+            "userName": "SnowEgg",
+            "illustTitle": "Live title",
+            "createDate": "2021-01-01T00:00:00+00:00",
+            "uploadDate": "2022-01-01T00:00:00+00:00",
+            "illustComment": "",
+            "tags": {"tags": []},
+        },
+    }
     body = [{"urls": {"original": url}, "width": 4, "height": 4} for url in pages]
-    return {"https://www.pixiv.net/ajax/illust/1": json.dumps(metadata),
-            "https://www.pixiv.net/ajax/illust/1/pages": json.dumps({"error": False, "body": body})}
+    return {
+        "https://www.pixiv.net/ajax/illust/1": json.dumps(metadata),
+        "https://www.pixiv.net/ajax/illust/1/pages": json.dumps({"error": False, "body": body}),
+    }
 
 
 class ArtistsTests(TempRoot):
@@ -141,23 +152,51 @@ class ArtistsTests(TempRoot):
 
     def previous_record(self, index, data, url):
         path = self.put(f"assets/public/artists/snowegg/pixiv-1-p{index:02d}.png", data)
-        return {"id": f"artists:pixiv:1:p{index}", "source_id": "artists:pixiv:1", "artist": "SnowEgg",
-                "title": f"Test Collection — page {index + 1}", "kind": "song_art", "page_url": PAGE_URL,
-                "download_url": url, "path": path, "width": 4, "height": 4, "format": "PNG", "mode": "RGB",
-                "bytes": len(data), "sha256": sha(data), "fetched_at": "2026-01-01T00:00:00+00:00", "game": "DEEMO"}
+        return {
+            "id": f"artists:pixiv:1:p{index}",
+            "source_id": "artists:pixiv:1",
+            "artist": "SnowEgg",
+            "title": f"Test Collection — page {index + 1}",
+            "kind": "song_art",
+            "page_url": PAGE_URL,
+            "download_url": url,
+            "path": path,
+            "width": 4,
+            "height": 4,
+            "format": "PNG",
+            "mode": "RGB",
+            "bytes": len(data),
+            "sha256": sha(data),
+            "fetched_at": "2026-01-01T00:00:00+00:00",
+            "game": "DEEMO",
+        }
 
     def seed(self):
         self.old = {0: png("red"), 1: png("green")}
-        records = [self.previous_record(0, self.old[0], OLD_P0),
-                   self.previous_record(1, self.old[1], OLD_P0.replace("_p0", "_p1"))]
-        source = {"id": "artists:pixiv:1", "name": "Archived title", "url": PAGE_URL, "artist": "SnowEgg",
-                  "status": "complete", "platform": "Pixiv", "access": "public_without_login",
-                  "artist_display_name": "SnowEgg", "description": "kept", "asset_count": 2}
+        records = [
+            self.previous_record(0, self.old[0], OLD_P0),
+            self.previous_record(1, self.old[1], OLD_P0.replace("_p0", "_p1")),
+        ]
+        source = {
+            "id": "artists:pixiv:1",
+            "name": "Archived title",
+            "url": PAGE_URL,
+            "artist": "SnowEgg",
+            "status": "complete",
+            "platform": "Pixiv",
+            "access": "public_without_login",
+            "artist_display_name": "SnowEgg",
+            "description": "kept",
+            "asset_count": 2,
+        }
         self.write_manifest("artists", {"schema_version": 1, "sources": [source], "assets": records, "failures": []})
 
     def run_main(self, web, *flags):
-        with patch.object(artists.requests, "get", web), patch.object(sys, "argv", ["fetch_artists.py", "--workers", "2", *flags]), \
-                contextlib.redirect_stdout(io.StringIO()):
+        with (
+            patch.object(artists.requests, "get", web),
+            patch.object(sys, "argv", ["fetch_artists.py", "--workers", "2", *flags]),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
             return artists.main()
 
     def test_reupload_keeps_old_file_and_record_as_superseded(self):
@@ -196,9 +235,13 @@ class ArtistsTests(TempRoot):
         web = FakeWeb({**pixiv_routes([OLD_P0, OLD_P0.replace("_p0", "_p1")]), OLD_P0: new})
         self.assertEqual(self.run_main(web), 0)
         assets = self.read_manifest("artists")["assets"]
-        self.assertEqual([(a["id"], a["path"], a["sha256"], a.get("upstream_status")) for a in assets],
-                         [("artists:pixiv:1:p0", "assets/public/artists/snowegg/pixiv-1-p00.png", sha(new), None),
-                          ("artists:pixiv:1:p1", "assets/public/artists/snowegg/pixiv-1-p01.png", sha(self.old[1]), None)])
+        self.assertEqual(
+            [(a["id"], a["path"], a["sha256"], a.get("upstream_status")) for a in assets],
+            [
+                ("artists:pixiv:1:p0", "assets/public/artists/snowegg/pixiv-1-p00.png", sha(new), None),
+                ("artists:pixiv:1:p1", "assets/public/artists/snowegg/pixiv-1-p01.png", sha(self.old[1]), None),
+            ],
+        )
         for asset in assets:
             self.assertEqual(sha((self.root / asset["path"]).read_bytes()), asset["sha256"], asset["id"])
 
@@ -214,10 +257,14 @@ class ArtistsTests(TempRoot):
         assets = self.read_manifest("artists")["assets"]
         green = "assets/public/artists/snowegg/pixiv-1-p01.png"
         self.assertEqual(self.archived_files(), {"assets/public/artists/snowegg/pixiv-1-p00.png", green})
-        self.assertEqual([(a["id"], a["path"], a["sha256"]) for a in assets],
-                         [("artists:pixiv:1:p0", "assets/public/artists/snowegg/pixiv-1-p00.png", sha(png("white"))),
-                          (f"artists:pixiv:1:p0:{sha(png('green'))[:12]}", green, sha(png("green"))),
-                          ("artists:pixiv:1:p1", "assets/public/artists/snowegg/pixiv-1-p01.png", sha(self.old[1]))])
+        self.assertEqual(
+            [(a["id"], a["path"], a["sha256"]) for a in assets],
+            [
+                ("artists:pixiv:1:p0", "assets/public/artists/snowegg/pixiv-1-p00.png", sha(png("white"))),
+                (f"artists:pixiv:1:p0:{sha(png('green'))[:12]}", green, sha(png("green"))),
+                ("artists:pixiv:1:p1", "assets/public/artists/snowegg/pixiv-1-p01.png", sha(self.old[1])),
+            ],
+        )
         for asset in assets:
             self.assertEqual(sha((self.root / asset["path"]).read_bytes()), asset["sha256"], asset["id"])
 
@@ -228,14 +275,21 @@ class ArtistsTests(TempRoot):
         self.assertEqual(self.run_main(web), 0)
 
         def summary():
-            return [(a["id"], a["path"], a["sha256"], a.get("upstream_status")) for a in self.read_manifest("artists")["assets"]]
+            return [
+                (a["id"], a["path"], a["sha256"], a.get("upstream_status"))
+                for a in self.read_manifest("artists")["assets"]
+            ]
 
         before = summary()
         lost = "assets/public/artists/snowegg/pixiv-1-p00.png"
-        self.assertEqual([row[:2] for row in before],
-                         [("artists:pixiv:1:p0", f"assets/public/artists/snowegg/pixiv-1-p00-{sha(png('blue'))[:12]}.png"),
-                          (f"artists:pixiv:1:p0:{sha(self.old[0])[:12]}", lost),
-                          ("artists:pixiv:1:p1", "assets/public/artists/snowegg/pixiv-1-p01.png")])
+        self.assertEqual(
+            [row[:2] for row in before],
+            [
+                ("artists:pixiv:1:p0", f"assets/public/artists/snowegg/pixiv-1-p00-{sha(png('blue'))[:12]}.png"),
+                (f"artists:pixiv:1:p0:{sha(self.old[0])[:12]}", lost),
+                ("artists:pixiv:1:p1", "assets/public/artists/snowegg/pixiv-1-p01.png"),
+            ],
+        )
         # The superseded red file is lost and upstream still serves blue, from the cache or downloaded
         # again: nothing moves, so no copy is left without a record.
         (self.root / lost).unlink()
@@ -251,29 +305,48 @@ class ArtistsTests(TempRoot):
         p0 = self.previous_record(0, red, OLD_P0)
         p1 = self.previous_record(1, red, p1_url)  # red at pixiv-1-p01.png, now the superseded version
         blue_path = self.put(f"assets/public/artists/snowegg/pixiv-1-p01-{sha(blue)[:12]}.png", blue)
-        assets = [p0, {**p1, "path": blue_path, "sha256": sha(blue), "bytes": len(blue)},
-                  {**p1, "id": f"{p1['id']}:{sha(red)[:12]}", "upstream_status": "superseded", "superseded_by": p1["id"]}]
+        assets = [
+            p0,
+            {**p1, "path": blue_path, "sha256": sha(blue), "bytes": len(blue)},
+            {**p1, "id": f"{p1['id']}:{sha(red)[:12]}", "upstream_status": "superseded", "superseded_by": p1["id"]},
+        ]
         self.write_manifest("artists", {"schema_version": 1, "sources": [], "assets": assets, "failures": []})
         # Upstream reverts page 2 to red, the bytes of page 1, so its record now points at pixiv-1-p00.png.
         web = FakeWeb({**pixiv_routes([OLD_P0, p1_url]), OLD_P0: red, p1_url: red})
         self.assertEqual(self.run_main(web, "--refresh"), 0)
         result = {asset["id"]: asset for asset in self.read_manifest("artists")["assets"]}
-        self.assertEqual(sorted(result), sorted([p0["id"], p1["id"], f"{p1['id']}:{sha(blue)[:12]}", f"{p1['id']}:{sha(red)[:12]}"]))
+        self.assertEqual(
+            sorted(result), sorted([p0["id"], p1["id"], f"{p1['id']}:{sha(blue)[:12]}", f"{p1['id']}:{sha(red)[:12]}"])
+        )
         self.assertEqual((result[p1["id"]]["path"], result[p1["id"]]["duplicate_of"]), (p0["path"], p0["id"]))
         files = {path.relative_to(self.root).as_posix() for path in (self.root / "assets").rglob("*") if path.is_file()}
-        self.assertEqual({asset["path"] for asset in result.values()}, files, "an archived file is no longer referenced")
+        self.assertEqual(
+            {asset["path"] for asset in result.values()}, files, "an archived file is no longer referenced"
+        )
 
     def test_duplicate_stem_stops_main_before_any_download(self):
         self.seed()
         before = (self.root / "data/sources/artists.json").read_bytes()
 
         def collect_jimdo(manifest, jobs, previous=()):
-            jobs.append({"id": "artists:jimdo:kolokolsan:clash", "source_id": "artists:jimdo:kolokolsan",
-                         "directory": "snowegg", "stem": "pixiv-1-p00", "page_url": artists.JIMDO_URL,
-                         "download_url": LIGHTBOX.format(key="i0000000000000001").replace("/transf/dimension=2048x2048:format=png/", "/transf/none/")})
+            jobs.append(
+                {
+                    "id": "artists:jimdo:kolokolsan:clash",
+                    "source_id": "artists:jimdo:kolokolsan",
+                    "directory": "snowegg",
+                    "stem": "pixiv-1-p00",
+                    "page_url": artists.JIMDO_URL,
+                    "download_url": LIGHTBOX.format(key="i0000000000000001").replace(
+                        "/transf/dimension=2048x2048:format=png/", "/transf/none/"
+                    ),
+                }
+            )
 
         web = FakeWeb({**pixiv_routes([NEW_P0]), NEW_P0: png("blue")})
-        with patch.object(artists, "collect_jimdo", collect_jimdo), self.assertRaisesRegex(SystemExit, "snowegg/pixiv-1-p00"):
+        with (
+            patch.object(artists, "collect_jimdo", collect_jimdo),
+            self.assertRaisesRegex(SystemExit, "snowegg/pixiv-1-p00"),
+        ):
             self.run_main(web)
         self.assertEqual(web.requested, list(pixiv_routes([NEW_P0])), "a download started before the duplicate check")
         self.assertEqual((self.root / "data/sources/artists.json").read_bytes(), before)
@@ -284,25 +357,45 @@ class ArtistsTests(TempRoot):
         manifest["assets"][1]["upstream_status"] = "removed"
         self.write_manifest("artists", manifest)
         self.assertEqual(self.run_main(FakeWeb()), 1)
-        self.assertEqual([(a["id"], a["upstream_status"]) for a in self.read_manifest("artists")["assets"]],
-                         [("artists:pixiv:1:p0", "fetch_failed"), ("artists:pixiv:1:p1", "removed")])
+        self.assertEqual(
+            [(a["id"], a["upstream_status"]) for a in self.read_manifest("artists")["assets"]],
+            [("artists:pixiv:1:p0", "fetch_failed"), ("artists:pixiv:1:p1", "removed")],
+        )
 
     def test_record_of_an_unconfigured_source_keeps_its_source_row(self):
         self.seed()
         manifest = self.read_manifest("artists")
         data = png("yellow")
-        retired = {"id": "artists:pixiv:2", "name": "Retired", "url": "https://www.pixiv.net/en/artworks/2", "artist": "SnowEgg",
-                   "status": "complete", "platform": "Pixiv", "access": "public_without_login", "asset_count": 1}
+        retired = {
+            "id": "artists:pixiv:2",
+            "name": "Retired",
+            "url": "https://www.pixiv.net/en/artworks/2",
+            "artist": "SnowEgg",
+            "status": "complete",
+            "platform": "Pixiv",
+            "access": "public_without_login",
+            "asset_count": 1,
+        }
         manifest["sources"].append(retired)
-        manifest["assets"].append({**manifest["assets"][0], "id": "artists:pixiv:2:p0", "source_id": retired["id"],
-                                   "path": self.put("assets/public/artists/snowegg/pixiv-2-p00.png", data),
-                                   "download_url": OLD_P0.replace("1_p0", "2_p0"), "bytes": len(data), "sha256": sha(data)})
+        manifest["assets"].append(
+            {
+                **manifest["assets"][0],
+                "id": "artists:pixiv:2:p0",
+                "source_id": retired["id"],
+                "path": self.put("assets/public/artists/snowegg/pixiv-2-p00.png", data),
+                "download_url": OLD_P0.replace("1_p0", "2_p0"),
+                "bytes": len(data),
+                "sha256": sha(data),
+            }
+        )
         self.write_manifest("artists", manifest)
         self.assertEqual(self.run_main(FakeWeb(pixiv_routes([OLD_P0, OLD_P0.replace("_p0", "_p1")]))), 0)
         result = self.read_manifest("artists")
         self.assertIn(retired, result["sources"])
-        self.assertEqual({a["id"]: a.get("upstream_status") for a in result["assets"]},
-                         {"artists:pixiv:1:p0": None, "artists:pixiv:1:p1": None, "artists:pixiv:2:p0": "removed"})
+        self.assertEqual(
+            {a["id"]: a.get("upstream_status") for a in result["assets"]},
+            {"artists:pixiv:1:p0": None, "artists:pixiv:1:p1": None, "artists:pixiv:2:p0": "removed"},
+        )
 
     def test_discovery_failure_keeps_previous_assets(self):
         self.seed()
@@ -312,16 +405,20 @@ class ArtistsTests(TempRoot):
         self.assertEqual(set(assets), {"artists:pixiv:1:p0", "artists:pixiv:1:p1"})
         self.assertTrue(all(asset["upstream_status"] == "fetch_failed" for asset in assets.values()))
         source = manifest["sources"][0]
-        self.assertEqual((source["status"], source["name"], source["description"], source["asset_count"]),
-                         ("failed", "Archived title", "kept", 2))
+        self.assertEqual(
+            (source["status"], source["name"], source["description"], source["asset_count"]),
+            ("failed", "Archived title", "kept", 2),
+        )
         self.assertEqual([(f["source_id"], f["url"]) for f in manifest["failures"]], [("artists:pixiv:1", PAGE_URL)])
 
     def test_failures_are_written_in_a_stable_order(self):
         posts = {"snowegg": {**PIXIV["snowegg"], "posts": {"3": "C", "2": "B", "1": "A"}}}
         with patch.object(artists, "PIXIV_POSTS", posts):
             self.assertEqual(self.run_main(FakeWeb()), 1)
-        self.assertEqual([f["source_id"] for f in self.read_manifest("artists")["failures"]],
-                         ["artists:pixiv:1", "artists:pixiv:2", "artists:pixiv:3"])
+        self.assertEqual(
+            [f["source_id"] for f in self.read_manifest("artists")["failures"]],
+            ["artists:pixiv:1", "artists:pixiv:2", "artists:pixiv:3"],
+        )
 
     def test_download_failure_marks_record_fetch_failed(self):
         self.seed()
@@ -336,13 +433,23 @@ class ArtistsTests(TempRoot):
 
     def test_dedup_primary_does_not_depend_on_completion_order(self):
         data = png("purple")
-        jobs = [{"id": f"artists:pixiv:9:p{i}", "source_id": "artists:pixiv:9", "directory": "x",
-                 "stem": f"pixiv-9-p{i:02d}", "download_url": f"https://i.pximg.net/{i}.png", "page_url": PAGE_URL}
-                for i in (0, 1)]
+        jobs = [
+            {
+                "id": f"artists:pixiv:9:p{i}",
+                "source_id": "artists:pixiv:9",
+                "directory": "x",
+                "stem": f"pixiv-9-p{i:02d}",
+                "download_url": f"https://i.pximg.net/{i}.png",
+                "page_url": PAGE_URL,
+            }
+            for i in (0, 1)
+        ]
         for slow in ("artists:pixiv:9:p0", "artists:pixiv:9:p1"):
+
             def fake_download(job, cache, refresh, slow=slow):
                 threading.Event().wait(0.2 if job["id"] == slow else 0)  # time.sleep is patched out in setUp
                 return job, data, "2026-01-01T00:00:00+00:00"
+
             manifest = {"assets": [], "failures": []}
             with patch.object(artists, "download", fake_download), contextlib.redirect_stdout(io.StringIO()):
                 artists.fetch_all(manifest, list(reversed(jobs)), {}, False, 2)
@@ -352,8 +459,14 @@ class ArtistsTests(TempRoot):
             self.assertEqual(by_id["artists:pixiv:9:p1"]["duplicate_of"], "artists:pixiv:9:p0")
 
     def pixiv_job(self, post):
-        return {"id": f"artists:pixiv:{post}:p0", "source_id": f"artists:pixiv:{post}", "directory": "x",
-                "stem": f"pixiv-{post}-p00", "download_url": f"https://i.pximg.net/{post}.png", "page_url": PAGE_URL}
+        return {
+            "id": f"artists:pixiv:{post}:p0",
+            "source_id": f"artists:pixiv:{post}",
+            "directory": "x",
+            "stem": f"pixiv-{post}-p00",
+            "download_url": f"https://i.pximg.net/{post}.png",
+            "page_url": PAGE_URL,
+        }
 
     def run_jobs(self, previous, served, *posts):
         """fetch_all() then carry_forward() as main() runs them, each post's job served the given bytes."""
@@ -369,8 +482,13 @@ class ArtistsTests(TempRoot):
 
     def archived(self, post, data):
         path = self.put(f"assets/public/artists/x/pixiv-{post}-p00.png", data)
-        return {**self.pixiv_job(post), "path": path, "bytes": len(data), "sha256": sha(data),
-                "fetched_at": "2026-01-01T00:00:00+00:00"}
+        return {
+            **self.pixiv_job(post),
+            "path": path,
+            "bytes": len(data),
+            "sha256": sha(data),
+            "fetched_at": "2026-01-01T00:00:00+00:00",
+        }
 
     def test_new_upload_with_archived_bytes_reuses_the_archived_record_and_file(self):
         red = png("red")
@@ -378,14 +496,23 @@ class ArtistsTests(TempRoot):
         # A new upload whose id sorts first has the archived bytes: it becomes a duplicate of the archived record,
         # whose file it shares, rather than a second copy that would leave the archived file unreferenced.
         records = self.run_jobs([archived], {"artists:pixiv:1:p0": red, "artists:pixiv:2:p0": red}, 2, 1)
-        self.assertEqual({key: (row["path"], row.get("duplicate_of")) for key, row in records.items()},
-                         {"artists:pixiv:1:p0": (archived["path"], "artists:pixiv:2:p0"), "artists:pixiv:2:p0": (archived["path"], None)})
+        self.assertEqual(
+            {key: (row["path"], row.get("duplicate_of")) for key, row in records.items()},
+            {
+                "artists:pixiv:1:p0": (archived["path"], "artists:pixiv:2:p0"),
+                "artists:pixiv:2:p0": (archived["path"], None),
+            },
+        )
         self.assertEqual(self.archived_files(), {archived["path"]})
         # Upstream then drops the archived upload: its record stays, removed, and still owns the file.
         records = self.run_jobs(list(records.values()), {"artists:pixiv:1:p0": red}, 1)
-        self.assertEqual({key: (row["path"], row.get("duplicate_of"), row.get("upstream_status")) for key, row in records.items()},
-                         {"artists:pixiv:1:p0": (archived["path"], "artists:pixiv:2:p0", None),
-                          "artists:pixiv:2:p0": (archived["path"], None, "removed")})
+        self.assertEqual(
+            {key: (row["path"], row.get("duplicate_of"), row.get("upstream_status")) for key, row in records.items()},
+            {
+                "artists:pixiv:1:p0": (archived["path"], "artists:pixiv:2:p0", None),
+                "artists:pixiv:2:p0": (archived["path"], None, "removed"),
+            },
+        )
         self.assertEqual(self.archived_files(), {archived["path"]})
 
     def test_archived_bytes_whose_record_moved_on_keep_their_file(self):
@@ -393,21 +520,33 @@ class ArtistsTests(TempRoot):
         archived = {key: value for key, value in self.archived(2, red).items() if key not in ("directory", "stem")}
         # The archived upload is re-uploaded as blue while two other posts serve its red bytes: the first of them stands
         # in as the primary of red, on the archived file, so duplicate_of never names a record with other bytes.
-        records = self.run_jobs([archived], {"artists:pixiv:1:p0": red, "artists:pixiv:2:p0": blue, "artists:pixiv:3:p0": red}, 1, 2, 3)
+        records = self.run_jobs(
+            [archived], {"artists:pixiv:1:p0": red, "artists:pixiv:2:p0": blue, "artists:pixiv:3:p0": red}, 1, 2, 3
+        )
         blue_path = f"assets/public/artists/x/pixiv-2-p00-{sha(blue)[:12]}.png"
         superseded = f"artists:pixiv:2:p0:{sha(red)[:12]}"
-        self.assertEqual({key: (row["path"], row["sha256"], row.get("duplicate_of"), row.get("superseded_by")) for key, row in records.items()},
-                         {"artists:pixiv:1:p0": (archived["path"], sha(red), None, None),
-                          "artists:pixiv:2:p0": (blue_path, sha(blue), None, None),
-                          "artists:pixiv:3:p0": (archived["path"], sha(red), "artists:pixiv:1:p0", None),
-                          superseded: (archived["path"], sha(red), None, "artists:pixiv:2:p0")})
+        self.assertEqual(
+            {
+                key: (row["path"], row["sha256"], row.get("duplicate_of"), row.get("superseded_by"))
+                for key, row in records.items()
+            },
+            {
+                "artists:pixiv:1:p0": (archived["path"], sha(red), None, None),
+                "artists:pixiv:2:p0": (blue_path, sha(blue), None, None),
+                "artists:pixiv:3:p0": (archived["path"], sha(red), "artists:pixiv:1:p0", None),
+                superseded: (archived["path"], sha(red), None, "artists:pixiv:2:p0"),
+            },
+        )
         self.assertEqual(self.archived_files(), {archived["path"], blue_path})
 
     def test_download_refuses_other_hosts_and_redirects(self):
         job = {"id": "artists:pixiv:1:p0", "source_id": "artists:pixiv:1", "page_url": PAGE_URL}
         # urllib3 reads the backslash as the start of the path, so the second URL goes to 169.254.169.254.
-        for url in ("https://i.pximg.net.evil.example/1_p0.png", "https://169.254.169.254\\@i.pximg.net/img-original/1_p0.png",
-                    "http://i.pximg.net/img-original/1_p0.png"):
+        for url in (
+            "https://i.pximg.net.evil.example/1_p0.png",
+            "https://169.254.169.254\\@i.pximg.net/img-original/1_p0.png",
+            "http://i.pximg.net/img-original/1_p0.png",
+        ):
             web = FakeWeb()
             with patch.object(artists.requests, "get", web), self.assertRaisesRegex(ValueError, "expected hosts"):
                 artists.download({**job, "download_url": url}, {}, False)
@@ -427,7 +566,10 @@ class ArtistsTests(TempRoot):
 
 class TumblrArtistTests(unittest.TestCase):
     # Many posts inserted out of order, so neither dict nor set iteration order is sorted by chance.
-    POSTS = {post: f"Collection {post}" for post in ("907", "15", "311", "42", "7", "128", "64", "999", "3", "250", "76", "501")}
+    POSTS = {
+        post: f"Collection {post}"
+        for post in ("907", "15", "311", "42", "7", "128", "64", "999", "3", "250", "76", "501")
+    }
 
     def setUp(self):
         patcher = patch.object(artists, "TUMBLR_POSTS", self.POSTS)
@@ -437,12 +579,17 @@ class TumblrArtistTests(unittest.TestCase):
     def test_failures_use_real_sources_in_stable_order(self):
         expected = [f"artists:tumblr:{post}" for post in sorted(self.POSTS)]
         manifest = {"sources": [], "failures": []}
-        with patch.object(artists.time, "sleep", lambda seconds: None), patch.object(artists.requests, "get", FakeWeb()):
+        with (
+            patch.object(artists.time, "sleep", lambda seconds: None),
+            patch.object(artists.requests, "get", FakeWeb()),
+        ):
             artists.collect_tumblr(manifest, [])
         self.assertEqual([row["id"] for row in manifest["sources"]], expected)
         self.assertTrue(all(row["status"] == "failed" for row in manifest["sources"]))
-        self.assertEqual([(f["source_id"], f["url"]) for f in manifest["failures"]],
-                         [(source_id, artists.TUMBLR_API) for source_id in expected])
+        self.assertEqual(
+            [(f["source_id"], f["url"]) for f in manifest["failures"]],
+            [(source_id, artists.TUMBLR_API) for source_id in expected],
+        )
 
         web = FakeWeb({artists.TUMBLR_API: "var tumblr_api_read = " + json.dumps({"posts": []}) + ";"})
         manifest = {"sources": [], "failures": []}
@@ -487,10 +634,15 @@ class TumblrRefetchTests(ArtistRunTests):
     LIVE = "collect_tumblr"
 
     def test_unchanged_url_reupload_is_stable_and_a_revert_is_listed_once(self):
-        post = {"id": TUMBLR_POST, "url-with-slug": f"https://wublaze.tumblr.com/post/{TUMBLR_POST}/x",
-                "photos": [{"photo-url-1280": TUMBLR_IMAGE}]}
+        post = {
+            "id": TUMBLR_POST,
+            "url-with-slug": f"https://wublaze.tumblr.com/post/{TUMBLR_POST}/x",
+            "photos": [{"photo-url-1280": TUMBLR_IMAGE}],
+        }
         red, blue = png("red"), png("blue")
-        web = FakeWeb({artists.TUMBLR_API: "var tumblr_api_read = " + json.dumps({"posts": [post]}) + ";", TUMBLR_IMAGE: red})
+        web = FakeWeb(
+            {artists.TUMBLR_API: "var tumblr_api_read = " + json.dumps({"posts": [post]}) + ";", TUMBLR_IMAGE: red}
+        )
         canonical = f"artists:tumblr:{TUMBLR_POST}:p0"
         stem = f"assets/public/artists/blaze-wu/tumblr-{TUMBLR_POST}-p00"
         self.assertEqual(self.run_main(web), 0)
@@ -499,7 +651,9 @@ class TumblrRefetchTests(ArtistRunTests):
         self.assertEqual(self.run_main(web, "--refresh"), 0)
         refreshed, assets = self.manifest()
         self.assertEqual(sorted(assets), [canonical, f"{canonical}:{sha(red)[:12]}"])
-        self.assertEqual((assets[canonical]["sha256"], assets[canonical]["path"]), (sha(blue), f"{stem}-{sha(blue)[:12]}.png"))
+        self.assertEqual(
+            (assets[canonical]["sha256"], assets[canonical]["path"]), (sha(blue), f"{stem}-{sha(blue)[:12]}.png")
+        )
         self.assertEqual(assets[f"{canonical}:{sha(red)[:12]}"]["path"], f"{stem}.png")
 
         # Without --refresh the cached copy of the URL is the canonical record, never the superseded one.
@@ -532,26 +686,52 @@ class JimdoTests(TempRoot):
         return manifest, jobs
 
     def image(self, title, key):
-        return {"lightbox": LIGHTBOX.format(key=key), "caption": f"【Rayark様 音楽ゲーム「Deemo」】楽曲「{title}」アートワーク", "w": 4, "h": 4}
+        return {
+            "lightbox": LIGHTBOX.format(key=key),
+            "caption": f"【Rayark様 音楽ゲーム「Deemo」】楽曲「{title}」アートワーク",
+            "w": 4,
+            "h": 4,
+        }
 
     def test_committed_records_keep_their_ids_and_file_names(self):
         committed = json.loads((ROOT / "data/sources/artists.json").read_text(encoding="utf-8"))
         records = [asset for asset in committed["assets"] if asset["source_id"] == "artists:jimdo:kolokolsan"]
         self.assertEqual(len(records), 5)
-        images = [{"lightbox": r["advertised_lightbox_url"], "caption": r["source_caption"],
-                   "w": r["source_dimensions"][0], "h": r["source_dimensions"][1]} for r in records]
+        images = [
+            {
+                "lightbox": r["advertised_lightbox_url"],
+                "caption": r["source_caption"],
+                "w": r["source_dimensions"][0],
+                "h": r["source_dimensions"][1],
+            }
+            for r in records
+        ]
         manifest, jobs = self.collect(images, committed["assets"])
         self.assertEqual(manifest["failures"], [])
-        self.assertEqual(sorted((job["id"], job["stem"], job["download_url"]) for job in jobs),
-                         sorted((r["id"], Path(r["path"]).stem, r["download_url"]) for r in records))
+        self.assertEqual(
+            sorted((job["id"], job["stem"], job["download_url"]) for job in jobs),
+            sorted((r["id"], Path(r["path"]).stem, r["download_url"]) for r in records),
+        )
 
     def test_new_stems_are_unique_and_never_empty(self):
-        manifest, jobs = self.collect([self.image("月光", "i0000000000000001"), self.image("花の言葉", "i0000000000000002"),
-                                       self.image("Glaciology!", "i0000000000000003"), self.image("glaciology", "i0000000000000004")])
+        manifest, jobs = self.collect(
+            [
+                self.image("月光", "i0000000000000001"),
+                self.image("花の言葉", "i0000000000000002"),
+                self.image("Glaciology!", "i0000000000000003"),
+                self.image("glaciology", "i0000000000000004"),
+            ]
+        )
         self.assertEqual(manifest["failures"], [])
-        self.assertEqual([job["stem"] for job in jobs],
-                         ["jimdo-i0000000000000001", "jimdo-i0000000000000002",
-                          "glaciology-i0000000000000003", "glaciology-i0000000000000004"])
+        self.assertEqual(
+            [job["stem"] for job in jobs],
+            [
+                "jimdo-i0000000000000001",
+                "jimdo-i0000000000000002",
+                "glaciology-i0000000000000003",
+                "glaciology-i0000000000000004",
+            ],
+        )
         self.assertEqual(len({job["id"] for job in jobs}), 4)
         self.assertTrue(all(job["id"].endswith(":" + job["stem"]) for job in jobs))
 
@@ -562,9 +742,11 @@ class JimdoTests(TempRoot):
         self.assertIn("Duplicate", manifest["failures"][0]["error"])
 
     def test_lightbox_must_be_a_transform_url_on_the_jimdo_host(self):
-        for lightbox in ("https://evil.example/image.jimcdn.com/app/cms/image/transf/none/image/i0000000000000001/x.png",
-                         "https://evil.example\\@image.jimcdn.com/app/cms/image/transf/none/image/i0000000000000001/x.png",
-                         "https://image.jimcdn.com/app/other/image/i0000000000000001/version/1/x.png"):
+        for lightbox in (
+            "https://evil.example/image.jimcdn.com/app/cms/image/transf/none/image/i0000000000000001/x.png",
+            "https://evil.example\\@image.jimcdn.com/app/cms/image/transf/none/image/i0000000000000001/x.png",
+            "https://image.jimcdn.com/app/other/image/i0000000000000001/version/1/x.png",
+        ):
             image = {**self.image("A", "i0000000000000001"), "lightbox": lightbox}
             manifest, jobs = self.collect([image])
             self.assertEqual(jobs, [], lightbox)
@@ -586,7 +768,9 @@ class JimdoRefetchTests(ArtistRunTests):
 
     def page(self, version):
         lightbox = LIGHTBOX.format(key=self.KEY).replace("/version/1/", f"/version/{version}/")
-        html = JIMDO_HTML.format(lightbox=lightbox, caption="【Rayark様 音楽ゲーム「Deemo」】楽曲「Glaciology」アートワーク", w=4, h=4)
+        html = JIMDO_HTML.format(
+            lightbox=lightbox, caption="【Rayark様 音楽ゲーム「Deemo」】楽曲「Glaciology」アートワーク", w=4, h=4
+        )
         return html, re.sub(r"/transf/[^/]+/", "/transf/none/", lightbox)
 
     def test_reupload_keeps_the_canonical_id_and_stem_on_a_cached_rerun(self):
@@ -602,7 +786,9 @@ class JimdoRefetchTests(ArtistRunTests):
         self.assertEqual(self.run_main(web), 0)
         reuploaded, assets = self.manifest()
         self.assertEqual(sorted(assets), [canonical, f"{canonical}:{sha(red)[:12]}"])
-        self.assertEqual((assets[canonical]["sha256"], assets[canonical]["path"]), (sha(blue), f"{stem}-{sha(blue)[:12]}.png"))
+        self.assertEqual(
+            (assets[canonical]["sha256"], assets[canonical]["path"]), (sha(blue), f"{stem}-{sha(blue)[:12]}.png")
+        )
         self.assertEqual(assets[f"{canonical}:{sha(red)[:12]}"]["path"], f"{stem}.png")
 
         # The image id maps to the canonical record, never to the superseded version listed after it.
@@ -618,8 +804,12 @@ CAA_API = f"https://coverartarchive.org/release/{archives.CAA_MBID}"
 
 
 def caa_image(image_id):
-    return {"id": image_id, "types": ["Front"], "approved": True,
-            "image": f"http://coverartarchive.org/release/{archives.CAA_MBID}/{image_id}.jpg"}
+    return {
+        "id": image_id,
+        "types": ["Front"],
+        "approved": True,
+        "image": f"http://coverartarchive.org/release/{archives.CAA_MBID}/{image_id}.jpg",
+    }
 
 
 class ArchivesTests(TempRoot):
@@ -632,8 +822,11 @@ class ArchivesTests(TempRoot):
         self.addCleanup(archives.reset)
 
     def run_main(self, web, steps=None):
-        with patch.object(archives, "session", lambda: web), patch.object(archives, "STEPS", archives.STEPS if steps is None else steps), \
-                contextlib.redirect_stdout(io.StringIO()):
+        with (
+            patch.object(archives, "session", lambda: web),
+            patch.object(archives, "STEPS", archives.STEPS if steps is None else steps),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
             return archives.main()
 
     def caa_step(self):
@@ -641,17 +834,45 @@ class ArchivesTests(TempRoot):
 
     def caa_record(self, image_id, data):
         path = self.put(f"assets/public/archives/cover-art-archive/{image_id}.png", data)
-        return {"id": f"archives:cover-art-archive:{image_id}", "source_id": "archives:cover-art-archive",
-                "title": "scan", "kind": "reference", "page_url": "https://musicbrainz.org/x",
-                "download_url": f"https://coverartarchive.org/release/{archives.CAA_MBID}/{image_id}.jpg",
-                "path": path, "width": 4, "height": 4, "format": "PNG", "bytes": len(data), "sha256": sha(data),
-                "fetched_at": "2026-01-01T00:00:00+00:00", "game": "DEEMO"}
+        return {
+            "id": f"archives:cover-art-archive:{image_id}",
+            "source_id": "archives:cover-art-archive",
+            "title": "scan",
+            "kind": "reference",
+            "page_url": "https://musicbrainz.org/x",
+            "download_url": f"https://coverartarchive.org/release/{archives.CAA_MBID}/{image_id}.jpg",
+            "path": path,
+            "width": 4,
+            "height": 4,
+            "format": "PNG",
+            "bytes": len(data),
+            "sha256": sha(data),
+            "fetched_at": "2026-01-01T00:00:00+00:00",
+            "game": "DEEMO",
+        }
 
     def test_offline_run_attributes_failures_and_exits_nonzero(self):
         old = png("red")
-        self.write_manifest("archives", {"schema_version": 1, "sources": [
-            {"id": "archives:cover-art-archive", "name": "CAA", "url": "https://musicbrainz.org/x", "status": "fetched", "notes": ""}],
-            "assets": [self.caa_record(11, old), {**self.caa_record(12, png("green")), "upstream_status": "removed"}], "failures": []})
+        self.write_manifest(
+            "archives",
+            {
+                "schema_version": 1,
+                "sources": [
+                    {
+                        "id": "archives:cover-art-archive",
+                        "name": "CAA",
+                        "url": "https://musicbrainz.org/x",
+                        "status": "fetched",
+                        "notes": "",
+                    }
+                ],
+                "assets": [
+                    self.caa_record(11, old),
+                    {**self.caa_record(12, png("green")), "upstream_status": "removed"},
+                ],
+                "failures": [],
+            },
+        )
         self.assertEqual(self.run_main(FakeWeb()), 1)
         manifest = self.read_manifest("archives")
         sources = {row["id"]: row for row in manifest["sources"]}
@@ -659,16 +880,29 @@ class ArchivesTests(TempRoot):
         for failure in manifest["failures"]:
             self.assertIn(failure["source_id"], sources)
             self.assertTrue(failure["url"].startswith("https://"), failure)
-        self.assertIn(("archives:cover-art-archive", CAA_API), [(f["source_id"], f["url"]) for f in manifest["failures"]])
-        for sid in ("cover-art-archive", "rayarkmusic-tumblr", "kitsunefreak-cleaned", "official-deemo",
-                    "deemo-exhibition", "rayark-brand-assets"):
+        self.assertIn(
+            ("archives:cover-art-archive", CAA_API), [(f["source_id"], f["url"]) for f in manifest["failures"]]
+        )
+        for sid in (
+            "cover-art-archive",
+            "rayarkmusic-tumblr",
+            "kitsunefreak-cleaned",
+            "official-deemo",
+            "deemo-exhibition",
+            "rayark-brand-assets",
+        ):
             self.assertEqual(sources[f"archives:{sid}"]["status"], "failed", sid)
         self.assertEqual(sources["archives:steam-reborn"]["access_status"], "request_failed")
-        self.assertEqual(manifest["failures"], sorted(manifest["failures"], key=lambda f: (f["source_id"], f.get("asset_id", ""), f["url"], f["error"])))
+        self.assertEqual(
+            manifest["failures"],
+            sorted(manifest["failures"], key=lambda f: (f["source_id"], f.get("asset_id", ""), f["url"], f["error"])),
+        )
         kept = manifest["assets"]
         # A record already marked removed stays removed when its source fails.
-        self.assertEqual([(a["id"], a["upstream_status"]) for a in kept],
-                         [("archives:cover-art-archive:11", "fetch_failed"), ("archives:cover-art-archive:12", "removed")])
+        self.assertEqual(
+            [(a["id"], a["upstream_status"]) for a in kept],
+            [("archives:cover-art-archive:11", "fetch_failed"), ("archives:cover-art-archive:12", "removed")],
+        )
         self.assertEqual((self.root / kept[0]["path"]).read_bytes(), old)
         self.assertNotIn("retained unchanged", sources["archives:kitsunefreak-cleaned"]["notes"])
 
@@ -683,14 +917,20 @@ class ArchivesTests(TempRoot):
         for failure in manifest["failures"]:
             self.assertIn(failure["source_id"], sources)
             self.assertTrue(failure["url"], failure)
-        self.assertIn(("archives:internet-archive-202606", "https://archive.org/details/deemo_ost-_202606"),
-                      [(f["source_id"], f["url"]) for f in manifest["failures"]])
+        self.assertIn(
+            ("archives:internet-archive-202606", "https://archive.org/details/deemo_ost-_202606"),
+            [(f["source_id"], f["url"]) for f in manifest["failures"]],
+        )
         with contextlib.redirect_stdout(io.StringIO()):
             archives.verify()
 
     def test_partial_source_and_removed_record(self):
-        web = FakeWeb({CAA_API: json.dumps({"images": [caa_image(11), caa_image(12)]}),
-                       f"https://coverartarchive.org/release/{archives.CAA_MBID}/11.jpg": png("red")})
+        web = FakeWeb(
+            {
+                CAA_API: json.dumps({"images": [caa_image(11), caa_image(12)]}),
+                f"https://coverartarchive.org/release/{archives.CAA_MBID}/11.jpg": png("red"),
+            }
+        )
         self.assertEqual(self.run_main(web, self.caa_step()), 1)
         source = self.read_manifest("archives")["sources"][0]
         self.assertEqual((source["status"], source["assets_downloaded"]), ("partial", 1))
@@ -698,7 +938,9 @@ class ArchivesTests(TempRoot):
         self.assertEqual(failure["asset_id"], "archives:cover-art-archive:12")
 
         old = png("green")
-        self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [self.caa_record(13, old)], "failures": []})
+        self.write_manifest(
+            "archives", {"schema_version": 1, "sources": [], "assets": [self.caa_record(13, old)], "failures": []}
+        )
         web.routes[f"https://coverartarchive.org/release/{archives.CAA_MBID}/12.jpg"] = png("blue")
         archives.reset()
         self.assertEqual(self.run_main(web, self.caa_step()), 0)
@@ -707,7 +949,13 @@ class ArchivesTests(TempRoot):
         self.assertNotIn("upstream_status", assets["archives:cover-art-archive:11"])
 
     def test_record_of_an_unconfigured_source_keeps_its_source_row(self):
-        retired = {"id": "archives:retired", "name": "Retired", "url": "https://deemo.com/old", "status": "fetched", "notes": ""}
+        retired = {
+            "id": "archives:retired",
+            "name": "Retired",
+            "url": "https://deemo.com/old",
+            "status": "fetched",
+            "notes": "",
+        }
         record = {**self.caa_record(11, png("red")), "id": "archives:retired:11", "source_id": retired["id"]}
         self.write_manifest("archives", {"schema_version": 1, "sources": [retired], "assets": [record], "failures": []})
         self.assertEqual(self.run_main(FakeWeb({CAA_API: json.dumps({"images": []})}), self.caa_step()), 0)
@@ -724,8 +972,10 @@ class ArchivesTests(TempRoot):
         self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [record], "failures": []})
         web = FakeWeb({CAA_API: json.dumps({"images": [caa_image(11)]}), url: png("blue")})
         self.assertEqual(self.run_main(web, self.caa_step()), 0)
-        self.assertEqual([(a["id"], a["path"], a["sha256"]) for a in self.read_manifest("archives")["assets"]],
-                         [(record["id"], record["path"], sha(png("blue")))])
+        self.assertEqual(
+            [(a["id"], a["path"], a["sha256"]) for a in self.read_manifest("archives")["assets"]],
+            [(record["id"], record["path"], sha(png("blue")))],
+        )
         with contextlib.redirect_stdout(io.StringIO()):
             archives.verify()
 
@@ -739,9 +989,13 @@ class ArchivesTests(TempRoot):
         archives.reset()
         self.assertEqual(self.run_main(web, self.caa_step()), 0)
         green = f"assets/public/archives/cover-art-archive/11-{sha(png('green'))[:12]}.png"
-        self.assertEqual(sorted((a["id"], a["path"], a["sha256"]) for a in self.read_manifest("archives")["assets"]),
-                         [(record["id"], record["path"], sha(png("red"))),
-                          (f"{record['id']}:{sha(png('green'))[:12]}", green, sha(png("green")))])
+        self.assertEqual(
+            sorted((a["id"], a["path"], a["sha256"]) for a in self.read_manifest("archives")["assets"]),
+            [
+                (record["id"], record["path"], sha(png("red"))),
+                (f"{record['id']}:{sha(png('green'))[:12]}", green, sha(png("green"))),
+            ],
+        )
         with contextlib.redirect_stdout(io.StringIO()):
             archives.verify()
 
@@ -753,9 +1007,10 @@ class ArchivesTests(TempRoot):
         archives.reset()
         self.assertEqual(self.run_main(web, self.caa_step()), 0)
         assets = self.read_manifest("archives")["assets"]
-        self.assertEqual(sorted((a["id"], a["path"], a.get("upstream_status")) for a in assets),
-                         [(record["id"], green, None),
-                          (f"{record['id']}:{sha(png('red'))[:12]}", record["path"], "superseded")])
+        self.assertEqual(
+            sorted((a["id"], a["path"], a.get("upstream_status")) for a in assets),
+            [(record["id"], green, None), (f"{record['id']}:{sha(png('red'))[:12]}", record["path"], "superseded")],
+        )
         self.assertFalse((self.root / record["path"]).exists(), "a second copy of green was written")
         with self.assertRaises(FileNotFoundError), contextlib.redirect_stdout(io.StringIO()):
             archives.verify()
@@ -771,9 +1026,13 @@ class ArchivesTests(TempRoot):
         web = FakeWeb({CAA_API: json.dumps({"images": [caa_image(11)]}), url: png("blue")})
         self.assertEqual(self.run_main(web, self.caa_step()), 0)
         before = self.read_manifest("archives")["assets"]
-        self.assertEqual(sorted((a["id"], a["path"]) for a in before),
-                         [(record["id"], f"assets/public/archives/cover-art-archive/11-{sha(png('blue'))[:12]}.png"),
-                          (f"{record['id']}:{sha(png('red'))[:12]}", record["path"])])
+        self.assertEqual(
+            sorted((a["id"], a["path"]) for a in before),
+            [
+                (record["id"], f"assets/public/archives/cover-art-archive/11-{sha(png('blue'))[:12]}.png"),
+                (f"{record['id']}:{sha(png('red'))[:12]}", record["path"]),
+            ],
+        )
 
         # The superseded red file is lost and upstream still serves blue: nothing moves, so no copy is
         # left without a record, and --verify reports the lost file until it is restored.
@@ -791,16 +1050,24 @@ class ArchivesTests(TempRoot):
 
     def test_reupload_supersedes_previous_version(self):
         old, new = png("red"), png("blue")
-        self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [self.caa_record(11, old)], "failures": []})
-        web = FakeWeb({CAA_API: json.dumps({"images": [caa_image(11)]}),
-                       f"https://coverartarchive.org/release/{archives.CAA_MBID}/11.jpg": new})
+        self.write_manifest(
+            "archives", {"schema_version": 1, "sources": [], "assets": [self.caa_record(11, old)], "failures": []}
+        )
+        web = FakeWeb(
+            {
+                CAA_API: json.dumps({"images": [caa_image(11)]}),
+                f"https://coverartarchive.org/release/{archives.CAA_MBID}/11.jpg": new,
+            }
+        )
         self.assertEqual(self.run_main(web, self.caa_step()), 0)
         assets = {a["id"]: a for a in self.read_manifest("archives")["assets"]}
         canonical = assets["archives:cover-art-archive:11"]
         self.assertEqual(canonical["path"], f"assets/public/archives/cover-art-archive/11-{sha(new)[:12]}.png")
         superseded = assets[f"archives:cover-art-archive:11:{sha(old)[:12]}"]
-        self.assertEqual((superseded["upstream_status"], superseded["superseded_by"], superseded["path"]),
-                         ("superseded", "archives:cover-art-archive:11", "assets/public/archives/cover-art-archive/11.png"))
+        self.assertEqual(
+            (superseded["upstream_status"], superseded["superseded_by"], superseded["path"]),
+            ("superseded", "archives:cover-art-archive:11", "assets/public/archives/cover-art-archive/11.png"),
+        )
         self.assertEqual((self.root / superseded["path"]).read_bytes(), old)
 
         # Upstream reverts to the old bytes: they are canonical again and listed once.
@@ -808,10 +1075,16 @@ class ArchivesTests(TempRoot):
         archives.reset()
         self.assertEqual(self.run_main(web, self.caa_step()), 0)
         assets = {a["id"]: a for a in self.read_manifest("archives")["assets"]}
-        self.assertEqual(sorted(assets), ["archives:cover-art-archive:11", f"archives:cover-art-archive:11:{sha(new)[:12]}"])
-        self.assertEqual((assets["archives:cover-art-archive:11"]["sha256"], assets["archives:cover-art-archive:11"]["path"]),
-                         (sha(old), "assets/public/archives/cover-art-archive/11.png"))
-        self.assertEqual(assets[f"archives:cover-art-archive:11:{sha(new)[:12]}"]["superseded_by"], "archives:cover-art-archive:11")
+        self.assertEqual(
+            sorted(assets), ["archives:cover-art-archive:11", f"archives:cover-art-archive:11:{sha(new)[:12]}"]
+        )
+        self.assertEqual(
+            (assets["archives:cover-art-archive:11"]["sha256"], assets["archives:cover-art-archive:11"]["path"]),
+            (sha(old), "assets/public/archives/cover-art-archive/11.png"),
+        )
+        self.assertEqual(
+            assets[f"archives:cover-art-archive:11:{sha(new)[:12]}"]["superseded_by"], "archives:cover-art-archive:11"
+        )
 
     def test_manifest_is_written_once_and_never_on_interrupt(self):
         path = self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": [], "failures": []})
@@ -837,7 +1110,9 @@ class ArchivesTests(TempRoot):
         writes = []
         original = archives.write_json
         with patch.object(archives, "write_json", lambda *args: (writes.append(args[0]), original(*args))):
-            self.assertEqual(self.run_main(web, [(first, "x", "https://deemo.com/"), (second, "y", "https://deemo.com/")]), 0)
+            self.assertEqual(
+                self.run_main(web, [(first, "x", "https://deemo.com/"), (second, "y", "https://deemo.com/")]), 0
+            )
         self.assertEqual(writes, [path])
         self.assertEqual([asset["id"] for asset in self.read_manifest("archives")["assets"]], ["archives:x:a"])
 
@@ -850,43 +1125,79 @@ class ArchivesTests(TempRoot):
 
     def test_verify_checks_failure_sources_and_superseded_by(self):
         record = self.caa_record(11, png("red"))
-        source = {"id": "archives:cover-art-archive", "name": "CAA", "url": "https://musicbrainz.org/x", "status": "partial", "notes": ""}
-        version = {**record, "id": record["id"] + ":0123456789ab", "upstream_status": "superseded", "superseded_by": record["id"]}
-        good = {"schema_version": 1, "sources": [source], "assets": [record, version],
-                "failures": [{"source_id": source["id"], "url": CAA_API, "error": "offline"}]}
+        source = {
+            "id": "archives:cover-art-archive",
+            "name": "CAA",
+            "url": "https://musicbrainz.org/x",
+            "status": "partial",
+            "notes": "",
+        }
+        version = {
+            **record,
+            "id": record["id"] + ":0123456789ab",
+            "upstream_status": "superseded",
+            "superseded_by": record["id"],
+        }
+        good = {
+            "schema_version": 1,
+            "sources": [source],
+            "assets": [record, version],
+            "failures": [{"source_id": source["id"], "url": CAA_API, "error": "offline"}],
+        }
         self.write_manifest("archives", good)
         with contextlib.redirect_stdout(io.StringIO()):
             archives.verify()
-        for bad in ({**good, "failures": [{"source_id": "archives:catalog", "url": CAA_API, "error": "offline"}]},
-                    {**good, "failures": [{"source_id": source["id"], "url": "", "error": "offline"}]},
-                    {**good, "assets": [record, {**version, "superseded_by": "archives:cover-art-archive:12"}]}):
+        for bad in (
+            {**good, "failures": [{"source_id": "archives:catalog", "url": CAA_API, "error": "offline"}]},
+            {**good, "failures": [{"source_id": source["id"], "url": "", "error": "offline"}]},
+            {**good, "assets": [record, {**version, "superseded_by": "archives:cover-art-archive:12"}]},
+        ):
             self.write_manifest("archives", bad)
             with self.assertRaises(AssertionError), contextlib.redirect_stdout(io.StringIO()):
                 archives.verify()
 
     def test_cover_filter_checks_hostnames(self):
-        html = "".join(f'<img src="{src}">' for src in (
-            "https://64.media.tumblr.com/tumblr_x_cover.jpg",
-            "https://attacker.example/x?media.tumblr.com/_cover.png",
-            "http://169.254.169.254/latest/media.tumblr.com/_cover.png",
-            "https://media.tumblr.com.attacker.example/a_cover.png",
-            "https://attacker.example\\@64.media.tumblr.com/tumblr_y_cover.png",
-            "https://64.media.tumblr.com/tumblr_x_1280.jpg"))
+        html = "".join(
+            f'<img src="{src}">'
+            for src in (
+                "https://64.media.tumblr.com/tumblr_x_cover.jpg",
+                "https://attacker.example/x?media.tumblr.com/_cover.png",
+                "http://169.254.169.254/latest/media.tumblr.com/_cover.png",
+                "https://media.tumblr.com.attacker.example/a_cover.png",
+                "https://attacker.example\\@64.media.tumblr.com/tumblr_y_cover.png",
+                "https://64.media.tumblr.com/tumblr_x_1280.jpg",
+            )
+        )
         self.assertEqual(archives.post_covers(html, {}), ["https://64.media.tumblr.com/tumblr_x_cover.jpg"])
 
     def test_get_checks_every_redirect_hop(self):
         start = "https://coverartarchive.org/release/x/1.jpg"
-        web = FakeWeb({start: (307, b"", {"Location": "https://archive.org/download/x/1.jpg"}),
-                       # A relative Location is resolved against the hop that sent it.
-                       "https://archive.org/download/x/1.jpg": (302, b"", {"Location": "/items/x/1.jpg"}),
-                       "https://archive.org/items/x/1.jpg": (302, b"", {"Location": "https://ia800.us.archive.org/1.jpg"}),
-                       "https://ia800.us.archive.org/1.jpg": png("red")})
+        web = FakeWeb(
+            {
+                start: (307, b"", {"Location": "https://archive.org/download/x/1.jpg"}),
+                # A relative Location is resolved against the hop that sent it.
+                "https://archive.org/download/x/1.jpg": (302, b"", {"Location": "/items/x/1.jpg"}),
+                "https://archive.org/items/x/1.jpg": (302, b"", {"Location": "https://ia800.us.archive.org/1.jpg"}),
+                "https://ia800.us.archive.org/1.jpg": png("red"),
+            }
+        )
         with patch.object(archives, "session", lambda: web):
             self.assertEqual(archives.get(start, archives.CAA_HOSTS).url, "https://ia800.us.archive.org/1.jpg")
-            self.assertEqual(web.requested, [start, "https://archive.org/download/x/1.jpg",
-                                             "https://archive.org/items/x/1.jpg", "https://ia800.us.archive.org/1.jpg"])
-            for location in ("https://attacker.example/1.jpg", "http://archive.org/1.jpg", "http://169.254.169.254/",
-                             "https://attacker.example\\@archive.org/1.jpg"):
+            self.assertEqual(
+                web.requested,
+                [
+                    start,
+                    "https://archive.org/download/x/1.jpg",
+                    "https://archive.org/items/x/1.jpg",
+                    "https://ia800.us.archive.org/1.jpg",
+                ],
+            )
+            for location in (
+                "https://attacker.example/1.jpg",
+                "http://archive.org/1.jpg",
+                "http://169.254.169.254/",
+                "https://attacker.example\\@archive.org/1.jpg",
+            ):
                 web.routes[start] = (302, b"", {"Location": location})
                 web.requested.clear()
                 with self.assertRaisesRegex(ValueError, "expected hosts"):
@@ -904,8 +1215,13 @@ class ArchivesTests(TempRoot):
         self.assertNotIn("retained unchanged", row["notes"])
         self.assertIn("no images were retained", row["notes"])
         archives.reset()
-        post = {"id": 5, "url": "https://kitsunefreak.tumblr.com/post/5", "tags": ["deemo"], "photo-caption": "Edit",
-                "photo-url-1280": "https://64.media.tumblr.com/5_1280.png"}
+        post = {
+            "id": 5,
+            "url": "https://kitsunefreak.tumblr.com/post/5",
+            "tags": ["deemo"],
+            "photo-caption": "Edit",
+            "photo-url-1280": "https://64.media.tumblr.com/5_1280.png",
+        }
         one = "var tumblr_api_read = " + json.dumps({"posts": [post], "posts-total": 1}) + ";"
         with patch.object(archives, "session", lambda: FakeWeb({url: one, post["photo-url-1280"]: png("red")})):
             archives.tumblr_cleaned()
@@ -936,44 +1252,74 @@ class ArchiveSiteTests(TempRoot):
     def run_steps(self, web, *names):
         steps = [step for step in archives.STEPS if step[0].__name__ in names]
         self.assertEqual(len(steps), len(names))
-        with patch.object(archives, "session", lambda: web), patch.object(archives, "STEPS", steps), \
-                contextlib.redirect_stdout(io.StringIO()):
+        with (
+            patch.object(archives, "session", lambda: web),
+            patch.object(archives, "STEPS", steps),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
             code = archives.main()
             archives.verify()
-        self.assertEqual([url for url in web.requested if "attacker.example" in url], [], "an off-host URL was requested")
+        self.assertEqual(
+            [url for url in web.requested if "attacker.example" in url], [], "an off-host URL was requested"
+        )
         return code, self.read_manifest("archives")
 
     def web(self):
-        posts = [{"id": "77", "url-with-slug": f"{MIRROR}/post/77/song", "id3-title": "Song", "tags": ["deemo"]},
-                 {"id": "78", "url-with-slug": "https://attacker.example/post/78", "id3-title": "Bait"}]
-        return FakeWeb({
-            f"{MIRROR}/deemo": f'<a href="{MIRROR}/tagged/Deemo%20Songs">DEEMO</a><a href="{MIRROR}/tagged/Miscellaneous">misc</a>',
-            MIRROR_API: "var tumblr_api_read = " + json.dumps({"posts": posts, "posts-total": 2}) + ";",
-            # The off-host cover comes first, so letting it through would also renumber the real covers.
-            f"{MIRROR}/post/77/song": f'<img src="https://attacker.example/tumblr_x_cover.png"><img src="{COVER_OK}"><img src="{COVER_MOVED}">',
-            COVER_OK: png("red"),
-            COVER_MOVED: (302, b"", {"Location": "https://attacker.example/tumblr_77b_cover.png"}),
-            "https://deemo.com/": '<img src="/img/index_pic.png"><img src="https://attacker.example/about_pic.png"><img src="/img/logo.png">',
-            "https://deemo.com/img/index_pic.png": (301, b"", {"Location": "https://www.deemo.com/img/index_pic.png"}),
-            "https://www.deemo.com/img/index_pic.png": png("green"),
-            EXHIBITION_PDF: b"%PDF-1.4 exhibition",
-            BRAND_PDF: b"%PDF-1.4 brand assets",
-            IA_METADATA: json.dumps({"files": [{"format": "Flac"}, {"format": "PNG"}, {"format": "PNG"}]}),
-        })
+        posts = [
+            {"id": "77", "url-with-slug": f"{MIRROR}/post/77/song", "id3-title": "Song", "tags": ["deemo"]},
+            {"id": "78", "url-with-slug": "https://attacker.example/post/78", "id3-title": "Bait"},
+        ]
+        return FakeWeb(
+            {
+                f"{MIRROR}/deemo": f'<a href="{MIRROR}/tagged/Deemo%20Songs">DEEMO</a><a href="{MIRROR}/tagged/Miscellaneous">misc</a>',
+                MIRROR_API: "var tumblr_api_read = " + json.dumps({"posts": posts, "posts-total": 2}) + ";",
+                # The off-host cover comes first, so letting it through would also renumber the real covers.
+                f"{MIRROR}/post/77/song": f'<img src="https://attacker.example/tumblr_x_cover.png"><img src="{COVER_OK}"><img src="{COVER_MOVED}">',
+                COVER_OK: png("red"),
+                COVER_MOVED: (302, b"", {"Location": "https://attacker.example/tumblr_77b_cover.png"}),
+                "https://deemo.com/": '<img src="/img/index_pic.png"><img src="https://attacker.example/about_pic.png"><img src="/img/logo.png">',
+                "https://deemo.com/img/index_pic.png": (
+                    301,
+                    b"",
+                    {"Location": "https://www.deemo.com/img/index_pic.png"},
+                ),
+                "https://www.deemo.com/img/index_pic.png": png("green"),
+                EXHIBITION_PDF: b"%PDF-1.4 exhibition",
+                BRAND_PDF: b"%PDF-1.4 brand assets",
+                IA_METADATA: json.dumps({"files": [{"format": "Flac"}, {"format": "PNG"}, {"format": "PNG"}]}),
+            }
+        )
 
     def test_pages_images_and_pdfs_come_only_from_their_hosts(self):
         code, manifest = self.run_steps(self.web(), "tumblr_mirror", "official", "catalog")
         self.assertEqual(code, 1)
         assets = {asset["id"]: asset for asset in manifest["assets"]}
-        self.assertEqual(sorted(assets), ["archives:deemo-exhibition:deemo-exhibition", "archives:official-deemo:index_pic",
-                                          "archives:rayark-brand-assets:rayark-brand-assets", "archives:rayarkmusic-tumblr:77-1"])
+        self.assertEqual(
+            sorted(assets),
+            [
+                "archives:deemo-exhibition:deemo-exhibition",
+                "archives:official-deemo:index_pic",
+                "archives:rayark-brand-assets:rayark-brand-assets",
+                "archives:rayarkmusic-tumblr:77-1",
+            ],
+        )
         self.assertEqual(assets["archives:rayarkmusic-tumblr:77-1"]["resolved_url"], COVER_OK)
-        self.assertEqual(assets["archives:official-deemo:index_pic"]["resolved_url"], "https://www.deemo.com/img/index_pic.png")
+        self.assertEqual(
+            assets["archives:official-deemo:index_pic"]["resolved_url"], "https://www.deemo.com/img/index_pic.png"
+        )
         self.assertEqual(assets["archives:deemo-exhibition:deemo-exhibition"]["format"], "PDF")
-        self.assertEqual(sorted((f["source_id"], f.get("asset_id", ""), f["url"]) for f in manifest["failures"]),
-                         [("archives:official-deemo", "archives:official-deemo:about_pic", "https://attacker.example/about_pic.png"),
-                          ("archives:rayarkmusic-tumblr", "", "https://attacker.example/post/78"),
-                          ("archives:rayarkmusic-tumblr", "archives:rayarkmusic-tumblr:77-2", COVER_MOVED)])
+        self.assertEqual(
+            sorted((f["source_id"], f.get("asset_id", ""), f["url"]) for f in manifest["failures"]),
+            [
+                (
+                    "archives:official-deemo",
+                    "archives:official-deemo:about_pic",
+                    "https://attacker.example/about_pic.png",
+                ),
+                ("archives:rayarkmusic-tumblr", "", "https://attacker.example/post/78"),
+                ("archives:rayarkmusic-tumblr", "archives:rayarkmusic-tumblr:77-2", COVER_MOVED),
+            ],
+        )
         ia = next(row for row in manifest["sources"] if row["id"] == "archives:internet-archive-202606")
         self.assertEqual(ia["file_formats"], {"Flac": 1, "PNG": 2})
 
@@ -987,48 +1333,78 @@ class ArchiveSiteTests(TempRoot):
         self.assertIn(("archives:official-deemo", "https://deemo.com/"), failures)
         self.assertIn(("archives:internet-archive-202606", IA_METADATA), failures)
         # The reference PDFs do not depend on the website page.
-        self.assertEqual(sorted(asset["id"] for asset in manifest["assets"]),
-                         ["archives:deemo-exhibition:deemo-exhibition", "archives:rayark-brand-assets:rayark-brand-assets"])
+        self.assertEqual(
+            sorted(asset["id"] for asset in manifest["assets"]),
+            ["archives:deemo-exhibition:deemo-exhibition", "archives:rayark-brand-assets:rayark-brand-assets"],
+        )
 
     def test_a_final_server_error_fails_the_page_instead_of_reading_it_as_empty(self):
         # The session hands back the last 429/5xx after its retries, so get() must raise on it;
         # otherwise an empty error page would mark every archived record of the page "removed".
         web = self.web()
         previous = []
-        for sid, key, page, color in (("official-deemo", "index_pic", "https://deemo.com/", "green"),
-                                      ("rayarkmusic-tumblr", "77-1", f"{MIRROR}/deemo", "red")):
+        for sid, key, page, color in (
+            ("official-deemo", "index_pic", "https://deemo.com/", "green"),
+            ("rayarkmusic-tumblr", "77-1", f"{MIRROR}/deemo", "red"),
+        ):
             web.routes[page] = (503, b"", {})
             data = png(color)
-            previous.append({"id": f"archives:{sid}:{key}", "source_id": f"archives:{sid}", "title": key, "kind": "illustration",
-                             "page_url": page, "download_url": f"{page}{key}.png", "path": self.put(f"assets/public/archives/{sid}/{key}.png", data),
-                             "width": 4, "height": 4, "format": "PNG", "bytes": len(data), "sha256": sha(data),
-                             "fetched_at": "2026-01-01T00:00:00+00:00", "game": "DEEMO"})
+            previous.append(
+                {
+                    "id": f"archives:{sid}:{key}",
+                    "source_id": f"archives:{sid}",
+                    "title": key,
+                    "kind": "illustration",
+                    "page_url": page,
+                    "download_url": f"{page}{key}.png",
+                    "path": self.put(f"assets/public/archives/{sid}/{key}.png", data),
+                    "width": 4,
+                    "height": 4,
+                    "format": "PNG",
+                    "bytes": len(data),
+                    "sha256": sha(data),
+                    "fetched_at": "2026-01-01T00:00:00+00:00",
+                    "game": "DEEMO",
+                }
+            )
         self.write_manifest("archives", {"schema_version": 1, "sources": [], "assets": previous, "failures": []})
         code, manifest = self.run_steps(web, "tumblr_mirror", "official")
         self.assertEqual(code, 1)
         assets = {asset["id"]: asset for asset in manifest["assets"]}
-        self.assertEqual([assets[row["id"]].get("upstream_status") for row in previous], ["fetch_failed", "fetch_failed"])
-        self.assertEqual([(f["source_id"], f["url"]) for f in manifest["failures"]],
-                         [("archives:official-deemo", "https://deemo.com/"), ("archives:rayarkmusic-tumblr", f"{MIRROR}/deemo")])
+        self.assertEqual(
+            [assets[row["id"]].get("upstream_status") for row in previous], ["fetch_failed", "fetch_failed"]
+        )
+        self.assertEqual(
+            [(f["source_id"], f["url"]) for f in manifest["failures"]],
+            [("archives:official-deemo", "https://deemo.com/"), ("archives:rayarkmusic-tumblr", f"{MIRROR}/deemo")],
+        )
         self.assertTrue(all("503" in f["error"] for f in manifest["failures"]), manifest["failures"])
         status = {row["id"]: row["status"] for row in manifest["sources"]}
-        self.assertEqual((status["archives:official-deemo"], status["archives:rayarkmusic-tumblr"]), ("failed", "failed"))
+        self.assertEqual(
+            (status["archives:official-deemo"], status["archives:rayarkmusic-tumblr"]), ("failed", "failed")
+        )
 
 
 class ConnectionHostTests(unittest.TestCase):
     """The allow-list must judge the host requests really connects to, read here from the real HTTPAdapter."""
 
     HOSTS = ("media.tumblr.com",)
-    REFUSED = ("https://attacker.example\\@64.media.tumblr.com/x_cover.png",
-               "https://64.media.tumblr.com\\.attacker.example/x_cover.png",
-               "https://64.media.tumblr.com@attacker.example/x_cover.png",
-               "https://user:secret@64.media.tumblr.com/x_cover.png",
-               "https://64.media.tumblr.com%2eattacker.example/x_cover.png",
-               "https://64.media.tumblr.com:8443/x_cover.png",
-               "https://xmedia.tumblr.com/x_cover.png",
-               "https:///x_cover.png")
-    ACCEPTED = ("https://64.media.tumblr.com/x_cover.png", "HTTPS://64.MEDIA.TUMBLR.COM./x_cover.png",
-                "https://64.media.tumblr.com#@attacker.example/", "https://64.media.tumblr.com?@attacker.example/")
+    REFUSED = (
+        "https://attacker.example\\@64.media.tumblr.com/x_cover.png",
+        "https://64.media.tumblr.com\\.attacker.example/x_cover.png",
+        "https://64.media.tumblr.com@attacker.example/x_cover.png",
+        "https://user:secret@64.media.tumblr.com/x_cover.png",
+        "https://64.media.tumblr.com%2eattacker.example/x_cover.png",
+        "https://64.media.tumblr.com:8443/x_cover.png",
+        "https://xmedia.tumblr.com/x_cover.png",
+        "https:///x_cover.png",
+    )
+    ACCEPTED = (
+        "https://64.media.tumblr.com/x_cover.png",
+        "HTTPS://64.MEDIA.TUMBLR.COM./x_cover.png",
+        "https://64.media.tumblr.com#@attacker.example/",
+        "https://64.media.tumblr.com?@attacker.example/",
+    )
 
     def setUp(self):
         self.addCleanup(lambda: hasattr(archives.LOCAL, "session") and delattr(archives.LOCAL, "session"))
@@ -1040,13 +1416,18 @@ class ConnectionHostTests(unittest.TestCase):
             hosts.append(adapter.build_connection_pool_key_attributes(request, True, None)[0]["host"])
             raise requests.ConnectionError("offline test")
 
-        with patch.object(requests.adapters.HTTPAdapter, "send", send), contextlib.suppress(ValueError, requests.ConnectionError):
+        with (
+            patch.object(requests.adapters.HTTPAdapter, "send", send),
+            contextlib.suppress(ValueError, requests.ConnectionError),
+        ):
             call()
         return hosts
 
     def test_only_allowed_connection_hosts_are_contacted(self):
-        fetches = {"archives.get": lambda url: archives.get(url, self.HOSTS),
-                   "artists.get_within": lambda url: artists.get_within(url, {}, self.HOSTS)}
+        fetches = {
+            "archives.get": lambda url: archives.get(url, self.HOSTS),
+            "artists.get_within": lambda url: artists.get_within(url, {}, self.HOSTS),
+        }
         for name, fetch in fetches.items():
             for module in (archives, artists):
                 for url in self.REFUSED:
@@ -1063,7 +1444,9 @@ class ConnectionHostTests(unittest.TestCase):
         for module in (archives, artists):
             self.assertFalse(module.host_allowed("https://evilarchive.org/x", ("archive.org",)), module.__name__)
             self.assertTrue(module.host_allowed("https://ia800.us.archive.org/x", ("archive.org",)), module.__name__)
-            self.assertFalse(module.host_allowed("http://i.pximg.net/img-original/1_p0.png", ("i.pximg.net",)), module.__name__)
+            self.assertFalse(
+                module.host_allowed("http://i.pximg.net/img-original/1_p0.png", ("i.pximg.net",)), module.__name__
+            )
 
     def test_only_the_scheme_is_upgraded_to_https(self):
         self.assertEqual(archives.https("http://deemo.com/a.png"), "https://deemo.com/a.png")
@@ -1139,6 +1522,7 @@ class RetryStatusTests(unittest.TestCase):
 
 # ----------------------------------------------------------- committed data, code
 
+
 class CommittedDataTests(unittest.TestCase):
     def setUp(self):
         self.manifest = json.loads((ROOT / "data/sources/archives.json").read_text(encoding="utf-8"))
@@ -1168,7 +1552,10 @@ class CommittedDataTests(unittest.TestCase):
         for name in ("fetch_artists", "fetch_archives"):
             tree = ast.parse((ROOT / f"scripts/{name}.py").read_text(encoding="utf-8"))
             for node in ast.walk(tree):
-                if isinstance(node, ast.Call) and getattr(node.func, "attr", getattr(node.func, "id", None)) in ("read_text", "write_text"):
+                if isinstance(node, ast.Call) and getattr(node.func, "attr", getattr(node.func, "id", None)) in (
+                    "read_text",
+                    "write_text",
+                ):
                     self.assertIn("encoding", [keyword.arg for keyword in node.keywords], f"{name}.py:{node.lineno}")
 
 

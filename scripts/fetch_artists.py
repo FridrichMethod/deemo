@@ -28,11 +28,11 @@ import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = "data/sources/artists.json"
-HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; DEEMOArtworkArchive/1.0)",
-           "Accept": "*/*"}
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; DEEMOArtworkArchive/1.0)", "Accept": "*/*"}
 PIXIV_POSTS = {
     "snowegg": {
-        "artist": "雪歌草 / 雪蛋 / SnowEgg", "user_id": "1755315",
+        "artist": "雪歌草 / 雪蛋 / SnowEgg",
+        "user_id": "1755315",
         "posts": {
             "87625394": "Sakuzyo Collection 2",
             "85567713": "Taishi Collection",
@@ -44,19 +44,23 @@ PIXIV_POSTS = {
         },
     },
     "ryori": {
-        "artist": "Ryori", "user_id": "1400721",
-        "posts": {"71679906": "AD:PIANO Collection 2",
-                  "67258437": "Feryquitous Collection"},
+        "artist": "Ryori",
+        "user_id": "1400721",
+        "posts": {"71679906": "AD:PIANO Collection 2", "67258437": "Feryquitous Collection"},
     },
     "kai": {
-        "artist": "K@I", "user_id": "93444",
-        "posts": {"79134908": "DEEMO 3.6",
-                  "75111180": "DEEMO 3.0 / Classical Collection",
-                  "54551640": "Aioi Collection",
-                  "51203078": "Book of Alice"},
+        "artist": "K@I",
+        "user_id": "93444",
+        "posts": {
+            "79134908": "DEEMO 3.6",
+            "75111180": "DEEMO 3.0 / Classical Collection",
+            "54551640": "Aioi Collection",
+            "51203078": "Book of Alice",
+        },
     },
     "siyouko": {
-        "artist": "Siyouko / 硝子", "user_id": "937764",
+        "artist": "Siyouko / 硝子",
+        "user_id": "937764",
         "posts": {"47910628": "Deemoまとめ"},
     },
 }
@@ -94,9 +98,13 @@ def host_allowed(url, hosts):
     except (ValueError, requests.RequestException):
         return False
     host = (sent.hostname or "").rstrip(".")
-    return (sent.scheme == "https" and raw.hostname == sent.hostname and ports <= {None, 443}
-            and "@" not in raw.netloc + sent.netloc
-            and any(host == allowed or host.endswith("." + allowed) for allowed in hosts))
+    return (
+        sent.scheme == "https"
+        and raw.hostname == sent.hostname
+        and ports <= {None, 443}
+        and "@" not in raw.netloc + sent.netloc
+        and any(host == allowed or host.endswith("." + allowed) for allowed in hosts)
+    )
 
 
 def get_within(url, headers, hosts):
@@ -147,8 +155,7 @@ def slug(text):
 
 
 def record_failure(manifest, source_id, url, error, **extra):
-    manifest["failures"].append({"source_id": source_id, "url": url,
-                                 "error": str(error), **extra})
+    manifest["failures"].append({"source_id": source_id, "url": url, "error": str(error), **extra})
 
 
 def failure_order(row):
@@ -160,9 +167,15 @@ def collect_pixiv(manifest, jobs):
         for post_id, collection in artist["posts"].items():
             page = f"https://www.pixiv.net/en/artworks/{post_id}"
             source_id = f"artists:pixiv:{post_id}"
-            source = {"id": source_id, "name": collection, "url": page,
-                      "artist": artist["artist"], "status": "pending",
-                      "platform": "Pixiv", "access": "public_without_login"}
+            source = {
+                "id": source_id,
+                "name": collection,
+                "url": page,
+                "artist": artist["artist"],
+                "status": "pending",
+                "platform": "Pixiv",
+                "access": "public_without_login",
+            }
             manifest["sources"].append(source)
             try:
                 metadata_url = f"https://www.pixiv.net/ajax/illust/{post_id}"
@@ -173,17 +186,21 @@ def collect_pixiv(manifest, jobs):
                     raise ValueError("Restricted artwork is outside this public collection")
                 pages_url = f"https://www.pixiv.net/ajax/illust/{post_id}/pages"
                 pages = pixiv_body(pages_url)
-                source.update({"name": metadata["illustTitle"],
-                               "metadata_url": metadata_url,
-                               "pages_metadata_url": pages_url,
-                               "published_at": metadata.get("createDate"),
-                               "updated_at": metadata.get("uploadDate"),
-                               "artist_user_id": metadata["userId"],
-                               "artist_display_name": metadata["userName"],
-                               "description": text_content(metadata.get("illustComment")),
-                               "tags": [t["tag"] for t in metadata.get("tags", {}).get("tags", [])],
-                               "page_count": len(pages),
-                               "notes": "Public original URLs returned by Pixiv; no authentication or transformation."})
+                source.update(
+                    {
+                        "name": metadata["illustTitle"],
+                        "metadata_url": metadata_url,
+                        "pages_metadata_url": pages_url,
+                        "published_at": metadata.get("createDate"),
+                        "updated_at": metadata.get("uploadDate"),
+                        "artist_user_id": metadata["userId"],
+                        "artist_display_name": metadata["userName"],
+                        "description": text_content(metadata.get("illustComment")),
+                        "tags": [t["tag"] for t in metadata.get("tags", {}).get("tags", [])],
+                        "page_count": len(pages),
+                        "notes": "Public original URLs returned by Pixiv; no authentication or transformation.",
+                    }
+                )
                 for index, entry in enumerate(pages):
                     if directory == "snowegg":
                         kind = "collection_cover" if index == 0 else "song_art"
@@ -198,25 +215,36 @@ def collect_pixiv(manifest, jobs):
                         kind = "song_art" if post_id == "79134908" else "contact_sheet"
                     else:
                         kind = "illustration"
-                    jobs.append({"id": f"{source_id}:p{index}", "source_id": source_id,
-                                 "artist": artist["artist"], "directory": directory,
-                                 "stem": f"pixiv-{post_id}-p{index:02d}",
-                                 "title": f"{collection} — page {index + 1}",
-                                 "collection": collection, "collection_scope": "source_post_grouping",
-                                 "kind": kind, "page_url": page,
-                                 "download_url": entry["urls"]["original"],
-                                 "source_page_index": index,
-                                 "source_dimensions": [entry["width"], entry["height"]],
-                                 "published_at": metadata.get("createDate"),
-                                 "song_titles": [], "mapping_status": "unmapped",
-                                 "quality": "artist_original_upload",
-                                 "notes": ("Process/design reference; retained separately from song art."
-                                           if kind == "reference" else
-                                           "Artist's DEEMO illustration compilation; not asserted to be commissioned song artwork."
-                                           if directory == "siyouko" else
-                                           "Artist presentation includes decorative framing/copyright text; page order retained, exact song unmapped."
-                                           if directory == "kai" else
-                                           "Page order retained; no unverified song-title assignment. Source-post grouping may include covers for other collections.")})
+                    jobs.append(
+                        {
+                            "id": f"{source_id}:p{index}",
+                            "source_id": source_id,
+                            "artist": artist["artist"],
+                            "directory": directory,
+                            "stem": f"pixiv-{post_id}-p{index:02d}",
+                            "title": f"{collection} — page {index + 1}",
+                            "collection": collection,
+                            "collection_scope": "source_post_grouping",
+                            "kind": kind,
+                            "page_url": page,
+                            "download_url": entry["urls"]["original"],
+                            "source_page_index": index,
+                            "source_dimensions": [entry["width"], entry["height"]],
+                            "published_at": metadata.get("createDate"),
+                            "song_titles": [],
+                            "mapping_status": "unmapped",
+                            "quality": "artist_original_upload",
+                            "notes": (
+                                "Process/design reference; retained separately from song art."
+                                if kind == "reference"
+                                else "Artist's DEEMO illustration compilation; not asserted to be commissioned song artwork."
+                                if directory == "siyouko"
+                                else "Artist presentation includes decorative framing/copyright text; page order retained, exact song unmapped."
+                                if directory == "kai"
+                                else "Page order retained; no unverified song-title assignment. Source-post grouping may include covers for other collections."
+                            ),
+                        }
+                    )
                 source["status"] = "discovered"
                 print(f"Discovered {len(pages)} Pixiv images: {post_id}", flush=True)
             except Exception as error:
@@ -232,14 +260,23 @@ def jimdo_image_id(url):
 
 def collect_jimdo(manifest, jobs, previous_assets=()):
     source_id = "artists:jimdo:kolokolsan"
-    source = {"id": source_id, "name": "ころころさん / 鳩紫ぽっぽ — 仕事の制作物",
-              "url": JIMDO_URL, "status": "pending", "platform": "Jimdo",
-              "artist": "ころころさん / 鳩紫ぽっぽ", "access": "public_without_login"}
+    source = {
+        "id": source_id,
+        "name": "ころころさん / 鳩紫ぽっぽ — 仕事の制作物",
+        "url": JIMDO_URL,
+        "status": "pending",
+        "platform": "Jimdo",
+        "artist": "ころころさん / 鳩紫ぽっぽ",
+        "access": "public_without_login",
+    }
     manifest["sources"].append(source)
     # Images already in the manifest keep their ids and file names (the first five used the bare
     # title slug); new ones are keyed by the Jimdo image id, prefixed with the slug when it is not empty.
-    known = {jimdo_image_id(asset["download_url"]): asset["id"] for asset in previous_assets
-             if asset["source_id"] == source_id}
+    known = {
+        jimdo_image_id(asset["download_url"]): asset["id"]
+        for asset in previous_assets
+        if asset["source_id"] == source_id
+    }
     try:
         soup = BeautifulSoup(request(JIMDO_URL).text, "html.parser")
         images = [i for i in soup.find_all("img") if "「Deemo」" in i.get("alt", "")]
@@ -251,27 +288,45 @@ def collect_jimdo(manifest, jobs, previous_assets=()):
             title = re.search(r"楽曲「([^」]+)」", caption).group(1)
             lightbox = img.find_parent("a").get("data-href")
             key = jimdo_image_id(lightbox)
-            if (not key or not host_allowed(lightbox, DOWNLOAD_HOSTS["jimdo"])
-                    or not urlsplit(lightbox).path.startswith("/app/cms/image/transf/")):
+            if (
+                not key
+                or not host_allowed(lightbox, DOWNLOAD_HOSTS["jimdo"])
+                or not urlsplit(lightbox).path.startswith("/app/cms/image/transf/")
+            ):
                 raise ValueError(f"Missing public lightbox URL for {title}")
             if key in seen:
                 raise ValueError(f"Duplicate Jimdo image {key} for {title}")
             seen.add(key)
             asset_id = known.get(key) or f"{source_id}:{slug(title) or 'jimdo'}-{key}"
             original = re.sub(r"/transf/[^/]+/", "/transf/none/", lightbox)
-            found.append({"id": asset_id, "source_id": source_id,
-                         "artist": source["artist"], "directory": "kolokolsan",
-                         "stem": asset_id.rsplit(":", 1)[1], "title": title, "song_titles": [title],
-                         "kind": "song_art", "page_url": JIMDO_URL,
-                         "download_url": original, "mapping_status": "source_caption",
-                         "advertised_lightbox_url": lightbox,
-                         "source_caption": caption,
-                         "source_dimensions": [int(img["data-orig-width"]), int(img["data-orig-height"])],
-                         "source_dimensions_kind": "advertised_lightbox_metadata; untransformed originals may be larger",
-                         "quality": "artist_original_upload"})
+            found.append(
+                {
+                    "id": asset_id,
+                    "source_id": source_id,
+                    "artist": source["artist"],
+                    "directory": "kolokolsan",
+                    "stem": asset_id.rsplit(":", 1)[1],
+                    "title": title,
+                    "song_titles": [title],
+                    "kind": "song_art",
+                    "page_url": JIMDO_URL,
+                    "download_url": original,
+                    "mapping_status": "source_caption",
+                    "advertised_lightbox_url": lightbox,
+                    "source_caption": caption,
+                    "source_dimensions": [int(img["data-orig-width"]), int(img["data-orig-height"])],
+                    "source_dimensions_kind": "advertised_lightbox_metadata; untransformed originals may be larger",
+                    "quality": "artist_original_upload",
+                }
+            )
         jobs.extend(found)
-        source.update({"status": "discovered", "page_count": len(images),
-                       "notes": "Only images explicitly labelled Deemo; public Jimdo transf/none URLs retain originals. The PNG originals are larger than the advertised 2048px lightbox metadata."})
+        source.update(
+            {
+                "status": "discovered",
+                "page_count": len(images),
+                "notes": "Only images explicitly labelled Deemo; public Jimdo transf/none URLs retain originals. The PNG originals are larger than the advertised 2048px lightbox metadata.",
+            }
+        )
     except Exception as error:
         source["status"] = "failed"
         record_failure(manifest, source_id, JIMDO_URL, error)
@@ -285,8 +340,14 @@ def collect_tumblr(manifest, jobs):
         # Attribute the failure to every known post, so their archived records are kept as fetch_failed.
         for post_id, collection in sorted(TUMBLR_POSTS.items()):
             source_id = f"artists:tumblr:{post_id}"
-            manifest["sources"].append({"id": source_id, "name": collection,
-                                        "url": f"https://wublaze.tumblr.com/post/{post_id}", "status": "failed"})
+            manifest["sources"].append(
+                {
+                    "id": source_id,
+                    "name": collection,
+                    "url": f"https://wublaze.tumblr.com/post/{post_id}",
+                    "status": "failed",
+                }
+            )
             record_failure(manifest, source_id, TUMBLR_API, error)
         return
     seen = set()
@@ -298,12 +359,19 @@ def collect_tumblr(manifest, jobs):
         source_id = f"artists:tumblr:{post_id}"
         collection = TUMBLR_POSTS[post_id]
         page = post["url-with-slug"]
-        source = {"id": source_id, "name": collection, "url": page,
-                  "artist": "Blaze Wu", "platform": "Tumblr", "status": "discovered",
-                  "access": "public_without_login", "metadata_url": TUMBLR_API,
-                  "published_at": post.get("date-gmt"),
-                  "description": text_content(post.get("photo-caption")),
-                  "notes": "Largest image URL advertised by Tumblr's public legacy API; may be a platform-sized upload."}
+        source = {
+            "id": source_id,
+            "name": collection,
+            "url": page,
+            "artist": "Blaze Wu",
+            "platform": "Tumblr",
+            "status": "discovered",
+            "access": "public_without_login",
+            "metadata_url": TUMBLR_API,
+            "published_at": post.get("date-gmt"),
+            "description": text_content(post.get("photo-caption")),
+            "notes": "Largest image URL advertised by Tumblr's public legacy API; may be a platform-sized upload.",
+        }
         manifest["sources"].append(source)
         photos = post.get("photos") or [post]
         for index, photo in enumerate(photos):
@@ -312,33 +380,54 @@ def collect_tumblr(manifest, jobs):
                 record_failure(manifest, source_id, page, "No public large image URL", source_page_index=index)
                 continue
             kind = "contact_sheet" if post_id != "129276170315" else ("collection_cover" if index == 5 else "song_art")
-            jobs.append({"id": f"{source_id}:p{index}", "source_id": source_id,
-                         "artist": "Blaze Wu", "directory": "blaze-wu",
-                         "stem": f"tumblr-{post_id}-p{index:02d}",
-                         "title": f"{collection} — page {index + 1}", "collection": collection,
-                         "kind": kind, "page_url": page, "download_url": original,
-                         "source_page_index": index, "published_at": post.get("date-gmt"),
-                         "song_titles": [], "mapping_status": "unmapped",
-                         "quality": "artist_public_platform_image"})
+            jobs.append(
+                {
+                    "id": f"{source_id}:p{index}",
+                    "source_id": source_id,
+                    "artist": "Blaze Wu",
+                    "directory": "blaze-wu",
+                    "stem": f"tumblr-{post_id}-p{index:02d}",
+                    "title": f"{collection} — page {index + 1}",
+                    "collection": collection,
+                    "kind": kind,
+                    "page_url": page,
+                    "download_url": original,
+                    "source_page_index": index,
+                    "published_at": post.get("date-gmt"),
+                    "song_titles": [],
+                    "mapping_status": "unmapped",
+                    "quality": "artist_public_platform_image",
+                }
+            )
     for missing in sorted(TUMBLR_POSTS.keys() - seen):
         source_id = f"artists:tumblr:{missing}"
         page = f"https://wublaze.tumblr.com/post/{missing}"
-        manifest["sources"].append({"id": source_id, "name": TUMBLR_POSTS[missing],
-                                    "url": page, "status": "failed"})
+        manifest["sources"].append({"id": source_id, "name": TUMBLR_POSTS[missing], "url": page, "status": "failed"})
         record_failure(manifest, source_id, page, "Known post not returned by public artist archive")
 
 
 def collect_reference(manifest):
-    source = {"id": "artists:blogspot:siyouko-career", "name": "Siyouko — career/commission record",
-              "url": REFERENCE_URL, "artist": "Siyouko / 硝子", "status": "pending",
-              "platform": "Blogspot", "access": "public_without_login"}
+    source = {
+        "id": "artists:blogspot:siyouko-career",
+        "name": "Siyouko — career/commission record",
+        "url": REFERENCE_URL,
+        "artist": "Siyouko / 硝子",
+        "status": "pending",
+        "platform": "Blogspot",
+        "access": "public_without_login",
+    }
     manifest["sources"].append(source)
     try:
         soup = BeautifulSoup(request(REFERENCE_URL).text, "html.parser")
         body = soup.select_one(".post-body")
         if body is None or "DEEMO" not in body.get_text():
             raise ValueError("Expected DEEMO commission reference not found")
-        source.update({"status": "reference_only", "notes": "Artist's career record confirms DEEMO cutscene, song artwork, and character-design work. This page contains no downloadable DEEMO artwork."})
+        source.update(
+            {
+                "status": "reference_only",
+                "notes": "Artist's career record confirms DEEMO cutscene, song artwork, and character-design work. This page contains no downloadable DEEMO artwork.",
+            }
+        )
     except Exception as error:
         source["status"] = "failed"
         record_failure(manifest, source["id"], REFERENCE_URL, error)
@@ -414,10 +503,21 @@ def save_asset(job, data, fetched_at, hashes):
         keep_file(ROOT / relative, data, digest)
         hashes[digest] = (relative, job["id"])
     asset = {key: value for key, value in job.items() if key not in ("directory", "stem")}
-    asset.update({"path": relative, "width": width, "height": height, "format": fmt,
-                  "mode": mode, "bytes": len(data), "sha256": digest, "fetched_at": fetched_at,
-                  "game": "DEEMO", "rights": "Artwork remains copyright of Rayark and/or the original artist; no redistribution license inferred.",
-                  "transformed": False})
+    asset.update(
+        {
+            "path": relative,
+            "width": width,
+            "height": height,
+            "format": fmt,
+            "mode": mode,
+            "bytes": len(data),
+            "sha256": digest,
+            "fetched_at": fetched_at,
+            "game": "DEEMO",
+            "rights": "Artwork remains copyright of Rayark and/or the original artist; no redistribution license inferred.",
+            "transformed": False,
+        }
+    )
     if duplicate_of:
         asset["duplicate_of"] = duplicate_of
     return asset
@@ -469,8 +569,10 @@ def fetch_all(manifest, jobs, cache, refresh, workers, previous=()):
 
 def require_unique(jobs):
     """Stop before any download when two jobs would share an asset id or a file stem."""
-    for label, keys in (("asset id", [job["id"] for job in jobs]),
-                        ("file stem", [f"{job['directory']}/{job['stem']}" for job in jobs])):
+    for label, keys in (
+        ("asset id", [job["id"] for job in jobs]),
+        ("file stem", [f"{job['directory']}/{job['stem']}" for job in jobs]),
+    ):
         duplicates = sorted(key for key, count in Counter(keys).items() if count > 1)
         if duplicates:
             raise SystemExit(f"Duplicate {label}: {', '.join(duplicates)}")
@@ -499,8 +601,12 @@ def carry_forward(previous, manifest):
         new = records.get(old["id"])
         if new is not None:
             if new["sha256"] != old["sha256"]:
-                version = {**old, "id": f"{old['id']}:{old['sha256'][:12]}",
-                           "upstream_status": "superseded", "superseded_by": old["id"]}
+                version = {
+                    **old,
+                    "id": f"{old['id']}:{old['sha256'][:12]}",
+                    "upstream_status": "superseded",
+                    "superseded_by": old["id"],
+                }
                 records.setdefault(version["id"], version)
         elif old.get("upstream_status") == "superseded":
             records.setdefault(old["id"], old)
@@ -509,10 +615,14 @@ def carry_forward(previous, manifest):
             records[old["id"]] = {**old, "upstream_status": status}
         else:
             records[old["id"]] = {**old, "upstream_status": "removed"}
+
     def restored(row):
         canonical = records.get(row.get("superseded_by"))
-        return (row.get("upstream_status") == "superseded" and canonical is not None
-                and (canonical["sha256"], canonical["path"]) == (row["sha256"], row["path"]))
+        return (
+            row.get("upstream_status") == "superseded"
+            and canonical is not None
+            and (canonical["sha256"], canonical["path"]) == (row["sha256"], row["path"])
+        )
 
     manifest["assets"] = [row for row in records.values() if not restored(row)]
     missing = {row["source_id"] for row in manifest["assets"]} - {row["id"] for row in manifest["sources"]}
@@ -522,9 +632,10 @@ def carry_forward(previous, manifest):
 def keep_source_details(previous, manifest):
     """A source whose discovery failed keeps the metadata of its previous successful read."""
     old = {row["id"]: row for row in previous.get("sources", [])}
-    manifest["sources"] = [{**row, **old[row["id"]], "status": "failed"}
-                           if row["status"] == "failed" and row["id"] in old else row
-                           for row in manifest["sources"]]
+    manifest["sources"] = [
+        {**row, **old[row["id"]], "status": "failed"} if row["status"] == "failed" and row["id"] in old else row
+        for row in manifest["sources"]
+    ]
 
 
 def main():
@@ -539,9 +650,15 @@ def main():
     # Superseded versions stay in the manifest but are no longer the cached copy of their URL.
     current = [asset for asset in previous.get("assets", []) if asset.get("upstream_status") != "superseded"]
     cache = {asset["download_url"]: asset for asset in current}
-    manifest = {"schema_version": 1, "fetched_at": now(), "sources": [], "assets": [], "failures": [],
-                "scope": "DEEMO 1 artist-published illustrations, original public uploads and public platform images",
-                "excluded": "Paid artbooks; DEEMO II; unrelated games, unrelated fanart and cross-game anniversary posts; credentials and login walls"}
+    manifest = {
+        "schema_version": 1,
+        "fetched_at": now(),
+        "sources": [],
+        "assets": [],
+        "failures": [],
+        "scope": "DEEMO 1 artist-published illustrations, original public uploads and public platform images",
+        "excluded": "Paid artbooks; DEEMO II; unrelated games, unrelated fanart and cross-game anniversary posts; credentials and login walls",
+    }
     jobs = []
     collect_pixiv(manifest, jobs)
     collect_jimdo(manifest, jobs, current)
@@ -565,8 +682,17 @@ def main():
     manifest["sources"].sort(key=lambda source: source["id"])
     manifest["failures"].sort(key=failure_order)
     write_json(manifest_path, manifest)
-    print(json.dumps({"sources": len(manifest["sources"]), "assets": len(manifest["assets"]),
-                      "unique_files": len(hashes), "failures": len(manifest["failures"])}, indent=2))
+    print(
+        json.dumps(
+            {
+                "sources": len(manifest["sources"]),
+                "assets": len(manifest["assets"]),
+                "unique_files": len(hashes),
+                "failures": len(manifest["failures"]),
+            },
+            indent=2,
+        )
+    )
     return 1 if manifest["failures"] else 0
 
 

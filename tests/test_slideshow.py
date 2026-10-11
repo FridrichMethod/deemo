@@ -21,7 +21,15 @@ VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "met
 # The round controls of the bottom row, left to right on screen.
 BOTTOM_ROW = ["photo", "github", "archive-link", "iplayer", "random"]
 # Icon-only controls, found by their own or their container's class: whether each is a toggle (aria-pressed).
-ICON_BUTTONS = {"prev": False, "next": False, "photo": False, "random": True, "iplayer": True, "save": False, "close": False}
+ICON_BUTTONS = {
+    "prev": False,
+    "next": False,
+    "photo": False,
+    "random": True,
+    "iplayer": True,
+    "save": False,
+    "close": False,
+}
 
 
 class Node:
@@ -73,7 +81,7 @@ def top_level_css(css):
     out, depth, index = [], 0, 0
     for match in re.finditer(r"@(?:media|supports)[^{]*\{|\{|\}", css):
         if depth == 0:
-            out.append(css[index:match.start()])
+            out.append(css[index : match.start()])
         if match.group().startswith("@"):
             depth += 1
         elif depth and match.group() == "{":
@@ -93,18 +101,21 @@ def media_block(css, condition):
     if not match:
         return None
     depth = 1
-    for brace in re.finditer(r"[{}]", css[match.end():]):
+    for brace in re.finditer(r"[{}]", css[match.end() :]):
         depth += 1 if brace.group() == "{" else -1
         if depth == 0:
-            return css[match.end():match.end() + brace.start()]
+            return css[match.end() : match.end() + brace.start()]
     return None
 
 
 def css_value(css, selectors, prop):
     """The last value `css` gives `prop` in a rule for exactly this selector list (one selector per line or not)."""
     rule = r"(?m)^[ \t]*" + r"\s*,\s*".join(map(re.escape, selectors)) + r"\s*\{([^}]*)\}"
-    values = [found.group(1) for body in re.findall(rule, css)
-              for found in re.finditer(r"(?<![\w-])" + re.escape(prop) + r"\s*:\s*([^;]+?)\s*(?:;|$)", body)]
+    values = [
+        found.group(1)
+        for body in re.findall(rule, css)
+        for found in re.finditer(r"(?<![\w-])" + re.escape(prop) + r"\s*:\s*([^;]+?)\s*(?:;|$)", body)
+    ]
     return values[-1] if values else None
 
 
@@ -141,19 +152,29 @@ class SlideshowTemplateTests(unittest.TestCase):
 
     def assert_translated(self, key):
         for lang in ("en", "zh-CN"):
-            self.assertTrue(self.messages[lang].get(key, "").strip(), f"{key} has no {lang} string in src/i18n/slideshow.js")
+            self.assertTrue(
+                self.messages[lang].get(key, "").strip(), f"{key} has no {lang} string in src/i18n/slideshow.js"
+            )
 
     def test_icon_only_controls_are_named_buttons_in_both_languages(self):
         for name, toggle in ICON_BUTTONS.items():
             with self.subTest(control=name):
                 node = self.control(name)
-                self.assertEqual((node.tag, node.attrs.get("type")), ("button", "button"), "Actions are <button type=button>, not links")
+                self.assertEqual(
+                    (node.tag, node.attrs.get("type")),
+                    ("button", "button"),
+                    "Actions are <button type=button>, not links",
+                )
                 key = i18n_attrs(node).get("aria-label")
                 self.assertTrue(key, "Icon-only controls take an aria-label translated through data-i18n-attr")
                 self.assert_translated(key)
                 self.assertEqual(node.attrs.get("aria-label"), self.messages["en"][key])
                 if toggle:
-                    self.assertIn(node.attrs.get("aria-pressed"), ("true", "false"), "Toggles expose their state with aria-pressed")
+                    self.assertIn(
+                        node.attrs.get("aria-pressed"),
+                        ("true", "false"),
+                        "Toggles expose their state with aria-pressed",
+                    )
 
     def test_no_javascript_urls(self):
         for node in self.nodes:
@@ -164,7 +185,7 @@ class SlideshowTemplateTests(unittest.TestCase):
         for node in self.nodes:
             if node.tag == "img":
                 with self.subTest(src=node.attrs.get("src")):
-                    self.assertIn("alt", node.attrs, "Decorative icons take alt=\"\"")
+                    self.assertIn("alt", node.attrs, 'Decorative icons take alt=""')
 
     def test_accessible_names_contain_the_visible_label(self):
         """WCAG 2.5.3: an aria-label on a control with visible text must contain that text."""
@@ -173,7 +194,9 @@ class SlideshowTemplateTests(unittest.TestCase):
             if label_key and text_key:
                 for lang in ("en", "zh-CN"):
                     with self.subTest(control=text_key, lang=lang):
-                        self.assertIn(self.messages[lang][text_key].casefold(), self.messages[lang][label_key].casefold())
+                        self.assertIn(
+                            self.messages[lang][text_key].casefold(), self.messages[lang][label_key].casefold()
+                        )
 
     def test_bottom_row_dom_order_follows_its_layout(self):
         order = [cls for node in self.nodes if "bt" in node.classes for cls in node.classes if cls in BOTTOM_ROW]
@@ -188,7 +211,9 @@ class SlideshowTemplateTests(unittest.TestCase):
 
     def test_only_the_current_slide_takes_hits_and_reaches_assistive_tech(self):
         """Hidden slides stack over the shown one; opacity alone leaves them hit-testable and in the AX tree."""
-        rule = lambda selector: re.search(r"(?m)^" + re.escape(selector) + r" \{(.*?)\n\}", self.css, re.DOTALL).group(1)
+        rule = lambda selector: re.search(r"(?m)^" + re.escape(selector) + r" \{(.*?)\n\}", self.css, re.DOTALL).group(
+            1
+        )
         self.assertRegex(rule(".mySlides"), r"pointer-events:\s*none")
         self.assertRegex(rule(".mySlides"), r"visibility:\s*hidden")
         self.assertRegex(rule(".mySlides.is-current"), r"pointer-events:\s*auto")
@@ -209,9 +234,17 @@ class SlideshowTemplateTests(unittest.TestCase):
         self.assertIn('"notes-artist"', self.html, "metaRow() tags the artist's row")
         # metaRow() tags a row by its label, so the label it compares with must be the one notesFor() gives the
         # slide's artist (data.artist), and no other notes row may share that label in either language.
-        tagged = re.findall(r'if \(label === DEEMO_I18N\.t\("(slideshow\.notes\.[\w.]+)"\)\)\s*dt\.className = dd\.className = "notes-artist"', self.html)
+        tagged = re.findall(
+            r'if \(label === DEEMO_I18N\.t\("(slideshow\.notes\.[\w.]+)"\)\)\s*dt\.className = dd\.className = "notes-artist"',
+            self.html,
+        )
         self.assertEqual(len(tagged), 1, "metaRow() tags one label as the artist's row")
-        rows = {field: key for key, field in re.findall(r'metaRow\(meta, DEEMO_I18N\.t\("(slideshow\.notes\.[\w.]+)"\), data\.(\w+)\)', self.html)}
+        rows = {
+            field: key
+            for key, field in re.findall(
+                r'metaRow\(meta, DEEMO_I18N\.t\("(slideshow\.notes\.[\w.]+)"\), data\.(\w+)\)', self.html
+            )
+        }
         self.assertEqual(rows.get("artist"), tagged[0], "The tagged label is the one the artist's row is given")
         others = set(re.findall(r'"(slideshow\.notes\.[\w.]+)"', self.html)) - {tagged[0], "slideshow.notes.label"}
         self.assertTrue(others, "The other notes rows (music, collection) are labelled too")
@@ -243,7 +276,9 @@ class SlideshowTemplateTests(unittest.TestCase):
         self.assertTrue(clamp, "Short landscape screens clamp the arrows' top with max(50%, <n>px)")
         arrow_top = lengths["stage margin-top"] + int(clamp.group(1)) + lengths["arrow margin-top"]
         toggle_bottom = lengths["toggle top"] + lengths["toggle height"] + 2 * lengths["toggle padding"]
-        self.assertGreaterEqual(arrow_top, toggle_bottom, "The arrows' top edge clears the bottom of the language toggle")
+        self.assertGreaterEqual(
+            arrow_top, toggle_bottom, "The arrows' top edge clears the bottom of the language toggle"
+        )
 
     def test_the_wrapped_signature_leaves_the_language_toggle_its_taps(self):
         """Wrapped on a narrow phone (about 330px wide with the shipped font), the fixed signature's box spans to the
@@ -272,19 +307,27 @@ class SlideshowTemplateTests(unittest.TestCase):
         name alone: a longer one wraps onto a line of its own, under the bottom control row of a phone held sideways."""
         archive = json.loads(REGISTER.search((ROOT / "src/i18n/archive.js").read_text(encoding="utf-8")).group(1))
         links = [node for node in self.nodes if node.tag == "a" and node.attrs.get("href") == "archive.html"]
-        self.assertEqual({node.attrs.get("data-i18n") for node in links}, {"slideshow.archive.text", "slideshow.caption.browse"})
+        self.assertEqual(
+            {node.attrs.get("data-i18n") for node in links}, {"slideshow.archive.text", "slideshow.caption.browse"}
+        )
         for node in links:
-            self.assertEqual(node.text.strip(), self.messages["en"][node.attrs["data-i18n"]], "static text is the English string")
+            self.assertEqual(
+                node.text.strip(), self.messages["en"][node.attrs["data-i18n"]], "static text is the English string"
+            )
         for lang, readme in (("en", "README.md"), ("zh-CN", "README.zh-CN.md")):
             with self.subTest(lang=lang):
                 name = archive[lang]["header.title"].removeprefix("DEEMO 1 ")  # "Artwork Archive" / "曲绘档案"
                 messages = self.messages[lang]
                 self.assertIn(messages["slideshow.archive.text"].casefold(), name.casefold())
-                self.assertIn(messages["slideshow.archive.text"].casefold(), messages["slideshow.archive.label"].casefold())
+                self.assertIn(
+                    messages["slideshow.archive.text"].casefold(), messages["slideshow.archive.label"].casefold()
+                )
                 self.assertIn(name, messages["slideshow.archive.label"])
                 self.assertEqual(messages["slideshow.caption.browse"], name)
-                online = re.search(r"\[([^\]]+)\]\(https://fridrichmethod\.github\.io/deemo/archive\.html\)",
-                                   (ROOT / readme).read_text(encoding="utf-8"))
+                online = re.search(
+                    r"\[([^\]]+)\]\(https://fridrichmethod\.github\.io/deemo/archive\.html\)",
+                    (ROOT / readme).read_text(encoding="utf-8"),
+                )
                 self.assertIn(name, online.group(1))
 
 

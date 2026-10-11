@@ -51,16 +51,30 @@ TEXT = {
         "heading": "## Wiki source check",
         "snapshots": "Baseline snapshot {baseline_at} ({baseline}) → current discovery {current_at} ({current}).",
         "candidates": ("{} candidate", "{} candidates"),
-        "counts": ("- {added} added ({added_after_baseline} of them uploaded after the baseline) · "
-                   "{reuploaded} re-uploaded · {removed} removed"),
+        "counts": (
+            "- {added} added ({added_after_baseline} of them uploaded after the baseline) · "
+            "{reuploaded} re-uploaded · {removed} removed"
+        ),
         "unchanged": "The candidate set has not changed; nothing to do.",
         "section": "### {} ({})",
-        "added": "Added", "reuploaded": "Re-uploaded", "removed": "Removed",
-        "columns": {"source": "Source", "file": "File", "kind": "Type", "dims": "Dimensions", "size": "Size",
-                    "uploaded": "Uploaded", "names": "Song title / collection", "sha1": "Wiki SHA-1",
-                    "local": "Local file"},
-        "more": ("{} more entry is not listed; see the diff of `data/sources/wiki-discovery.json`.",
-                 "{} more entries are not listed; see the diff of `data/sources/wiki-discovery.json`."),
+        "added": "Added",
+        "reuploaded": "Re-uploaded",
+        "removed": "Removed",
+        "columns": {
+            "source": "Source",
+            "file": "File",
+            "kind": "Type",
+            "dims": "Dimensions",
+            "size": "Size",
+            "uploaded": "Uploaded",
+            "names": "Song title / collection",
+            "sha1": "Wiki SHA-1",
+            "local": "Local file",
+        },
+        "more": (
+            "{} more entry is not listed; see the diff of `data/sources/wiki-discovery.json`.",
+            "{} more entries are not listed; see the diff of `data/sources/wiki-discovery.json`.",
+        ),
         "small": " ⚠ small image",
         "after_baseline": "{} (after baseline)",
         "no_local": "none",
@@ -87,9 +101,20 @@ for test in tests/test_*.py; do .venv/bin/python -I "$test" || echo "FAILED: $te
         "counts": "- 新增 {added}（其中 {added_after_baseline} 个在基线之后上传）· 重新上传 {reuploaded} · 移除 {removed}",
         "unchanged": "候选集合没有变化，无需处理。",
         "section": "### {}（{}）",
-        "added": "新增", "reuploaded": "重新上传", "removed": "移除",
-        "columns": {"source": "来源", "file": "文件", "kind": "类型", "dims": "尺寸", "size": "大小",
-                    "uploaded": "上传时间", "names": "曲名 / 曲包", "sha1": "Wiki SHA-1", "local": "本地文件"},
+        "added": "新增",
+        "reuploaded": "重新上传",
+        "removed": "移除",
+        "columns": {
+            "source": "来源",
+            "file": "文件",
+            "kind": "类型",
+            "dims": "尺寸",
+            "size": "大小",
+            "uploaded": "上传时间",
+            "names": "曲名 / 曲包",
+            "sha1": "Wiki SHA-1",
+            "local": "本地文件",
+        },
         "more": "另有 {} 项未列出，见 `data/sources/wiki-discovery.json` 的 diff。",
         "small": " ⚠小图",
         "after_baseline": "{}（基线之后）",
@@ -170,17 +195,27 @@ def compare(baseline: dict, current: dict, manifest: dict) -> dict:
     baseline_time = str(baseline.get("fetched_at") or "")
     added = [describe(new[key], None, assets, baseline_time) for key in sorted(new) if key not in old]
     removed = [describe(old[key], None, assets, baseline_time) for key in sorted(old) if key not in new]
-    reuploaded = [describe(new[key], old[key], assets, baseline_time) for key in sorted(new)
-                  if key in old and fingerprint(new[key]) != fingerprint(old[key])]
-    counts = {"added": len(added), "reuploaded": len(reuploaded), "removed": len(removed),
-              "added_after_baseline": sum(row["uploaded_after_baseline"] for row in added),
-              "baseline": len(old), "current": len(new)}
+    reuploaded = [
+        describe(new[key], old[key], assets, baseline_time)
+        for key in sorted(new)
+        if key in old and fingerprint(new[key]) != fingerprint(old[key])
+    ]
+    counts = {
+        "added": len(added),
+        "reuploaded": len(reuploaded),
+        "removed": len(removed),
+        "added_after_baseline": sum(row["uploaded_after_baseline"] for row in added),
+        "baseline": len(old),
+        "current": len(new),
+    }
     date = str(current.get("fetched_at") or "")[:10]
     date = date if DATE.fullmatch(date) else "unknown-date"
     return {
         "changed": bool(added or removed or reuploaded),
-        "title": (f"Wiki source update: {counts['added']} added · {counts['reuploaded']} re-uploaded · "
-                  f"{counts['removed']} removed ({date})"),
+        "title": (
+            f"Wiki source update: {counts['added']} added · {counts['reuploaded']} re-uploaded · "
+            f"{counts['removed']} removed ({date})"
+        ),
         "counts": counts,
         "baseline_fetched_at": baseline.get("fetched_at"),
         "current_fetched_at": current.get("fetched_at"),
@@ -227,8 +262,13 @@ def page_url(row: dict) -> str | None:
         return None
     try:
         parts = urlsplit(url)
-        trusted = (parts.scheme == "https" and parts.hostname == SOURCE_HOSTS.get(row["source"])
-                   and parts.port is None and not parts.username and not parts.password)
+        trusted = (
+            parts.scheme == "https"
+            and parts.hostname == SOURCE_HOSTS.get(row["source"])
+            and parts.port is None
+            and not parts.username
+            and not parts.password
+        )
     except ValueError:
         return None
     return quote(url, safe=URL_SAFE) if trusted else None
@@ -275,16 +315,28 @@ def local(row: dict, lang: str = "en") -> str:
 
 def added_row(row: dict, lang: str = "en") -> list[str]:
     names = " / ".join(code(name) for name in row["song_titles"] + row["collections"]) or "—"
-    return [source(row), link(row), code(row["kind"]) if row["kind"] else "?",
-            dims(row["width"], row["height"], lang), mib(row["size"]), uploaded(row, lang), names]
+    return [
+        source(row),
+        link(row),
+        code(row["kind"]) if row["kind"] else "?",
+        dims(row["width"], row["height"], lang),
+        mib(row["size"]),
+        uploaded(row, lang),
+        names,
+    ]
 
 
 def reuploaded_row(row: dict, lang: str = "en") -> list[str]:
     old = row["previous"]
-    return [source(row), link(row),
-            f"{dims(old['width'], old['height'], lang)} → {dims(row['width'], row['height'], lang)}",
-            f"{mib(old['size'])} → {mib(row['size'])}",
-            f"{short_sha(old['sha1'])} → {short_sha(row['sha1'])}", uploaded(row, lang), local(row, lang)]
+    return [
+        source(row),
+        link(row),
+        f"{dims(old['width'], old['height'], lang)} → {dims(row['width'], row['height'], lang)}",
+        f"{mib(old['size'])} → {mib(row['size'])}",
+        f"{short_sha(old['sha1'])} → {short_sha(row['sha1'])}",
+        uploaded(row, lang),
+        local(row, lang),
+    ]
 
 
 def removed_row(row: dict, lang: str = "en") -> list[str]:
@@ -296,8 +348,12 @@ def table(section: str, rows: list[dict], columns: tuple[str, ...], render_row, 
         return []
     text = TEXT[lang]
     headers = [text["columns"][column] for column in columns]
-    lines = [text["section"].format(text[section], len(rows)), "", "| " + " | ".join(headers) + " |",
-             "| " + " | ".join("---" for _ in headers) + " |"]
+    lines = [
+        text["section"].format(text[section], len(rows)),
+        "",
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+    ]
     lines += ["| " + " | ".join(render_row(row, lang)) + " |" for row in rows[:limit]]
     if len(rows) > limit:
         lines.append("\n" + plural(text["more"], len(rows) - limit))
@@ -309,12 +365,17 @@ def render(report: dict, lang: str = "en", limit: int | None = None) -> str:
     text, counts = TEXT[lang], report["counts"]
     limit = ROW_LIMIT if limit is None else limit
     lines = [
-        text["heading"], "",
-        text["snapshots"].format(baseline_at=timestamp(report["baseline_fetched_at"]),
-                                 baseline=plural(text["candidates"], counts["baseline"]),
-                                 current_at=timestamp(report["current_fetched_at"]),
-                                 current=plural(text["candidates"], counts["current"])), "",
-        text["counts"].format(**counts), "",
+        text["heading"],
+        "",
+        text["snapshots"].format(
+            baseline_at=timestamp(report["baseline_fetched_at"]),
+            baseline=plural(text["candidates"], counts["baseline"]),
+            current_at=timestamp(report["current_fetched_at"]),
+            current=plural(text["candidates"], counts["current"]),
+        ),
+        "",
+        text["counts"].format(**counts),
+        "",
     ]
     if not report["changed"]:
         return "\n".join(lines + [text["unchanged"], ""])
@@ -331,8 +392,10 @@ def render_bilingual(report: dict) -> str:
     """
     limit = ROW_LIMIT
     while True:
-        markdown = (f"{render(report, 'en', limit)}\n<details>\n<summary>简体中文</summary>\n\n"
-                    f"{render(report, 'zh-CN', limit)}\n</details>\n")
+        markdown = (
+            f"{render(report, 'en', limit)}\n<details>\n<summary>简体中文</summary>\n\n"
+            f"{render(report, 'zh-CN', limit)}\n</details>\n"
+        )
         if len(markdown) <= REPORT_LIMIT or limit <= 0:
             return markdown
         limit = min(limit - 1, limit * REPORT_LIMIT // len(markdown))
@@ -342,8 +405,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--baseline", required=True, type=Path, help="Committed wiki-discovery.json")
     parser.add_argument("--current", required=True, type=Path, help="Freshly discovered wiki-discovery.json")
-    parser.add_argument("--manifest", type=Path, default=ROOT / "data/sources/wikis.json",
-                        help="wikis.json manifest used to locate existing downloads")
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=ROOT / "data/sources/wikis.json",
+        help="wikis.json manifest used to locate existing downloads",
+    )
     parser.add_argument("--report", type=Path, help="Write the Markdown report to this path")
     parser.add_argument("--summary", type=Path, help="Write the JSON comparison to this path")
     args = parser.parse_args()
@@ -353,7 +420,11 @@ def main() -> None:
         args.report.write_text(render_bilingual(report), encoding="utf-8")
     if args.summary:
         args.summary.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"changed": report["changed"], "title": report["title"], "counts": report["counts"]}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"changed": report["changed"], "title": report["title"], "counts": report["counts"]}, ensure_ascii=False
+        )
+    )
 
 
 if __name__ == "__main__":

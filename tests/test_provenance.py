@@ -51,14 +51,25 @@ def dump(path, data):
 
 
 def song(title, composer=None, source="fandom"):
-    row = {"title": title, "page_url": f"https://{source}.example.test/{title}", "source_id": fetch.SOURCES[source]["id"],
-           "collections": []}
+    row = {
+        "title": title,
+        "page_url": f"https://{source}.example.test/{title}",
+        "source_id": fetch.SOURCES[source]["id"],
+        "collections": [],
+    }
     return {**row, "composer": composer} if composer else row
 
 
 def candidate(titles, source="bwiki", kind="song_art", **extra):
-    return {"source": source, "file_title": "File:" + "+".join(titles or ["cover"]), "kind": kind,
-            "song_titles": list(titles), "collections": [], "related_pages": [], **extra}
+    return {
+        "source": source,
+        "file_title": "File:" + "+".join(titles or ["cover"]),
+        "kind": kind,
+        "song_titles": list(titles),
+        "collections": [],
+        "related_pages": [],
+        **extra,
+    }
 
 
 def messages(relative):
@@ -74,7 +85,7 @@ def function_body(source, name):
     for index in range(start, len(source)):
         depth += {"{": 1, "}": -1}.get(source[index], 0)
         if not depth:
-            return source[start + 1:index]
+            return source[start + 1 : index]
     raise AssertionError(f"function {name} is not closed")
 
 
@@ -114,7 +125,7 @@ def record_tail(record):
     upstream_status and superseded_by follow them and are left out."""
     keys = [key for key in record if key not in fetch.UPSTREAM_FIELDS]
     tail = [key for key in keys if key in TAIL]
-    return keys[len(keys) - len(tail):], tail
+    return keys[len(keys) - len(tail) :], tail
 
 
 class ComposerJoinTests(unittest.TestCase):
@@ -122,47 +133,91 @@ class ComposerJoinTests(unittest.TestCase):
         return [row.get("composer") for row in fetch.with_composers(candidates, songs)]
 
     def test_the_own_wiki_answers_first_and_the_other_wiki_fills_in(self):
-        songs = [song("Empedrado", "Keikaku Tsuukou feat. Parorto"), song("Empedrado", "Yuma.Mizo", "bwiki"),
-                 song("Altale", None), song("Altale", "Sakuzyo", "bwiki"), song("Magnolia", "M2U"),
-                 song("Magnolia", None, "bwiki")]
-        rows = fetch.with_composers([candidate(["Empedrado"], "fandom"), candidate(["Empedrado"], "bwiki"),
-                                     candidate(["Altale"], "fandom"), candidate(["Altale"], "bwiki"),
-                                     candidate(["Magnolia"], "bwiki")], songs)
-        self.assertEqual([row.get("composer") for row in rows],
-                         ["Keikaku Tsuukou feat. Parorto", "Yuma.Mizo", "Sakuzyo", "Sakuzyo", "M2U"])
+        songs = [
+            song("Empedrado", "Keikaku Tsuukou feat. Parorto"),
+            song("Empedrado", "Yuma.Mizo", "bwiki"),
+            song("Altale", None),
+            song("Altale", "Sakuzyo", "bwiki"),
+            song("Magnolia", "M2U"),
+            song("Magnolia", None, "bwiki"),
+        ]
+        rows = fetch.with_composers(
+            [
+                candidate(["Empedrado"], "fandom"),
+                candidate(["Empedrado"], "bwiki"),
+                candidate(["Altale"], "fandom"),
+                candidate(["Altale"], "bwiki"),
+                candidate(["Magnolia"], "bwiki"),
+            ],
+            songs,
+        )
+        self.assertEqual(
+            [row.get("composer") for row in rows],
+            ["Keikaku Tsuukou feat. Parorto", "Yuma.Mizo", "Sakuzyo", "Sakuzyo", "M2U"],
+        )
         # A credit from the other wiki names that wiki, right after the composer.
-        self.assertEqual([row.get("composer_source") for row in rows], [None, None, "wikis:bwiki", None, "wikis:fandom"])
+        self.assertEqual(
+            [row.get("composer_source") for row in rows], [None, None, "wikis:bwiki", None, "wikis:fandom"]
+        )
         self.assertEqual(list(rows[2])[-2:], ["composer", "composer_source"])
 
     def test_the_join_is_on_the_exact_song_title(self):
         songs = [song("Witch Hunting", "Lime", "bwiki"), song("Re: the Full moon World.", "M2U", "bwiki")]
-        self.assertEqual(self.composers([candidate(["Witch hunting"]), candidate(["Re：the Full moon World."])], songs),
-                         [None, None])
+        self.assertEqual(
+            self.composers([candidate(["Witch hunting"]), candidate(["Re：the Full moon World."])], songs), [None, None]
+        )
 
     def test_several_songs_join_and_respellings_count_once(self):
-        songs = [song("I race the dawn", "Rabpit"), song("Sunset", "Nicode"),
-                 song("Matricaria -Pazs-", 'NOMA & Apo11o"1.62"program ft.Yuki Shizaki', "bwiki"),
-                 song("Matricaria ~Pazs~", "NOMA & Apo11o”1.62”program ft. Yuki Shizaki", "bwiki")]
-        self.assertEqual(self.composers([candidate(["I race the dawn", "Sunset"], "fandom"),
-                                         candidate(["Matricaria -Pazs-", "Matricaria ~Pazs~"])], songs),
-                         ["Rabpit / Nicode", 'NOMA & Apo11o"1.62"program ft.Yuki Shizaki'])
+        songs = [
+            song("I race the dawn", "Rabpit"),
+            song("Sunset", "Nicode"),
+            song("Matricaria -Pazs-", 'NOMA & Apo11o"1.62"program ft.Yuki Shizaki', "bwiki"),
+            song("Matricaria ~Pazs~", "NOMA & Apo11o”1.62”program ft. Yuki Shizaki", "bwiki"),
+        ]
+        self.assertEqual(
+            self.composers(
+                [
+                    candidate(["I race the dawn", "Sunset"], "fandom"),
+                    candidate(["Matricaria -Pazs-", "Matricaria ~Pazs~"]),
+                ],
+                songs,
+            ),
+            ["Rabpit / Nicode", 'NOMA & Apo11o"1.62"program ft.Yuki Shizaki'],
+        )
 
     def test_names_held_apart_by_a_run_of_spaces_are_split(self):
         # The song index keeps a page's line break between names as a run of spaces, which HTML collapses into one.
-        songs = [song("Moon without the stars", "Jerry Barnes  Quiana", "bwiki"), song("Hey Boy", " Jerry Barnes ", "bwiki"),
-                 song("Magnolia", "M2U  Vocal by Guriri"), song("Altale", "Sakuzyo", "bwiki")]
-        self.assertEqual(self.composers([candidate(["Moon without the stars", "Hey Boy"]), candidate(["Magnolia"], "fandom"),
-                                         candidate(["Altale"])], songs),
-                         ["Jerry Barnes / Quiana", "M2U / Vocal by Guriri", "Sakuzyo"])
+        songs = [
+            song("Moon without the stars", "Jerry Barnes  Quiana", "bwiki"),
+            song("Hey Boy", " Jerry Barnes ", "bwiki"),
+            song("Magnolia", "M2U  Vocal by Guriri"),
+            song("Altale", "Sakuzyo", "bwiki"),
+        ]
+        self.assertEqual(
+            self.composers(
+                [
+                    candidate(["Moon without the stars", "Hey Boy"]),
+                    candidate(["Magnolia"], "fandom"),
+                    candidate(["Altale"]),
+                ],
+                songs,
+            ),
+            ["Jerry Barnes / Quiana", "M2U / Vocal by Guriri", "Sakuzyo"],
+        )
 
     def test_covers_and_unmatched_art_get_none_and_a_stale_composer_goes(self):
         songs = [song("AM 05:25", "Ice"), song("Daylife", "Ice")]
-        rows = [candidate(["AM 05:25", "Daylife"], "fandom", kind="collection_cover"),
-                candidate(["Unknown"], composer="Old credit", composer_source="wikis:fandom"), candidate([], composer="Old credit")]
+        rows = [
+            candidate(["AM 05:25", "Daylife"], "fandom", kind="collection_cover"),
+            candidate(["Unknown"], composer="Old credit", composer_source="wikis:fandom"),
+            candidate([], composer="Old credit"),
+        ]
         result = fetch.with_composers(rows, songs)
         self.assertEqual([row.get("composer") for row in result], [None, None, None])
-        self.assertEqual([list(row) for row in result],
-                         [[key for key in row if key not in ("composer", "composer_source")] for row in rows])
+        self.assertEqual(
+            [list(row) for row in result],
+            [[key for key in row if key not in ("composer", "composer_source")] for row in rows],
+        )
         self.assertEqual(rows[1]["composer"], "Old credit")  # the input is left as it was
         # A credit that moves to the own wiki's page drops the other wiki's name.
         own = fetch.with_composers([{**rows[1], "song_titles": ["Daylife"]}], [song("Daylife", "Ice", "bwiki")])
@@ -193,13 +248,24 @@ class ComposerRecordTests(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
         self.web = FakeWeb()
-        for patcher in (patch.object(fetch, "ROOT", self.root), patch.object(fetch.requests, "get", self.web),
-                        patch.object(fetch.time, "sleep", lambda seconds: None),
-                        patch.object(fetch, "fetch_illustrator_index", lambda manifest: None)):
+        for patcher in (
+            patch.object(fetch, "ROOT", self.root),
+            patch.object(fetch.requests, "get", self.web),
+            patch.object(fetch.time, "sleep", lambda seconds: None),
+            patch.object(fetch, "fetch_illustrator_index", lambda manifest: None),
+        ):
             patcher.start()
             self.addCleanup(patcher.stop)
-        dump(self.root / MANIFEST, {"schema_version": 1, "fetched_at": "2026-01-01T00:00:00Z", "failures": [], "assets": [],
-                                    "sources": [{**fetch.SOURCES[key], "status": "complete"} for key in ("fandom", "bwiki")]})
+        dump(
+            self.root / MANIFEST,
+            {
+                "schema_version": 1,
+                "fetched_at": "2026-01-01T00:00:00Z",
+                "failures": [],
+                "assets": [],
+                "sources": [{**fetch.SOURCES[key], "status": "complete"} for key in ("fandom", "bwiki")],
+            },
+        )
 
     def offer(self, name, payload, **extra):
         """A BWIKI song-art candidate for the file name whose download URL serves payload."""
@@ -207,32 +273,57 @@ class ComposerRecordTests(unittest.TestCase):
         self.web.routes[url] = payload
         with Image.open(io.BytesIO(payload)) as image:
             width, height = image.size
-        info = {"width": width, "height": height, "size": len(payload), "mime": "image/png", "url": url,
-                "sha1": hashlib.sha1(payload).hexdigest(), "descriptionurl": f"https://wiki.example.test/{name}",
-                "timestamp": "2021-09-01T00:00:00Z"}
-        return {"source": "bwiki", "file_title": "文件:" + name, "info": info, "kind": "song_art",
-                "song_titles": [name.rsplit(".", 1)[0]], "collections": [], "related_pages": [], **extra}
+        info = {
+            "width": width,
+            "height": height,
+            "size": len(payload),
+            "mime": "image/png",
+            "url": url,
+            "sha1": hashlib.sha1(payload).hexdigest(),
+            "descriptionurl": f"https://wiki.example.test/{name}",
+            "timestamp": "2021-09-01T00:00:00Z",
+        }
+        return {
+            "source": "bwiki",
+            "file_title": "文件:" + name,
+            "info": info,
+            "kind": "song_art",
+            "song_titles": [name.rsplit(".", 1)[0]],
+            "collections": [],
+            "related_pages": [],
+            **extra,
+        }
 
     def run_main(self, *args):
         with patch.object(sys, "argv", ["fetch_wikis.py", *args]), patch("builtins.print"):
             fetch.main()
 
     def resume(self, *candidates):
-        dump(self.root / DISCOVERY, {"schema_version": 1, "fetched_at": "2026-02-02T00:00:00Z", "candidates": list(candidates)})
+        dump(
+            self.root / DISCOVERY,
+            {"schema_version": 1, "fetched_at": "2026-02-02T00:00:00Z", "candidates": list(candidates)},
+        )
         self.run_main("--resume", "--workers", "1")
         return read_json(MANIFEST, self.root)
 
     def test_discovery_stores_the_composer_with_the_snapshot(self):
         art = self.offer("Altale.png", png("red"))
-        with patch.object(fetch, "discover_fandom", return_value=([], [song("Altale", "Sakuzyo")], {})), \
-                patch.object(fetch, "discover_bwiki", return_value=([art], [song("Altale", "sakuzyo", "bwiki")], {})):
+        with (
+            patch.object(fetch, "discover_fandom", return_value=([], [song("Altale", "Sakuzyo")], {})),
+            patch.object(fetch, "discover_bwiki", return_value=([art], [song("Altale", "sakuzyo", "bwiki")], {})),
+        ):
             self.run_main("--metadata-only")
         self.assertEqual(read_json(DISCOVERY, self.root)["candidates"][0]["composer"], "sakuzyo")
         self.assertEqual(self.web.calls, [])
 
     def test_records_keep_the_composer_in_a_stable_place(self):
-        offered = self.offer("Altale.png", png("red"), collection_aliases=["Etude collection"], composer="Sakuzyo",
-                             composer_source="wikis:fandom")
+        offered = self.offer(
+            "Altale.png",
+            png("red"),
+            collection_aliases=["Etude collection"],
+            composer="Sakuzyo",
+            composer_source="wikis:fandom",
+        )
         art = {**offered, "info": {**offered["info"], "sha1": "f" * 40}}  # a checksum caveat adds a delivery_note
         first = self.resume(art)["assets"][0]
         self.assertEqual(list(first)[-4:], ["composer", "composer_source", "collection_aliases", "delivery_note"])
@@ -244,28 +335,50 @@ class ComposerRecordTests(unittest.TestCase):
         renamed = self.resume({**art, "composer": "削除"})["assets"][0]
         self.assertEqual(list(renamed.items()), list({**first, "composer": "削除"}.items()))
         own = {key: value for key, value in art.items() if key != "composer_source"}
-        self.assertEqual(self.resume(own)["assets"][0], {key: value for key, value in first.items() if key != "composer_source"})
+        self.assertEqual(
+            self.resume(own)["assets"][0], {key: value for key, value in first.items() if key != "composer_source"}
+        )
         dropped = {key: value for key, value in art.items() if key not in ("composer", "composer_source")}
-        self.assertEqual(self.resume(dropped)["assets"][0],
-                         {key: value for key, value in first.items() if key not in ("composer", "composer_source")})
+        self.assertEqual(
+            self.resume(dropped)["assets"][0],
+            {key: value for key, value in first.items() if key not in ("composer", "composer_source")},
+        )
 
     def test_carried_forward_records_keep_the_composer_in_place(self):
         # The manifest carry-forward: a failed re-download, a re-upload and a file gone from the snapshot keep their
         # composer-bearing record, with the upstream fields after the TAIL keys, which record_tail() accepts.
-        offered = self.offer("Altale.png", png("red"), collection_aliases=["Etude collection"], composer="Sakuzyo",
-                             composer_source="wikis:fandom")
+        offered = self.offer(
+            "Altale.png",
+            png("red"),
+            collection_aliases=["Etude collection"],
+            composer="Sakuzyo",
+            composer_source="wikis:fandom",
+        )
         art = {**offered, "info": {**offered["info"], "sha1": "f" * 40}}
         first = self.resume(art)["assets"][0]
-        unreachable = {**art, "info": {**art["info"], "sha1": "e" * 40, "url": "https://images.example.test/gone/Altale.png"}}
+        unreachable = {
+            **art,
+            "info": {**art["info"], "sha1": "e" * 40, "url": "https://images.example.test/gone/Altale.png"},
+        }
         failed = self.resume(unreachable)["assets"]
-        reupload = self.offer("Altale.png", png("blue"), collection_aliases=["Etude collection"], composer="Sakuzyo",
-                              composer_source="wikis:fandom")
+        reupload = self.offer(
+            "Altale.png",
+            png("blue"),
+            collection_aliases=["Etude collection"],
+            composer="Sakuzyo",
+            composer_source="wikis:fandom",
+        )
         superseded = self.resume({**reupload, "info": {**reupload["info"], "sha1": "d" * 40}})["assets"]
         removed = self.resume()["assets"]
         statuses = {"fetch_failed": failed, "superseded": superseded, "removed": removed}
-        self.assertEqual({status: [row.get("upstream_status") for row in rows] for status, rows in statuses.items()},
-                         {"fetch_failed": ["fetch_failed"], "superseded": [None, "superseded"],
-                          "removed": ["removed", "superseded"]})
+        self.assertEqual(
+            {status: [row.get("upstream_status") for row in rows] for status, rows in statuses.items()},
+            {
+                "fetch_failed": ["fetch_failed"],
+                "superseded": [None, "superseded"],
+                "removed": ["removed", "superseded"],
+            },
+        )
         for status, rows in statuses.items():
             for row in rows:
                 with self.subTest(status=status, row=row["id"]):
@@ -293,13 +406,21 @@ def composer_drift(manifest, snapshot, keys=("composer", "composer_source")):
     run after that merge; until then it is older than the snapshot, or names an earlier snapshot_fetched_at."""
     if instant(manifest["fetched_at"]) < instant(snapshot["fetched_at"]):
         return []
-    earlier = {source["id"] for source in manifest["sources"]
-               if (source.get("discovery") or {}).get("snapshot_fetched_at") not in (None, snapshot["fetched_at"])}
+    earlier = {
+        source["id"]
+        for source in manifest["sources"]
+        if (source.get("discovery") or {}).get("snapshot_fetched_at") not in (None, snapshot["fetched_at"])
+    }
     by_id = {fetch.candidate_id(row): row for row in snapshot["candidates"]}
     # A carried-forward record (upstream_status) keeps what it had.
-    return [record["id"] for record in manifest["assets"]
-            if record["id"] in by_id and record["source_id"] not in earlier and not record.get("upstream_status")
-            and any(record.get(key) != by_id[record["id"]].get(key) for key in keys)]
+    return [
+        record["id"]
+        for record in manifest["assets"]
+        if record["id"] in by_id
+        and record["source_id"] not in earlier
+        and not record.get("upstream_status")
+        and any(record.get(key) != by_id[record["id"]].get(key) for key in keys)
+    ]
 
 
 class CommittedWikiDataTests(unittest.TestCase):
@@ -315,7 +436,9 @@ class CommittedWikiDataTests(unittest.TestCase):
 
     def test_the_snapshot_holds_the_join_of_the_song_index(self):
         expected = fetch.with_composers(self.candidates, self.songs)
-        differ = [row["file_title"] for row, want in zip(self.candidates, expected) if list(row.items()) != list(want.items())]
+        differ = [
+            row["file_title"] for row, want in zip(self.candidates, expected) if list(row.items()) != list(want.items())
+        ]
         self.assertEqual(differ, [], "Patch the snapshot with fetch_wikis.with_composers()")
         self.assertGreater(sum("composer" in row for row in self.candidates), 400)
 
@@ -326,10 +449,15 @@ class CommittedWikiDataTests(unittest.TestCase):
         # BWIKI and Fandom spell collections differently; every record shows one spelling and keeps the others as
         # collection_aliases for search (fetch_wikis.with_collection_aliases(), applied before the composers).
         expected = fetch.with_composers(fetch.with_collection_aliases(self.candidates, self.songs), self.songs)
-        differ = [row["file_title"] for row, want in zip(self.candidates, expected) if list(row.items()) != list(want.items())]
+        differ = [
+            row["file_title"] for row, want in zip(self.candidates, expected) if list(row.items()) != list(want.items())
+        ]
         self.assertEqual(differ, [], "Patch the snapshot with fetch_wikis.with_collection_aliases()")
-        self.assertEqual(composer_drift(self.manifest, self.snapshot, ("collections", "collection_aliases")), [],
-                         "Run fetch_wikis.py --resume")
+        self.assertEqual(
+            composer_drift(self.manifest, self.snapshot, ("collections", "collection_aliases")),
+            [],
+            "Run fetch_wikis.py --resume",
+        )
         shown = {}
         for row in self.candidates + [record for record in self.assets if not record.get("upstream_status")]:
             for name in row["collections"]:
@@ -355,34 +483,65 @@ class CommittedWikiDataTests(unittest.TestCase):
         # The source-check workflow's pull request: upstream credits BWIKI Magnolia differently, discovery rewrites the
         # song index and the snapshot, and the manifest keeps the earlier credit until the --resume after the merge.
         art = candidate(["Magnolia"], composer="M2U feat. Guriri")
-        record = {"id": fetch.candidate_id(art), "source_id": "wikis:bwiki", "kind": "song_art", "composer": "M2U feat. Guriri"}
+        record = {
+            "id": fetch.candidate_id(art),
+            "source_id": "wikis:bwiki",
+            "kind": "song_art",
+            "composer": "M2U feat. Guriri",
+        }
         manifest = {"fetched_at": "2026-10-08T11:50:01.560814Z", "sources": [{"id": "wikis:bwiki"}], "assets": [record]}
-        resumed = {"fetched_at": "2026-10-08T11:40:06.359430Z",
-                   "candidates": fetch.with_composers([art], [song("Magnolia", "M2U feat. Guriri (arr. someone)", "bwiki")])}
+        resumed = {
+            "fetched_at": "2026-10-08T11:40:06.359430Z",
+            "candidates": fetch.with_composers([art], [song("Magnolia", "M2U feat. Guriri (arr. someone)", "bwiki")]),
+        }
         self.assertEqual(composer_drift(manifest, resumed), [record["id"]])  # resumed from this snapshot: held to it
-        self.assertEqual(composer_drift({**manifest, "assets": [{**record, "upstream_status": "removed"}]}, resumed), [])
+        self.assertEqual(
+            composer_drift({**manifest, "assets": [{**record, "upstream_status": "removed"}]}, resumed), []
+        )
         newer = {**resumed, "fetched_at": "2026-10-15T03:00:00Z"}
         self.assertEqual(composer_drift(manifest, newer), [])
         # A manifest that names the snapshot it was resumed from answers to that one only.
-        named = {**manifest, "fetched_at": "2026-10-16T00:00:00Z",
-                 "sources": [{"id": "wikis:bwiki", "discovery": {"snapshot_fetched_at": resumed["fetched_at"]}}]}
+        named = {
+            **manifest,
+            "fetched_at": "2026-10-16T00:00:00Z",
+            "sources": [{"id": "wikis:bwiki", "discovery": {"snapshot_fetched_at": resumed["fetched_at"]}}],
+        }
         self.assertEqual(composer_drift(named, newer), [])
         self.assertEqual(composer_drift(named, resumed), [record["id"]])
 
     def test_altale_carries_its_composer_on_both_wikis(self):
-        altale = {record["source_id"]: record.get("composer") for record in self.assets
-                  if record["title"] == "Altale" and record["kind"] == "song_art"}
+        altale = {
+            record["source_id"]: record.get("composer")
+            for record in self.assets
+            if record["title"] == "Altale" and record["kind"] == "song_art"
+        }
         # Fandom's Altale page names no composer today, so its credit comes from BWIKI's. Which wiki supplies it is
         # held to the snapshot above, not pinned here: an Artist added upstream moves it to Fandom's own page.
         self.assertEqual(altale, {"wikis:fandom": "Sakuzyo", "wikis:bwiki": "Sakuzyo"})
 
 
 class SlideProvenanceTests(unittest.TestCase):
-    WIKI = {"id": "wikis:bwiki:1", "source_id": "wikis:bwiki", "family": "wikis", "kind": "song_art",
-            "provenance": "Public community wiki upload; original creator/upload lineage not independently established."}
-    REPOST = {"id": "archives:tumblr:1", "source_id": "archives:tumblr", "family": "archives", "kind": "song_art",
-              "provenance": "community_repost"}
-    ARTIST = {"id": "artists:a:1", "source_id": "artists:a", "family": "artists", "kind": "song_art", "rights": "Artist's own."}
+    WIKI = {
+        "id": "wikis:bwiki:1",
+        "source_id": "wikis:bwiki",
+        "family": "wikis",
+        "kind": "song_art",
+        "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+    }
+    REPOST = {
+        "id": "archives:tumblr:1",
+        "source_id": "archives:tumblr",
+        "family": "archives",
+        "kind": "song_art",
+        "provenance": "community_repost",
+    }
+    ARTIST = {
+        "id": "artists:a:1",
+        "source_id": "artists:a",
+        "family": "artists",
+        "kind": "song_art",
+        "rights": "Artist's own.",
+    }
     LEGACY = {"id": "legacy:magnolia", "source_id": "legacy", "family": "legacy", "kind": "song_art"}
 
     def test_the_credited_record_names_the_class(self):
@@ -403,23 +562,39 @@ class SlideProvenanceTests(unittest.TestCase):
     def test_each_composer_line_names_the_sources_that_give_it(self):
         names = {"wikis:fandom": "DEEMO Fandom Wiki", "wikis:bwiki": "Bilibili DEEMO Wiki"}
         BWIKI, FANDOM = ["wikis:bwiki", "Bilibili DEEMO Wiki"], ["wikis:fandom", "DEEMO Fandom Wiki"]
-        fandom = {**self.WIKI, "id": "wikis:fandom:1", "source_id": "wikis:fandom", "composer": "Sakuzyo",
-                  "composer_source": "wikis:bwiki"}
+        fandom = {
+            **self.WIKI,
+            "id": "wikis:fandom:1",
+            "source_id": "wikis:fandom",
+            "composer": "Sakuzyo",
+            "composer_source": "wikis:bwiki",
+        }
         bwiki = {**self.WIKI, "composer": "Sakuzyo"}
         # Lavuestia Mutanz: BWIKI's upload credits its own spelling; Fandom's copy spells the credit differently.
-        respelled = {**self.WIKI, "id": "wikis:fandom:2", "source_id": "wikis:fandom", "composer": "Narsil Feat. Himeko"}
+        respelled = {
+            **self.WIKI,
+            "id": "wikis:fandom:2",
+            "source_id": "wikis:fandom",
+            "composer": "Narsil Feat. Himeko",
+        }
         cases = {
             "borrowed by the credited record": (entry(fandom), [[BWIKI]]),
             "the credited record gives its own": (entry(bwiki, fandom), None),
             "the supplier's own record follows": (entry(fandom, bwiki), [[BWIKI]]),
             "only another record gives one": (entry(self.REPOST, bwiki), [[BWIKI]]),
-            "several suppliers of one credit": (entry(self.ARTIST, fandom, {**bwiki, "source_id": "wikis:other"}),
-                                                [[BWIKI, ["wikis:other", "wikis:other"]]]),
-            "another spelling from another source": (entry({**bwiki, "composer": "Narsil feat. Himeko (Luna)"}, respelled),
-                                                     [[], [FANDOM]]),
+            "several suppliers of one credit": (
+                entry(self.ARTIST, fandom, {**bwiki, "source_id": "wikis:other"}),
+                [[BWIKI, ["wikis:other", "wikis:other"]]],
+            ),
+            "another spelling from another source": (
+                entry({**bwiki, "composer": "Narsil feat. Himeko (Luna)"}, respelled),
+                [[], [FANDOM]],
+            ),
             "the same credit spelled alike": (entry(bwiki, {**respelled, "composer": "SAKUZYO"}), None),
-            "two spellings, neither the caption's": (entry(self.REPOST, bwiki, {**respelled, "composer": "Sakuzyo (Ice)"}),
-                                                     [[BWIKI], [FANDOM]]),
+            "two spellings, neither the caption's": (
+                entry(self.REPOST, bwiki, {**respelled, "composer": "Sakuzyo (Ice)"}),
+                [[BWIKI], [FANDOM]],
+            ),
             "no composer": (entry(self.WIKI), None),
             "a bare record": (fandom, [[BWIKI]]),
         }
@@ -435,9 +610,18 @@ class SlideProvenanceTests(unittest.TestCase):
             root = Path(temp)
             (root / "templates").mkdir()
             (root / "templates/slideshow.html").write_text("<main>\n@python-work-area\n</main>\n", encoding="utf-8")
-            assets = [entry(record, url=f"assets/{index}.png", title=f"Art {index}", source_name="Source",
-                            page_url="https://example.test/", width=8, height=8)
-                      for index, record in enumerate((self.REPOST, self.ARTIST))]
+            assets = [
+                entry(
+                    record,
+                    url=f"assets/{index}.png",
+                    title=f"Art {index}",
+                    source_name="Source",
+                    page_url="https://example.test/",
+                    width=8,
+                    height=8,
+                )
+                for index, record in enumerate((self.REPOST, self.ARTIST))
+            ]
             slides = Slides(build.render_slideshow(root, {"assets": assets})).slides
         self.assertEqual([slide.get("data-provenance") for slide in slides], ["community_repost", None])
         self.assertEqual(list(slides[0])[list(slides[0]).index("data-kind") + 1], "data-provenance")
@@ -456,16 +640,24 @@ class CommittedSlideshowTests(unittest.TestCase):
         tokens = {slide["data-provenance"] for slide in self.slides if slide.get("data-provenance")}
         self.assertIn("community_repost", tokens)
         # The slideshow names every class the archive viewer labels, so a new class is labelled on both pages.
-        archive = {key.split(".", 2)[2] for key in messages("src/i18n/archive.js")["en"] if key.startswith("provenance.class.")}
+        archive = {
+            key.split(".", 2)[2] for key in messages("src/i18n/archive.js")["en"] if key.startswith("provenance.class.")
+        }
         for language, table in self.messages.items():
             with self.subTest(language=language):
-                self.assertEqual(sorted(token for token in tokens | archive if f"slideshow.provenance.{token}" not in table), [])
+                self.assertEqual(
+                    sorted(token for token in tokens | archive if f"slideshow.provenance.{token}" not in table), []
+                )
 
     def test_reposts_and_wiki_uploads_are_qualified(self):
         by_source = {}
         for slide in self.slides:
             by_source.setdefault(slide["data-source-id"].split(":")[0], []).append(slide.get("data-provenance"))
-        tumblr = [slide.get("data-provenance") for slide in self.slides if slide["data-source-id"] == "archives:rayarkmusic-tumblr"]
+        tumblr = [
+            slide.get("data-provenance")
+            for slide in self.slides
+            if slide["data-source-id"] == "archives:rayarkmusic-tumblr"
+        ]
         self.assertTrue(tumblr, "No Tunes of Rayark slides")
         self.assertEqual(set(tumblr), {"community_repost"})
         self.assertEqual(set(by_source["wikis"]), {"wiki"})
@@ -475,11 +667,17 @@ class CommittedSlideshowTests(unittest.TestCase):
         # No offline test runs the page, so the wiring is checked in the source: notesFor looks up the slide's class
         # label, and when there is one it goes into the eyebrow as a notes-provenance span inside the notes-kind label.
         notes = function_body((ROOT / "templates/slideshow.html").read_text(encoding="utf-8-sig"), "notesFor")
-        self.assertRegex(notes, r'var origin = data\.provenance && DEEMO_I18N\.has\("slideshow\.provenance\." \+ data\.provenance\)'
-                                r'\s*\? DEEMO_I18N\.t\("slideshow\.provenance\." \+ data\.provenance\) : "";')
-        self.assertRegex(notes, r'var label = element\("span", "notes-kind", kind\);'
-                                r'\s*if \(origin\) label\.append\(element\("span", "notes-provenance", [^;]*\+ origin\)\);'
-                                r'\s*eyebrow\.append\(label\);')
+        self.assertRegex(
+            notes,
+            r'var origin = data\.provenance && DEEMO_I18N\.has\("slideshow\.provenance\." \+ data\.provenance\)'
+            r'\s*\? DEEMO_I18N\.t\("slideshow\.provenance\." \+ data\.provenance\) : "";',
+        )
+        self.assertRegex(
+            notes,
+            r'var label = element\("span", "notes-kind", kind\);'
+            r'\s*if \(origin\) label\.append\(element\("span", "notes-provenance", [^;]*\+ origin\)\);'
+            r"\s*eyebrow\.append\(label\);",
+        )
         self.assertRegex(notes, r"notes\.append\(eyebrow, title\);")
 
     def test_the_caption_names_a_community_copy(self):
@@ -490,12 +688,19 @@ class CommittedSlideshowTests(unittest.TestCase):
         self.assertIn(markup, template)
         self.assertTrue(markup in (ROOT / "index.html").read_text(encoding="utf-8"), "Rebuild the catalog")
         caption = function_body(template, "showCaption")
-        self.assertRegex(caption, r'origin\.replaceChildren\(\);\s*if \(/\^community_/\.test\(token\) && '
-                                  r'DEEMO_I18N\.has\("slideshow\.provenance\." \+ token\)\) \{')
-        self.assertRegex(caption, r'var label = element\("span", null, DEEMO_I18N\.t\("slideshow\.provenance\." \+ token\)\);')
+        self.assertRegex(
+            caption,
+            r"origin\.replaceChildren\(\);\s*if \(/\^community_/\.test\(token\) && "
+            r'DEEMO_I18N\.has\("slideshow\.provenance\." \+ token\)\) \{',
+        )
+        self.assertRegex(
+            caption, r'var label = element\("span", null, DEEMO_I18N\.t\("slideshow\.provenance\." \+ token\)\);'
+        )
         self.assertRegex(caption, r'origin\.append\("\\u00a0· ", label\);')
-        self.assertTrue({"community_repost", "community_edit", "community_scan"} <= {
-            key.split(".", 2)[2] for key in self.messages["en"] if key.startswith("slideshow.provenance.")})
+        self.assertTrue(
+            {"community_repost", "community_edit", "community_scan"}
+            <= {key.split(".", 2)[2] for key in self.messages["en"] if key.startswith("slideshow.provenance.")}
+        )
 
     def test_a_borrowed_composer_credit_names_its_source(self):
         # The caption credits the entry's first record, so a credit line that only another source's page gives (a
@@ -526,13 +731,15 @@ class CommittedSlideshowTests(unittest.TestCase):
             with self.subTest(language=language):
                 self.assertEqual(re.findall(r"\{(\w+)\}", table["slideshow.notes.composer_source"]), ["source"])
         template = (ROOT / "templates/slideshow.html").read_text(encoding="utf-8-sig")
-        self.assertRegex(function_body(template, "notesFor"),
-                         r'metaRow\(meta, DEEMO_I18N\.t\("slideshow\.notes\.music"\), data\.composer, composerCredits\(data\)\);\s*'
-                         r'metaRow\(meta, DEEMO_I18N\.t\("slideshow\.notes\.artist"\), data\.artist\);')
+        self.assertRegex(
+            function_body(template, "notesFor"),
+            r'metaRow\(meta, DEEMO_I18N\.t\("slideshow\.notes\.music"\), data\.composer, composerCredits\(data\)\);\s*'
+            r'metaRow\(meta, DEEMO_I18N\.t\("slideshow\.notes\.artist"\), data\.artist\);',
+        )
         credits = function_body(template, "composerCredits")
-        self.assertRegex(credits, r'JSON\.parse\(data\.composerSources\)')
+        self.assertRegex(credits, r"JSON\.parse\(data\.composerSources\)")
         self.assertRegex(credits, r'DEEMO_I18N\.t\("slideshow\.notes\.composer_source", \{source: sources\.map\(')
-        self.assertRegex(credits, r'return DEEMO_I18N\.sourceName\(source\[0\], source\[1\]\);')
+        self.assertRegex(credits, r"return DEEMO_I18N\.sourceName\(source\[0\], source\[1\]\);")
 
     def test_wiki_art_is_credited_and_found_by_its_composer(self):
         records = [record for asset in self.catalog["assets"] for record in asset["provenance"]]
@@ -541,11 +748,20 @@ class CommittedSlideshowTests(unittest.TestCase):
         self.assertEqual(sorted(wiki), sorted(manifest))
         self.assertEqual([key for key in sorted(wiki) if wiki[key] != manifest[key]], [], "Rebuild the catalog")
         # The archive search indexes every record's composer: "Sakuzyo" finds the Fandom and BWIKI Altale too.
-        found = {record["source_id"] for asset in self.catalog["assets"] if asset["gallery"]
-                 if any("Sakuzyo" in (record.get("composer") or "") for record in asset["provenance"])
-                 for record in asset["provenance"] if record["title"] == "Altale"}
+        found = {
+            record["source_id"]
+            for asset in self.catalog["assets"]
+            if asset["gallery"]
+            if any("Sakuzyo" in (record.get("composer") or "") for record in asset["provenance"])
+            for record in asset["provenance"]
+            if record["title"] == "Altale"
+        }
         self.assertTrue({"legacy", "wikis:fandom", "wikis:bwiki"} <= found, found)
-        credited = [slide for slide in self.slides if slide["data-source-id"].startswith("wikis:") and slide.get("data-composer")]
+        credited = [
+            slide
+            for slide in self.slides
+            if slide["data-source-id"].startswith("wikis:") and slide.get("data-composer")
+        ]
         self.assertGreater(len(credited), 400)
         self.assertIn("Sakuzyo", {slide["data-composer"] for slide in credited if slide["data-title"] == "Altale"})
 
@@ -561,11 +777,19 @@ class ArchiveComposerTests(unittest.TestCase):
         # The credit itself always reads exactly as provenance.composer, which the browser smoke test expects; a
         # borrowed one is followed by its own paragraph naming the wiki that gave it.
         script = (ROOT / "src/archive.js").read_text(encoding="utf-8")
-        self.assertRegex(function_body(script, "provenanceBlock"), r"if \(p\.composer\) block\.append\(\.\.\.composerLines\(p\)\);")
+        self.assertRegex(
+            function_body(script, "provenanceBlock"), r"if \(p\.composer\) block\.append\(\.\.\.composerLines\(p\)\);"
+        )
         lines = function_body(script, "composerLines")
-        self.assertRegex(lines, r'const lines = \[element\("p", t\("provenance\.composer", \{composer: textValue\(p\.composer\)\}\)\)\];')
-        self.assertRegex(lines, r'if \(p\.composer_source\) \{\s*const source = textValue\(p\.composer_source\)\.split\(" / "\)'
-                                r'\.map\(\(id\) => i18n\.sourceName\(id, ')
+        self.assertRegex(
+            lines,
+            r'const lines = \[element\("p", t\("provenance\.composer", \{composer: textValue\(p\.composer\)\}\)\)\];',
+        )
+        self.assertRegex(
+            lines,
+            r'if \(p\.composer_source\) \{\s*const source = textValue\(p\.composer_source\)\.split\(" / "\)'
+            r"\.map\(\(id\) => i18n\.sourceName\(id, ",
+        )
         self.assertRegex(lines, r'lines\.push\(element\("p", t\("provenance\.composer_source", \{source\}\)\)\);\s*\}')
         self.assertRegex(lines, r"return lines;\s*$")
 
@@ -576,7 +800,9 @@ class ArchiveUpstreamTests(unittest.TestCase):
     def test_every_upstream_status_the_build_accepts_is_labelled(self):
         for language, table in messages("src/i18n/archive.js").items():
             with self.subTest(language=language):
-                self.assertEqual([status for status in build.UPSTREAM_STATUSES if f"upstream.{status}" not in table], [])
+                self.assertEqual(
+                    [status for status in build.UPSTREAM_STATUSES if f"upstream.{status}" not in table], []
+                )
                 self.assertIn("{status}", table["provenance.upstream"])
                 self.assertEqual(set(re.findall(r"\{(\w+)\}", table["provenance.superseded_by"])), {"width", "height"})
 
@@ -584,7 +810,10 @@ class ArchiveUpstreamTests(unittest.TestCase):
         # As for the slideshow, the wiring is checked in the source: the record's upstream notes end with a paragraph
         # holding a button that shows the newer entry, and show() opens that entry, clearing filters that hide it.
         script = (ROOT / "src/archive.js").read_text(encoding="utf-8")
-        self.assertRegex(function_body(script, "provenanceBlock"), r"if \(p\.upstream_status\) block\.append\(\.\.\.upstreamNotes\(p\)\);")
+        self.assertRegex(
+            function_body(script, "provenanceBlock"),
+            r"if \(p\.upstream_status\) block\.append\(\.\.\.upstreamNotes\(p\)\);",
+        )
         notes = function_body(script, "upstreamNotes")
         self.assertRegex(notes, r"record\.id === p\.superseded_by")
         self.assertIn('t("provenance.superseded_by", {width: newer.width, height: newer.height})', notes)

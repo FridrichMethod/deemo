@@ -35,7 +35,14 @@ MODIFIED_UPSTREAM = {
     "browserconfig.xml": "browserconfig.xml",
 }
 # Changed upstream files that cannot carry a comment, or that were replaced outright; NOTICE names them.
-NOTED_IN_NOTICE = ("index.html", "site.webmanifest", ".gitattributes", "README.md", "html.py", "scripts/build_catalog.py")
+NOTED_IN_NOTICE = (
+    "index.html",
+    "site.webmanifest",
+    ".gitattributes",
+    "README.md",
+    "html.py",
+    "scripts/build_catalog.py",
+)
 
 
 class Links(HTMLParser):
@@ -136,7 +143,9 @@ class FontTests(unittest.TestCase):
 class ProvenanceTests(unittest.TestCase):
     def test_every_inherited_site_file_has_a_provenance_row(self):
         inherited = {record["path"]: record["original_path"] for record in inventory_records()}
-        files = sorted(path.relative_to(ROOT).as_posix() for path in (ROOT / "assets/site").rglob("*") if path.is_file())
+        files = sorted(
+            path.relative_to(ROOT).as_posix() for path in (ROOT / "assets/site").rglob("*") if path.is_file()
+        )
         self.assertTrue(files)
         for document in LICENSE_INDEXES:
             rows = [line for line in (ROOT / document).read_text(encoding="utf-8").splitlines() if line.startswith("|")]
@@ -144,11 +153,18 @@ class ProvenanceTests(unittest.TestCase):
                 with self.subTest(document=document, file=relative):
                     matching = [row for row in rows if row.startswith(f"| `{relative.removeprefix('assets/site/')}` |")]
                     self.assertEqual(len(matching), 1, "Each file under assets/site/ needs exactly one provenance row")
-                    self.assertIn(f"`{inherited.get(relative, '(not in the legacy inventory)')}`", matching[0], "Name the inherited upstream path")
+                    self.assertIn(
+                        f"`{inherited.get(relative, '(not in the legacy inventory)')}`",
+                        matching[0],
+                        "Name the inherited upstream path",
+                    )
 
     def test_unverified_music_rights_are_not_assigned_to_rayark_alone(self):
         # The wikis credit the song to Sleepy WiFi feat. Riin; nothing names Rayark as the sole rights holder.
-        hedges = {"licenses/README.md": "Rayark Inc. and/or the artists", "licenses/README.zh-CN.md": "Rayark Inc. 及/或原作者"}
+        hedges = {
+            "licenses/README.md": "Rayark Inc. and/or the artists",
+            "licenses/README.zh-CN.md": "Rayark Inc. 及/或原作者",
+        }
         for document, hedge in hedges.items():
             with self.subTest(document=document):
                 lines = (ROOT / document).read_text(encoding="utf-8").splitlines()
@@ -160,7 +176,10 @@ class ProvenanceTests(unittest.TestCase):
 
     def test_readmes_state_the_inventory_size(self):
         count = len(inventory_records())
-        for document, pattern in (("README.md", r"SHA-256 of (\d+) legacy files"), ("README.zh-CN.md", r"(\d+) 个旧文件")):
+        for document, pattern in (
+            ("README.md", r"SHA-256 of (\d+) legacy files"),
+            ("README.zh-CN.md", r"(\d+) 个旧文件"),
+        ):
             with self.subTest(document=document):
                 match = re.search(pattern, (ROOT / document).read_text(encoding="utf-8"))
                 self.assertIsNotNone(match)

@@ -10,18 +10,62 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTER = re.compile(r"DEEMO_I18N\.register\((\{.*\})\);\s*$", re.DOTALL)
 # Source statuses the fetch scripts write besides fetch_archives' fixed list. A refetch can bring any of them into the
 # catalog (a run with failures marks its source partial or failed), so they are labelled before they first appear.
-FETCHER_STATUSES = {"complete", "partial", "failed", "unavailable", "discovered", "pending", "reference_only",
-                    "fetched", "no_assets_fetched"}
+FETCHER_STATUSES = {
+    "complete",
+    "partial",
+    "failed",
+    "unavailable",
+    "discovered",
+    "pending",
+    "reference_only",
+    "fetched",
+    "no_assets_fetched",
+}
 # Marks a refetch puts on a record it keeps although upstream changed (removed, re-uploaded, or not re-downloadable).
 UPSTREAM_STATUSES = {"removed", "superseded", "fetch_failed"}
 # Provenance-record fields src/archive.js shows (viewer, card or search). File facts (path, size, digest, fetch time)
 # are shown once per asset from the asset's own fields, which every record of a byte-identical file shares.
 SHOWN = {
-    "source_id", "source_name", "page_url", "download_url", "family", "kind", "title", "artist", "composer", "composer_source",
-    "collection", "collection_scope", "collections", "collection_aliases", "song_titles", "internal_key", "notes", "quality", "provenance",
-    "quality_notes", "source_dimensions", "source_dimensions_kind", "variant_note", "layout_note", "delivery_note", "rights", "rights_holder",
-    "wiki_original_sha1_matches", "upstream_status", "superseded_by", "mapping_status", "title_status", "variants",
-    "path", "width", "height", "format", "bytes", "sha256", "fetched_at",
+    "source_id",
+    "source_name",
+    "page_url",
+    "download_url",
+    "family",
+    "kind",
+    "title",
+    "artist",
+    "composer",
+    "composer_source",
+    "collection",
+    "collection_scope",
+    "collections",
+    "collection_aliases",
+    "song_titles",
+    "internal_key",
+    "notes",
+    "quality",
+    "provenance",
+    "quality_notes",
+    "source_dimensions",
+    "source_dimensions_kind",
+    "variant_note",
+    "layout_note",
+    "delivery_note",
+    "rights",
+    "rights_holder",
+    "wiki_original_sha1_matches",
+    "upstream_status",
+    "superseded_by",
+    "mapping_status",
+    "title_status",
+    "variants",
+    "path",
+    "width",
+    "height",
+    "format",
+    "bytes",
+    "sha256",
+    "fetched_at",
 }
 # Fields the page leaves out on purpose, with the reason. A new manifest field fails the test until it is added to one
 # of the two lists, so a caveat cannot be dropped silently.
@@ -69,7 +113,11 @@ class ArchiveLabelTests(unittest.TestCase):
         self.assertTrue(tokens, f"No {prefix} tokens found in data/catalog.json")
         for language, table in self.tables.items():
             missing = sorted(token for token in tokens if f"{prefix}.{token}" not in table)
-            self.assertEqual(missing, [], f"Add {prefix}.<token> labels for {language} to src/i18n/archive.js; the page would show raw tokens")
+            self.assertEqual(
+                missing,
+                [],
+                f"Add {prefix}.<token> labels for {language} to src/i18n/archive.js; the page would show raw tokens",
+            )
 
     def test_source_statuses_are_labelled(self):
         self.assert_labelled("status", {source["status"] for source in self.catalog["sources"]} | FETCHER_STATUSES)
@@ -79,20 +127,28 @@ class ArchiveLabelTests(unittest.TestCase):
 
     def test_provenance_classes_are_labelled(self):
         # Archives records carry a class token; every wiki upload carries the same lineage caveat, labelled "wiki".
-        classes = {"wiki" if record["family"] == "wikis" else record["provenance"]
-                   for record in self.records if isinstance(record.get("provenance"), str)}
+        classes = {
+            "wiki" if record["family"] == "wikis" else record["provenance"]
+            for record in self.records
+            if isinstance(record.get("provenance"), str)
+        }
         self.assert_labelled("provenance.class", classes)
 
     def test_dimension_kinds_are_labelled(self):
         # source_dimensions_kind is "<token>; <maintainer prose>"; the page states the advertised size through the token's
         # label and shows the raw value only when the label or the size is missing.
         records = [record for record in self.records if record.get("source_dimensions_kind")]
-        self.assert_labelled("provenance.dimensions_kind",
-                             {record["source_dimensions_kind"].split(";")[0].strip() for record in records})
+        self.assert_labelled(
+            "provenance.dimensions_kind", {record["source_dimensions_kind"].split(";")[0].strip() for record in records}
+        )
         for record in records:
             dimensions = record.get("source_dimensions")
-            self.assertTrue(isinstance(dimensions, list) and len(dimensions) == 2 and all(
-                isinstance(value, int) and value > 0 for value in dimensions), record["id"])
+            self.assertTrue(
+                isinstance(dimensions, list)
+                and len(dimensions) == 2
+                and all(isinstance(value, int) and value > 0 for value in dimensions),
+                record["id"],
+            )
 
     def test_upstream_statuses_are_labelled(self):
         found = {record["upstream_status"] for record in self.records if record.get("upstream_status")}
@@ -105,8 +161,11 @@ class ArchiveLabelTests(unittest.TestCase):
             families.setdefault(record["family"], set()).update(record)
         for family, keys in sorted(families.items()):
             with self.subTest(family=family):
-                self.assertEqual(sorted(keys - SHOWN - set(IGNORED)), [],
-                                 "Show these fields in src/archive.js or list them in IGNORED with the reason")
+                self.assertEqual(
+                    sorted(keys - SHOWN - set(IGNORED)),
+                    [],
+                    "Show these fields in src/archive.js or list them in IGNORED with the reason",
+                )
 
     def test_shown_fields_are_read_by_the_page(self):
         script = (ROOT / "src/archive.js").read_text(encoding="utf-8")
@@ -115,9 +174,18 @@ class ArchiveLabelTests(unittest.TestCase):
 
     def test_ignored_caveats_stay_harmless(self):
         self.assertFalse([record["id"] for record in self.records if record.get("transformed")], "transformed files")
-        self.assertFalse([record["id"] for record in self.records if record.get("api_approved") is False], "unapproved scans")
-        self.assertFalse([record["id"] for record in self.records if record.get("wiki_original_size_matches") is False
-                          and record.get("wiki_original_sha1_matches") is not False], "size mismatch with a matching digest")
+        self.assertFalse(
+            [record["id"] for record in self.records if record.get("api_approved") is False], "unapproved scans"
+        )
+        self.assertFalse(
+            [
+                record["id"]
+                for record in self.records
+                if record.get("wiki_original_size_matches") is False
+                and record.get("wiki_original_sha1_matches") is not False
+            ],
+            "size mismatch with a matching digest",
+        )
 
 
 if __name__ == "__main__":

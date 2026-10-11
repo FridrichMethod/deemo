@@ -55,15 +55,21 @@ def session():
         s.headers["User-Agent"] = "DEEMO-public-art-archive/1.0 (personal collection; public images only)"
         # raise_on_status=False: after the retries, hand back the last 429/5xx response instead of
         # raising RetryError, so callers can record the real status code.
-        s.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=0.7, status_forcelist=[429, 500, 502, 503, 504],
-                                                          raise_on_status=False)))
+        s.mount(
+            "https://",
+            HTTPAdapter(
+                max_retries=Retry(
+                    total=2, backoff_factor=0.7, status_forcelist=[429, 500, 502, 503, 504], raise_on_status=False
+                )
+            ),
+        )
         LOCAL.session = s
     return LOCAL.session
 
 
 def https(url):
     """Upgrade an http:// scheme to https:// (only the scheme, never text later in the URL)."""
-    return "https://" + url[len("http://"):] if url.startswith("http://") else url
+    return "https://" + url[len("http://") :] if url.startswith("http://") else url
 
 
 def host_allowed(url, hosts):
@@ -82,9 +88,13 @@ def host_allowed(url, hosts):
     except (ValueError, requests.RequestException):
         return False
     host = (sent.hostname or "").rstrip(".")
-    return (sent.scheme == "https" and raw.hostname == sent.hostname and ports <= {None, 443}
-            and "@" not in raw.netloc + sent.netloc
-            and any(host == allowed or host.endswith("." + allowed) for allowed in hosts))
+    return (
+        sent.scheme == "https"
+        and raw.hostname == sent.hostname
+        and ports <= {None, 443}
+        and "@" not in raw.netloc + sent.netloc
+        and any(host == allowed or host.endswith("." + allowed) for allowed in hosts)
+    )
 
 
 def get(url, hosts):
@@ -109,7 +119,9 @@ def source(sid, name, url, status, notes, **extra):
 
 def failure(sid, url, exc, **extra):
     with LOCK:
-        MANIFEST["failures"].append({"source_id": "archives:" + sid, "url": url, "error": str(exc), "checked_at": STAMP, **extra})
+        MANIFEST["failures"].append(
+            {"source_id": "archives:" + sid, "url": url, "error": str(exc), "checked_at": STAMP, **extra}
+        )
 
 
 def download(sid, key, title, page, url, kind, hosts, **extra):
@@ -138,11 +150,24 @@ def download(sid, key, title, page, url, kind, hosts, **extra):
             path = beside if holds(ROOT / beside, digest) else base
         target = ROOT / path
         keep_file(target, blob, digest)
-        row = {"id": f"archives:{sid}:{key}", "source_id": "archives:" + sid, "title": title,
-               "kind": kind, "page_url": page, "download_url": url,
-               "resolved_url": r.url, "path": path.as_posix(), "width": width,
-               "height": height, "format": fmt, "bytes": len(blob), "sha256": digest,
-               "fetched_at": STAMP, "game": "DEEMO", **extra}
+        row = {
+            "id": f"archives:{sid}:{key}",
+            "source_id": "archives:" + sid,
+            "title": title,
+            "kind": kind,
+            "page_url": page,
+            "download_url": url,
+            "resolved_url": r.url,
+            "path": path.as_posix(),
+            "width": width,
+            "height": height,
+            "format": fmt,
+            "bytes": len(blob),
+            "sha256": digest,
+            "fetched_at": STAMP,
+            "game": "DEEMO",
+            **extra,
+        }
         with LOCK:
             MANIFEST["assets"].append(row)
         return row
@@ -159,8 +184,13 @@ def pool(fn, items, workers=5):
 def cover_art_archive():
     sid = "cover-art-archive"
     page = f"https://musicbrainz.org/release/{CAA_MBID}/cover-art"
-    record = source(sid, "DEEMO Song Collection — Cover Art Archive", page, "fetched",
-                    "Community scans of official soundtrack packaging. Original API image files, not thumbnails; booklet spreads are references, not independent song masters.")
+    record = source(
+        sid,
+        "DEEMO Song Collection — Cover Art Archive",
+        page,
+        "fetched",
+        "Community scans of official soundtrack packaging. Original API image files, not thumbnails; booklet spreads are references, not independent song masters.",
+    )
     api = f"https://coverartarchive.org/release/{CAA_MBID}"
     try:
         data = get(api, CAA_HOSTS).json()
@@ -168,9 +198,22 @@ def cover_art_archive():
         failure(sid, api, exc)
         return
     record["images_listed"] = len(data["images"])
-    pool(lambda img: download(sid, img["id"], "DEEMO Song Collection — " + ", ".join(img["types"] or ["scan"]), page,
-                              https(img["image"]), "reference", hosts=CAA_HOSTS,
-                              provenance="community_scan", scan_types=img["types"], api_approved=img["approved"]), data["images"], 3)
+    pool(
+        lambda img: download(
+            sid,
+            img["id"],
+            "DEEMO Song Collection — " + ", ".join(img["types"] or ["scan"]),
+            page,
+            https(img["image"]),
+            "reference",
+            hosts=CAA_HOSTS,
+            provenance="community_scan",
+            scan_types=img["types"],
+            api_approved=img["approved"],
+        ),
+        data["images"],
+        3,
+    )
 
 
 def tumblr_api(blog, tag, start=0):
@@ -198,8 +241,11 @@ def post_covers(html, post):
     asset id) of every cover stays as before; callers skip the empty entries.
     """
     soup = BeautifulSoup(html, "html.parser")
-    covers = [img["src"] for img in soup.find_all("img", src=True)
-              if host_allowed(https(img["src"]), TUMBLR_MEDIA_HOSTS) and "_cover." in urlsplit(img["src"]).path]
+    covers = [
+        img["src"]
+        for img in soup.find_all("img", src=True)
+        if host_allowed(https(img["src"]), TUMBLR_MEDIA_HOSTS) and "_cover." in urlsplit(img["src"]).path
+    ]
     # Some posts are standalone photos, already exposing largest API images.
     photos = post.get("photos", []) or ([post] if post.get("photo-url-1280") else [])
     covers += [p.get("photo-url-1280") or p.get("photo-url-500") for p in photos]
@@ -209,16 +255,26 @@ def post_covers(html, post):
 def tumblr_mirror():
     sid, blog = "rayarkmusic-tumblr", "rayarkmusic"
     page = f"https://{blog}.tumblr.com/deemo"
-    record = source(sid, "Tunes of Rayark — DEEMO", page, "fetched",
-                    "Unofficial repost blog. Only image covers of DEEMO posts are fetched; no audio. FAQ describes cleaned artwork edits; these are not author masters.",
-                    faq_url=f"https://{blog}.tumblr.com/faq", provenance="community_repost")
+    record = source(
+        sid,
+        "Tunes of Rayark — DEEMO",
+        page,
+        "fetched",
+        "Unofficial repost blog. Only image covers of DEEMO posts are fetched; no audio. FAQ describes cleaned artwork edits; these are not author masters.",
+        faq_url=f"https://{blog}.tumblr.com/faq",
+        provenance="community_repost",
+    )
     try:
         doc = BeautifulSoup(get(page, TUMBLR_HOSTS).text, "html.parser")
     except Exception as exc:
         failure(sid, page, exc)
         return
-    tags = [unquote(a["href"].split("/tagged/", 1)[1]) for a in doc.find_all("a", href=True)
-            if "/tagged/" in a["href"] and "Miscellaneous" not in a["href"]]
+    tags = [
+        unquote(a["href"].split("/tagged/", 1)[1])
+        for a in doc.find_all("a", href=True)
+        if "/tagged/" in a["href"] and "Miscellaneous" not in a["href"]
+    ]
+
     def collect(tag):
         try:
             posts = tumblr_tag(blog, tag)
@@ -226,6 +282,7 @@ def tumblr_mirror():
         except Exception as exc:
             failure(sid, f"https://{blog}.tumblr.com/tagged/{quote(tag)}", exc)
             return tag, []
+
     groups = pool(collect, tags, 4)
     record["tag_counts"] = {tag: len(posts) for tag, posts in groups}
     posts = {p["id"]: p for _, group in groups for p in group}
@@ -240,11 +297,21 @@ def tumblr_mirror():
                 failure(sid, post_url, "No public image cover found in post HTML/API")
             for n, url in enumerate(covers, 1):
                 if url:
-                    download(sid, f"{post['id']}-{n}", title, post_url, url, "song_art", hosts=TUMBLR_MEDIA_HOSTS,
-                             provenance="community_repost", tags=post.get("tags", []),
-                             quality_notes="May include typography, cleaned background, or reduced Tumblr audio-cover resolution.")
+                    download(
+                        sid,
+                        f"{post['id']}-{n}",
+                        title,
+                        post_url,
+                        url,
+                        "song_art",
+                        hosts=TUMBLR_MEDIA_HOSTS,
+                        provenance="community_repost",
+                        tags=post.get("tags", []),
+                        quality_notes="May include typography, cleaned background, or reduced Tumblr audio-cover resolution.",
+                    )
         except Exception as exc:
             failure(sid, post_url, exc)
+
     pool(fetch_post, posts.values(), 5)
 
 
@@ -254,7 +321,10 @@ CLEANED_NOTE = "Fan edits linked by the Tunes of Rayark FAQ."
 def cleaned_note(posts_listed, downloaded):
     """Describe the Kitsunefreak result without claiming images that were not retained."""
     if downloaded:
-        return CLEANED_NOTE + " Public largest-size Tumblr images retained unchanged; source image was edited by uploader, not a production master."
+        return (
+            CLEANED_NOTE
+            + " Public largest-size Tumblr images retained unchanged; source image was edited by uploader, not a production master."
+        )
     if not posts_listed:
         return CLEANED_NOTE + " The public Tumblr API returned no DEEMO-tagged posts, so no images were retained."
     return CLEANED_NOTE + " No images were retained in this run; see failures."
@@ -263,67 +333,227 @@ def cleaned_note(posts_listed, downloaded):
 def tumblr_cleaned():
     sid, blog = "kitsunefreak-cleaned", "kitsunefreak"
     page = f"https://{blog}.tumblr.com/tagged/my%20edit"
-    record = source(sid, "Kitsunefreak cleaned DEEMO artwork", page, "fetched", CLEANED_NOTE, provenance="community_edit")
+    record = source(
+        sid, "Kitsunefreak cleaned DEEMO artwork", page, "fetched", CLEANED_NOTE, provenance="community_edit"
+    )
     try:
         posts = tumblr_tag(blog, "my edit")
     except Exception as exc:
         failure(sid, page, exc)
         return
-    posts = [p for p in posts if "deemo" in json.dumps(p.get("tags", [])).lower() or "deemo" in p.get("photo-caption", "").lower()]
+    posts = [
+        p
+        for p in posts
+        if "deemo" in json.dumps(p.get("tags", [])).lower() or "deemo" in p.get("photo-caption", "").lower()
+    ]
     record["posts_listed"] = len(posts)
     downloaded = 0
     for post in posts:
         photos = post.get("photos", []) or ([post] if post.get("photo-url-1280") else [])
-        title = BeautifulSoup(post.get("photo-caption", ""), "html.parser").get_text(" ", strip=True)[:160] or post.get("slug", post["id"])
+        title = BeautifulSoup(post.get("photo-caption", ""), "html.parser").get_text(" ", strip=True)[:160] or post.get(
+            "slug", post["id"]
+        )
         for n, photo in enumerate(photos, 1):
             url = photo.get("photo-url-1280") or photo.get("photo-url-500")
             if url:
-                downloaded += download(sid, f"{post['id']}-{n}", title, post["url"], url, "illustration", hosts=TUMBLR_MEDIA_HOSTS,
-                                       provenance="community_edit", tags=post.get("tags", [])) is not None
+                downloaded += (
+                    download(
+                        sid,
+                        f"{post['id']}-{n}",
+                        title,
+                        post["url"],
+                        url,
+                        "illustration",
+                        hosts=TUMBLR_MEDIA_HOSTS,
+                        provenance="community_edit",
+                        tags=post.get("tags", []),
+                    )
+                    is not None
+                )
     record["notes"] = cleaned_note(len(posts), downloaded)
 
 
 def official():
     sid, page = "official-deemo", "https://deemo.com/"
-    source(sid, "DEEMO official website", page, "fetched", "Official website key art. Decorative illustrations; not a complete song-art library.",
-           mirror_url="https://rayark.com/g/deemo/")
+    source(
+        sid,
+        "DEEMO official website",
+        page,
+        "fetched",
+        "Official website key art. Decorative illustrations; not a complete song-art library.",
+        mirror_url="https://rayark.com/g/deemo/",
+    )
     try:
         soup = BeautifulSoup(get(page, OFFICIAL_HOSTS).text, "html.parser")
         names = {"index_pic.png", "about_pic.png", "screen_pic.png", "contact_pic.png"}
-        images = {urljoin(page, img["src"]) for img in soup.find_all("img", src=True) if Path(urlparse(img["src"]).path).name in names}
-        pool(lambda url: download(sid, Path(urlparse(url).path).stem, "DEEMO official website — " + Path(urlparse(url).path).stem,
-                                  page, url, "illustration", hosts=OFFICIAL_HOSTS, rights_holder="Rayark / credited original artists",
-                                  provenance="official_website"), images, 3)
+        images = {
+            urljoin(page, img["src"])
+            for img in soup.find_all("img", src=True)
+            if Path(urlparse(img["src"]).path).name in names
+        }
+        pool(
+            lambda url: download(
+                sid,
+                Path(urlparse(url).path).stem,
+                "DEEMO official website — " + Path(urlparse(url).path).stem,
+                page,
+                url,
+                "illustration",
+                hosts=OFFICIAL_HOSTS,
+                rights_holder="Rayark / credited original artists",
+                provenance="official_website",
+            ),
+            images,
+            3,
+        )
     except Exception as exc:
         failure(sid, page, exc)
     # The reference PDFs do not depend on the website page, so they are fetched even when it fails.
     for key, title, url in [
-        ("deemo-exhibition", "DEEMO Exhibition — official English guide", "https://rayark.promo/deemo_exhibition_en.pdf"),
-        ("rayark-brand-assets", "Rayark Game Brand Assets", "https://rayark.promo/rayark_site/RAYARK_GameBrandAssets.pdf"),
+        (
+            "deemo-exhibition",
+            "DEEMO Exhibition — official English guide",
+            "https://rayark.promo/deemo_exhibition_en.pdf",
+        ),
+        (
+            "rayark-brand-assets",
+            "Rayark Game Brand Assets",
+            "https://rayark.promo/rayark_site/RAYARK_GameBrandAssets.pdf",
+        ),
     ]:
-        source(key, title, url, "fetched", "Official reference PDF. Retained as reference; excluded from song-art gallery.")
+        source(
+            key, title, url, "fetched", "Official reference PDF. Retained as reference; excluded from song-art gallery."
+        )
         download(key, key, title, url, url, "reference", hosts=PROMO_HOSTS, provenance="official_reference")
 
 
 CATALOG_ENTRIES = [
-    ("kadokawa-artbook", "DEEMO Visual Collection", "https://www.kadokawa.co.jp/product/322109001023/", "purchase_required", "Official 400+ artwork book; purchases are out of scope, so it was not bought or downloaded."),
-    ("bookwalker-artbook", "DEEMO Visual Collection — BookWalker", "https://bookwalker.jp/deebf58ee2-8a3a-4e18-bdc2-6f75f704dd7a/", "purchase_required", "Paid DRM ebook; no purchase, preview extraction, or DRM bypass attempted."),
-    ("reddit-34", "DEEMO 3.4 extracted OST thread", "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/", "index_only", "Historical soundtrack bundle; earlier source audit attributes artwork to Wikia. No audio downloaded."),
-    ("reddit-4x", "DEEMO 4.x extracted OST thread", "https://www.reddit.com/r/TrueDeemo/comments/mzq53n/deemo_4x_extracted_ost/", "historical_unavailable", "Earlier search found reports of dead links; uploader mentions image scaling, so not native-resolution masters."),
-    ("reddit-5x", "DEEMO 5.x extracted OST + Artwork thread", "https://www.reddit.com/r/TrueDeemo/comments/sgcr9r/deemo_5x_extracted_ost_artwork/", "historical_unavailable", "Earlier search found MEGA takedown reports. Uploader describes Wikia WebP converted to PNG. Not an independent master-art source."),
-    ("reddit-art-database", "DEEMO in-game art database discussion", "https://www.reddit.com/r/TrueDeemo/comments/ssnzv6/", "index_only", "Discussion, not a verified downloadable higher-resolution archive."),
-    ("original-extraction-blog", "Original repository extraction provenance", "https://2heng.xin/2018/04/05/python-pil/", "index_only", "Original repo author's explanation of Unity extraction and PIL processing. Attribution retained as provenance."),
-    ("baidu-original", "Original extraction Baidu share", "https://pan.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA", "unverified_download", "Original repo-era Unity assets. Web share alone does not supply anonymous raw files; not evidence of higher-quality art."),
-    ("baidu-tools", "Original extraction tools Baidu share", "https://pan.baidu.com/s/1eIyEgsc1WOJo6piwjgH-pQ", "out_of_scope", "Tools linked in extraction blog, not song-art masters."),
-    ("dropbox-historical", "Historical Dropbox artwork share", "https://www.dropbox.com/sh/qdzxn3menwuk5he/AAAL2v6303lMlAf1ma54tJjga?dl=0", "historical_unavailable", "Checked shared-folder URL returns a Dropbox Error page despite HTTP 200; no public files available."),
-    ("zerochan", "Zerochan DEEMO index", "https://www.zerochan.net/Deemo", "mixed_content_index", "Mixed official art, fanart, crops, and potential upscales; no verified new source singled out. Artist originals are handled separately."),
-    ("safebooru", "Safebooru DEEMO tag", "https://safebooru.org/index.php?page=post&s=list&tags=deemo", "mixed_content_index", "Mixed third-party image board; no independently verified new official song art. Not batch imported as masters."),
-    ("tumgik-blazewu", "Tumgik mirror of Blaze Wu", "https://www.tumgik.com/wublaze", "mirror_index", "Third-party mirror; fetch author Tumblr through the artist-source importer instead."),
-    ("blazewu-tumblr", "Blaze Wu MILI Collection Vol.2", "https://wublaze.tumblr.com/post/129276170315/deemomili-collection-vol2songs-illustration", "delegated", "Author's original upload; handled by the separate artist-source importer to avoid duplicate ownership."),
-    ("bilibili-video-search", "Bilibili DEEMO artwork videos", "https://search.bilibili.com/all?keyword=DEEMO%20%E6%9B%B2%E7%BB%98", "index_only", "Video search leads are recompressed frames, not loose native artwork; no videos/audio downloaded."),
-    ("steam-reborn", "DEEMO -Reborn-", "https://store.steampowered.com/app/1282210/DEEMO_Reborn/", "purchase_required", "Paid game; purchases are out of scope, so it was not bought or downloaded. Shared original-game songs are only a subset."),
-    ("steamdb-reborn", "DEEMO -Reborn- songcover bundle index", "https://steamdb.info/depot/1282212/", "index_only", "Lists Unity songcover bundles, not publicly downloadable image files. Actual texture dimensions remain unverified."),
-    ("illustrator-directory", "Japanese DEEMO illustrator directory", "https://wikiwiki.jp/deemo/%E3%82%A2%E3%83%BC%E3%83%86%E3%82%A3%E3%82%B9%E3%83%88%E5%88%A5%E3%83%AA%E3%82%B9%E3%83%882", "delegated", "Same page as wikis:wikiwiki-illustrators; handled by the wiki importer to avoid duplicate ownership."),
+    (
+        "kadokawa-artbook",
+        "DEEMO Visual Collection",
+        "https://www.kadokawa.co.jp/product/322109001023/",
+        "purchase_required",
+        "Official 400+ artwork book; purchases are out of scope, so it was not bought or downloaded.",
+    ),
+    (
+        "bookwalker-artbook",
+        "DEEMO Visual Collection — BookWalker",
+        "https://bookwalker.jp/deebf58ee2-8a3a-4e18-bdc2-6f75f704dd7a/",
+        "purchase_required",
+        "Paid DRM ebook; no purchase, preview extraction, or DRM bypass attempted.",
+    ),
+    (
+        "reddit-34",
+        "DEEMO 3.4 extracted OST thread",
+        "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/",
+        "index_only",
+        "Historical soundtrack bundle; earlier source audit attributes artwork to Wikia. No audio downloaded.",
+    ),
+    (
+        "reddit-4x",
+        "DEEMO 4.x extracted OST thread",
+        "https://www.reddit.com/r/TrueDeemo/comments/mzq53n/deemo_4x_extracted_ost/",
+        "historical_unavailable",
+        "Earlier search found reports of dead links; uploader mentions image scaling, so not native-resolution masters.",
+    ),
+    (
+        "reddit-5x",
+        "DEEMO 5.x extracted OST + Artwork thread",
+        "https://www.reddit.com/r/TrueDeemo/comments/sgcr9r/deemo_5x_extracted_ost_artwork/",
+        "historical_unavailable",
+        "Earlier search found MEGA takedown reports. Uploader describes Wikia WebP converted to PNG. Not an independent master-art source.",
+    ),
+    (
+        "reddit-art-database",
+        "DEEMO in-game art database discussion",
+        "https://www.reddit.com/r/TrueDeemo/comments/ssnzv6/",
+        "index_only",
+        "Discussion, not a verified downloadable higher-resolution archive.",
+    ),
+    (
+        "original-extraction-blog",
+        "Original repository extraction provenance",
+        "https://2heng.xin/2018/04/05/python-pil/",
+        "index_only",
+        "Original repo author's explanation of Unity extraction and PIL processing. Attribution retained as provenance.",
+    ),
+    (
+        "baidu-original",
+        "Original extraction Baidu share",
+        "https://pan.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA",
+        "unverified_download",
+        "Original repo-era Unity assets. Web share alone does not supply anonymous raw files; not evidence of higher-quality art.",
+    ),
+    (
+        "baidu-tools",
+        "Original extraction tools Baidu share",
+        "https://pan.baidu.com/s/1eIyEgsc1WOJo6piwjgH-pQ",
+        "out_of_scope",
+        "Tools linked in extraction blog, not song-art masters.",
+    ),
+    (
+        "dropbox-historical",
+        "Historical Dropbox artwork share",
+        "https://www.dropbox.com/sh/qdzxn3menwuk5he/AAAL2v6303lMlAf1ma54tJjga?dl=0",
+        "historical_unavailable",
+        "Checked shared-folder URL returns a Dropbox Error page despite HTTP 200; no public files available.",
+    ),
+    (
+        "zerochan",
+        "Zerochan DEEMO index",
+        "https://www.zerochan.net/Deemo",
+        "mixed_content_index",
+        "Mixed official art, fanart, crops, and potential upscales; no verified new source singled out. Artist originals are handled separately.",
+    ),
+    (
+        "safebooru",
+        "Safebooru DEEMO tag",
+        "https://safebooru.org/index.php?page=post&s=list&tags=deemo",
+        "mixed_content_index",
+        "Mixed third-party image board; no independently verified new official song art. Not batch imported as masters.",
+    ),
+    (
+        "tumgik-blazewu",
+        "Tumgik mirror of Blaze Wu",
+        "https://www.tumgik.com/wublaze",
+        "mirror_index",
+        "Third-party mirror; fetch author Tumblr through the artist-source importer instead.",
+    ),
+    (
+        "blazewu-tumblr",
+        "Blaze Wu MILI Collection Vol.2",
+        "https://wublaze.tumblr.com/post/129276170315/deemomili-collection-vol2songs-illustration",
+        "delegated",
+        "Author's original upload; handled by the separate artist-source importer to avoid duplicate ownership.",
+    ),
+    (
+        "bilibili-video-search",
+        "Bilibili DEEMO artwork videos",
+        "https://search.bilibili.com/all?keyword=DEEMO%20%E6%9B%B2%E7%BB%98",
+        "index_only",
+        "Video search leads are recompressed frames, not loose native artwork; no videos/audio downloaded.",
+    ),
+    (
+        "steam-reborn",
+        "DEEMO -Reborn-",
+        "https://store.steampowered.com/app/1282210/DEEMO_Reborn/",
+        "purchase_required",
+        "Paid game; purchases are out of scope, so it was not bought or downloaded. Shared original-game songs are only a subset.",
+    ),
+    (
+        "steamdb-reborn",
+        "DEEMO -Reborn- songcover bundle index",
+        "https://steamdb.info/depot/1282212/",
+        "index_only",
+        "Lists Unity songcover bundles, not publicly downloadable image files. Actual texture dimensions remain unverified.",
+    ),
+    (
+        "illustrator-directory",
+        "Japanese DEEMO illustrator directory",
+        "https://wikiwiki.jp/deemo/%E3%82%A2%E3%83%BC%E3%83%86%E3%82%A3%E3%82%B9%E3%83%88%E5%88%A5%E3%83%AA%E3%82%B9%E3%83%882",
+        "delegated",
+        "Same page as wikis:wikiwiki-illustrators; handled by the wiki importer to avoid duplicate ownership.",
+    ),
 ]
 
 
@@ -346,8 +576,13 @@ def check_entry(entry):
 def catalog():
     # Created first: main() files an unexpected error escaping this step under this source id.
     sid = "internet-archive-202606"
-    row = source(sid, "Internet Archive DEEMO OST 202606", "https://archive.org/details/deemo_ost-_202606", "excluded_audio_derivatives",
-                 "Metadata examined without downloading audio. PNG files derived from FLAC and spectrograms are audio visualizations, not original loose cover art. Audio metadata itself attributes embedded pictures to DEEMO Wiki.")
+    row = source(
+        sid,
+        "Internet Archive DEEMO OST 202606",
+        "https://archive.org/details/deemo_ost-_202606",
+        "excluded_audio_derivatives",
+        "Metadata examined without downloading audio. PNG files derived from FLAC and spectrograms are audio visualizations, not original loose cover art. Audio metadata itself attributes embedded pictures to DEEMO Wiki.",
+    )
     pool(check_entry, CATALOG_ENTRIES, 5)
     metadata = "https://archive.org/metadata/deemo_ost-_202606"
     try:
@@ -392,8 +627,12 @@ def carry_forward(previous, manifest):
         new = records.get(old["id"])
         if new is not None:
             if new["sha256"] != old["sha256"]:
-                version = {**old, "id": f"{old['id']}:{old['sha256'][:12]}",
-                           "upstream_status": "superseded", "superseded_by": old["id"]}
+                version = {
+                    **old,
+                    "id": f"{old['id']}:{old['sha256'][:12]}",
+                    "upstream_status": "superseded",
+                    "superseded_by": old["id"],
+                }
                 records.setdefault(version["id"], version)
         elif old.get("upstream_status") == "superseded":
             records.setdefault(old["id"], old)
@@ -402,10 +641,14 @@ def carry_forward(previous, manifest):
             records[old["id"]] = {**old, "upstream_status": status}
         else:
             records[old["id"]] = {**old, "upstream_status": "removed"}
+
     def restored(row):
         canonical = records.get(row.get("superseded_by"))
-        return (row.get("upstream_status") == "superseded" and canonical is not None
-                and (canonical["sha256"], canonical["path"]) == (row["sha256"], row["path"]))
+        return (
+            row.get("upstream_status") == "superseded"
+            and canonical is not None
+            and (canonical["sha256"], canonical["path"]) == (row["sha256"], row["path"])
+        )
 
     manifest["assets"] = [row for row in records.values() if not restored(row)]
     missing = {row["source_id"] for row in manifest["assets"]} - {row["id"] for row in manifest["sources"]}
@@ -435,7 +678,18 @@ def main():
     carry_forward(previous, MANIFEST)
     # Written once, at the end: an interrupted run leaves the previous manifest untouched.
     save()
-    print(json.dumps({"sources": len(MANIFEST["sources"]), "assets": len(MANIFEST["assets"]), "failures": len(MANIFEST["failures"]), "counts": counts}, indent=2), flush=True)
+    print(
+        json.dumps(
+            {
+                "sources": len(MANIFEST["sources"]),
+                "assets": len(MANIFEST["assets"]),
+                "failures": len(MANIFEST["failures"]),
+                "counts": counts,
+            },
+            indent=2,
+        ),
+        flush=True,
+    )
     return 1 if MANIFEST["failures"] else 0
 
 
@@ -499,7 +753,11 @@ def verify():
             assert blob.startswith(b"%PDF-"), asset["path"]
         else:
             with Image.open(io.BytesIO(blob)) as image:
-                assert (image.width, image.height, image.format) == (asset["width"], asset["height"], asset["format"]), asset["path"]
+                assert (image.width, image.height, image.format) == (
+                    asset["width"],
+                    asset["height"],
+                    asset["format"],
+                ), asset["path"]
                 image.verify()
     for asset in manifest["assets"]:
         assert asset.get("superseded_by", asset["id"]) in ids, asset["id"]

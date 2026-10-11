@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
-CSS_URL = re.compile(r'''url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*?))\s*\)''', re.IGNORECASE)
+CSS_URL = re.compile(r"""url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*?))\s*\)""", re.IGNORECASE)
 MEDIA_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico", ".mp3", ".ttf", ".woff", ".woff2"}
 
 
@@ -73,7 +73,9 @@ class LayoutTests(unittest.TestCase):
 
     def test_css_url_parser_preserves_spaces_and_optional_quotes(self):
         self.assertEqual(
-            css_urls('src: url("../assets/a b.ttf"); src: url(../assets/c d.ttf); background: url(\'../assets/e f.png\');'),
+            css_urls(
+                "src: url(\"../assets/a b.ttf\"); src: url(../assets/c d.ttf); background: url('../assets/e f.png');"
+            ),
             ["../assets/a b.ttf", "../assets/c d.ttf", "../assets/e f.png"],
         )
 
@@ -110,10 +112,16 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(len(targets), len(records))
         required = {"LICENSE", "licenses/DeemoSongs-MIT.txt", "src/vendor/legacy-ui.js"}
         for directory in ("assets/legacy", "assets/site"):
-            required.update(path.relative_to(ROOT).as_posix() for path in (ROOT / directory).rglob("*") if path.is_file() and "__pycache__" not in path.parts)
+            required.update(
+                path.relative_to(ROOT).as_posix()
+                for path in (ROOT / directory).rglob("*")
+                if path.is_file() and "__pycache__" not in path.parts
+            )
         # The README was added during migration; only the scripts are inherited.
         required.update(path.relative_to(ROOT).as_posix() for path in (ROOT / "scripts/legacy").glob("*.py"))
-        self.assertTrue(required.issubset(targets), f"Files absent from preserved-byte inventory: {sorted(required - targets)}")
+        self.assertTrue(
+            required.issubset(targets), f"Files absent from preserved-byte inventory: {sorted(required - targets)}"
+        )
         for record in records:
             with self.subTest(path=record["path"]):
                 path = (ROOT / record["path"]).resolve()
@@ -133,11 +141,18 @@ class LayoutTests(unittest.TestCase):
 
     def test_layout_has_no_case_insensitive_filename_collisions(self):
         seen = {}
-        paths = [path for directory in ("assets", "src", "scripts", "templates", "licenses") for path in (ROOT / directory).rglob("*") if path.is_file()]
+        paths = [
+            path
+            for directory in ("assets", "src", "scripts", "templates", "licenses")
+            for path in (ROOT / directory).rglob("*")
+            if path.is_file()
+        ]
         paths.extend(path for path in ROOT.iterdir() if path.is_file())
         for path in paths:
             relative = path.relative_to(ROOT).as_posix()
-            self.assertNotIn(relative.casefold(), seen, f"Case-insensitive collision: {relative} / {seen.get(relative.casefold())}")
+            self.assertNotIn(
+                relative.casefold(), seen, f"Case-insensitive collision: {relative} / {seen.get(relative.casefold())}"
+            )
             seen[relative.casefold()] = relative
 
 

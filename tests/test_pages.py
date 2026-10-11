@@ -6,7 +6,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-SPEC = importlib.util.spec_from_file_location("prepare_pages", Path(__file__).resolve().parents[1] / "scripts/prepare_pages.py")
+SPEC = importlib.util.spec_from_file_location(
+    "prepare_pages", Path(__file__).resolve().parents[1] / "scripts/prepare_pages.py"
+)
 pages = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(pages)
 

@@ -14,8 +14,13 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_COMMIT = "193055eb9df7f8aa1197d413810f59b6bf4eb9a4"
 INVENTORY = ROOT / "data/legacy-inventory.json"
 ROOT_ICONS = {
-    "android-chrome-192x192.png", "apple-touch-icon.png", "favicon-16x16.png",
-    "favicon-32x32.png", "favicon.ico", "mstile-150x150.png", "safari-pinned-tab.svg",
+    "android-chrome-192x192.png",
+    "apple-touch-icon.png",
+    "favicon-16x16.png",
+    "favicon-32x32.png",
+    "favicon.ico",
+    "mstile-150x150.png",
+    "safari-pinned-tab.svg",
 }
 # Inherited from upstream but deliberately not redistributed: commercial fonts whose licenses forbid
 # it (see NOTICE). They map to no destination and must not reappear at either path.
@@ -72,11 +77,22 @@ def create():
         actual_oid = hashlib.new(algorithm, f"blob {len(raw)}\0".encode() + raw).hexdigest()
         if actual_oid != oid:
             raise ValueError(f"Relocation changed file contents: {original} -> {path}")
-        files.append({"original_path": original, "path": path, "category": category,
-                      "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(), "git_blob": oid})
-    return {"schema_version": 1, "source_commit": SOURCE_COMMIT,
-            "source_repository": "https://github.com/FridrichMethod/deemo",
-            "files": sorted(files, key=lambda row: row["original_path"])}
+        files.append(
+            {
+                "original_path": original,
+                "path": path,
+                "category": category,
+                "bytes": len(raw),
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "git_blob": oid,
+            }
+        )
+    return {
+        "schema_version": 1,
+        "source_commit": SOURCE_COMMIT,
+        "source_repository": "https://github.com/FridrichMethod/deemo",
+        "files": sorted(files, key=lambda row: row["original_path"]),
+    }
 
 
 def verify(inventory):
@@ -97,14 +113,20 @@ def verify(inventory):
         if row["original_path"] != row["path"] and (ROOT / row["original_path"]).exists():
             raise ValueError(f"Old path still exists: {row['original_path']}")
     for original, former in WITHDRAWN.items():
-        if any(row["original_path"] == original for row in inventory["files"]) or (ROOT / original).exists() or (ROOT / former).exists():
+        if (
+            any(row["original_path"] == original for row in inventory["files"])
+            or (ROOT / original).exists()
+            or (ROOT / former).exists()
+        ):
             raise ValueError(f"Withdrawn file is back in the repository: {original}")
     print(f"Verified {len(seen)} inherited files: bytes, hashes, paths and case-insensitive uniqueness.")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--write", action="store_true", help="Rebuild inventory and compare every file to its original Git blob")
+    parser.add_argument(
+        "--write", action="store_true", help="Rebuild inventory and compare every file to its original Git blob"
+    )
     args = parser.parse_args()
     if args.write:
         inventory = create()

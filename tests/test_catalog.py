@@ -19,14 +19,20 @@ from unittest.mock import patch
 
 from PIL import Image
 
-spec = importlib.util.spec_from_file_location("build_catalog", Path(__file__).resolve().parents[1] / "scripts/build_catalog.py")
+spec = importlib.util.spec_from_file_location(
+    "build_catalog", Path(__file__).resolve().parents[1] / "scripts/build_catalog.py"
+)
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)
 
 # Git exports these to hooks (as absolute paths in a linked worktree). Inherited, they would point the temp roots'
 # git commands, and build.tracked_files(), at the enclosing checkout and stage the fixtures into its index.
 GIT_REPOSITORY_ENVIRONMENT = (
-    "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY",
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_COMMON_DIR",
+    "GIT_OBJECT_DIRECTORY",
     "GIT_ALTERNATE_OBJECT_DIRECTORIES",
 )
 
@@ -35,8 +41,8 @@ def png_chunk(data, kind):
     """Offset and data length of the first chunk of this type in a PNG file."""
     offset = 8
     while offset < len(data):
-        length = int.from_bytes(data[offset:offset + 4], "big")
-        if data[offset + 4:offset + 8] == kind:
+        length = int.from_bytes(data[offset : offset + 4], "big")
+        if data[offset + 4 : offset + 8] == kind:
             return offset, length
         offset += 12 + length
     raise ValueError(f"No {kind} chunk")
@@ -72,19 +78,30 @@ class CatalogTests(unittest.TestCase):
         Image.new("RGB", (8, 12), "white").save(path)
         raw = path.read_bytes()
         self.asset = {
-            "id": "artist:sample", "source_id": "artist", "title": "Sample",
-            "kind": "song_art", "page_url": "https://example.com/art",
-            "path": "assets/public/artists/sample.png", "bytes": len(raw),
-            "sha256": hashlib.sha256(raw).hexdigest(), "width": 8, "height": 12,
-            "format": "PNG", "game": "DEEMO",
+            "id": "artist:sample",
+            "source_id": "artist",
+            "title": "Sample",
+            "kind": "song_art",
+            "page_url": "https://example.com/art",
+            "path": "assets/public/artists/sample.png",
+            "bytes": len(raw),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "width": 8,
+            "height": 12,
+            "format": "PNG",
+            "game": "DEEMO",
         }
         self.required_inputs()
 
     def required_inputs(self):
         """Empty versions of every input a build requires; each test then adds only what it exercises."""
         for family in build.SOURCE_MANIFESTS:
-            (self.root / f"data/sources/{family}.json").write_text(json.dumps({"sources": [], "assets": []}), encoding="utf-8")
-        (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {"songs": {}, "books": []}}), encoding="utf-8")
+            (self.root / f"data/sources/{family}.json").write_text(
+                json.dumps({"sources": [], "assets": []}), encoding="utf-8"
+            )
+        (self.root / "data/sources/song-mapping.json").write_text(
+            json.dumps({"data": {"songs": {}, "books": []}}), encoding="utf-8"
+        )
         (self.root / "data/thumbs.json").write_text(json.dumps({"thumbnails": {}}), encoding="utf-8")
         for variant in ("trans", "tiny"):
             (self.root / f"assets/legacy/{variant}").mkdir(parents=True, exist_ok=True)
@@ -158,7 +175,14 @@ class CatalogTests(unittest.TestCase):
         path = self.root / "assets/public/artists/other.png"
         Image.new("RGB", (8, 12), "black").save(path)
         raw = path.read_bytes()
-        other = {**self.asset, "id": "wiki:other", "source_id": "wiki", "path": path.relative_to(self.root).as_posix(), "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+        other = {
+            **self.asset,
+            "id": "wiki:other",
+            "source_id": "wiki",
+            "path": path.relative_to(self.root).as_posix(),
+            "bytes": len(raw),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+        }
         self.manifest("wikis", other)
         self.assertEqual(len(build.combine(self.root, verify=True)["assets"]), 2)
 
@@ -193,21 +217,31 @@ class CatalogTests(unittest.TestCase):
         # ...and a damaged pixel stream under a valid checksum, which only decoding (Image.load()) notices.
         bad_stream = bytearray(raw)
         bad_stream[offset + 8 + length // 2] ^= 0xFF
-        bad_stream[crc] = struct.pack(">I", zlib.crc32(bytes(bad_stream[offset + 4:crc.start])))
+        bad_stream[crc] = struct.pack(">I", zlib.crc32(bytes(bad_stream[offset + 4 : crc.start])))
         for name, data in (("checksum", bad_checksum), ("stream", bad_stream)):
             record = self.stored(f"assets/public/artists/{name}.png", bytes(data))
             with self.subTest(name), self.assertRaises((OSError, SyntaxError)):
                 build.validate_asset(self.root, record, True)
 
     def test_pdf_records_need_a_pdf_header_and_stay_out_of_the_gallery(self):
-        pdf = self.stored("assets/public/archives/booklet.pdf", b"%PDF-1.4\n%%EOF\n", id="archive:booklet", source_id="archive",
-                          kind="reference", format="PDF", width=None, height=None)
+        pdf = self.stored(
+            "assets/public/archives/booklet.pdf",
+            b"%PDF-1.4\n%%EOF\n",
+            id="archive:booklet",
+            source_id="archive",
+            kind="reference",
+            format="PDF",
+            width=None,
+            height=None,
+        )
         self.manifest("archives", pdf)
         catalog = build.combine(self.root, verify=True)
         self.assertFalse(catalog["assets"][0]["gallery"])
         self.assertEqual(catalog["summary"]["gallery_images"], 0)
         self.assertEqual(self.slides(catalog), [])
-        fake = self.stored("assets/public/archives/fake.pdf", b"<html>not a PDF</html>", format="PDF", width=None, height=None)
+        fake = self.stored(
+            "assets/public/archives/fake.pdf", b"<html>not a PDF</html>", format="PDF", width=None, height=None
+        )
         with self.assertRaisesRegex(ValueError, "Invalid PDF header"):
             build.validate_asset(self.root, fake, True)
 
@@ -223,12 +257,16 @@ class CatalogTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Duplicate asset ID: artist:sample"):
             build.combine(self.root, verify=True)
         self.required_inputs()
-        (self.root / "data/sources/artists.json").write_text(json.dumps({"sources": [], "assets": [self.asset]}), encoding="utf-8")
+        (self.root / "data/sources/artists.json").write_text(
+            json.dumps({"sources": [], "assets": [self.asset]}), encoding="utf-8"
+        )
         with self.assertRaisesRegex(ValueError, "Missing source: artist"):
             build.combine(self.root, verify=True)
         self.required_inputs()
         self.manifest("artists", self.asset)
-        (self.root / "data/sources/wikis.json").write_text(json.dumps({"sources": [{"id": "artist", "name": "Other"}], "assets": []}), encoding="utf-8")
+        (self.root / "data/sources/wikis.json").write_text(
+            json.dumps({"sources": [{"id": "artist", "name": "Other"}], "assets": []}), encoding="utf-8"
+        )
         with self.assertRaisesRegex(ValueError, "Duplicate source IDs"):
             build.combine(self.root, verify=True)
 
@@ -254,8 +292,10 @@ class CatalogTests(unittest.TestCase):
         self.git("init", "-q")
         self.image("assets/public/wikis/unreferenced.png", "black")
         self.git("add", "assets")
-        self.assertEqual(build.tracked_files(self.root, build.ORPHAN_CHECK_DIRECTORIES),
-                         ["assets/public/artists/sample.png", "assets/public/wikis/unreferenced.png"])
+        self.assertEqual(
+            build.tracked_files(self.root, build.ORPHAN_CHECK_DIRECTORIES),
+            ["assets/public/artists/sample.png", "assets/public/wikis/unreferenced.png"],
+        )
         # A directory inside someone else's checkout is not a checkout of this site.
         nested = self.root / "nested"
         nested.mkdir()
@@ -265,20 +305,39 @@ class CatalogTests(unittest.TestCase):
         sources = [{"id": "wiki", "name": "Wiki", "url": "https://example.com/wiki"}]
         records = [
             self.image("assets/public/wikis/art--new.png", "black", id="wiki:art", source_id="wiki"),
-            self.image("assets/public/wikis/art--old.png", "gray", id="wiki:art--old", source_id="wiki",
-                       upstream_status="superseded", superseded_by="wiki:art"),
-            self.image("assets/public/wikis/gone.png", "red", id="wiki:gone", source_id="wiki", upstream_status="removed"),
-            self.image("assets/public/wikis/retry.png", "blue", id="wiki:retry", source_id="wiki", upstream_status="fetch_failed"),
+            self.image(
+                "assets/public/wikis/art--old.png",
+                "gray",
+                id="wiki:art--old",
+                source_id="wiki",
+                upstream_status="superseded",
+                superseded_by="wiki:art",
+            ),
+            self.image(
+                "assets/public/wikis/gone.png", "red", id="wiki:gone", source_id="wiki", upstream_status="removed"
+            ),
+            self.image(
+                "assets/public/wikis/retry.png",
+                "blue",
+                id="wiki:retry",
+                source_id="wiki",
+                upstream_status="fetch_failed",
+            ),
         ]
 
         def write(assets):
-            (self.root / "data/sources/wikis.json").write_text(json.dumps({"sources": sources, "assets": assets}), encoding="utf-8")
+            (self.root / "data/sources/wikis.json").write_text(
+                json.dumps({"sources": sources, "assets": assets}), encoding="utf-8"
+            )
 
         write(records)
         catalog = {asset["id"]: asset for asset in build.combine(self.root, verify=True)["assets"]}
         self.assertEqual(len(catalog), 4)
         self.assertNotIn("upstream_status", catalog["wiki:art"])
-        self.assertEqual((catalog["wiki:art--old"]["upstream_status"], catalog["wiki:art--old"]["superseded_by"]), ("superseded", "wiki:art"))
+        self.assertEqual(
+            (catalog["wiki:art--old"]["upstream_status"], catalog["wiki:art--old"]["superseded_by"]),
+            ("superseded", "wiki:art"),
+        )
         self.assertEqual(catalog["wiki:art--old"]["provenance"][0]["superseded_by"], "wiki:art")
         self.assertEqual(catalog["wiki:gone"]["upstream_status"], "removed")
         self.assertEqual(catalog["wiki:retry"]["provenance"][0]["upstream_status"], "fetch_failed")
@@ -318,7 +377,13 @@ class CatalogTests(unittest.TestCase):
 
     def test_legacy_mapping_distinguishes_composer_and_illustrator(self):
         self.legacy_pair()
-        mapping = {"source_url": "https://example.com/mapping", "data": {"songs": {"magnolia": {"name": "Magnolia", "artist": "M2U", "book": 0}}, "books": [{"name": "Collection"}]}}
+        mapping = {
+            "source_url": "https://example.com/mapping",
+            "data": {
+                "songs": {"magnolia": {"name": "Magnolia", "artist": "M2U", "book": 0}},
+                "books": [{"name": "Collection"}],
+            },
+        }
         (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping))
         asset = build.legacy_assets(self.root)[0]
         self.assertEqual(asset["title"], "Magnolia")
@@ -335,54 +400,118 @@ class CatalogTests(unittest.TestCase):
             "randall": {"name": "Randall", "artist": "Hikoshi Hashimoto", "book": 0},
             "magnolia": {"name": "Magnolia", "artist": "M2U", "book": 0},
             "Magnolia": {"name": "Not this one", "artist": "Nobody", "book": 0},
-            "echo": {"name": "Echo one"}, "ECHO": {"name": "Echo two"},
+            "echo": {"name": "Echo one"},
+            "ECHO": {"name": "Echo two"},
         }
-        mapping = {"source_url": "https://example.com/mapping", "data": {"songs": songs, "books": [{"name": "Collaboration collection"}]}}
+        mapping = {
+            "source_url": "https://example.com/mapping",
+            "data": {"songs": songs, "books": [{"name": "Collaboration collection"}]},
+        }
         (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping), encoding="utf-8")
         assets = {asset["internal_key"]: asset for asset in build.legacy_assets(self.root)}
         randall = assets["Randall"]
-        self.assertEqual((randall["title"], randall["composer"], randall["collection"], randall["kind"]),
-                         ("Randall", "Hikoshi Hashimoto", "Collaboration collection", "song_art"))
+        self.assertEqual(
+            (randall["title"], randall["composer"], randall["collection"], randall["kind"]),
+            ("Randall", "Hikoshi Hashimoto", "Collaboration collection", "song_art"),
+        )
         self.assertEqual(randall["song_titles"], ["Randall"])
         self.assertEqual(randall["title_status"], "mapped_case_insensitive_internal_key")
         self.assertEqual(randall["mapping_source"], "https://example.com/mapping")
         # An exact key always wins over a case variant.
-        self.assertEqual((assets["magnolia"]["title"], assets["magnolia"]["title_status"]), ("Magnolia", "mapped_exact_internal_key"))
+        self.assertEqual(
+            (assets["magnolia"]["title"], assets["magnolia"]["title_status"]), ("Magnolia", "mapped_exact_internal_key")
+        )
         # Two keys that differ only in case leave the texture unmapped rather than guessing.
-        self.assertEqual((assets["Echo"]["title"], assets["Echo"]["title_status"], assets["Echo"]["mapping_source"]), ("Echo", "internal_key", None))
+        self.assertEqual(
+            (assets["Echo"]["title"], assets["Echo"]["title_status"], assets["Echo"]["mapping_source"]),
+            ("Echo", "internal_key", None),
+        )
 
     def test_unmapped_legacy_key_takes_the_songs_of_a_same_key_wiki_upload(self):
         # The wiki's song artwork "Samsara105 fc.png" is the texture samsara105_fc, which the song mapping lacks: both
         # pages then call it "The 105th Day" rather than song artwork in the archive and an unmapped texture here.
         for key in ("samsara105_fc", "walkingbythesea", "magnolia", "disputed_key", "booksprites_0"):
             self.legacy_pair(key)
-        mapping = {"source_url": "https://example.com/mapping", "data": {"songs": {"magnolia": {"name": "Magnolia"}}, "books": []}}
+        mapping = {
+            "source_url": "https://example.com/mapping",
+            "data": {"songs": {"magnolia": {"name": "Magnolia"}}, "books": []},
+        }
         (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping), encoding="utf-8")
 
         def upload(name, title, songs, kind="song_art"):
             colour = tuple(hashlib.sha256(name.encode()).digest()[:3])
-            return self.image(f"assets/public/wikis/{name}.png", colour, id=f"wikis:test:{name}", source_id="wikis:test",
-                              title=title, kind=kind, song_titles=songs, page_url=f"https://wiki.example/File:{name}")
+            return self.image(
+                f"assets/public/wikis/{name}.png",
+                colour,
+                id=f"wikis:test:{name}",
+                source_id="wikis:test",
+                title=title,
+                kind=kind,
+                song_titles=songs,
+                page_url=f"https://wiki.example/File:{name}",
+            )
 
-        uploads = [upload("a", "Samsara105 fc", ["The 105th Day"]), upload("b", "Walking By The Sea", ["Walking by the sea"]),
-                   upload("c", "Walking by the sea", ["Walking by the sea"]), upload("d", "Magnolia", ["Not this one"]),
-                   upload("e", "Disputed key", ["One"]), upload("f", "Disputed Key", ["Two"]),
-                   upload("g", "Booksprites 0", [], kind="collection_cover")]
-        (self.root / "data/sources/wikis.json").write_text(json.dumps({"sources": [{"id": "wikis:test", "name": "Wiki", "url": "https://wiki.example/"}],
-                                                                       "assets": uploads}), encoding="utf-8")
+        uploads = [
+            upload("a", "Samsara105 fc", ["The 105th Day"]),
+            upload("b", "Walking By The Sea", ["Walking by the sea"]),
+            upload("c", "Walking by the sea", ["Walking by the sea"]),
+            upload("d", "Magnolia", ["Not this one"]),
+            upload("e", "Disputed key", ["One"]),
+            upload("f", "Disputed Key", ["Two"]),
+            upload("g", "Booksprites 0", [], kind="collection_cover"),
+        ]
+        (self.root / "data/sources/wikis.json").write_text(
+            json.dumps(
+                {"sources": [{"id": "wikis:test", "name": "Wiki", "url": "https://wiki.example/"}], "assets": uploads}
+            ),
+            encoding="utf-8",
+        )
         catalog = build.combine(self.root, verify=True)
         legacy = {asset["internal_key"]: asset for asset in catalog["assets"] if asset["family"] == "legacy"}
-        self.assertEqual({key: (asset["title"], asset["song_titles"], asset["kind"], asset["title_status"], asset["mapping_source"])
-                          for key, asset in legacy.items()}, {
-            "samsara105_fc": ("The 105th Day", ["The 105th Day"], "song_art", "mapped_wiki_file_key", "https://wiki.example/File:a"),
-            "walkingbythesea": ("Walking by the sea", ["Walking by the sea"], "song_art", "mapped_wiki_file_key", "https://wiki.example/File:b"),
-            # The song mapping's own key wins; uploads that disagree on the songs map nothing; covers map no song.
-            "magnolia": ("Magnolia", ["Magnolia"], "song_art", "mapped_exact_internal_key", "https://example.com/mapping"),
-            "disputed_key": ("disputed_key", [], "illustration", "internal_key", None),
-            "booksprites_0": ("booksprites_0", [], "collection_cover", "internal_key", None),
-        })
+        self.assertEqual(
+            {
+                key: (
+                    asset["title"],
+                    asset["song_titles"],
+                    asset["kind"],
+                    asset["title_status"],
+                    asset["mapping_source"],
+                )
+                for key, asset in legacy.items()
+            },
+            {
+                "samsara105_fc": (
+                    "The 105th Day",
+                    ["The 105th Day"],
+                    "song_art",
+                    "mapped_wiki_file_key",
+                    "https://wiki.example/File:a",
+                ),
+                "walkingbythesea": (
+                    "Walking by the sea",
+                    ["Walking by the sea"],
+                    "song_art",
+                    "mapped_wiki_file_key",
+                    "https://wiki.example/File:b",
+                ),
+                # The song mapping's own key wins; uploads that disagree on the songs map nothing; covers map no song.
+                "magnolia": (
+                    "Magnolia",
+                    ["Magnolia"],
+                    "song_art",
+                    "mapped_exact_internal_key",
+                    "https://example.com/mapping",
+                ),
+                "disputed_key": ("disputed_key", [], "illustration", "internal_key", None),
+                "booksprites_0": ("booksprites_0", [], "collection_cover", "internal_key", None),
+            },
+        )
         self.assertIsNone(legacy["samsara105_fc"]["composer"])
-        kinds = {slide["data-id"]: (slide["data-kind"], slide.get("data-songs")) for slide in self.slides(catalog) if slide["data-id"].startswith("legacy:")}
+        kinds = {
+            slide["data-id"]: (slide["data-kind"], slide.get("data-songs"))
+            for slide in self.slides(catalog)
+            if slide["data-id"].startswith("legacy:")
+        }
         self.assertEqual(kinds["legacy:samsara105_fc"], ("song_art", "The 105th Day"))
         self.assertEqual(kinds["legacy:disputed_key"], ("unmapped", None))
 
@@ -391,69 +520,143 @@ class CatalogTests(unittest.TestCase):
         # the slideshow show one spelling, the wikis', and the record's own stays searchable as a collection alias.
         for key in ("magnolia", "altale", "sheep"):
             self.legacy_pair(key)
-        songs = {"magnolia": {"name": "Magnolia", "book": 0}, "altale": {"name": "Altale", "book": 1}, "sheep": {"name": "Sheep", "book": 2}}
+        songs = {
+            "magnolia": {"name": "Magnolia", "book": 0},
+            "altale": {"name": "Altale", "book": 1},
+            "sheep": {"name": "Sheep", "book": 2},
+        }
         books = [{"name": "Etude collection"}, {"name": "MILI collection"}, {"name": "Post grouping"}]
-        (self.root / "data/sources/song-mapping.json").write_text(json.dumps({"data": {"songs": songs, "books": books}}), encoding="utf-8")
-        wiki = [self.image("assets/public/wikis/a.png", "red", id="wikis:test:a", source_id="wikis:test", collections=["Etude Collection"],
-                           collection_aliases=["Etude collection"]),
-                self.image("assets/public/wikis/b.png", "green", id="wikis:test:b", source_id="wikis:test", collections=["ETUDE collection"],
-                           upstream_status="removed")]
-        artists = [self.image("assets/public/artists/m.png", "blue", id="artist:m", collection="Mili Collection"),
-                   self.image("assets/public/artists/p.png", "black", id="artist:p", collection="post grouping", collection_scope="source_post_grouping")]
+        (self.root / "data/sources/song-mapping.json").write_text(
+            json.dumps({"data": {"songs": songs, "books": books}}), encoding="utf-8"
+        )
+        wiki = [
+            self.image(
+                "assets/public/wikis/a.png",
+                "red",
+                id="wikis:test:a",
+                source_id="wikis:test",
+                collections=["Etude Collection"],
+                collection_aliases=["Etude collection"],
+            ),
+            self.image(
+                "assets/public/wikis/b.png",
+                "green",
+                id="wikis:test:b",
+                source_id="wikis:test",
+                collections=["ETUDE collection"],
+                upstream_status="removed",
+            ),
+        ]
+        artists = [
+            self.image("assets/public/artists/m.png", "blue", id="artist:m", collection="Mili Collection"),
+            self.image(
+                "assets/public/artists/p.png",
+                "black",
+                id="artist:p",
+                collection="post grouping",
+                collection_scope="source_post_grouping",
+            ),
+        ]
         for family, assets, source in (("wikis", wiki, "wikis:test"), ("artists", artists, "artist")):
             content = {"sources": [{"id": source, "name": family, "url": "https://example.com/"}], "assets": assets}
             (self.root / f"data/sources/{family}.json").write_text(json.dumps(content), encoding="utf-8")
-        records = {record["id"]: record for asset in build.combine(self.root, verify=True)["assets"] for record in asset["provenance"]}
-        shown = {record_id: (record.get("collection"), record.get("collections"), record.get("collection_aliases"))
-                 for record_id, record in records.items()}
-        self.assertEqual(shown, {
-            # The current wiki records' spelling wins (they are left as they are), over a removed record's and the
-            # first in code-point order.
-            "wikis:test:a": (None, ["Etude Collection"], ["Etude collection"]),
-            "wikis:test:b": (None, ["Etude Collection"], ["ETUDE collection"]),
-            "legacy:magnolia": ("Etude Collection", None, ["Etude collection"]),
-            # No current wiki record names this one: the first spelling in code-point order.
-            "legacy:altale": ("MILI collection", None, None),
-            "artist:m": ("MILI collection", None, ["Mili Collection"]),
-            # A post's grouping is quoted as the post spells it.
-            "artist:p": ("post grouping", None, None),
-            "legacy:sheep": ("Post grouping", None, None),
-        })
-        slides = {slide["data-id"]: slide.get("data-collection") for slide in self.slides(build.combine(self.root, verify=True))}
-        self.assertEqual((slides["legacy:magnolia"], slides["wikis:test:a"], slides["artist:m"]), ("Etude Collection", "Etude Collection", "MILI collection"))
+        records = {
+            record["id"]: record
+            for asset in build.combine(self.root, verify=True)["assets"]
+            for record in asset["provenance"]
+        }
+        shown = {
+            record_id: (record.get("collection"), record.get("collections"), record.get("collection_aliases"))
+            for record_id, record in records.items()
+        }
+        self.assertEqual(
+            shown,
+            {
+                # The current wiki records' spelling wins (they are left as they are), over a removed record's and the
+                # first in code-point order.
+                "wikis:test:a": (None, ["Etude Collection"], ["Etude collection"]),
+                "wikis:test:b": (None, ["Etude Collection"], ["ETUDE collection"]),
+                "legacy:magnolia": ("Etude Collection", None, ["Etude collection"]),
+                # No current wiki record names this one: the first spelling in code-point order.
+                "legacy:altale": ("MILI collection", None, None),
+                "artist:m": ("MILI collection", None, ["Mili Collection"]),
+                # A post's grouping is quoted as the post spells it.
+                "artist:p": ("post grouping", None, None),
+                "legacy:sheep": ("Post grouping", None, None),
+            },
+        )
+        slides = {
+            slide["data-id"]: slide.get("data-collection")
+            for slide in self.slides(build.combine(self.root, verify=True))
+        }
+        self.assertEqual(
+            (slides["legacy:magnolia"], slides["wikis:test:a"], slides["artist:m"]),
+            ("Etude Collection", "Etude Collection", "MILI collection"),
+        )
 
     def test_unambiguous_legacy_cover_keys_are_collection_covers(self):
         for key in ("deemo1a", "Deemo1B", "booksprites_0", "MN2_booksprites", "deemo1", "deemo1ab", "walkingbythesea"):
             self.legacy_pair(key)
         kinds = {asset["internal_key"]: asset["kind"] for asset in build.legacy_assets(self.root)}
-        self.assertEqual(kinds, {
-            "deemo1a": "collection_cover", "Deemo1B": "collection_cover", "booksprites_0": "collection_cover",
-            "MN2_booksprites": "collection_cover", "deemo1": "illustration", "deemo1ab": "illustration",
-            "walkingbythesea": "illustration",
-        })
+        self.assertEqual(
+            kinds,
+            {
+                "deemo1a": "collection_cover",
+                "Deemo1B": "collection_cover",
+                "booksprites_0": "collection_cover",
+                "MN2_booksprites": "collection_cover",
+                "deemo1": "illustration",
+                "deemo1ab": "illustration",
+                "walkingbythesea": "illustration",
+            },
+        )
 
     def test_slideshow_names_no_kind_for_an_unmapped_legacy_texture(self):
         # "illustration" is only the archive's "Illustration / unmapped" catch-all for these; the slideshow eyebrow
         # must not assert it. Mapped textures and cover keys keep their kind.
         for key in ("walkingbythesea", "magnolia", "booksprites_0"):
             self.legacy_pair(key)
-        mapping = {"source_url": "https://example.com/mapping", "data": {"songs": {"magnolia": {"name": "Magnolia"}}, "books": []}}
+        mapping = {
+            "source_url": "https://example.com/mapping",
+            "data": {"songs": {"magnolia": {"name": "Magnolia"}}, "books": []},
+        }
         (self.root / "data/sources/song-mapping.json").write_text(json.dumps(mapping), encoding="utf-8")
         catalog = build.combine(self.root, verify=True)
-        self.assertEqual({asset["internal_key"]: asset["kind"] for asset in catalog["assets"]},
-                         {"walkingbythesea": "illustration", "magnolia": "song_art", "booksprites_0": "collection_cover"})
+        self.assertEqual(
+            {asset["internal_key"]: asset["kind"] for asset in catalog["assets"]},
+            {"walkingbythesea": "illustration", "magnolia": "song_art", "booksprites_0": "collection_cover"},
+        )
         kinds = {slide["data-id"]: slide["data-kind"] for slide in self.slides(catalog)}
-        self.assertEqual(kinds, {"legacy:walkingbythesea": "unmapped", "legacy:magnolia": "song_art", "legacy:booksprites_0": "collection_cover"})
+        self.assertEqual(
+            kinds,
+            {
+                "legacy:walkingbythesea": "unmapped",
+                "legacy:magnolia": "song_art",
+                "legacy:booksprites_0": "collection_cover",
+            },
+        )
 
     def test_slides_carry_their_mapped_song_titles(self):
         # The liner notes headline the song when a wiki title is only a file key ("Classic01" for "Tristesse").
         self.manifest("artists", {**self.asset, "title": "Classic01", "song_titles": ["Tristesse"]})
-        self.manifest("wikis", {**self.asset, "id": "wiki:sample", "source_id": "wiki", "song_titles": ["tristesse", "Ballade No.1"]})
+        self.manifest(
+            "wikis",
+            {**self.asset, "id": "wiki:sample", "source_id": "wiki", "song_titles": ["tristesse", "Ballade No.1"]},
+        )
         path = self.root / "assets/public/artists/other.png"
         Image.new("RGB", (8, 12), "black").save(path)
         raw = path.read_bytes()
-        self.manifest("archives", {**self.asset, "id": "archive:other", "source_id": "archive", "path": path.relative_to(self.root).as_posix(),
-                                   "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
+        self.manifest(
+            "archives",
+            {
+                **self.asset,
+                "id": "archive:other",
+                "source_id": "archive",
+                "path": path.relative_to(self.root).as_posix(),
+                "bytes": len(raw),
+                "sha256": hashlib.sha256(raw).hexdigest(),
+            },
+        )
         slides = {slide["data-id"]: slide for slide in self.slides(build.combine(self.root, verify=True))}
         self.assertEqual(slides["artist:sample"]["data-songs"], "Tristesse\nBallade No.1")
         self.assertNotIn("data-songs", slides["archive:other"])
@@ -498,7 +701,10 @@ class CatalogTests(unittest.TestCase):
         # A lost manifest, mapping or legacy directory must not quietly build a smaller site.
         self.assertEqual(build.combine(self.root, verify=True)["summary"]["unique_files"], 0)
         for relative in [f"data/sources/{family}.json" for family in build.SOURCE_MANIFESTS] + [
-                "data/sources/song-mapping.json", "assets/legacy/trans", "assets/legacy/tiny"]:
+            "data/sources/song-mapping.json",
+            "assets/legacy/trans",
+            "assets/legacy/tiny",
+        ]:
             with self.subTest(missing=relative):
                 path = self.root / relative
                 path.rmdir() if path.is_dir() else path.unlink()
@@ -510,10 +716,15 @@ class CatalogTests(unittest.TestCase):
         # Without data/thumbs.json the catalog would lose every grid preview; the build stops instead, before it
         # writes any generated file.
         self.assertIsNone(self.run_main("--verify"))
-        written = {name: (self.root / name).read_bytes() for name in ("data/catalog.json", "data/catalog.js", "index.html")}
+        written = {
+            name: (self.root / name).read_bytes() for name in ("data/catalog.json", "data/catalog.js", "index.html")
+        }
         (self.root / "data/thumbs.json").unlink()
         for args in (("--verify",), ("--verify", "--check"), ()):
-            with self.subTest(args=args), self.assertRaisesRegex(FileNotFoundError, "Missing required input: data/thumbs.json"):
+            with (
+                self.subTest(args=args),
+                self.assertRaisesRegex(FileNotFoundError, "Missing required input: data/thumbs.json"),
+            ):
                 self.run_main(*args)
         self.assertEqual({name: (self.root / name).read_bytes() for name in written}, written)
 
@@ -556,7 +767,11 @@ class CatalogTests(unittest.TestCase):
                 (self.root / link).symlink_to(target)
             except OSError as error:  # Windows without the symlink privilege
                 self.skipTest(f"Cannot create symlinks: {error}")
-        for value in ("assets/public/artists/outside.png", "assets/public/artists/notice.png", "assets/public/linked/sources/artists.json"):
+        for value in (
+            "assets/public/artists/outside.png",
+            "assets/public/artists/notice.png",
+            "assets/public/linked/sources/artists.json",
+        ):
             with self.subTest(value), self.assertRaisesRegex(ValueError, "outside"):
                 build.safe_path(self.root, value)
         with self.assertRaisesRegex(ValueError, "outside"):
@@ -569,7 +784,15 @@ class CatalogTests(unittest.TestCase):
             build.safe_path(checkout, self.asset["path"])
 
     def test_unsafe_paths_rejected(self):
-        for path in ("../secret.png", "/tmp/secret.png", "assets/../../secret.png", "README.md", "trans/magnolia.png", "tiny/magnolia.png", ""):
+        for path in (
+            "../secret.png",
+            "/tmp/secret.png",
+            "assets/../../secret.png",
+            "README.md",
+            "trans/magnolia.png",
+            "tiny/magnolia.png",
+            "",
+        ):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 build.safe_path(self.root, path)
 
@@ -580,19 +803,46 @@ class CatalogTests(unittest.TestCase):
     def test_html_escapes_remote_metadata(self):
         # Scraped titles and names go into double-quoted attributes: none may end the attribute or the tag, add an
         # attribute, or lose a character (a raw CR would be read back as LF by an HTML parser).
-        hostile = 'A & B "><script>alert(1)</script>\' onerror=\'alert(2)\r\nline 2\tend <b>&amp;'
-        record = {**self.asset, "title": hostile, "composer": f"Composer {hostile}", "artist": f"Artist {hostile}",
-                  "collection": f"Pack {hostile}", "song_titles": [f"Song {hostile}"]}
-        asset = {**copy.deepcopy(record), "family": "artists", "gallery": True, "url": "assets/public/artists/sample.png",
-                 "source_name": f"Source {hostile}", "provenance": [record]}
+        hostile = "A & B \"><script>alert(1)</script>' onerror='alert(2)\r\nline 2\tend <b>&amp;"
+        record = {
+            **self.asset,
+            "title": hostile,
+            "composer": f"Composer {hostile}",
+            "artist": f"Artist {hostile}",
+            "collection": f"Pack {hostile}",
+            "song_titles": [f"Song {hostile}"],
+        }
+        asset = {
+            **copy.deepcopy(record),
+            "family": "artists",
+            "gallery": True,
+            "url": "assets/public/artists/sample.png",
+            "source_name": f"Source {hostile}",
+            "provenance": [record],
+        }
         self.template()
         rendered = build.render_slideshow(self.root, {"assets": [asset]})
         images = ImgTags(rendered).images
         self.assertEqual(len(images), 1)
-        self.assertEqual([name for name, _ in images[0]], [
-            "class", "data-src", "data-id", "data-title", "data-source", "data-source-id", "data-page", "data-size",
-            "data-kind", "data-songs", "data-composer", "data-artist", "data-collection", "alt",
-        ])
+        self.assertEqual(
+            [name for name, _ in images[0]],
+            [
+                "class",
+                "data-src",
+                "data-id",
+                "data-title",
+                "data-source",
+                "data-source-id",
+                "data-page",
+                "data-size",
+                "data-kind",
+                "data-songs",
+                "data-composer",
+                "data-artist",
+                "data-collection",
+                "alt",
+            ],
+        )
         values = dict(images[0])
         self.assertEqual(values["data-title"], hostile)
         self.assertEqual(values["alt"], hostile)
@@ -645,8 +895,15 @@ class CommittedCatalogTests(unittest.TestCase):
                     for name in filter(None, [record.get("collection"), *(record.get("collections") or [])]):
                         shown.setdefault(build.collection_key(name), set()).add(name)
         self.assertEqual({key: sorted(names) for key, names in shown.items() if len(names) > 1}, {})
-        legacy = [record for record in records.values() if record["family"] == "legacy" and "Etude collection" in record.get("collection_aliases", [])]
-        self.assertTrue(legacy and all(record["collection"] == "Etude Collection" for record in legacy), "Run scripts/build_catalog.py")
+        legacy = [
+            record
+            for record in records.values()
+            if record["family"] == "legacy" and "Etude collection" in record.get("collection_aliases", [])
+        ]
+        self.assertTrue(
+            legacy and all(record["collection"] == "Etude Collection" for record in legacy),
+            "Run scripts/build_catalog.py",
+        )
 
 
 if __name__ == "__main__":

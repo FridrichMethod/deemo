@@ -82,7 +82,7 @@ def retry_delay(error, attempt):
                 seconds = math.nan
         if not math.isnan(seconds):
             return min(max(seconds, 0.0), MAX_RETRY_AFTER)
-    return min(2 ** attempt, 8)
+    return min(2**attempt, 8)
 
 
 def get(url, *, params=None, headers=None):
@@ -133,9 +133,18 @@ def pages(source, titles):
     for start in range(0, len(titles), 30):
         continuation = {}
         while True:
-            result = api(source, titles="|".join(titles[start:start + 30]), redirects=1,
-                         prop="revisions|images|categories|info", rvprop="content|timestamp", rvslots="main",
-                         imlimit="max", cllimit="max", inprop="url", **continuation)
+            result = api(
+                source,
+                titles="|".join(titles[start : start + 30]),
+                redirects=1,
+                prop="revisions|images|categories|info",
+                rvprop="content|timestamp",
+                rvslots="main",
+                imlimit="max",
+                cllimit="max",
+                inprop="url",
+                **continuation,
+            )
             for page in result.get("query", {}).get("pages", {}).values():
                 if "missing" in page:
                     continue
@@ -152,8 +161,13 @@ def pages(source, titles):
 def imageinfo(source, titles):
     infos = {}
     for start in range(0, len(titles), 50):
-        result = api(source, titles="|".join(titles[start:start + 50]), prop="imageinfo",
-                     iiprop="size|url|mime|timestamp|sha1|extmetadata", iilimit=1)
+        result = api(
+            source,
+            titles="|".join(titles[start : start + 50]),
+            prop="imageinfo",
+            iiprop="size|url|mime|timestamp|sha1|extmetadata",
+            iilimit=1,
+        )
         for page in result.get("query", {}).get("pages", {}).values():
             if page.get("imageinfo"):
                 infos[page["title"]] = page["imageinfo"][0]
@@ -184,8 +198,14 @@ def with_collection_aliases(candidates, songs):
     search for one of them still finds the record; the archive searches them, but does not show them. Aliases the
     candidates already carry count as spellings too, so applying this to its own result changes nothing."""
     spellings = defaultdict(set)
-    for name in [*(name for song in songs for name in song["collections"]),
-                 *(name for candidate in candidates for name in candidate["collections"] + candidate.get("collection_aliases", []))]:
+    for name in [
+        *(name for song in songs for name in song["collections"]),
+        *(
+            name
+            for candidate in candidates
+            for name in candidate["collections"] + candidate.get("collection_aliases", [])
+        ),
+    ]:
         spellings[normalized(name) or name].add(name)
     result = []
     for candidate in candidates:
@@ -244,8 +264,10 @@ def song_metadata(source, page):
     content = wikitext(page)
     collections = re.findall(r"\{\{Return\|([^|}\n]+)(?:\|([^}\n]+))?", content)
     row = {
-        "title": page["title"], "page_url": page.get("fullurl", SOURCES[source]["page_base"] + quote(page["title"])),
-        "source_id": SOURCES[source]["id"], "page_id": page["pageid"],
+        "title": page["title"],
+        "page_url": page.get("fullurl", SOURCES[source]["page_base"] + quote(page["title"])),
+        "source_id": SOURCES[source]["id"],
+        "page_id": page["pageid"],
         "categories": [x["title"] for x in page.get("categories", [])],
         "image_files": [x["title"] for x in page.get("images", []) if RASTER.search(x["title"])],
     }
@@ -279,13 +301,17 @@ def discover_fandom():
                 continue
             stem = filename.rsplit(".", 1)[0]
             kind = "collection_cover" if "booksprite" in filename.lower() else "song_art"
-            entry = candidates.setdefault(image["title"], {"kind": kind, "song_titles": [], "related_pages": [], "collections": []})
+            entry = candidates.setdefault(
+                image["title"], {"kind": kind, "song_titles": [], "related_pages": [], "collections": []}
+            )
             if song["title"] not in entry["song_titles"]:
                 entry["song_titles"].append(song["title"])
             entry["related_pages"] = sorted(set(entry["related_pages"] + [song["page_url"]]))
             entry["collections"] = unique_collections(entry["collections"] + song["collections"])
             if normalized(stem) != primary:
-                entry["variant_note"] = "Additional raster image referenced by the song page; may be alternate artwork or a composite."
+                entry["variant_note"] = (
+                    "Additional raster image referenced by the song page; may be alternate artwork or a composite."
+                )
             if song.get("illustrator"):
                 entry["artist"] = song["illustrator"]
     collection_names = [x["title"] for x in category("fandom", "Category:Collections")]
@@ -293,14 +319,19 @@ def discover_fandom():
     for page in song_pages:
         collection_names.extend(re.findall(r"\{\{Return\|([^|}\n]+)", wikitext(page)))
     collection_pages = pages("fandom", sorted(set(collection_names)))
-    covers = re.compile(r"booksprites?|^(collection \d+|deemo1[ab]|ad-piano [23]?|nmst2|djmax|egoist|vocal|team grimoire)\.", re.I)
+    covers = re.compile(
+        r"booksprites?|^(collection \d+|deemo1[ab]|ad-piano [23]?|nmst2|djmax|egoist|vocal|team grimoire)\.", re.I
+    )
     for page in collection_pages:
         if any("DEEMO II" in c["title"] for c in page.get("categories", [])):
             continue
         for image in page.get("images", []):
             filename = image["title"].split(":", 1)[1]
             if RASTER.search(filename) and not UI.search(filename) and covers.search(filename):
-                entry = candidates.setdefault(image["title"], {"kind": "collection_cover", "song_titles": [], "related_pages": [], "collections": []})
+                entry = candidates.setdefault(
+                    image["title"],
+                    {"kind": "collection_cover", "song_titles": [], "related_pages": [], "collections": []},
+                )
                 entry["related_pages"] = sorted(set(entry["related_pages"] + [page.get("fullurl", "")]))
     infos = imageinfo("fandom", sorted(candidates))
     selected = []
@@ -311,10 +342,24 @@ def discover_fandom():
             excluded.append({"title": title, "reason": "No downloadable image metadata"})
             continue
         if candidate["kind"] == "song_art" and min(info["width"], info["height"]) < 300:
-            excluded.append({"title": title, "reason": "Small UI/icon-sized image on song page", "width": info["width"], "height": info["height"]})
+            excluded.append(
+                {
+                    "title": title,
+                    "reason": "Small UI/icon-sized image on song page",
+                    "width": info["width"],
+                    "height": info["height"],
+                }
+            )
             continue
         if candidate["kind"] == "collection_cover" and min(info["width"], info["height"]) < MIN_COVER_EDGE:
-            excluded.append({"title": title, "reason": "Icon-sized collection image", "width": info["width"], "height": info["height"]})
+            excluded.append(
+                {
+                    "title": title,
+                    "reason": "Icon-sized collection image",
+                    "width": info["width"],
+                    "height": info["height"],
+                }
+            )
             continue
         selected.append({"source": "fandom", "file_title": title, "info": info, **candidate})
     return selected, songs, {"song_pages": len(songs), "collection_pages": len(collection_pages), "excluded": excluded}
@@ -345,23 +390,50 @@ def discover_bwiki(fandom_songs):
         stem = info["name"].rsplit(".", 1)[0].replace("_", " ")
         related = lookup.get(normalized(stem), [])
         if related and min(info["width"], info["height"]) >= 300:
-            selected.append({"source": "bwiki", "file_title": info["title"], "info": info,
-                             "kind": "song_art", "song_titles": sorted({s["title"] for s in related}),
-                             "related_pages": sorted({s["page_url"] for s in related}),
-                             "collections": unique_collections(c for s in related for c in s["collections"]),
-                             "mapping_method": "Exact normalized song title / image filename match"})
-        elif (normalized(stem) in collection_lookup or re.search(r"collection|selection|^Book of |^Epilogue$|^Shattered Memories", stem, re.I)) \
-                and min(info["width"], info["height"]) >= MIN_COVER_EDGE:
+            selected.append(
+                {
+                    "source": "bwiki",
+                    "file_title": info["title"],
+                    "info": info,
+                    "kind": "song_art",
+                    "song_titles": sorted({s["title"] for s in related}),
+                    "related_pages": sorted({s["page_url"] for s in related}),
+                    "collections": unique_collections(c for s in related for c in s["collections"]),
+                    "mapping_method": "Exact normalized song title / image filename match",
+                }
+            )
+        elif (
+            normalized(stem) in collection_lookup
+            or re.search(r"collection|selection|^Book of |^Epilogue$|^Shattered Memories", stem, re.I)
+        ) and min(info["width"], info["height"]) >= MIN_COVER_EDGE:
             collection = collection_lookup.get(normalized(stem), stem)
             # A spelling that cannot be a title ("RAC collection #4") links to the file's own stem, which always can.
             page = stem if ILLEGAL_TITLE.search(collection) else collection
-            selected.append({"source": "bwiki", "file_title": info["title"], "info": info,
-                             "kind": "collection_cover", "song_titles": [], "collections": [collection],
-                             "related_pages": [SOURCES["bwiki"]["page_base"] + quote(page)]})
+            selected.append(
+                {
+                    "source": "bwiki",
+                    "file_title": info["title"],
+                    "info": info,
+                    "kind": "collection_cover",
+                    "song_titles": [],
+                    "collections": [collection],
+                    "related_pages": [SOURCES["bwiki"]["page_base"] + quote(page)],
+                }
+            )
         elif min(info["width"], info["height"]) >= 500:
-            excluded_large.append({"title": info["title"], "width": info["width"], "height": info["height"],
-                                   "reason": "No exact song/collection title mapping; not automatically identified as song artwork"})
-    return selected, songs, {"song_pages": len(songs), "allimages_count": len(inventory), "excluded_large_images": excluded_large}
+            excluded_large.append(
+                {
+                    "title": info["title"],
+                    "width": info["width"],
+                    "height": info["height"],
+                    "reason": "No exact song/collection title mapping; not automatically identified as song artwork",
+                }
+            )
+    return (
+        selected,
+        songs,
+        {"song_pages": len(songs), "allimages_count": len(inventory), "excluded_large_images": excluded_large},
+    )
 
 
 def asset_filename(title, digest, image_format):
@@ -375,13 +447,19 @@ def delivery_note(url, size_matches, sha1_matches):
     """The caveat shown with a download, or None when the bytes are the plain original upload."""
     if "format=png" in url:
         if size_matches and sha1_matches:
-            return ("Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki "
-                    "original upload. Downloaded bytes preserved unchanged.")
-        return ("Retrieved through the public full-size CDN PNG fallback (format=png); may be CDN-reencoded, since the "
-                "checksum/size differ from the wiki original upload. Downloaded bytes preserved unchanged.")
+            return (
+                "Retrieved through the public full-size CDN PNG fallback (format=png); SHA-1 and size match the wiki "
+                "original upload. Downloaded bytes preserved unchanged."
+            )
+        return (
+            "Retrieved through the public full-size CDN PNG fallback (format=png); may be CDN-reencoded, since the "
+            "checksum/size differ from the wiki original upload. Downloaded bytes preserved unchanged."
+        )
     if not size_matches or not sha1_matches:
-        return ("Full-size public CDN file matches published dimensions but differs from the wiki original upload "
-                "checksum/size; downloaded bytes preserved unchanged.")
+        return (
+            "Full-size public CDN file matches published dimensions but differs from the wiki original upload "
+            "checksum/size; downloaded bytes preserved unchanged."
+        )
     return None
 
 
@@ -396,16 +474,33 @@ def download(candidate, existing):
     if asset_id in existing:
         previous = existing[asset_id]
         path = ROOT / previous["path"]
-        if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == previous["sha256"] and previous.get("wiki_sha1") == info.get("sha1"):
+        if (
+            path.is_file()
+            and hashlib.sha256(path.read_bytes()).hexdigest() == previous["sha256"]
+            and previous.get("wiki_sha1") == info.get("sha1")
+        ):
             download_sha1 = hashlib.sha1(path.read_bytes()).hexdigest()
-            current = {key: value for key, value in previous.items()
-                       if key not in UPSTREAM_FIELDS + SONG_INDEX_FIELDS + ("delivery_note",)}
-            record = {**current, "kind": candidate["kind"], "song_titles": candidate["song_titles"],
-                      "collections": candidate["collections"], "related_pages": candidate["related_pages"],
-                      "download_sha1": download_sha1, "wiki_original_size_matches": path.stat().st_size == info["size"],
-                      "wiki_original_sha1_matches": download_sha1 == info.get("sha1")}
+            current = {
+                key: value
+                for key, value in previous.items()
+                if key not in UPSTREAM_FIELDS + SONG_INDEX_FIELDS + ("delivery_note",)
+            }
+            record = {
+                **current,
+                "kind": candidate["kind"],
+                "song_titles": candidate["song_titles"],
+                "collections": candidate["collections"],
+                "related_pages": candidate["related_pages"],
+                "download_sha1": download_sha1,
+                "wiki_original_size_matches": path.stat().st_size == info["size"],
+                "wiki_original_sha1_matches": download_sha1 == info.get("sha1"),
+            }
             record.update({field: candidate[field] for field in SONG_INDEX_FIELDS if candidate.get(field)})
-            note = delivery_note(previous.get("download_url", ""), record["wiki_original_size_matches"], record["wiki_original_sha1_matches"])
+            note = delivery_note(
+                previous.get("download_url", ""),
+                record["wiki_original_size_matches"],
+                record["wiki_original_sha1_matches"],
+            )
             if note:
                 record["delivery_note"] = note
             return record
@@ -447,25 +542,41 @@ def download(candidate, existing):
     (ROOT / relative).parent.mkdir(parents=True, exist_ok=True)
     (ROOT / relative).write_bytes(payload)
     record = {
-        "id": asset_id, "source_id": SOURCES[source]["id"],
+        "id": asset_id,
+        "source_id": SOURCES[source]["id"],
         "title": candidate["file_title"].split(":", 1)[-1].rsplit(".", 1)[0],
-        "kind": candidate["kind"], "page_url": info["descriptionurl"],
-        "download_url": url, "resolved_download_url": response.url, "wiki_original_url": info["url"],
-        "path": relative.as_posix(), "width": width, "height": height, "format": image_format,
-        "bytes": len(payload), "sha256": digest, "fetched_at": now(), "game": "DEEMO",
-        "content_type": response.headers.get("Content-Type"), "wiki_mime": info.get("mime"),
-        "wiki_sha1": info.get("sha1"), "wiki_timestamp": info.get("timestamp"),
+        "kind": candidate["kind"],
+        "page_url": info["descriptionurl"],
+        "download_url": url,
+        "resolved_download_url": response.url,
+        "wiki_original_url": info["url"],
+        "path": relative.as_posix(),
+        "width": width,
+        "height": height,
+        "format": image_format,
+        "bytes": len(payload),
+        "sha256": digest,
+        "fetched_at": now(),
+        "game": "DEEMO",
+        "content_type": response.headers.get("Content-Type"),
+        "wiki_mime": info.get("mime"),
+        "wiki_sha1": info.get("sha1"),
+        "wiki_timestamp": info.get("timestamp"),
         "download_sha1": hashlib.sha1(payload).hexdigest(),
         "wiki_original_size_matches": len(payload) == info["size"],
         "wiki_original_sha1_matches": hashlib.sha1(payload).hexdigest() == info.get("sha1"),
-        "song_titles": candidate["song_titles"], "collections": candidate["collections"],
-        "related_pages": candidate["related_pages"], "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
+        "song_titles": candidate["song_titles"],
+        "collections": candidate["collections"],
+        "related_pages": candidate["related_pages"],
+        "provenance": "Public community wiki upload; original creator/upload lineage not independently established.",
     }
     for field in ("artist", "variant_note", "mapping_method"):
         if field in candidate:
             record[field] = candidate[field]
     if width == 2 * height or height == 2 * width:
-        record["layout_note"] = "2:1 aspect ratio; may contain a texture atlas or combined artwork. Download preserved without cropping."
+        record["layout_note"] = (
+            "2:1 aspect ratio; may contain a texture atlas or combined artwork. Download preserved without cropping."
+        )
     if info.get("extmetadata"):
         record["wiki_extmetadata"] = info["extmetadata"]
     if attempted_failures:
@@ -500,7 +611,12 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
         if record is not None:
             if record["sha256"] != previous["sha256"]:
                 previous_id = f"{asset_id}:{previous['sha256'][:12]}"
-                merged[previous_id] = {**previous, "id": previous_id, "upstream_status": "superseded", "superseded_by": asset_id}
+                merged[previous_id] = {
+                    **previous,
+                    "id": previous_id,
+                    "upstream_status": "superseded",
+                    "superseded_by": asset_id,
+                }
         elif asset_id in failed_ids:
             merged[asset_id] = {**previous, "upstream_status": "fetch_failed"}
         elif asset_id in candidate_ids or previous.get("upstream_status") == "superseded":
@@ -511,8 +627,11 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
 
     def restored(record):
         canonical = merged.get(record.get("superseded_by"))
-        return (record.get("upstream_status") == "superseded" and canonical is not None
-                and (canonical["sha256"], canonical["path"]) == (record["sha256"], record["path"]))
+        return (
+            record.get("upstream_status") == "superseded"
+            and canonical is not None
+            and (canonical["sha256"], canonical["path"]) == (record["sha256"], record["path"])
+        )
 
     return [merged[asset_id] for asset_id in sorted(merged) if not restored(merged[asset_id])]
 
@@ -522,8 +641,12 @@ def resumed_sources(sources, snapshot):
     snapshot recorded them; for an older snapshot without statistics the previous ones are kept."""
     stats = snapshot.get("stats", {})
     keys = {SOURCES[key]["id"]: key for key in stats if key in SOURCES}
-    return [{**source, "discovery": {**stats[keys[source["id"]]], "snapshot_fetched_at": snapshot.get("fetched_at")}}
-            if source["id"] in keys else source for source in sources]
+    return [
+        {**source, "discovery": {**stats[keys[source["id"]]], "snapshot_fetched_at": snapshot.get("fetched_at")}}
+        if source["id"] in keys
+        else source
+        for source in sources
+    ]
 
 
 def write_json(relative, data):
@@ -547,40 +670,68 @@ def fetch_song_keys():
     url = "https://raw.githubusercontent.com/syuchan1005/DeemoSongs/master/DeemoSongs.json"
     response = get(url)
     data = response.json()
-    write_json("data/sources/song-mapping.json", {
-        "schema_version": 1, "fetched_at": now(),
-        "source_url": "https://github.com/syuchan1005/DeemoSongs", "download_url": url,
-        "sha256": hashlib.sha256(response.content).hexdigest(), "data": data,
-        "notes": "Public legacy game-key/song-title mapping; upstream data may predate later DEEMO releases. No art included.",
-        "license": "MIT", "license_path": "licenses/DeemoSongs-MIT.txt",
-    })
+    write_json(
+        "data/sources/song-mapping.json",
+        {
+            "schema_version": 1,
+            "fetched_at": now(),
+            "source_url": "https://github.com/syuchan1005/DeemoSongs",
+            "download_url": url,
+            "sha256": hashlib.sha256(response.content).hexdigest(),
+            "data": data,
+            "notes": "Public legacy game-key/song-title mapping; upstream data may predate later DEEMO releases. No art included.",
+            "license": "MIT",
+            "license_path": "licenses/DeemoSongs-MIT.txt",
+        },
+    )
 
 
 def fetch_illustrator_index(manifest):
-    source = {"id": "wikis:wikiwiki-illustrators", "name": "Japanese DEEMO Wiki illustrator directory",
-              "url": "https://wikiwiki.jp/deemo/アーティスト別リスト2", "status": "unavailable",
-              "notes": "Reference directory for illustrator provenance; availability is checked without authentication or challenge bypass."}
+    source = {
+        "id": "wikis:wikiwiki-illustrators",
+        "name": "Japanese DEEMO Wiki illustrator directory",
+        "url": "https://wikiwiki.jp/deemo/アーティスト別リスト2",
+        "status": "unavailable",
+        "notes": "Reference directory for illustrator provenance; availability is checked without authentication or challenge bypass.",
+    }
     try:
         response = get(source["url"])
         from bs4 import BeautifulSoup
+
         soup = BeautifulSoup(response.text, "html.parser")
         main = soup.select_one("#body") or soup.select_one("main") or soup
         rows = []
         for element in main.find_all(["h2", "h3", "h4", "tr"]):
-            rows.append({"type": element.name, "text": element.get_text(" ", strip=True),
-                         "links": [{"text": link.get_text(" ", strip=True), "url": link.get("href")} for link in element.find_all("a", href=True)]})
-        write_json("data/sources/wiki-illustrator-index.json", {"schema_version": 1, "fetched_at": now(),
-                   "source_url": source["url"], "rows": rows})
+            rows.append(
+                {
+                    "type": element.name,
+                    "text": element.get_text(" ", strip=True),
+                    "links": [
+                        {"text": link.get_text(" ", strip=True), "url": link.get("href")}
+                        for link in element.find_all("a", href=True)
+                    ],
+                }
+            )
+        write_json(
+            "data/sources/wiki-illustrator-index.json",
+            {"schema_version": 1, "fetched_at": now(), "source_url": source["url"], "rows": rows},
+        )
         source.update(status="complete", index_path="data/sources/wiki-illustrator-index.json")
     except Exception as error:
-        manifest["failures"].append({"source_id": source["id"], "url": source["url"], "error": str(error), "stage": "reference_index"})
+        manifest["failures"].append(
+            {"source_id": source["id"], "url": source["url"], "error": str(error), "stage": "reference_index"}
+        )
     manifest["sources"] = [s for s in manifest["sources"] if s["id"] != source["id"]] + [source]
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--metadata-only", action="store_true", help="Discover sources and metadata without downloading image bytes")
-    parser.add_argument("--resume", action="store_true", help="Reuse the saved discovery snapshot and verify/retry its image downloads")
+    parser.add_argument(
+        "--metadata-only", action="store_true", help="Discover sources and metadata without downloading image bytes"
+    )
+    parser.add_argument(
+        "--resume", action="store_true", help="Reuse the saved discovery snapshot and verify/retry its image downloads"
+    )
     parser.add_argument("--workers", type=int, default=4, choices=range(1, 5))
     args = parser.parse_args()
     manifest_path = ROOT / "data/sources/wikis.json"
@@ -604,15 +755,22 @@ def main():
         print(f"BWIKI: {len(bwiki_songs)} song pages, {len(bwiki)} image candidates", flush=True)
         stats, discovered_at = {"fandom": fandom_stats, "bwiki": bwiki_stats}, now()
         for source in ("fandom", "bwiki"):
-            manifest["sources"].append({**SOURCES[source], "status": "discovered",
-                                        "discovery": {**stats[source], "snapshot_fetched_at": discovered_at},
-                                        "notes": "Only original DEEMO and its ports. DEEMO II categories, audio, charts, screenshots and unrelated UI are excluded."})
+            manifest["sources"].append(
+                {
+                    **SOURCES[source],
+                    "status": "discovered",
+                    "discovery": {**stats[source], "snapshot_fetched_at": discovered_at},
+                    "notes": "Only original DEEMO and its ports. DEEMO II categories, audio, charts, screenshots and unrelated UI are excluded.",
+                }
+            )
         songs = fandom_songs + bwiki_songs
         write_json("data/sources/wiki-song-index.json", {"schema_version": 1, "fetched_at": now(), "songs": songs})
         candidates = with_composers(with_collection_aliases(fandom + bwiki, songs), songs)
         # The statistics travel with the snapshot, so a later --resume can describe the enumeration it resumes.
-        write_json("data/sources/wiki-discovery.json", {"schema_version": 1, "fetched_at": discovered_at, "stats": stats,
-                                                         "candidates": candidates})
+        write_json(
+            "data/sources/wiki-discovery.json",
+            {"schema_version": 1, "fetched_at": discovered_at, "stats": stats, "candidates": candidates},
+        )
     if args.metadata_only:
         if not manifest_path.exists():
             write_json("data/sources/wikis.json", manifest)
@@ -637,10 +795,18 @@ def main():
                 results[record["id"]] = record
             except Exception as error:
                 failed_ids.add(candidate_id(item))
-                manifest["failures"].append({"source_id": SOURCES[item["source"]]["id"], "url": item["info"]["url"],
-                                             "title": item["file_title"], "error": str(error)})
+                manifest["failures"].append(
+                    {
+                        "source_id": SOURCES[item["source"]]["id"],
+                        "url": item["info"]["url"],
+                        "title": item["file_title"],
+                        "error": str(error),
+                    }
+                )
             if index % 25 == 0 or index == len(candidates):
-                print(f"Downloaded/verified {index}/{len(candidates)}; failures={len(manifest['failures'])}", flush=True)
+                print(
+                    f"Downloaded/verified {index}/{len(candidates)}; failures={len(manifest['failures'])}", flush=True
+                )
                 # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest.
                 manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
                 manifest["failures"].sort(key=failure_key)  # completion order varies between runs
@@ -655,9 +821,17 @@ def main():
     manifest["assets"].sort(key=lambda row: row["id"])
     manifest["failures"].sort(key=failure_key)
     write_json("data/sources/wikis.json", manifest)
-    print(json.dumps({"assets": len(manifest["assets"]), "failures": len(manifest["failures"]),
-                      "bytes": sum(x["bytes"] for x in manifest["assets"]),
-                      "kinds": dict(Counter(x["kind"] for x in manifest["assets"]))}), flush=True)
+    print(
+        json.dumps(
+            {
+                "assets": len(manifest["assets"]),
+                "failures": len(manifest["failures"]),
+                "bytes": sum(x["bytes"] for x in manifest["assets"]),
+                "kinds": dict(Counter(x["kind"] for x in manifest["assets"])),
+            }
+        ),
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

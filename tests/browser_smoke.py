@@ -31,7 +31,9 @@ NOTICE_URL = "https://github.com/FridrichMethod/deemo/blob/main/NOTICE"
 # Withdrawn for licensing reasons: their @font-face rules name only local() fonts, so nothing may request the files.
 REMOVED_FONTS = ("assets/site/fonts/COPRGTL.ttf", "assets/site/fonts/RocknRoll_Typo_bold.ttf")
 HAS_HAN = "(text) => /[\\u3400-\\u9fff]/.test(text)"
-IMAGE_SHOWN = "(() => { const img = document.getElementById('full-image'); return img.complete && img.naturalWidth > 0; })()"
+IMAGE_SHOWN = (
+    "(() => { const img = document.getElementById('full-image'); return img.complete && img.naturalWidth > 0; })()"
+)
 PARAGRAPHS = "[...document.querySelectorAll('#provenance p')].map((p) => p.textContent)"
 SHOWN_ID = "imgTargets[slideIndex - 1].dataset.id"
 SLIDE_SHOWN = "imgTargets[slideIndex - 1].naturalWidth > 0 && imgTargets[slideIndex - 1].closest('.mySlides').classList.contains('is-current')"
@@ -46,9 +48,15 @@ SHORT_PORTRAIT = [(375, 553), (360, 568), (320, 454)]
 PIXEL = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")
 # Controls by role and the message key of their accessible name.
 NAMED_CONTROLS = [
-    ("button", "slideshow.nav.prev"), ("button", "slideshow.nav.next"), ("button", "slideshow.screenshot.take"),
-    ("button", "slideshow.music.label"), ("button", "slideshow.autoplay.label"), ("button", "lang.toggle"),
-    ("link", "slideshow.github.label"), ("link", "slideshow.archive.text"), ("link", "slideshow.attribution"),
+    ("button", "slideshow.nav.prev"),
+    ("button", "slideshow.nav.next"),
+    ("button", "slideshow.screenshot.take"),
+    ("button", "slideshow.music.label"),
+    ("button", "slideshow.autoplay.label"),
+    ("button", "lang.toggle"),
+    ("link", "slideshow.github.label"),
+    ("link", "slideshow.archive.text"),
+    ("link", "slideshow.attribution"),
 ]
 # Liner-notes titles ([text, data-length]) of wiki slides: a title that is only the file's key gives the headline
 # to the mapped song and follows as a quiet file reference; a key that is the song's name stays the headline.
@@ -77,8 +85,10 @@ def title_words(text):
 
 def names_song(title, song):
     """Whether a title names a song: the same letters and digits, or the words of either running whole in the other's."""
+
     def runs_within(part, whole):
-        return any(whole[start:start + len(part)] == part for start in range(len(whole) - len(part) + 1))
+        return any(whole[start : start + len(part)] == part for start in range(len(whole) - len(part) + 1))
+
     a, b = title_words(title), title_words(song)
     return bool(a and b) and ("".join(a) == "".join(b) or runs_within(a, b) or runs_within(b, a))
 
@@ -114,7 +124,9 @@ class Monitor:
         def failed(request):
             pending.discard(request)
             aborted = request.failure == "net::ERR_ABORTED"
-            if aborted and (request in self.released or (request.resource_type == "media" and request in self.answered)):
+            if aborted and (
+                request in self.released or (request.resource_type == "media" and request in self.answered)
+            ):
                 return
             if not self.deliberate(request.url):
                 self.problems.append(f"request failed ({request.failure}): {request.url}")
@@ -161,8 +173,16 @@ class Monitor:
         self.pending[page].clear()
 
     def verdict(self):
-        external = [url for url in self.urls if urlparse(url).scheme in {"http", "https"} and urlparse(url).hostname not in {"127.0.0.1", "localhost"}]
-        outside_mount = [url for url in self.urls if urlparse(url).scheme in {"http", "https"} and not urlparse(url).path.startswith(mount_path)]
+        external = [
+            url
+            for url in self.urls
+            if urlparse(url).scheme in {"http", "https"} and urlparse(url).hostname not in {"127.0.0.1", "localhost"}
+        ]
+        outside_mount = [
+            url
+            for url in self.urls
+            if urlparse(url).scheme in {"http", "https"} and not urlparse(url).path.startswith(mount_path)
+        ]
         assert not external, external
         assert not outside_mount, outside_mount
         assert not self.problems, "\n".join(self.problems)
@@ -202,7 +222,9 @@ def catalog_count(page, predicate):
 
 
 def card_sizes(page):
-    return page.evaluate("[...document.querySelectorAll('.card-image img')].map((img) => [+img.getAttribute('width'), +img.getAttribute('height')])")
+    return page.evaluate(
+        "[...document.querySelectorAll('.card-image img')].map((img) => [+img.getAttribute('width'), +img.getAttribute('height')])"
+    )
 
 
 def check_archive(page):
@@ -247,7 +269,9 @@ def check_archive(page):
     page.locator("#sort").select_option("resolution")
     areas = [width * height for width, height in card_sizes(page)]
     assert areas == sorted(areas, reverse=True) and len(areas) == min(60, total)
-    assert areas[0] == page.evaluate("Math.max(...window.DEEMO_CATALOG.assets.filter((a) => a.gallery).map((a) => a.width * a.height))")
+    assert areas[0] == page.evaluate(
+        "Math.max(...window.DEEMO_CATALOG.assets.filter((a) => a.gallery).map((a) => a.width * a.height))"
+    )
     checks.extend(["source/kind/size filters match the catalog", "pixel-area sort"])
     page.locator("#reset-filters").click()
     page.locator("#family").select_option("legacy")
@@ -262,7 +286,9 @@ def check_archive(page):
     # The copy shares its basename with the original, so its role goes into the saved name.
     assert variant_link.get_attribute("download") == "magnolia-palette-quantized.png"
     assert page.locator("#download").get_attribute("download") == "magnolia.png"
-    variant = page.evaluate("window.DEEMO_CATALOG.assets.flatMap(a => a.provenance.flatMap(p => p.variants || [])).find(v => v.id === 'legacy:tiny:magnolia')")
+    variant = page.evaluate(
+        "window.DEEMO_CATALOG.assets.flatMap(a => a.provenance.flatMap(p => p.variants || [])).find(v => v.id === 'legacy:tiny:magnolia')"
+    )
     assert variant
     assert urlparse(mounted_url(variant_href)).path == urlparse(mounted_url(variant["url"])).path
     response = page.request.get(mounted_url(variant_href))
@@ -347,7 +373,9 @@ def check_language_before_catalog(browser):
     assert page.evaluate("window.DEEMO_CATALOG === undefined"), "data/catalog.js is still held back"
     assert page.locator("[data-lang-toggle]").inner_text() == "English"
     page.locator("[data-lang-toggle]").click()
-    assert page.evaluate("[DEEMO_I18N.lang, document.documentElement.lang]") == ["en", "en"], "The toggle goes where its label points"
+    assert page.evaluate("[DEEMO_I18N.lang, document.documentElement.lang]") == ["en", "en"], (
+        "The toggle goes where its label points"
+    )
     for route in held:
         route.continue_()
     page.wait_for_selector(".card")
@@ -361,11 +389,17 @@ def check_language_before_catalog(browser):
     navigate(page, "archive.html?lang=zh-CN")
     page.wait_for_selector(".card")
     toggle = page.locator("[data-lang-toggle]")
-    for lang, label, title in (("zh-CN", "English", "Switch to English"), ("en", "中文", "Switch to Simplified Chinese"),
-                               ("zh-CN", "English", "Switch to English")):
+    for lang, label, title in (
+        ("zh-CN", "English", "Switch to English"),
+        ("en", "中文", "Switch to Simplified Chinese"),
+        ("zh-CN", "English", "Switch to English"),
+    ):
         assert page.evaluate("DEEMO_I18N.lang") == lang, lang
-        assert [toggle.inner_text(), toggle.get_attribute("title"), toggle.locator("span").get_attribute("lang")] == \
-            [label, title, "en" if lang == "zh-CN" else "zh-CN"], (lang, toggle.inner_text())
+        assert [toggle.inner_text(), toggle.get_attribute("title"), toggle.locator("span").get_attribute("lang")] == [
+            label,
+            title,
+            "en" if lang == "zh-CN" else "zh-CN",
+        ], (lang, toggle.inner_text())
         toggle.click()
     finish(page)
     checks.append("translations before the catalog loads; toggle follows its label, also without common.js")
@@ -400,7 +434,13 @@ def check_search_folding(browser):
     folding ignores the browser locale (Turkish lowercases I to a dotless i). A colon stays in its term, so a colon
     prefix finds fewer images than the bare word, while the words after it stay separate terms."""
     counts = {}
-    folded = [("magnolia", "Ｍａｇｎｏｌｉａ"), ("まとめ", "マトメ"), ("まとめ", "ﾏﾄﾒ"), ("Re: the Full moon", "Re：the Full moon"), ("AD:PIANO", "AD：PIANO")]
+    folded = [
+        ("magnolia", "Ｍａｇｎｏｌｉａ"),
+        ("まとめ", "マトメ"),
+        ("まとめ", "ﾏﾄﾒ"),
+        ("Re: the Full moon", "Re：the Full moon"),
+        ("AD:PIANO", "AD：PIANO"),
+    ]
     cased = ["ice collection", "ICE COLLECTION", "In a cradle"]
     colon = ["Re", "Re:", "L", "L:", "Re: the", "Re:the", "Re : the", "Re: Full moon", "L: The Lower", "L: Lower"]
     for locale in ("en-US", "tr-TR"):
@@ -409,7 +449,9 @@ def check_search_folding(browser):
         page.wait_for_selector(".card")
         if locale == "tr-TR":
             # (V8 lowercases a short ASCII string without the locale; the kana sends this one through it.)
-            assert page.evaluate("'Ice ころ'.toLocaleLowerCase()") == "ıce ころ", "The Turkish context lowercases I to a dotless i"
+            assert page.evaluate("'Ice ころ'.toLocaleLowerCase()") == "ıce ころ", (
+                "The Turkish context lowercases I to a dotless i"
+            )
         for query in [query for pair in folded for query in pair] + cased + (colon if locale == "en-US" else []):
             page.locator("#query").fill(query)
             counts[locale, query] = shown_count(page)
@@ -422,7 +464,9 @@ def check_search_folding(browser):
     # Every term must match, so a colon prefix can only narrow the bare word, and here it must ("Re:" is not every
     # "re"); leaving out a word can only widen a query ("Re: Full moon" still finds "Re: the Full moon").
     assert 0 < count["Re:"] < count["Re"] and 0 < count["L:"] < count["L"], count
-    assert count["Re: Full moon"] >= count["Re: the Full moon"] > 0 and count["L: Lower"] >= count["L: The Lower"] > 0, count
+    assert (
+        count["Re: Full moon"] >= count["Re: the Full moon"] > 0 and count["L: Lower"] >= count["L: The Lower"] > 0
+    ), count
     assert count["Re:the"] == count["Re : the"] == count["Re: the"] > 0, count
     checks.append("search folds full-width, kana and colon forms in any locale; colon terms")
 
@@ -478,14 +522,18 @@ def check_deep_link_filters(browser):
     # Values that match no option are ignored, so each select keeps showing the default it applies.
     navigate(page, "archive.html?minimum=4000&sort=bogus&family=nope&kind=x")
     page.wait_for_selector(".card")
-    state = page.evaluate("Object.fromEntries(['minimum', 'sort', 'family', 'kind'].map((id) => [id, [document.getElementById(id).value, document.getElementById(id).selectedIndex]]))")
+    state = page.evaluate(
+        "Object.fromEntries(['minimum', 'sort', 'family', 'kind'].map((id) => [id, [document.getElementById(id).value, document.getElementById(id).selectedIndex]]))"
+    )
     assert state == {"minimum": ["0", 0], "sort": ["source", 0], "family": ["", 0], "kind": ["", 0]}, state
     assert shown_count(page) == catalog_count(page, "() => true")
     # Title sort compares numbers as numbers: page 2 before page 10.
     prefix = "AD:PIANO Collection 2 — page "
     navigate(page, "archive.html?sort=title&query=" + quote(prefix.split(" — ")[0]))
     page.wait_for_selector(".card")
-    pages = [int(title[len(prefix):]) for title in page.locator(".card h2").all_inner_texts() if title.startswith(prefix)]
+    pages = [
+        int(title[len(prefix) :]) for title in page.locator(".card h2").all_inner_texts() if title.startswith(prefix)
+    ]
     assert len(pages) == catalog_count(page, f"(a) => a.title.startsWith({json.dumps(prefix)})") >= 10, pages
     assert pages == sorted(pages), pages
     finish(page)
@@ -532,11 +580,20 @@ def check_no_repeated_names(browser):
         navigate(page, f"archive.html?lang={lang}")
         page.wait_for_selector(".card")
         lines = page.evaluate("[...document.querySelectorAll('.card')].map((card) => card.children[3].textContent)")
-        repeated = [line for line in lines if len(line.split(" · ")) == 2 and line.split(" · ")[1].startswith(line.split(" · ")[0])]
+        repeated = [
+            line
+            for line in lines
+            if len(line.split(" · ")) == 2 and line.split(" · ")[1].startswith(line.split(" · ")[0])
+        ]
         assert not repeated, (lang, repeated[:3])
-        assert any(" / " in line and " · " not in line for line in lines), (lang, lines[:5])  # Jimdo: "artist / artist — ..."
+        assert any(" / " in line and " · " not in line for line in lines), (
+            lang,
+            lines[:5],
+        )  # Jimdo: "artist / artist — ..."
         page.locator(".source-inventory summary").first.click()
-        rows = page.evaluate("[...document.querySelectorAll('#references p')].map((row) => [...row.querySelectorAll('a')].map((link) => link.textContent))")
+        rows = page.evaluate(
+            "[...document.querySelectorAll('#references p')].map((row) => [...row.querySelectorAll('a')].map((link) => link.textContent))"
+        )
         assert rows and all(len(links) == 2 and not links[0].startswith(links[1]) for links in rows), (lang, rows)
         finish(page)
     checks.append("no artist or reference title shown twice, in both languages")
@@ -556,7 +613,11 @@ def check_inventory_table(browser):
                 const scroll = document.querySelector('.table-scroll'), headers = [...document.querySelectorAll('.source-inventory th')];
                 return {records: lines(headers[1]), notes: Math.round(headers[2].getBoundingClientRect().width), scroll: [scroll.scrollWidth, scroll.clientWidth],
                         overflowing: [...document.querySelectorAll('.source-inventory th, .source-inventory td')].filter((cell) => cell.scrollWidth > cell.clientWidth + 1).map((cell) => cell.textContent.slice(0, 40))}; }""")
-            assert table["records"] == 1 and table["scroll"][0] <= table["scroll"][1] and not table["overflowing"], (lang, width, table)
+            assert table["records"] == 1 and table["scroll"][0] <= table["scroll"][1] and not table["overflowing"], (
+                lang,
+                width,
+                table,
+            )
             assert table["notes"] >= min(width / 3, 300), (lang, width, table)
             finish(page)
     checks.append("source inventory fits 375 and 1440 px wide in both languages")
@@ -568,7 +629,9 @@ def check_without_javascript(browser):
     page = new_page(browser, 375, 667, java_script_enabled=False)
     navigate(page, "archive.html")
     notice = page.locator(".noscript")
-    assert notice.is_visible() and notice.bounding_box()["y"] + notice.bounding_box()["height"] <= 667, notice.bounding_box()
+    assert notice.is_visible() and notice.bounding_box()["y"] + notice.bounding_box()["height"] <= 667, (
+        notice.bounding_box()
+    )
     assert "JavaScript" in notice.inner_text() and "需要 JavaScript" in notice.inner_text()
     assert not page.locator("#count").is_visible() and not page.get_by_text("Loading local catalog").is_visible()
     finish(page)
@@ -594,7 +657,9 @@ def check_viewer_provenance(browser):
             for label, text in record["expected"]:
                 assert text in record["shown"], (lang, record)
                 assert lang == "en" or page.evaluate(HAS_HAN, text), (lang, text)
-                seen.add("composer" if label == "composer" else "wiki class" if label == "class wiki" else "other class")
+                seen.add(
+                    "composer" if label == "composer" else "wiki class" if label == "class wiki" else "other class"
+                )
         page.locator("#next").click()
     assert seen == {"composer", "wiki class", "other class"}, seen
     page.keyboard.press("Escape")
@@ -606,7 +671,10 @@ def check_viewer_provenance(browser):
     blocks = {}
     # The language alternates, so every read follows a redraw of the open viewer (or its first drawing).
     for status in (None, "removed"):
-        page.evaluate(f"(status) => {{ if (status) {target}.upstream_status = status; else delete {target}.upstream_status; }}", status)
+        page.evaluate(
+            f"(status) => {{ if (status) {target}.upstream_status = status; else delete {target}.upstream_status; }}",
+            status,
+        )
         for lang in ("zh-CN", "en"):
             page.evaluate("(lang) => DEEMO_I18N.setLang(lang)", lang)
             blocks[status, lang] = page.evaluate(PARAGRAPHS)
@@ -639,13 +707,18 @@ def check_previews(browser):
     assert all(src == (thumb or url) for src, thumb, url in cards), cards[:3]
     originals = {urlparse(mounted_url(cards[index][2])).path for index in previewed}
     assert not originals & set(requested), sorted(originals & set(requested))[:3]
-    image_bytes = page.evaluate("performance.getEntriesByType('resource').filter((e) => e.initiatorType === 'img').reduce((sum, e) => sum + e.encodedBodySize, 0)")
+    image_bytes = page.evaluate(
+        "performance.getEntriesByType('resource').filter((e) => e.initiatorType === 'img').reduce((sum, e) => sum + e.encodedBodySize, 0)"
+    )
     assert 0 < image_bytes < 2_000_000, f"The first screen of the grid loaded {image_bytes} bytes of images"
     first = previewed[0]
     page.locator(".card-image").nth(first).click()
     page.wait_for_function(IMAGE_SHOWN)
     url = cards[first][2]
-    assert urlparse(page.evaluate("document.getElementById('full-image').currentSrc")).path == urlparse(mounted_url(url)).path
+    assert (
+        urlparse(page.evaluate("document.getElementById('full-image').currentSrc")).path
+        == urlparse(mounted_url(url)).path
+    )
     assert page.locator("#download").get_attribute("href") == url == page.locator("#original").get_attribute("href")
     assert urlparse(mounted_url(url)).path in requested
     finish(page)
@@ -655,17 +728,26 @@ def check_previews(browser):
     monitor.expect(preview)
     page.route(preview, lambda route: route.abort())
     navigate(page, "archive.html")
-    page.wait_for_function("(index) => { const img = document.querySelectorAll('.card-image img')[index]; return img.complete && img.naturalWidth > 0; }", arg=first, timeout=10_000)
+    page.wait_for_function(
+        "(index) => { const img = document.querySelectorAll('.card-image img')[index]; return img.complete && img.naturalWidth > 0; }",
+        arg=first,
+        timeout=10_000,
+    )
     assert page.locator(".card-image img").nth(first).get_attribute("src") == cards[first][2]
     finish(page)
-    checks.append(f"grid previews ({image_bytes} bytes of images on the first screen), originals in the viewer, fallback")
+    checks.append(
+        f"grid previews ({image_bytes} bytes of images on the first screen), originals in the viewer, fallback"
+    )
 
 
 def check_attribution(browser):
     """Both pages link "Attribution" to the rendered NOTICE, in both languages."""
     for lang in ("en", "zh-CN"):
         page = new_page(browser)
-        for relative, link in (("archive.html", "footer a[data-i18n='footer.attribution']"), ("index.html?asset=legacy%3Amagnolia", ".signature a[data-i18n='slideshow.attribution']")):
+        for relative, link in (
+            ("archive.html", "footer a[data-i18n='footer.attribution']"),
+            ("index.html?asset=legacy%3Amagnolia", ".signature a[data-i18n='slideshow.attribution']"),
+        ):
             navigate(page, f"{relative}{'&' if '?' in relative else '?'}lang={lang}")
             assert page.locator(link).count() == 1, (relative, link)
             label = page.evaluate("(key) => DEEMO_I18N.t(key)", page.locator(link).get_attribute("data-i18n"))
@@ -686,14 +768,20 @@ def check_removed_files(page):
         assert page.request.get(mounted_url(path)).status == 404, path
     navigate(page, "index.html")
     page.wait_for_function("window.DEEMO_I18N && imgTargets.length > 0")
-    slides = page.evaluate("[...imgTargets].filter((img) => /titletab/i.test(`${img.dataset.src} ${img.dataset.title} ${img.dataset.id}`)).map((img) => img.dataset.id)")
+    slides = page.evaluate(
+        "[...imgTargets].filter((img) => /titletab/i.test(`${img.dataset.src} ${img.dataset.title} ${img.dataset.id}`)).map((img) => img.dataset.id)"
+    )
     assert not slides, slides
     navigate(page, "archive.html")
     page.wait_for_selector(".card")
-    sprites = page.evaluate("window.DEEMO_CATALOG.assets.filter((a) => /titletab/i.test(JSON.stringify(a))).map((a) => a.id)")
+    sprites = page.evaluate(
+        "window.DEEMO_CATALOG.assets.filter((a) => /titletab/i.test(JSON.stringify(a))).map((a) => a.id)"
+    )
     assert not sprites, sprites
     # They were 70 x 47 UI tabs imported as collection covers.
-    icons = catalog_count(page, "(a) => a.provenance.some((p) => p.kind === 'collection_cover') && Math.max(a.width, a.height) < 100")
+    icons = catalog_count(
+        page, "(a) => a.provenance.some((p) => p.kind === 'collection_cover') && Math.max(a.width, a.height) < 100"
+    )
     assert icons == 0, icons
     checks.append("no removed fonts requested or served; no title-tab sprites")
 
@@ -729,9 +817,16 @@ def check_slideshow_controls(browser):
             assert page.get_by_role(role, name=name, exact=True).count() == 1, (lang, role, name)
             assert key == "lang.toggle" or (lang == "zh-CN") == page.evaluate(HAS_HAN, name), (lang, name)
         # The overlay's buttons are hidden while it is closed, so read their labels.
-        labels = page.locator("#screenshot button").evaluate_all("(buttons) => buttons.map((button) => button.getAttribute('aria-label'))")
-        expected = page.evaluate("[DEEMO_I18N.t('slideshow.screenshot.save'), DEEMO_I18N.t('slideshow.screenshot.close')]")
-        assert labels == expected and all((lang == "zh-CN") == page.evaluate(HAS_HAN, label) for label in labels), (lang, labels)
+        labels = page.locator("#screenshot button").evaluate_all(
+            "(buttons) => buttons.map((button) => button.getAttribute('aria-label'))"
+        )
+        expected = page.evaluate(
+            "[DEEMO_I18N.t('slideshow.screenshot.save'), DEEMO_I18N.t('slideshow.screenshot.close')]"
+        )
+        assert labels == expected and all((lang == "zh-CN") == page.evaluate(HAS_HAN, label) for label in labels), (
+            lang,
+            labels,
+        )
         finish(page)
     page = open_slideshow(browser, "asset=legacy%3Amagnolia")
     page.evaluate("document.activeElement.blur()")
@@ -748,8 +843,11 @@ def check_slideshow_controls(browser):
     row = []
     for _ in range(40):
         page.keyboard.press("Tab")
-        stop = page.evaluate("""(names) => { const control = document.activeElement.closest(names.map((name) => '.' + name).join(', '));
-            return control && [control.classList[0], document.activeElement.getBoundingClientRect().left]; }""", BOTTOM_ROW)
+        stop = page.evaluate(
+            """(names) => { const control = document.activeElement.closest(names.map((name) => '.' + name).join(', '));
+            return control && [control.classList[0], document.activeElement.getBoundingClientRect().left]; }""",
+            BOTTOM_ROW,
+        )
         if stop and stop[0] not in [name for name, _ in row]:
             row.append(stop)
         if len(row) == len(BOTTOM_ROW):
@@ -763,7 +861,9 @@ def check_slideshow_controls(browser):
     clock.click()
     assert [clock.get_attribute("aria-pressed"), page.evaluate("randomFlag")] == ["false", 1]
     finish(page)
-    checks.extend(["slideshow control names in both languages", "arrow keys", "bottom-row focus order", "sand clock state"])
+    checks.extend(
+        ["slideshow control names in both languages", "arrow keys", "bottom-row focus order", "sand clock state"]
+    )
 
 
 def check_screenshot_overlay(browser):
@@ -799,11 +899,17 @@ def check_screenshot_overlay(browser):
                 page.wait_for_function(f"({HITS})(document.querySelector({json.dumps(control)}))", timeout=5000)
             except PlaywrightTimeoutError:
                 raise AssertionError((width, height, control, page.locator(control).evaluate(OBSTACLE))) from None
-        assert hit(page, "#screenshot .save button"), (width, height, page.locator("#screenshot .save button").evaluate(OBSTACLE))
+        assert hit(page, "#screenshot .save button"), (
+            width,
+            height,
+            page.locator("#screenshot .save button").evaluate(OBSTACLE),
+        )
         page.keyboard.press("Escape")
         assert not page.evaluate(overlay_open)
     finish(page)
-    checks.append("screenshot overlay: no URL state, Escape, focus return; Save and close clear of the preview at 568x320, 667x375, 844x390")
+    checks.append(
+        "screenshot overlay: no URL state, Escape, focus return; Save and close clear of the preview at 568x320, 667x375, 844x390"
+    )
 
 
 def check_slide_hit_testing(browser):
@@ -850,10 +956,15 @@ def check_small_screens(browser):
     finish(page)
     # A landscape phone keeps the artist credit on screen, above the control row.
     page = open_slideshow(browser, "asset=artists%3Ajimdo%3Akolokolsan%3Aglaciology", 844, 390)
-    page.wait_for_function("document.querySelector('.slide-notes dd.notes-artist')?.checkVisibility({opacityProperty: true})", timeout=5000)
-    credit = page.evaluate("""(names) => { const dd = document.querySelector('.slide-notes dd.notes-artist'), box = dd.getBoundingClientRect();
+    page.wait_for_function(
+        "document.querySelector('.slide-notes dd.notes-artist')?.checkVisibility({opacityProperty: true})", timeout=5000
+    )
+    credit = page.evaluate(
+        """(names) => { const dd = document.querySelector('.slide-notes dd.notes-artist'), box = dd.getBoundingClientRect();
         const row = Math.min(...names.map((name) => document.querySelector('.' + name).getBoundingClientRect().top));
-        return {text: dd.textContent, artist: imgTargets[slideIndex - 1].dataset.artist.replace(/\\n/g, ''), top: box.top, bottom: box.bottom, row}; }""", BOTTOM_ROW)
+        return {text: dd.textContent, artist: imgTargets[slideIndex - 1].dataset.artist.replace(/\\n/g, ''), top: box.top, bottom: box.bottom, row}; }""",
+        BOTTOM_ROW,
+    )
     assert credit["text"] == credit["artist"] and 0 <= credit["top"] and credit["bottom"] <= credit["row"], credit
     finish(page)
     # Short portrait phones keep the artwork at least as tall as the notes and caption below it.
@@ -864,8 +975,16 @@ def check_small_screens(browser):
             return {art: art.height, text: document.querySelector('.asset-caption').getBoundingClientRect().bottom - notes.top}; }""")
         assert sizes["art"] >= sizes["text"] > 0, (width, height, sizes)
     finish(page)
-    landscape, portrait = (", ".join(f"{width}x{height}" for width, height in viewports) for viewports in (SHORT_LANDSCAPE, SHORT_PORTRAIT))
-    checks.extend([f"both arrows clear of the toggle at {landscape}", "artist credit at 844x390", f"artwork dominant at {portrait}"])
+    landscape, portrait = (
+        ", ".join(f"{width}x{height}" for width, height in viewports) for viewports in (SHORT_LANDSCAPE, SHORT_PORTRAIT)
+    )
+    checks.extend(
+        [
+            f"both arrows clear of the toggle at {landscape}",
+            "artist credit at 844x390",
+            f"artwork dominant at {portrait}",
+        ]
+    )
 
 
 def check_caption_clear_of_controls(browser):
@@ -874,10 +993,14 @@ def check_caption_clear_of_controls(browser):
     width, height = SHORT_LANDSCAPE[0]
     for lang in ("en", "zh-CN"):
         page = new_page(browser, width, height, reduced_motion="reduce")
-        page.route(re.compile(r"/assets/(public|legacy)/"), lambda route: route.fulfill(status=200, content_type="image/png", body=PIXEL))
+        page.route(
+            re.compile(r"/assets/(public|legacy)/"),
+            lambda route: route.fulfill(status=200, content_type="image/png", body=PIXEL),
+        )
         navigate(page, f"index.html?asset=legacy%3Amagnolia&lang={lang}")
         page.wait_for_function("document.querySelector('.deemo-view').style.opacity === '1'")
-        covered = page.evaluate("""(names) => { const covered = [];
+        covered = page.evaluate(
+            """(names) => { const covered = [];
             for (let step = 0; step < imgTargets.length; step++) {
                 plusSlides(1);
                 const caption = document.querySelector('.asset-caption').getBoundingClientRect();
@@ -885,7 +1008,9 @@ def check_caption_clear_of_controls(browser):
                     return box.top < caption.bottom && box.bottom > caption.top && box.left < caption.right && box.right > caption.left; });
                 if (under.length) covered.push([imgTargets[slideIndex - 1].dataset.id, Math.round(caption.bottom), under]);
             }
-            return [covered, slideIndex]; }""", BOTTOM_ROW)
+            return [covered, slideIndex]; }""",
+            BOTTOM_ROW,
+        )
         start = page.evaluate("[...imgTargets].findIndex((img) => img.dataset.id === 'legacy:magnolia') + 1")
         assert covered[1] == start, (lang, covered[1], start)  # once round the whole show
         assert not covered[0], (lang, width, height, covered[0])
@@ -897,7 +1022,9 @@ def check_liner_notes(browser):
     page = new_page(browser)
     for asset_id, titles in NOTES_CASES.items():
         navigate(page, "index.html?asset=" + quote(asset_id))
-        page.wait_for_function(f"{SHOWN_ID} === {json.dumps(asset_id)} && document.querySelector('.slide-notes .notes-title') !== null")
+        page.wait_for_function(
+            f"{SHOWN_ID} === {json.dumps(asset_id)} && document.querySelector('.slide-notes .notes-title') !== null"
+        )
         assert page.evaluate(NOTES_TITLES) == titles, (asset_id, page.evaluate(NOTES_TITLES))
     # Across the whole show, no wiki slide with mapped songs gets a file-styled headline, and a headline that is the
     # slide's own title names one of its songs; otherwise the songs are the headline and the title follows as a key.
@@ -907,9 +1034,18 @@ def check_liner_notes(browser):
     assert slides, "No wiki slides with mapped songs"
     styled = [asset_id for asset_id, _, _, titles in slides if titles[0][1] == "file"]
     assert not styled, styled
-    wrong = [(asset_id, titles) for asset_id, title, songs, titles in slides
-             if not (len(titles) == 1 and titles[0][0] == title and any(names_song(title, song) for song in songs)
-                     or len(titles) == 2 and titles[0][0] == " / ".join(songs) and titles[1] == [title, "file"])]
+    wrong = [
+        (asset_id, titles)
+        for asset_id, title, songs, titles in slides
+        if not (
+            len(titles) == 1
+            and titles[0][0] == title
+            and any(names_song(title, song) for song in songs)
+            or len(titles) == 2
+            and titles[0][0] == " / ".join(songs)
+            and titles[1] == [title, "file"]
+        )
+    ]
     assert not wrong, wrong
     finish(page)
     checks.append("liner notes headline the mapped song for a wiki file key")
@@ -925,12 +1061,26 @@ def check_composer_credits(browser):
         page = open_slideshow(browser, f"asset={quote('wikis:bwiki:e339d70947111b67')}&lang={lang}")
         page.wait_for_function("document.querySelector('.slide-notes dt') !== null")
         lines = page.evaluate("imgTargets[slideIndex - 1].dataset.composer.split('\\n')")
-        credit = page.evaluate("""(lines) => DEEMO_I18N.t('slideshow.notes.composer_source', {source: JSON.parse(imgTargets[slideIndex - 1].dataset.composerSources)[1][0][1]})""", lines)
-        assert len(lines) == 2 and "Fandom" in credit and (lang == "zh-CN") == page.evaluate(HAS_HAN, credit), (lang, lines, credit)
-        assert page.evaluate(music) == [["#text", lines[0]], ["#text", lines[1]], ["SPAN", credit]], (lang, page.evaluate(music))
+        credit = page.evaluate(
+            """(lines) => DEEMO_I18N.t('slideshow.notes.composer_source', {source: JSON.parse(imgTargets[slideIndex - 1].dataset.composerSources)[1][0][1]})""",
+            lines,
+        )
+        assert len(lines) == 2 and "Fandom" in credit and (lang == "zh-CN") == page.evaluate(HAS_HAN, credit), (
+            lang,
+            lines,
+            credit,
+        )
+        assert page.evaluate(music) == [["#text", lines[0]], ["#text", lines[1]], ["SPAN", credit]], (
+            lang,
+            page.evaluate(music),
+        )
         # A localized source name replaces the recorded one, as it does in the caption.
-        page.evaluate("""() => { DEEMO_I18N.register({'en': {'source.wikis:fandom': 'Smoke Fandom'}, 'zh-CN': {'source.wikis:fandom': 'Smoke 维基'}}); renderNotes(); }""")
-        localized = page.evaluate("DEEMO_I18N.t('slideshow.notes.composer_source', {source: DEEMO_I18N.t('source.wikis:fandom')})")
+        page.evaluate(
+            """() => { DEEMO_I18N.register({'en': {'source.wikis:fandom': 'Smoke Fandom'}, 'zh-CN': {'source.wikis:fandom': 'Smoke 维基'}}); renderNotes(); }"""
+        )
+        localized = page.evaluate(
+            "DEEMO_I18N.t('slideshow.notes.composer_source', {source: DEEMO_I18N.t('source.wikis:fandom')})"
+        )
         assert page.evaluate(music)[-1] == ["SPAN", localized], (lang, page.evaluate(music), localized)
         finish(page)
     checks.append("composer credits name the source of each line, localized, in both languages")
@@ -987,5 +1137,16 @@ with sync_playwright() as p:
     external = monitor.verdict()
     browser.close()
 checks.extend(["mount-relative assets", "local-only requests", "no console errors or failed requests"])
-print(json.dumps({"gallery_images": total, "base": base, "problems": monitor.problems, "external_requests": external,
-                  "seconds": round(time.monotonic() - started, 1), "checks": checks}, indent=2))
+print(
+    json.dumps(
+        {
+            "gallery_images": total,
+            "base": base,
+            "problems": monitor.problems,
+            "external_requests": external,
+            "seconds": round(time.monotonic() - started, 1),
+            "checks": checks,
+        },
+        indent=2,
+    )
+)

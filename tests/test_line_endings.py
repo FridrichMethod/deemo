@@ -37,16 +37,23 @@ class LineEndingTests(unittest.TestCase):
     def test_pinned_files_are_exempt_from_line_ending_conversion(self):
         paths = [row["path"] for row in self.rows]
         fields = git("check-attr", "-z", "--stdin", "text", stdin="\0".join(paths).encode()).split(b"\0")[:-1]
-        converted = [path.decode() for path, _, value in zip(fields[::3], fields[1::3], fields[2::3]) if value != b"unset"]
+        converted = [
+            path.decode() for path, _, value in zip(fields[::3], fields[1::3], fields[2::3]) if value != b"unset"
+        ]
         self.assertEqual(converted, [])
         self.assertEqual(len(fields), 3 * len(paths))
 
     def test_crlf_checkouts_keep_pinned_bytes(self):
         for settings in CRLF_CHECKOUTS:
             options = [part for setting in settings for part in ("-c", setting)]
-            changed = [row["path"] for row in self.rows
-                       if hashlib.sha256(git(*options, "cat-file", "--filters", f"--path={row['path']}", row["git_blob"])).hexdigest()
-                       != row["sha256"]]
+            changed = [
+                row["path"]
+                for row in self.rows
+                if hashlib.sha256(
+                    git(*options, "cat-file", "--filters", f"--path={row['path']}", row["git_blob"])
+                ).hexdigest()
+                != row["sha256"]
+            ]
             with self.subTest(settings=settings):
                 self.assertEqual(changed, [])
 

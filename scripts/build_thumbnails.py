@@ -39,12 +39,16 @@ VERSION_KEYS = ("pillow", "libwebp")
 EIGHT_BIT_MODES = {"1", "L", "LA", "P", "PA", "RGB", "RGBA"}
 GREY_MODES = {"1", "L", "LA"}
 SIXTEEN_BIT_GREY = {"I;16", "I;16L", "I;16B", "I;16N"}
-DESCRIPTION = ("Derived WebP previews for the archive grid only; they are not archive files. "
-               "Originals are unchanged and listed with their hashes in data/catalog.json.")
+DESCRIPTION = (
+    "Derived WebP previews for the archive grid only; they are not archive files. "
+    "Originals are unchanged and listed with their hashes in data/catalog.json."
+)
 
 
 def _load_catalog_builder():
-    spec = importlib.util.spec_from_file_location("build_catalog", Path(__file__).resolve().with_name("build_catalog.py"))
+    spec = importlib.util.spec_from_file_location(
+        "build_catalog", Path(__file__).resolve().with_name("build_catalog.py")
+    )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -54,8 +58,14 @@ build_catalog = _load_catalog_builder()
 
 
 def settings() -> dict:
-    return {"format": "WEBP", "long_edge": LONG_EDGE, "quality": QUALITY, "method": METHOD,
-            "pillow": PIL.__version__, "libwebp": features.version("webp")}
+    return {
+        "format": "WEBP",
+        "long_edge": LONG_EDGE,
+        "quality": QUALITY,
+        "method": METHOD,
+        "pillow": PIL.__version__,
+        "libwebp": features.version("webp"),
+    }
 
 
 def stable(encoder: dict) -> dict:
@@ -183,8 +193,10 @@ def build(root: Path, prune: bool = False, rebuild: bool = False, workers: int |
     current = settings()
     manifest = read_manifest(root)
     if manifest and manifest.get("encoder") != current and not rebuild:
-        raise ValueError(f"{MANIFEST} was encoded with {manifest.get('encoder')}, but this run uses {current}. "
-                         "Install requirements.txt, or pass --rebuild to re-encode every thumbnail.")
+        raise ValueError(
+            f"{MANIFEST} was encoded with {manifest.get('encoder')}, but this run uses {current}. "
+            "Install requirements.txt, or pass --rebuild to re-encode every thumbnail."
+        )
     previous = manifest["thumbnails"] if manifest and not rebuild else {}
     entries, pending = {}, []
     for sha256, original in originals(root).items():
@@ -196,10 +208,19 @@ def build(root: Path, prune: bool = False, rebuild: bool = False, workers: int |
     with ThreadPoolExecutor(workers_for(workers)) as pool:
         for (sha256, _), (data, (width, height)) in zip(pending, pool.map(lambda item: render(root, item[1]), pending)):
             write_atomic(root / thumb_path(sha256), data)
-            entries[sha256] = {"path": thumb_path(sha256), "width": width, "height": height,
-                               "bytes": len(data), "sha256": digest(data)}
-    content = {"schema_version": 1, "description": DESCRIPTION, "encoder": current,
-               "thumbnails": dict(sorted(entries.items()))}
+            entries[sha256] = {
+                "path": thumb_path(sha256),
+                "width": width,
+                "height": height,
+                "bytes": len(data),
+                "sha256": digest(data),
+            }
+    content = {
+        "schema_version": 1,
+        "description": DESCRIPTION,
+        "encoder": current,
+        "thumbnails": dict(sorted(entries.items())),
+    }
     encoded = (json.dumps(content, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     if not (root / MANIFEST).exists() or (root / MANIFEST).read_bytes() != encoded:
         write_atomic(root / MANIFEST, encoded)
@@ -208,9 +229,14 @@ def build(root: Path, prune: bool = False, rebuild: bool = False, workers: int |
     if prune:
         for path in orphans:
             (root / path).unlink()
-    return {"thumbnails": len(entries), "rendered": len(pending), "reused": len(entries) - len(pending),
-            "bytes": sum(entry["bytes"] for entry in entries.values()),
-            "orphans": [] if prune else orphans, "pruned": orphans if prune else []}
+    return {
+        "thumbnails": len(entries),
+        "rendered": len(pending),
+        "reused": len(entries) - len(pending),
+        "bytes": sum(entry["bytes"] for entry in entries.values()),
+        "orphans": [] if prune else orphans,
+        "pruned": orphans if prune else [],
+    }
 
 
 def check_entry(root: Path, sha256: str, entry: dict, original: dict | None) -> tuple[list[str], bytes | None]:
@@ -234,12 +260,16 @@ def check_entry(root: Path, sha256: str, entry: dict, original: dict | None) -> 
     if format_name != "WEBP":
         found.append(f"Thumbnail is {format_name}, not WEBP: {path}")
     if [*size] != [entry.get("width"), entry.get("height")]:
-        found.append(f"Dimension mismatch: {path} is {size[0]}x{size[1]}, {MANIFEST} says {entry.get('width')}x{entry.get('height')}")
+        found.append(
+            f"Dimension mismatch: {path} is {size[0]}x{size[1]}, {MANIFEST} says {entry.get('width')}x{entry.get('height')}"
+        )
     if original:
         # Either orientation: an EXIF-rotated original is previewed upright.
         expected = thumb_size(original["width"], original["height"])
         if sorted(size) != sorted(expected):
-            found.append(f"Dimension mismatch: {path} is {size[0]}x{size[1]}, expected {expected[0]}x{expected[1]} for {original['path']}")
+            found.append(
+                f"Dimension mismatch: {path} is {size[0]}x{size[1]}, expected {expected[0]}x{expected[1]} for {original['path']}"
+            )
     if "exif" in info or "xmp" in info:
         found.append(f"Thumbnail carries EXIF or XMP metadata: {path}")
     return found, data
@@ -254,18 +284,24 @@ def problems(root: Path, reencode: bool = False, workers: int | None = None) -> 
     current, recorded = settings(), manifest.get("encoder", {})
     found = []
     if stable(recorded) != stable(current):
-        found.append(f"Encoder settings changed: {MANIFEST} has {stable(recorded)}, the script uses {stable(current)}: "
-                     "run scripts/build_thumbnails.py --rebuild")
+        found.append(
+            f"Encoder settings changed: {MANIFEST} has {stable(recorded)}, the script uses {stable(current)}: "
+            "run scripts/build_thumbnails.py --rebuild"
+        )
     if reencode and recorded != current:
-        found.append(f"Byte-identical re-encoding needs Pillow {recorded.get('pillow')} with libwebp {recorded.get('libwebp')} "
-                     f"(running Pillow {current['pillow']} with libwebp {current['libwebp']}); install requirements.txt")
+        found.append(
+            f"Byte-identical re-encoding needs Pillow {recorded.get('pillow')} with libwebp {recorded.get('libwebp')} "
+            f"(running Pillow {current['pillow']} with libwebp {current['libwebp']}); install requirements.txt"
+        )
         reencode = False
     wanted, thumbnails = originals(root), manifest.get("thumbnails", {})
     for sha256 in sorted(wanted.keys() - thumbnails.keys()):
         found.append(f"No thumbnail for {wanted[sha256]['path']}: run scripts/build_thumbnails.py")
     for sha256 in sorted(thumbnails.keys() - wanted.keys()):
-        found.append(f"Thumbnail {thumbnails[sha256].get('path')} belongs to no current gallery original: "
-                     "run scripts/build_thumbnails.py --prune")
+        found.append(
+            f"Thumbnail {thumbnails[sha256].get('path')} belongs to no current gallery original: "
+            "run scripts/build_thumbnails.py --prune"
+        )
     intact = []
     for sha256, entry in sorted(thumbnails.items()):
         entry_problems, data = check_entry(root, sha256, entry, wanted.get(sha256))
@@ -273,27 +309,44 @@ def problems(root: Path, reencode: bool = False, workers: int | None = None) -> 
         if data is not None and sha256 in wanted:
             intact.append((wanted[sha256], entry["path"], data))
     referenced = {entry.get("path") for entry in thumbnails.values()}
-    found.extend(f"Unreferenced file in {THUMB_DIR}: {path}: run scripts/build_thumbnails.py --prune"
-                 for path in stored_files(root) if path not in referenced)
+    found.extend(
+        f"Unreferenced file in {THUMB_DIR}: {path}: run scripts/build_thumbnails.py --prune"
+        for path in stored_files(root)
+        if path not in referenced
+    )
     if reencode:
         with ThreadPoolExecutor(workers_for(workers)) as pool:
             rendered = pool.map(lambda item: render(root, item[0])[0], intact)
-            found.extend(f"Re-encoding {original['path']} does not reproduce {path}"
-                         for (original, path, data), fresh in zip(intact, rendered) if fresh != data)
+            found.extend(
+                f"Re-encoding {original['path']} does not reproduce {path}"
+                for (original, path, data), fresh in zip(intact, rendered)
+                if fresh != data
+            )
     return found
 
 
 def main(argv: list[str] | None = None, root: Path = ROOT) -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--check", action="store_true",
-                      help="Write nothing; fail unless every gallery original has its preview and each preview exists, "
-                           "decodes, has the expected size and hash, and nothing in assets/thumbs/ is orphaned")
-    mode.add_argument("--verify", action="store_true",
-                      help="Like --check, and also re-encode every preview from its original and require identical bytes")
-    parser.add_argument("--prune", action="store_true", help="Delete previews whose original is no longer in the gallery")
-    parser.add_argument("--rebuild", action="store_true",
-                        help="Re-encode every preview (after changing the encoder settings or the pinned Pillow)")
+    mode.add_argument(
+        "--check",
+        action="store_true",
+        help="Write nothing; fail unless every gallery original has its preview and each preview exists, "
+        "decodes, has the expected size and hash, and nothing in assets/thumbs/ is orphaned",
+    )
+    mode.add_argument(
+        "--verify",
+        action="store_true",
+        help="Like --check, and also re-encode every preview from its original and require identical bytes",
+    )
+    parser.add_argument(
+        "--prune", action="store_true", help="Delete previews whose original is no longer in the gallery"
+    )
+    parser.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="Re-encode every preview (after changing the encoder settings or the pinned Pillow)",
+    )
     parser.add_argument("--workers", type=int, help="Images decoded in parallel (default: up to 8)")
     args = parser.parse_args(argv)
     if (args.check or args.verify) and (args.prune or args.rebuild):
@@ -303,8 +356,16 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> None:
         if found:
             raise SystemExit("\n".join(found))
         thumbnails = read_manifest(root)["thumbnails"]
-        print(json.dumps({"thumbnails": len(thumbnails), "bytes": sum(entry["bytes"] for entry in thumbnails.values()),
-                          "reencoded": args.verify}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "thumbnails": len(thumbnails),
+                    "bytes": sum(entry["bytes"] for entry in thumbnails.values()),
+                    "reencoded": args.verify,
+                },
+                indent=2,
+            )
+        )
         return
     print(json.dumps(build(root, prune=args.prune, rebuild=args.rebuild, workers=args.workers), indent=2))
 

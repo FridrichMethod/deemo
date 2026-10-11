@@ -9,8 +9,15 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_DIRECTORIES = {"assets", "data", "src", "docs", "licenses"}
 PUBLIC_FILES = {
-    ".nojekyll", "archive.html", "index.html", "site.webmanifest",
-    "browserconfig.xml", "LICENSE", "NOTICE", "README.md", "README.zh-CN.md",
+    ".nojekyll",
+    "archive.html",
+    "index.html",
+    "site.webmanifest",
+    "browserconfig.xml",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "README.zh-CN.md",
 }
 # Leave room for archive metadata below Pages' 1 GB published-site limit.
 MAX_SITE_BYTES = 950_000_000
