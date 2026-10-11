@@ -449,6 +449,59 @@ class CheckpointTests(FetcherRun):
         self.assertGreaterEqual(len(files), 5)
         self.assertEqual({record["path"] for record in self.read(MANIFEST)["assets"]}, files)
 
+    def test_an_early_interrupt_keeps_the_failures_of_the_candidates_it_did_not_reach(self):
+        # Ctrl-C before the first periodic checkpoint still saves the manifest. A candidate the run has not reached
+        # keeps its record (fetch_failed) and its entry in failures, which explains the status and gives the next run
+        # its retry hints; a candidate the run reached has only this run's outcome.
+        names = ("Kept", "Back", "Again", "Waiting", "Queued")
+        first = {name: self.offer(f"{name}.png", png((index * 40, 0, 0))) for index, name in enumerate(names)}
+        self.resume(*first.values())
+
+        def gone(name, where):
+            """The candidate re-uploaded (a new SHA-1) at a URL that does not answer."""
+            return {**first[name], "info": {**first[name]["info"], "sha1": "e" * 40, "url": BWIKI_IMAGES + where}}
+
+        failing = [first["Kept"], *(gone(name, f"gone/{name}.png") for name in names[1:])]
+        previous = self.resume(*failing)
+        self.assertEqual(
+            [row["title"] for row in previous["failures"]], sorted(f"文件:{name}.png" for name in names[1:])
+        )
+        back = self.offer("Back.png", png("green"))  # the re-upload of Back answers now
+        current = [first["Kept"], back, gone("Again", "moved/Again.png"), failing[3], failing[4]]
+
+        def interrupted(futures):
+            # Collects in submission order; Ctrl-C reaches the main thread before the fourth (Waiting) is collected.
+            for index, future in enumerate(futures):
+                if index == 3:
+                    raise KeyboardInterrupt
+                concurrent.futures.wait([future])
+                yield future
+
+        with patch.object(fetch, "as_completed", interrupted), self.assertRaises(KeyboardInterrupt):
+            self.resume(*current)
+        saved = self.read(MANIFEST)
+        self.assertEqual(
+            [(row["title"], row["url"]) for row in saved["failures"]],
+            [
+                ("文件:Again.png", BWIKI_IMAGES + "moved/Again.png"),  # this run's failure only
+                ("文件:Queued.png", BWIKI_IMAGES + "gone/Queued.png"),  # the previous run's, kept as it was
+                ("文件:Waiting.png", BWIKI_IMAGES + "gone/Waiting.png"),
+            ],
+        )
+        earlier = {row["title"]: row for row in previous["failures"]}
+        self.assertEqual(saved["failures"][1:], [earlier["文件:Queued.png"], earlier["文件:Waiting.png"]])
+        # Every fetch_failed record sits next to its entry in failures.
+        failed = sorted(
+            record["title"] for record in saved["assets"] if record.get("upstream_status") == "fetch_failed"
+        )
+        self.assertEqual(failed, ["Again", "Queued", "Waiting"])
+        # Run to the end, the manifest lists this run's failures only.
+        manifest = self.resume(*current)
+        self.assertEqual(
+            [row["title"] for row in manifest["failures"]], ["文件:Again.png", "文件:Queued.png", "文件:Waiting.png"]
+        )
+        self.assertEqual(manifest["failures"][0]["url"], BWIKI_IMAGES + "moved/Again.png")
+
     def test_manifest_write_is_atomic(self):
         fetch.write_json(MANIFEST, {"assets": ["kept"]})
         with patch.object(fetch.os, "replace", side_effect=KeyboardInterrupt), self.assertRaises(KeyboardInterrupt):

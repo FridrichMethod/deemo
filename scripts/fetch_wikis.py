@@ -732,6 +732,13 @@ def failure_key(failure):
     return tuple(str(failure.get(field) or "") for field in ("source_id", "title", "url", "stage", "error"))
 
 
+def failure_candidate_id(failure):
+    """The id of the candidate a download failure is about, or None for any other failure (the reference index)."""
+    source = next((key for key, value in SOURCES.items() if value["id"] == failure.get("source_id")), None)
+    title = failure.get("title")
+    return candidate_id({"source": source, "file_title": title}) if source and isinstance(title, str) else None
+
+
 def merge_assets(existing, candidate_ids, results, failed_ids):
     """The manifest's records: this run's results merged over the previous records, so none is silently dropped.
 
@@ -775,20 +782,28 @@ def merge_assets(existing, candidate_ids, results, failed_ids):
     return [merged[asset_id] for asset_id in sorted(merged) if not restored(merged[asset_id])]
 
 
-def download_all(candidates, existing, manifest, workers):
+def download_all(candidates, existing, manifest, workers, previous_failures=()):
     """Download or verify every candidate; returns (candidate ids, results by id, ids whose download failed).
 
     The manifest is saved after every 25 results. On Ctrl-C, or any other exception that stops the run, the queued
     downloads are cancelled, the running ones finish writing their files, and the manifest is saved with every
-    download that finished before the exception propagates, so no downloaded file is left without its record."""
+    download that finished before the exception propagates, so no downloaded file is left without its record. Each
+    save also keeps the previous_failures (the previous manifest's) of the candidates without an outcome yet."""
     candidate_ids = {candidate_id(item) for item in candidates}
     results, failed_ids, jobs = {}, set(), {}
 
     def checkpoint():
-        # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest.
+        # A checkpoint holds every previous record too, so an interrupted run never shrinks the manifest, and the
+        # previous failures of the candidates it has not reached: a fetch_failed record keeps the entry explaining it,
+        # and the next run its retry hints. A finished run has reached every candidate, so it lists its own only.
         manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
         manifest["failures"].sort(key=failure_key)  # completion order varies between runs
-        write_json("data/sources/wikis.json", manifest)
+        pending = candidate_ids - results.keys() - failed_ids
+        waiting = [failure for failure in previous_failures if failure_candidate_id(failure) in pending]
+        write_json(
+            "data/sources/wikis.json",
+            {**manifest, "failures": sorted(manifest["failures"] + waiting, key=failure_key)},
+        )
 
     def collect(future):
         item = jobs[future]
@@ -1002,7 +1017,9 @@ def main():
             candidate["try_canonical_first"] = True
             if str(previous_failures[candidate["file_title"]].get("error", "")).startswith("[{"):
                 candidate["try_png_first"] = True
-    candidate_ids, results, failed_ids = download_all(candidates, existing, manifest, args.workers)
+    candidate_ids, results, failed_ids = download_all(
+        candidates, existing, manifest, args.workers, previous.get("failures", [])
+    )
     manifest["assets"] = merge_assets(existing, candidate_ids, results, failed_ids)
     wiki_ids = {source["id"] for source in SOURCES.values()}
     for source in manifest["sources"]:
