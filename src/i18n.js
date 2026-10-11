@@ -72,7 +72,8 @@
     if (next === lang) return;
     lang = next;
     try { localStorage.setItem(STORAGE_KEY, lang); } catch { /* ?lang= still carries the choice */ }
-    try { history.replaceState(history.state, "", location.pathname + localizeHref(location.search + location.hash)); } catch { /* some file:// contexts reject history updates */ }
+    // An empty query is passed as "?", or localizeHref would leave a bare fragment (index.html#screenshot) without ?lang=.
+    try { history.replaceState(history.state, "", location.pathname + localizeHref((location.search || "?") + location.hash)); } catch { /* some file:// contexts reject history updates */ }
     apply();
     for (const listener of listeners) listener(lang);
   }

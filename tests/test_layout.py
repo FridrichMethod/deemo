@@ -1,4 +1,4 @@
-"""Check relocated files, unchanged legacy bytes, and subdirectory-safe links."""
+"""Check relocated files, unchanged legacy bytes, subdirectory-safe links and stylesheet declarations."""
 
 import hashlib
 import json
@@ -12,10 +12,25 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 CSS_URL = re.compile(r"""url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*?))\s*\)""", re.IGNORECASE)
 MEDIA_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico", ".mp3", ".ttf", ".woff", ".woff2"}
+# A "property:" inside a declaration's value: a missing semicolon has run two declarations together.
+SECOND_PROPERTY = re.compile(r"(?<![\w-])-*[a-z][\w-]*\s*:", re.IGNORECASE)
 
 
 def css_urls(text):
     return [next(group for group in match.groups() if group is not None).strip() for match in CSS_URL.finditer(text)]
+
+
+def css_declarations(text):
+    """Each declaration in a stylesheet's rules as (property, value), read without comments, strings and url()
+    arguments, whose colons and semicolons are not syntax."""
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
+    text = re.sub(r'"(?:\\.|[^"\\\n])*"|\'(?:\\.|[^\'\\\n])*\'', '""', text)
+    text = re.sub(r"url\([^)]*\)", "url()", text, flags=re.IGNORECASE)
+    for body in re.findall(r"\{([^{}]*)\}", text):
+        for declaration in body.split(";"):
+            name, colon, value = declaration.partition(":")
+            if colon:
+                yield name.strip(), " ".join(value.split())
 
 
 class ResourceLinks(HTMLParser):
@@ -78,6 +93,36 @@ class LayoutTests(unittest.TestCase):
             ),
             ["../assets/a b.ttf", "../assets/c d.ttf", "../assets/e f.png"],
         )
+
+    def test_stylesheets_run_no_declarations_together(self):
+        """A missing semicolon makes one invalid value of two declarations, and browsers drop both: the inherited
+        `height: 100% position: relative;` of .popup set neither."""
+        sheets = sorted((ROOT / "src").rglob("*.css"))
+        self.assertIn(ROOT / "src/slideshow.css", sheets)
+        for sheet in sheets:
+            with self.subTest(stylesheet=sheet.relative_to(ROOT)):
+                declarations = list(css_declarations(sheet.read_text(encoding="utf-8-sig")))
+                self.assertTrue(declarations)
+                joined = [f"{name}: {value}" for name, value in declarations if SECOND_PROPERTY.search(value)]
+                self.assertEqual(joined, [])
+
+    def test_css_declaration_parser_skips_comments_strings_and_urls(self):
+        css = """@media (max-width: 500px) { .a:hover { content: "x: y; z"; color: red } }
+            /* b { margin: 0 left: 0 } */ .b { background: url(data:image/png;base64,AA==) no-repeat; }
+            .c { height: 100% position: relative; width: calc(100% - 2px)
+                 transition: all 2s; }"""
+        declarations = list(css_declarations(css))
+        self.assertEqual(
+            declarations,
+            [
+                ("content", '""'),
+                ("color", "red"),
+                ("background", "url() no-repeat"),
+                ("height", "100% position: relative"),
+                ("width", "calc(100% - 2px) transition: all 2s"),
+            ],
+        )
+        self.assertEqual([name for name, value in declarations if SECOND_PROPERTY.search(value)], ["height", "width"])
 
     def test_manifest_and_browserconfig_icons_exist(self):
         manifest_path = ROOT / "site.webmanifest"

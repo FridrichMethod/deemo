@@ -263,6 +263,8 @@
   $("next").addEventListener("click", () => open(current + 1));
   document.addEventListener("keydown", (event) => {
     if (!$("viewer").open) return;
+    // As in the slideshow, an arrow with a modifier (Alt+Left is Back) is the browser's, and a held key turns one image.
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.repeat) return;
     if (event.key === "ArrowLeft") { event.preventDefault(); open(current - 1); }
     if (event.key === "ArrowRight") { event.preventDefault(); open(current + 1); }
   });

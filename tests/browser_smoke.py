@@ -10,6 +10,7 @@ import base64
 import hashlib
 import json
 import re
+import sys
 import time
 import unicodedata
 import xml.etree.ElementTree as ET
@@ -19,11 +20,15 @@ from urllib.parse import quote, unquote, urljoin, urlparse
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
+# Every check below is an assert, which python -O strips: such a run would check nothing and still pass.
+if not __debug__:
+    sys.exit("browser_smoke.py checks with assert; run it without -O")
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument("--base", default="http://127.0.0.1:8765")
 parser.add_argument("--browser", default="/usr/bin/google-chrome")
 args = parser.parse_args()
-assert urlparse(args.base).hostname in {"127.0.0.1", "localhost"}, "Use a local test server"
+if urlparse(args.base).hostname not in {"127.0.0.1", "localhost"}:
+    parser.error("Use a local test server")
 base = args.base.rstrip("/") + "/"
 mount_path = urlparse(base).path
 checks = []
@@ -75,6 +80,19 @@ NOTES_CASES = {
     "wikis:fandom:07a098acfa802dd9": [["Knots Way", ""], ["Crossknotsway", "file"]],
 }
 NOTES_TITLES = "[...document.querySelectorAll('.slide-notes .notes-title')].map((title) => [title.textContent.replace(/\\u00a0/g, ' '), title.dataset.length || ''])"
+# Catalog text comes from wiki editors, Tumblr posts and artists' captions, and its URLs from the source pages. Each
+# hostile value records in window.__xss that it ran; the archive must show the text verbatim and link only http(s).
+XSS = "(window.__xss = window.__xss || []).push"
+HOSTILE = {
+    "title": f"Hostile <img src=x onerror=\"{XSS}('title')\"> title",
+    "artist": f"<b onmouseover=\"{XSS}('artist')\">Hostile artist</b>",
+    "notes": f"Hostile notes <img src=x onerror=\"{XSS}('notes')\">",
+    "source_id": f"<img src=x onerror=\"{XSS}('failure text')\">",
+    "page_url": f"javascript:{XSS}('page')",
+    "download_url": f"data:text/html,<script>{XSS}('download')</script>",
+    "source_url": "vbscript:msgbox(1)",
+    "failure_url": f"JaVaScRiPt:{XSS}('failure')",
+}
 
 
 def title_words(text):
@@ -359,8 +377,15 @@ def check_language(browser):
     assert page.evaluate("document.documentElement.lang") == "en"
     assert page.locator("#asset-source").inner_text() == "Original repository · game textures"
     assert "lang=" not in page.url and "lang=" not in page.locator(".archive-link a").get_attribute("href")
+    # An address with a fragment and no query keeps the fragment and gains ?lang= (and loses it again).
+    navigate(page, "index.html#screenshot")
+    page.wait_for_function("document.querySelector('.deemo-view').style.opacity === '1'")
+    for lang, address in (("zh-CN", "index.html?lang=zh-CN#screenshot"), ("en", "index.html#screenshot")):
+        page.locator("[data-lang-toggle]").first.click()
+        assert page.evaluate("document.documentElement.lang") == lang
+        assert page.url == mounted_url(address), (lang, page.url)
     finish(page)
-    checks.append("language toggle, persistence and localized source names")
+    checks.append("language toggle, persistence and localized source names; ?lang= beside a fragment")
 
 
 def check_language_before_catalog(browser):
@@ -515,6 +540,47 @@ def check_viewer_scroll_and_focus(browser):
     assert close_viewer(61) == [61, True]
     finish(page)
     checks.append("viewer scroll lock and focus return")
+
+
+def check_viewer_keys(browser):
+    """The arrow keys turn the viewer's image once per press, as in the slideshow: a held key does not race through the
+    gallery, and an arrow with a modifier (Alt+Left and Alt+Right are Back and Forward) is left to the browser."""
+    page = new_page(browser, 1440, 900)
+    page.route(
+        re.compile(r"/assets/(public|legacy)/"),
+        lambda route: route.fulfill(status=200, content_type="image/png", body=PIXEL),
+    )
+    navigate(page, "archive.html")
+    page.wait_for_selector(".card")
+    # Runs after the page's own listener, so it sees whether the page took the key.
+    page.evaluate(
+        "window.__keys = []; document.addEventListener('keydown', (event) => { if (event.key.startsWith('Arrow')) window.__keys.push([event.key, event.repeat, event.defaultPrevented]); })"
+    )
+
+    def position():
+        page.wait_for_function(IMAGE_SHOWN)
+        return page.evaluate("parseInt(document.getElementById('position').textContent, 10)")
+
+    page.locator(".card-image").nth(3).click()
+    url = page.url
+    assert position() == 4
+    chords = ["Alt+ArrowRight", "Control+ArrowLeft", "Meta+ArrowRight", "Shift+ArrowLeft"]
+    for chord in chords:
+        page.keyboard.press(chord)
+        assert [position(), page.url] == [4, url], chord
+    keys = page.evaluate("window.__keys.splice(0)")
+    assert keys == [[chord.split("+")[1], False, False] for chord in chords], keys
+    for _ in range(5):
+        page.keyboard.down("ArrowRight")
+    page.keyboard.up("ArrowRight")
+    assert position() == 5, "A held key turns one image"
+    page.keyboard.press("ArrowLeft")
+    assert position() == 4
+    keys = page.evaluate("window.__keys.splice(0)")
+    assert keys == [["ArrowRight", False, True], *[["ArrowRight", True, False]] * 4, ["ArrowLeft", False, True]], keys
+    page.keyboard.press("Escape")
+    finish(page)
+    checks.append("viewer arrow keys: one image per press, modifier chords left to the browser")
 
 
 def check_deep_link_filters(browser):
@@ -687,6 +753,65 @@ def check_viewer_provenance(browser):
     page.keyboard.press("Escape")
     finish(page)
     checks.append("viewer composer, provenance class and upstream status, in both languages")
+
+
+def hostile_catalog_script(page):
+    """data/catalog.js with markup and event handlers in the first gallery image's text, and javascript:, data: and
+    vbscript: URLs in each URL field the page links: a record's source page and download, a source, a failure."""
+    prefix = "window.DEEMO_CATALOG = "
+    text = page.request.get(mounted_url("data/catalog.js")).text()
+    assert text.startswith(prefix), text[:40]
+    catalog = json.loads(text[len(prefix) :].rstrip().removesuffix(";"))
+    asset = next(asset for asset in catalog["assets"] if asset["gallery"])
+    record = asset["provenance"][0]
+    asset["title"] = record["title"] = HOSTILE["title"]
+    asset["artist"] = record["artist"] = HOSTILE["artist"]
+    record.update(notes=HOSTILE["notes"], page_url=HOSTILE["page_url"], download_url=HOSTILE["download_url"])
+    catalog["sources"][0]["url"] = HOSTILE["source_url"]
+    catalog["failures"] = [
+        {"source_id": HOSTILE["source_id"], "url": HOSTILE["failure_url"], "error": HOSTILE["notes"]}
+    ]
+    return prefix + json.dumps(catalog, ensure_ascii=False) + ";\n"
+
+
+def check_hostile_catalog(browser):
+    """Markup in catalog text stays text and runs nothing, and a URL that is not http(s) becomes no link: the cards,
+    the viewer and the source inventory (sourceLink() in src/archive.js), in both languages."""
+    page = new_page(browser, 1440, 900)
+    body = hostile_catalog_script(page)
+    page.route(mounted_url("data/catalog.js"), lambda route: route.fulfill(content_type="text/javascript", body=body))
+    page.route(
+        re.compile(r"/assets/(public|legacy)/"),
+        lambda route: route.fulfill(status=200, content_type="image/png", body=PIXEL),
+    )
+    navigate(page, "archive.html")
+    page.wait_for_selector(".card")
+    page.locator(".card-image").first.click()
+    page.wait_for_function(IMAGE_SHOWN)
+    for lang in ("en", "zh-CN"):
+        # The modal viewer covers the toggle; a language change redraws the viewer and the inventory.
+        page.evaluate("(lang) => DEEMO_I18N.setLang(lang)", lang)
+        monitor.settle(page)
+        state = page.evaluate(
+            """(artist) => { const {t} = window.DEEMO_I18N, block = document.querySelector('#provenance .provenance-item');
+            const remote = [...block.children].find((node) => node.textContent === t('provenance.remote'));
+            const failure = document.querySelector('#failures li').firstElementChild;
+            return {xss: window.__xss ?? null, injected: document.querySelectorAll('img[src="x"], [onerror], [onmouseover]').length,
+                    links: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')).filter((href) => /^\\s*(javascript|data|vbscript):/i.test(href)),
+                    titles: [document.querySelector('#grid .card h2').textContent, document.getElementById('viewer-title').textContent],
+                    paragraphs: [...block.querySelectorAll('p')].map((p) => p.textContent), artist: t('provenance.artist', {artist}),
+                    unlinked: [block.firstElementChild, remote, document.querySelector('#sources td').firstElementChild, failure].map((node) => node && node.tagName),
+                    failure: failure.textContent}; }""",
+            HOSTILE["artist"],
+        )
+        assert state["xss"] is None and not state["injected"] and not state["links"], (lang, state)
+        assert state["titles"] == [HOSTILE["title"]] * 2, (lang, state["titles"])
+        for text in (HOSTILE["title"], state["artist"], HOSTILE["notes"]):
+            assert text in state["paragraphs"], (lang, text, state["paragraphs"])
+        assert state["unlinked"] == ["SPAN"] * 4 and state["failure"] == HOSTILE["source_id"], (lang, state)
+    page.keyboard.press("Escape")
+    finish(page)
+    checks.append("hostile catalog text shown verbatim, no script runs, non-http(s) URLs unlinked, in both languages")
 
 
 def check_previews(browser):
@@ -1116,8 +1241,10 @@ with sync_playwright() as p:
     check_explicit_language_persists(browser)
     check_search_folding(browser)
     check_viewer_scroll_and_focus(browser)
+    check_viewer_keys(browser)
     check_deep_link_filters(browser)
     check_viewer_provenance(browser)
+    check_hostile_catalog(browser)
     check_card_tags(browser)
     check_no_repeated_names(browser)
     check_inventory_table(browser)
