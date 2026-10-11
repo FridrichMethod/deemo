@@ -8,10 +8,10 @@ These tests ask Git for each pinned blob exactly as such a checkout would write 
 
 import hashlib
 import json
-from pathlib import Path
 import shutil
 import subprocess
 import unittest
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CRLF_CHECKOUTS = (("core.autocrlf=true",), ("core.autocrlf=false", "core.eol=crlf"))
@@ -38,7 +38,9 @@ class LineEndingTests(unittest.TestCase):
         paths = [row["path"] for row in self.rows]
         fields = git("check-attr", "-z", "--stdin", "text", stdin="\0".join(paths).encode()).split(b"\0")[:-1]
         converted = [
-            path.decode() for path, _, value in zip(fields[::3], fields[1::3], fields[2::3]) if value != b"unset"
+            path.decode()
+            for path, _, value in zip(fields[::3], fields[1::3], fields[2::3], strict=True)
+            if value != b"unset"
         ]
         self.assertEqual(converted, [])
         self.assertEqual(len(fields), 3 * len(paths))

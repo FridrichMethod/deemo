@@ -437,7 +437,9 @@ class CommittedWikiDataTests(unittest.TestCase):
     def test_the_snapshot_holds_the_join_of_the_song_index(self):
         expected = fetch.with_composers(self.candidates, self.songs)
         differ = [
-            row["file_title"] for row, want in zip(self.candidates, expected) if list(row.items()) != list(want.items())
+            row["file_title"]
+            for row, want in zip(self.candidates, expected, strict=True)
+            if list(row.items()) != list(want.items())
         ]
         self.assertEqual(differ, [], "Patch the snapshot with fetch_wikis.with_composers()")
         self.assertGreater(sum("composer" in row for row in self.candidates), 400)
@@ -450,7 +452,9 @@ class CommittedWikiDataTests(unittest.TestCase):
         # collection_aliases for search (fetch_wikis.with_collection_aliases(), applied before the composers).
         expected = fetch.with_composers(fetch.with_collection_aliases(self.candidates, self.songs), self.songs)
         differ = [
-            row["file_title"] for row, want in zip(self.candidates, expected) if list(row.items()) != list(want.items())
+            row["file_title"]
+            for row, want in zip(self.candidates, expected, strict=True)
+            if list(row.items()) != list(want.items())
         ]
         self.assertEqual(differ, [], "Patch the snapshot with fetch_wikis.with_collection_aliases()")
         self.assertEqual(
