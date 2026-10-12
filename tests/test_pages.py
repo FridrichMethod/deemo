@@ -315,6 +315,7 @@ RETIRED_DEPLOYMENT_RULES = {
         "should be run by hand",
         "redeploy",
         "deploys that release again",
+        "deploys that tag's commit again",
         "does not look the Release up again",
     ),
     "README.zh-CN.md": ("允许 `v*` 标签", "允许 `main`", "只应手动运行", "重新部署", "不会再次查询 Release"),
@@ -330,8 +331,39 @@ RETIRED_DEPLOYMENT_RULES = {
         "looks up no Release",
     ),
 }
-# Where a sentence of a deployment section or of the header comment ends: after a full stop and a space, or after 。.
-SENTENCE_END = re.compile(r"(?<=\.)\s+|(?<=。)")
+# Where a sentence of a deployment section or of the header comment ends: after a full stop and a space, but not after
+# "e.g." or "i.e.", or after 。.
+SENTENCE_END = re.compile(r"(?<=\.)(?<![Ee]\.g\.)(?<![Ii]\.e\.)\s+|(?<=。)")
+# The same retired rules in other words. A sentence of a deployment section or of the header comment brings one back
+# if it matches every pattern of that rule, read without case: it names the environment and main, or the environment
+# and every (any, all, each) v* tag; it says a manual run is for tags from some vX.Y.Z on; or it says a run deploys
+# again (once more, 再次).
+ENVIRONMENT = re.compile(r"environment|环境", re.I)
+RETIRED_SENTENCES = {
+    "the environment and main": (ENVIRONMENT, re.compile(r"(?<![a-z])main(?![a-z])", re.I)),
+    "the environment and every v* tag": (
+        ENVIRONMENT,
+        re.compile(
+            r"\b(?:every|any|all|each)\W+(?:\w+\W+)?v\*|(?:所有|任何|任意|全部|一切|每个)\W*(?:的\W*)?v\*", re.I
+        ),
+    ),
+    "a manual run for tags from a vX.Y.Z on": (
+        re.compile(r"\bmanual(?:ly)?\b|\bby hand\b|手动", re.I),
+        re.compile(rf"{VERSION}`?\s*(?:on\b|onwards?\b|(?:or|and) (?:later|newer)\b|[及或]?(?:之后|以后))", re.I),
+    ),
+    "a run that deploys again": (
+        re.compile(
+            r"\bre-?deploy|\bdeploy(?:s|ed|ing)?\b(?! job)[^,;:]*\b(?:again|once more)\b|(?:再次?|重新|又)部署", re.I
+        ),
+    ),
+}
+
+
+def retired_rules(sentence):
+    """The rules of RETIRED_SENTENCES whose every pattern sentence matches."""
+    return [
+        rule for rule, patterns in RETIRED_SENTENCES.items() if all(pattern.search(sentence) for pattern in patterns)
+    ]
 
 
 class WorkflowTests(unittest.TestCase):
@@ -535,7 +567,8 @@ class DocumentationTests(unittest.TestCase):
 
     def test_no_document_brings_back_the_retired_deployment_rules(self):
         # The github-pages environment accepts deployments only from tags from v1.1.1 on: not every v* tag, and not
-        # main, so no sentence that names the environment names main either.
+        # main; that is a rule the environment enforces, not a request about manual runs, and every run looks up the
+        # Release, so none deploys a release again without it.
         for document, phrases in RETIRED_DEPLOYMENT_RULES.items():
             text = (ROOT / document).read_text(encoding="utf-8")
             for phrase in phrases:
@@ -543,9 +576,31 @@ class DocumentationTests(unittest.TestCase):
                     self.assertNotIn(phrase, text)
             described = self.header() if document.endswith(".yml") else self.section(document)
             for sentence in SENTENCE_END.split(described):
-                if "environment" in sentence or "环境" in sentence:
-                    with self.subTest(document=document, sentence=sentence[:60]):
-                        self.assertNotIn("main", sentence)
+                with self.subTest(document=document, sentence=sentence[:60]):
+                    self.assertEqual(retired_rules(sentence), [])
+
+    def test_the_retired_rules_are_recognised_in_other_words(self):
+        # Each text, split into sentences as the documents are, brings back the rules named with it, and only those:
+        # "remains" names no main, and the deploy job running again is no run that deploys again.
+        for text, rules in (
+            ("Environment rules also accept `main`.", ["the environment and main"]),
+            ("Main is accepted by the environment too.", ["the environment and main"]),
+            ("The `github-pages` environment, e.g. for `main`, accepts it.", ["the environment and main"]),
+            ("`github-pages` 环境也接受 `main`。", ["the environment and main"]),
+            ("The `github-pages` environment remains as it is.", []),
+            ("The `github-pages` environment allows every `v*` tag.", ["the environment and every v* tag"]),
+            ("The github-pages environment allows any v* tag.", ["the environment and every v* tag"]),
+            ("`github-pages` 环境允许所有 `v*` 标签。", ["the environment and every v* tag"]),
+            ("Only tags from v1.1.1 on should be run by hand.", ["a manual run for tags from a vX.Y.Z on"]),
+            ("Only tags from `v1.1.1` on are to be run manually.", ["a manual run for tags from a vX.Y.Z on"]),
+            ("只能手动运行 `v1.1.1` 及之后的标签。", ["a manual run for tags from a vX.Y.Z on"]),
+            ("A manual run deploys that tag's commit again.", ["a run that deploys again"]),
+            ("A manual run deploys the release once more.", ["a run that deploys again"]),
+            ("手动运行会再次部署该标签。", ["a run that deploys again"]),
+            ("A re-run of the deploy job alone runs the deploy job again and deploys nothing.", []),
+        ):
+            with self.subTest(text):
+                self.assertEqual([found for piece in SENTENCE_END.split(text) for found in retired_rules(piece)], rules)
 
 
 class PagesTests(unittest.TestCase):
