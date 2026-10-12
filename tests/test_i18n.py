@@ -434,7 +434,7 @@ class DocumentTests(unittest.TestCase):
 
     def test_both_readmes_state_the_deployment_guards(self):
         """Each README's deployment section says what the workflows enforce: the Pages workflow deploys only from a
-        published vX.Y.Z release or a manual run on its tag (pages.yml's only triggers, and the deploy job's tag
+        published vX.Y.Z release or a manual run on a vX.Y.Z tag (pages.yml's only triggers, and the deploy job's tag
         condition), and tests/test_pages.py holds the tracked site to the Pages budget of scripts/prepare_pages.py on
         every push and pull request, before the release build measures it."""
         workflow = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8")
