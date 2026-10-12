@@ -20,6 +20,7 @@ from urllib.parse import urljoin
 
 import requests
 from PIL import Image
+from requests.adapters import HTTPAdapter
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -105,11 +106,17 @@ def response(url, status=200, body=b"", headers=None):
     return result
 
 
+# Only its get_redirect_target() is used: FakeWeb reads the Location of each redirect with it, as Session.send does.
+REQUESTS_SESSION = requests.Session()
+
+
 class FakeWeb:
     """Serves canned responses by exact URL; anything else fails like an unreachable host.
 
     Like requests, it follows redirects itself (with no host check) unless allow_redirects=False,
-    so a fetcher that stops passing allow_redirects=False fails the redirect tests.
+    so a fetcher that stops passing allow_redirects=False fails the redirect tests. Like
+    Session.send, it reads the Location of every redirect, followed or not, and so raises
+    UnicodeDecodeError for one that is not UTF-8 before it returns the response.
     """
 
     def __init__(self, routes=None):
@@ -126,6 +133,7 @@ class FakeWeb:
                 raise requests.ConnectionError(f"offline test: {url}")
             status, body, headers = route if isinstance(route, tuple) else (200, route, {})
             result = response(url, status, body, headers)
+            REQUESTS_SESSION.get_redirect_target(result)
             if not (allow_redirects and result.is_redirect):
                 return result
             url = urljoin(url, result.headers["location"])
@@ -2192,8 +2200,10 @@ class RedirectLocationTests(unittest.TestCase):
                 self.assertEqual(archives.redirect_target(redirect), followed(start, as_received(location)))
 
     def test_a_location_that_is_not_utf8_is_refused(self):
-        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
+        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests itself fails on it (FakeWeb does as well).
         location = "/items/x/Caf\xe9.jpg"
+        with self.assertRaisesRegex(requests.exceptions.InvalidURL, "Location is not UTF-8: '/items/x/Caf\xe9.jpg'$"):
+            archives.redirect_target(response(self.IMAGE, 302, headers={"Location": location}))
         web = FakeWeb({self.IMAGE: (302, b"", {"Location": location}), urljoin(self.IMAGE, location): png("red")})
         with (
             patch.object(archives, "session", return_value=web),
@@ -2252,8 +2262,10 @@ class ArtistRedirectLocationTests(unittest.TestCase):
                 self.assertEqual(artists.redirect_target(redirect), wikis.redirect_target(redirect))
 
     def test_a_location_that_is_not_utf8_is_refused_without_a_retry(self):
-        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
+        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests itself fails on it (FakeWeb does as well).
         location = "/img-original/Caf\xe9.png"
+        with self.assertRaisesRegex(ValueError, "Location is not UTF-8: '/img-original/Caf\xe9.png'$"):
+            artists.redirect_target(response(NEW_P0, 302, headers={"Location": location}))
         web = FakeWeb({NEW_P0: (302, b"", {"Location": location}), urljoin(NEW_P0, location): png("red")})
         with patch.object(artists.time, "sleep") as sleep, self.assertRaisesRegex(ValueError, "Location is not UTF-8"):
             self.download(web)
@@ -2299,6 +2311,124 @@ class RetryStatusTests(unittest.TestCase):
         row = self.check(503)
         self.assertEqual((row["access_status"], row["http_status"]), ("http_error", 503))
         self.assertEqual(self.check(403)["access_status"], "blocked")
+
+
+class Loopback(HTTPAdapter):
+    """Sends every request, whatever host its URL names, over plain HTTP to the loopback server on port; the response
+    keeps the URL that was requested. Nothing leaves the machine. Each response is kept in responses, so a test can
+    close one that requests raised on before it released the connection."""
+
+    def __init__(self, port, responses):
+        super().__init__()
+        self.port, self.responses = port, responses
+
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        return self.poolmanager.connection_from_host("127.0.0.1", self.port, scheme="http")
+
+    def build_response(self, req, resp):
+        response = super().build_response(req, resp)
+        self.responses.append(response)
+        return response
+
+
+class NotUtf8LocationTests(unittest.TestCase):
+    """A real requests.Session against a loopback server whose redirects send the raw byte 0xE9 in their Location. On
+    such a Location requests itself raises UnicodeDecodeError inside Session.send, before a fetcher sees the response;
+    each fetcher records it as a failed request of that entry, retries nothing and goes on."""
+
+    def setUp(self):
+        self.paths = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(handler):
+                self.paths.append(handler.path)
+                body = b"" if "moved" in handler.path else b'{"files": []}'
+                handler.send_response(302 if "moved" in handler.path else 200)
+                if "moved" in handler.path:
+                    handler.send_header("Location", "/Caf\xe9.png")  # http.server encodes it as latin-1: byte 0xE9
+                handler.send_header("Content-Length", str(len(body)))
+                handler.end_headers()
+                handler.wfile.write(body)
+
+            def log_message(handler, *args):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        self.session, responses = requests.Session(), []
+        self.session.trust_env = False
+        for prefix in ("https://", "http://"):
+            self.session.mount(prefix, Loopback(server.server_address[1], responses))
+        self.addCleanup(self.session.close)
+        self.addCleanup(lambda: [response.close() for response in responses])
+        archives.reset()
+        self.addCleanup(archives.reset)
+
+    def test_a_reachability_check_fails_as_a_request_and_the_catalog_goes_on(self):
+        entries = [
+            ("moved", "Moved", "https://www.reddit.com/r/TrueDeemo/moved/", "index_only", ""),
+            ("plain", "Plain", "https://www.reddit.com/r/TrueDeemo/plain/", "index_only", ""),
+        ]
+        with (
+            patch.object(archives, "session", return_value=self.session),
+            patch.object(archives, "CATALOG_ENTRIES", entries),
+        ):
+            archives.catalog()
+        rows = {row["id"]: row for row in archives.MANIFEST["sources"]}
+        moved = rows["archives:moved"]
+        self.assertEqual((moved["access_status"], moved.get("http_status")), ("request_failed", None))
+        self.assertIn("Refusing a redirect whose Location is not UTF-8: '/Caf\xe9.png'", moved["access_error"])
+        self.assertNotIn("redirect_location", moved)
+        self.assertEqual(rows["archives:plain"]["access_status"], "page_reachable")
+        self.assertEqual(rows["archives:internet-archive-202606"]["file_formats"], {})
+        self.assertEqual(archives.MANIFEST["failures"], [])
+        self.assertEqual(
+            sorted(self.paths),
+            ["/metadata/deemo_ost-_202606", "/r/TrueDeemo/moved/", "/r/TrueDeemo/plain/"],
+        )
+
+    def test_a_download_or_page_read_is_a_failure_of_its_entry(self):
+        image = "https://archive.org/download/moved/1.jpg"
+        with patch.object(archives, "session", return_value=self.session), patch.object(archives, "CAA_MBID", "moved"):
+            self.assertIsNone(
+                archives.download("cover-art-archive", "1", "Scan", "", image, "reference", archives.CAA_HOSTS)
+            )
+            archives.cover_art_archive()
+        self.assertEqual(
+            [(row["url"], row.get("asset_id")) for row in archives.MANIFEST["failures"]],
+            [(image, "archives:cover-art-archive:1"), ("https://coverartarchive.org/release/moved", None)],
+        )
+        for row in archives.MANIFEST["failures"]:
+            self.assertIn("Refusing a redirect whose Location is not UTF-8", row["error"])
+        self.assertEqual(self.paths, ["/download/moved/1.jpg", "/release/moved"])
+
+    def test_an_artist_download_or_page_read_fails_at_once(self):
+        job = {
+            "id": "artists:pixiv:1:p0",
+            "source_id": "artists:pixiv:1",
+            "page_url": PAGE_URL,
+            "download_url": "https://i.pximg.net/img-original/moved/1_p0.png",
+        }
+        manifest = {"sources": [], "assets": [], "failures": []}
+        with (
+            patch.object(artists.requests, "get", lambda url, **options: self.session.get(url, **options)),
+            patch.object(artists, "REFERENCE_URL", "https://princeofglass.blogspot.com/p/moved.html"),
+            patch.object(artists.time, "sleep") as sleep,
+            patch("builtins.print"),
+        ):
+            artists.collect_reference(manifest)
+            artists.fetch_all(manifest, [job], {}, False, 1)
+        self.assertEqual(
+            [(row["source_id"], row.get("asset_id")) for row in manifest["failures"]],
+            [("artists:blogspot:siyouko-career", None), ("artists:pixiv:1", "artists:pixiv:1:p0")],
+        )
+        for row in manifest["failures"]:
+            self.assertIn("Refusing a redirect whose Location is not UTF-8", row["error"])
+        self.assertEqual(manifest["assets"], [])
+        self.assertEqual(self.paths, ["/p/moved.html", "/img-original/moved/1_p0.png"])
+        sleep.assert_not_called()
 
 
 # ----------------------------------------------------------- committed data, code

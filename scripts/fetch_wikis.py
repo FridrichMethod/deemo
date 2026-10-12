@@ -176,18 +176,30 @@ def with_body(response, body):
     return served
 
 
+def not_utf8(header):
+    """The refusal of a redirect whose Location header (as http.client decodes it, latin-1) is not UTF-8: a
+    RefusedDownload, so it is not retried and nothing more is requested."""
+    return RefusedDownload(f"Refusing a redirect whose Location is not UTF-8: {header!r}")
+
+
+def send(url, headers, **options):
+    """requests.get(url) with HEADERS and headers, this script's timeout and options, streamed and following no redirect.
+    requests reads the Location of a redirect response even then (Session.send prepares the request Response.next would
+    send) and raises UnicodeDecodeError, which is no RequestException, for a Location that is not UTF-8 before it
+    returns the response: that is raised as not_utf8()."""
+    try:
+        return requests.get(
+            url, headers={**HEADERS, **headers}, timeout=TIMEOUT, allow_redirects=False, stream=True, **options
+        )
+    except UnicodeDecodeError as error:
+        raise not_utf8(bytes(error.object).decode("latin-1")) from None
+
+
 def page_response(url, params, headers):
     """One request of get(), following no redirect, its body read here up to MAX_RESPONSE_BYTES, so a connection lost
     mid-body is retried like any other request. A response that is not a redirect is returned with the bytes read as
     its body (see with_body())."""
-    response = requests.get(
-        url,
-        params=params,
-        headers={**HEADERS, **(headers or {})},
-        timeout=TIMEOUT,
-        allow_redirects=False,
-        stream=True,
-    )
+    response = send(url, headers or {}, params=params)
     try:
         response.raise_for_status()
         return response if response.is_redirect else with_body(response, read_body(response, MAX_RESPONSE_BYTES))
@@ -245,7 +257,7 @@ def read_body(response, limit):
 def image_response(url, headers):
     """One request of an image download, following no redirect: (response, body), body None for a redirect. The body
     is streamed and read here, so a connection lost mid-body is retried like any other request (see get_image())."""
-    response = requests.get(url, headers={**HEADERS, **headers}, timeout=TIMEOUT, allow_redirects=False, stream=True)
+    response = send(url, headers)
     try:
         response.raise_for_status()
         return response, None if response.is_redirect else read_body(response, MAX_IMAGE_BYTES)
@@ -258,12 +270,12 @@ def redirect_target(response):
     header bytes as latin-1, so the header is encoded back and decoded as UTF-8 (a raw UTF-8 file name stays itself
     instead of turning into mojibake), parsed with urlparse (which drops tabs, CR and LF anywhere and C0 controls or
     spaces at the start), requoted, and resolved against the response's URL. A Location that is not UTF-8 raises
-    RefusedDownload."""
+    not_utf8(); requests refuses it already in send(), so this only guards a response that did not come through it."""
     header = response.headers["Location"]
     try:
         location = header.encode("latin-1").decode("utf-8")
     except UnicodeError:
-        raise RefusedDownload(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
+        raise not_utf8(header) from None
     return urljoin(response.url, requests.utils.requote_uri(urlparse(location).geturl()))
 
 

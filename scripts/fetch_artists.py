@@ -106,18 +106,34 @@ def host_allowed(url, hosts):
     )
 
 
+def not_utf8(header):
+    """The refusal of a redirect whose Location header (as http.client decodes it, latin-1) is not UTF-8: a plain
+    ValueError, which request() does not retry, so the request fails at once and nothing more is requested."""
+    return ValueError(f"Refusing a redirect whose Location is not UTF-8: {header!r}")
+
+
+def send(url, headers, **options):
+    """requests.get(url) with headers, this script's timeout and options. requests reads the Location of every redirect
+    response, followed or not (for one it does not follow, Session.send prepares the request Response.next would send),
+    and raises UnicodeDecodeError for a Location that is not UTF-8 before it returns: that is raised as not_utf8()."""
+    try:
+        return requests.get(url, headers=headers, timeout=(15, 60), **options)
+    except UnicodeDecodeError as error:
+        raise not_utf8(bytes(error.object).decode("latin-1")) from None
+
+
 def redirect_target(response):
     """The absolute URL the redirect response sends to, read from its Location as requests reads it (and as
     fetch_archives.py and fetch_wikis.py read it): http.client decodes header bytes as latin-1, so the header is encoded
     back and decoded as UTF-8 (a raw UTF-8 path stays itself instead of turning into mojibake), parsed with urlparse
     (which drops tabs, CR and LF anywhere and C0 controls or spaces at the start), requoted, and resolved against the
-    response's URL. A Location that is not UTF-8 raises ValueError, which request() does not retry, so nothing more is
-    requested."""
+    response's URL. A Location that is not UTF-8 raises not_utf8(); requests refuses it already in send(), so this only
+    guards a response that did not come through it."""
     header = response.headers["location"]
     try:
         location = header.encode("latin-1").decode("utf-8")
     except UnicodeError:
-        raise ValueError(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
+        raise not_utf8(header) from None
     return urljoin(response.url, requests.utils.requote_uri(urlparse(location).geturl()))
 
 
@@ -126,7 +142,7 @@ def get_within(url, headers, hosts):
     for _ in range(MAX_REDIRECTS + 1):
         if not host_allowed(url, hosts):
             raise ValueError(f"Refusing URL outside the expected hosts ({', '.join(hosts)}): {url}")
-        response = requests.get(url, headers=headers, timeout=(15, 60), allow_redirects=False)
+        response = send(url, headers, allow_redirects=False)
         if not response.is_redirect:
             return response
         url = redirect_target(response)
@@ -142,7 +158,7 @@ def request(url, referer=None, hosts=None):
             if hosts:
                 response = get_within(url, headers, hosts)
             else:
-                response = requests.get(url, headers=headers, timeout=(15, 60))
+                response = send(url, headers)
             response.raise_for_status()
             return response
         except requests.RequestException as error:

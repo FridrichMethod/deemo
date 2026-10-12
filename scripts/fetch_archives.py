@@ -101,18 +101,34 @@ def host_allowed(url, hosts):
     )
 
 
+def not_utf8(header):
+    """The refusal of a redirect whose Location header (as http.client decodes it, latin-1) is not UTF-8: InvalidURL,
+    both a ValueError and a RequestException, so it fails a download, a page read or a reachability check like any
+    other failed request, and nothing more is requested."""
+    return requests.exceptions.InvalidURL(f"Refusing a redirect whose Location is not UTF-8: {header!r}")
+
+
+def send(url, **options):
+    """session().get(url, **options), following no redirect. requests reads the Location of a redirect response even
+    then (Session.send prepares the request Response.next would send) and raises UnicodeDecodeError, which is no
+    RequestException, for a Location that is not UTF-8 before it returns the response: that is raised as not_utf8()."""
+    try:
+        return session().get(url, allow_redirects=False, **options)
+    except UnicodeDecodeError as error:
+        raise not_utf8(bytes(error.object).decode("latin-1")) from None
+
+
 def redirect_target(r):
     """The absolute URL the redirect response r sends to, read from its Location as requests reads it: http.client
     decodes header bytes as latin-1, so the header is encoded back and decoded as UTF-8 (a raw UTF-8 path stays itself
     instead of turning into mojibake), parsed with urlparse (which drops tabs, CR and LF anywhere and C0 controls or
-    spaces at the start), requoted, and resolved against r's URL. A Location that is not UTF-8 raises InvalidURL, both
-    a ValueError and a RequestException, so it fails a download or a reachability check before anything more is
-    requested."""
+    spaces at the start), requoted, and resolved against r's URL. A Location that is not UTF-8 raises not_utf8(); a
+    real requests session refuses it already in send(), so this only guards a response that did not come through it."""
     header = r.headers["location"]
     try:
         location = header.encode("latin-1").decode("utf-8")
     except UnicodeError:
-        raise requests.exceptions.InvalidURL(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
+        raise not_utf8(header) from None
     return urljoin(r.url, requests.utils.requote_uri(urlparse(location).geturl()))
 
 
@@ -122,7 +138,7 @@ def get(url, hosts):
     for _ in range(MAX_REDIRECTS + 1):
         if not host_allowed(url, hosts):
             raise ValueError(f"Refusing URL outside the expected hosts ({', '.join(hosts)}): {url}")
-        r = session().get(url, timeout=(15, 60), allow_redirects=False)
+        r = send(url, timeout=(15, 60))
         if not r.is_redirect:
             r.raise_for_status()
             return r
@@ -624,7 +640,7 @@ def reach(url):
     requested), or None. Only the status line and headers are read: the body is never downloaded."""
     site = registrable_domain(urlsplit(url).hostname)
     for _ in range(MAX_REDIRECTS + 1):
-        r = session().get(url, timeout=(12, 35), allow_redirects=False, stream=True)
+        r = send(url, timeout=(12, 35), stream=True)
         r.close()
         if not r.is_redirect:
             return r, None
