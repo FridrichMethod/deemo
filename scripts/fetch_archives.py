@@ -655,6 +655,7 @@ def followed(location, hosts):
     try:
         target = (urlsplit(location).hostname or "").rstrip(".")
     except ValueError:
+        # Defensive, for a direct caller: reach() passes a Location that redirect_target() has already parsed.
         return False
     return target in hosts and not ip_literal(target) and host_allowed(location, (target,))
 

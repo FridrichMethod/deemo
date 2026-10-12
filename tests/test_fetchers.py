@@ -2204,6 +2204,19 @@ class CatalogCheckTests(unittest.TestCase):
             with self.subTest(url=url, location=location):
                 self.assert_not_followed(url, location)
 
+    def test_followed_refuses_a_location_urlsplit_cannot_read(self):
+        # reach() never passes one (redirect_target() has read the Location with urlparse); a direct caller gets False
+        # instead of the ValueError, as from host_allowed().
+        hosts = {"example.com", "::1", "ex#ample.com"}
+        for location in (
+            "https://[::1/x",
+            "https://example.com]/x",
+            "https://[example.com]/x",
+            "https://ex\uff03ample.com/x",  # a FULLWIDTH NUMBER SIGN, which NFKC turns into "#"
+        ):
+            with self.subTest(location=location):
+                self.assertFalse(archives.followed(location, hosts))
+
     def test_a_redirect_to_an_ip_address_is_not_followed_even_when_listed(self):
         reviewed = (
             ("shop.example.com", "192.0.2.1", ("archives:a",)),
