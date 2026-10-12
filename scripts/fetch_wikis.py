@@ -182,14 +182,29 @@ def not_utf8(header):
     return RefusedDownload(f"Refusing a redirect whose Location is not UTF-8: {header!r}")
 
 
+def close_redirect(response, *args, **kwargs):
+    """The response hook of send(): closes a redirect response as soon as requests has its status line and headers.
+    Session.send reads the rest of a redirect's body before it returns, even for a redirect it does not follow (to
+    release the connection, while it prepares the request Response.next would send), and read_body() never reads a
+    redirect, so no byte limit would apply to that body; once the response is closed, nothing more of it is read."""
+    if response.is_redirect:
+        response.close()
+
+
 def send(url, headers, **options):
-    """requests.get(url) with HEADERS and headers, this script's timeout and options, streamed and following no redirect.
-    requests reads the Location of a redirect response even then (Session.send prepares the request Response.next would
-    send) and raises UnicodeDecodeError, which is no RequestException, for a Location that is not UTF-8 before it
-    returns the response: that is raised as not_utf8()."""
+    """requests.get(url) with HEADERS and headers, this script's timeout and options, streamed and following no redirect;
+    a redirect response is closed before its body is read (see close_redirect()). requests still reads its Location
+    (Session.send prepares the request Response.next would send) and raises UnicodeDecodeError, which is no
+    RequestException, for a Location that is not UTF-8 before it returns the response: that is raised as not_utf8()."""
     try:
         return requests.get(
-            url, headers={**HEADERS, **headers}, timeout=TIMEOUT, allow_redirects=False, stream=True, **options
+            url,
+            headers={**HEADERS, **headers},
+            timeout=TIMEOUT,
+            allow_redirects=False,
+            stream=True,
+            hooks={"response": close_redirect},
+            **options,
         )
     except UnicodeDecodeError as error:
         raise not_utf8(bytes(error.object).decode("latin-1")) from None
