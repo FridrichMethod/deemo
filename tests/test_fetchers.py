@@ -2713,12 +2713,22 @@ class CommittedDataTests(unittest.TestCase):
         sources = {"archives:stopped": stopped, "archives:followed": followed}
         with patch.object(archives, "CROSS_HOST_REDIRECTS", (entry,)):
             self.assertEqual(unshown_redirects(sources), [])
+            # Host names compare without a final dot, as redirect_hosts() and followed() compare them.
+            for name, row in (
+                ("redirected to www.tumblr.com.", {**stopped, "redirect_location": "https://www.tumblr.com./x"}),
+                ("on wublaze.tumblr.com.", {**followed, "url": "https://wublaze.tumblr.com./post/1/x"}),
+            ):
+                with self.subTest(row=name):
+                    self.assertEqual(unshown_redirects({**sources, "archives:stopped": row}), [])
             for name, row in (
                 ("redirected to another host", {**stopped, "redirect_location": "https://other.tumblr.com/post/1/x"}),
                 ("not marked redirected_off_site", {**stopped, "access_status": "page_reachable"}),
                 ("not redirected", {**followed, "resolved_url": page}),
                 ("on the target host itself", {**followed, "url": location}),
                 ("on a host the pattern does not match", {**followed, "url": "https://tumblr.com.example/post/1/x"}),
+                # "*.tumblr.com" matches the subdomains of tumblr.com only, as in redirect_hosts().
+                ("on tumblr.com itself", {**followed, "url": "https://tumblr.com/post/1/x"}),
+                ("on eviltumblr.com", {**followed, "url": "https://eviltumblr.com/post/1/x"}),
             ):
                 with self.subTest(row=name):
                     cited = {**sources, "archives:stopped": row}
