@@ -2592,6 +2592,7 @@ class RedirectBodyTests(unittest.TestCase):
 
     def setUp(self):
         self.sent = queue.Queue()
+        self.status = 302  # the redirect status the server answers with
 
         class Handler(BaseHTTPRequestHandler):
             def do_GET(handler):
@@ -2601,7 +2602,7 @@ class RedirectBodyTests(unittest.TestCase):
                     handler.end_headers()
                     handler.wfile.write(self.PAYLOAD)
                     return
-                handler.send_response(302)
+                handler.send_response(self.status)
                 handler.send_header("Location", handler.path.replace("moved", "final"))
                 handler.send_header("Content-Length", str(self.BODY))
                 handler.end_headers()
@@ -2652,12 +2653,15 @@ class RedirectBodyTests(unittest.TestCase):
 
     def test_a_reachability_check_reads_no_redirect_body(self):
         self.archive_session()
-        row = archives.check_entry(("moved", "Moved", "https://www.reddit.com/r/TrueDeemo/moved/", "index_only", ""))
-        self.assertEqual(
-            (row["access_status"], row["resolved_url"]),
-            ("page_reachable", "https://www.reddit.com/r/TrueDeemo/final/"),
-        )
-        self.assert_redirect_bodies_unread(1)
+        for self.status in requests.sessions.REDIRECT_STATI:  # every status requests treats as a redirect
+            with self.subTest(status=self.status):
+                entry = ("moved", "Moved", "https://www.reddit.com/r/TrueDeemo/moved/", "index_only", "")
+                row = archives.check_entry(entry)
+                self.assertEqual(
+                    (row["access_status"], row["resolved_url"]),
+                    ("page_reachable", "https://www.reddit.com/r/TrueDeemo/final/"),
+                )
+                self.assert_redirect_bodies_unread(1)
 
     def test_an_archive_download_or_page_read_reads_no_redirect_body(self):
         self.archive_session()
@@ -2667,16 +2671,21 @@ class RedirectBodyTests(unittest.TestCase):
 
     def test_an_artist_download_or_page_read_reads_no_redirect_body(self):
         session = self.loopback_session()
-        with patch.object(artists.requests, "get", lambda url, **options: session.get(url, **options)):
-            # A download follows its redirects by hand (get_within()); a page read lets requests follow them.
-            image = artists.request(
-                "https://i.pximg.net/img-original/moved/1_p0.png", PAGE_URL, artists.DOWNLOAD_HOSTS["pixiv"]
-            )
-            page = artists.request("https://princeofglass.blogspot.com/p/moved.html")
-        self.assertEqual((image.url, image.content), ("https://i.pximg.net/img-original/final/1_p0.png", self.PAYLOAD))
-        self.assertEqual((page.url, page.content), ("https://princeofglass.blogspot.com/p/final.html", self.PAYLOAD))
-        self.assertEqual([response.status_code for response in page.history], [302])
-        self.assert_redirect_bodies_unread(2)
+        for self.status in requests.sessions.REDIRECT_STATI:  # every status requests treats as a redirect
+            with self.subTest(status=self.status), patch.object(artists.requests, "get", session.get):
+                # A download follows its redirects by hand (get_within()); a page read lets requests follow them.
+                image = artists.request(
+                    "https://i.pximg.net/img-original/moved/1_p0.png", PAGE_URL, artists.DOWNLOAD_HOSTS["pixiv"]
+                )
+                page = artists.request("https://princeofglass.blogspot.com/p/moved.html")
+                self.assertEqual(
+                    (image.url, image.content), ("https://i.pximg.net/img-original/final/1_p0.png", self.PAYLOAD)
+                )
+                self.assertEqual(
+                    (page.url, page.content), ("https://princeofglass.blogspot.com/p/final.html", self.PAYLOAD)
+                )
+                self.assertEqual([response.status_code for response in page.history], [self.status])
+                self.assert_redirect_bodies_unread(2)
 
 
 # ----------------------------------------------------------- committed data, code

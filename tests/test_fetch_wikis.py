@@ -1305,6 +1305,7 @@ class RedirectBodyTests(unittest.TestCase):
 
     def setUp(self):
         self.sent = queue.Queue()
+        self.status = 302  # the redirect status the server answers with
 
         class Handler(BaseHTTPRequestHandler):
             def do_GET(handler):
@@ -1314,7 +1315,7 @@ class RedirectBodyTests(unittest.TestCase):
                     handler.end_headers()
                     handler.wfile.write(self.PAYLOAD)
                     return
-                handler.send_response(302)
+                handler.send_response(self.status)
                 handler.send_header("Location", handler.path.replace("moved", "final"))
                 handler.send_header("Content-Length", str(self.BODY))
                 handler.end_headers()
@@ -1355,11 +1356,14 @@ class RedirectBodyTests(unittest.TestCase):
         self.assertLess(size, self.LIMIT, f"{size} of {self.BODY} redirect body bytes were sent")
 
     def test_a_page_read_reads_no_redirect_body(self):
-        response = fetch.get("https://deemo.fandom.com/moved/api.php", params={"action": "query"})
-        self.assertEqual(
-            (response.url, response.content), ("https://deemo.fandom.com/final/api.php?action=query", self.PAYLOAD)
-        )
-        self.assert_redirect_body_unread()
+        for self.status in requests.sessions.REDIRECT_STATI:  # every status requests treats as a redirect
+            with self.subTest(status=self.status):
+                response = fetch.get("https://deemo.fandom.com/moved/api.php", params={"action": "query"})
+                self.assertEqual(
+                    (response.url, response.content),
+                    ("https://deemo.fandom.com/final/api.php?action=query", self.PAYLOAD),
+                )
+                self.assert_redirect_body_unread()
 
     def test_an_image_download_reads_no_redirect_body(self):
         response, body = fetch.get_image("fandom", FANDOM_IMAGES + "a/ab/moved.png", {})
