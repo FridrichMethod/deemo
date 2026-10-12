@@ -4,9 +4,9 @@ name: Publish public gallery
 # and a manual run on such a tag (gh workflow run pages.yml --ref vX.Y.Z) deploys that commit; a manual run does
 # not look up the tag's Release, so use it only to redeploy a released tag. Pushes, pull requests and schedules never
 # start this workflow; tests.yml checks them. The guard job refuses, with an error, every other run: another event, a
-# branch, a release marked as a prerelease, a tag that is not vX.Y.Z, a commit that is not on main. The full tests.yml
-# then runs on the release commit, the build job repeats the guards before anything else and stages the site, and the
-# deploy job, whose condition requires a release tag again, publishes it.
+# branch, a release marked as a prerelease, a tag that is not vX.Y.Z (three numbers without leading zeros), a commit
+# that is not on main. The full tests.yml then runs on the release commit, the build job repeats the guards before
+# anything else and stages the site, and the deploy job, whose condition requires a release tag again, publishes it.
 on:
   release:
     types: [published]
@@ -50,7 +50,7 @@ jobs:
             workflow_dispatch) ;;
             *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
           esac
-          [[ "$REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Only a vX.Y.Z tag is deployed, not '$REF'."
+          [[ "$REF" =~ ^refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail "Only a vX.Y.Z tag, three numbers without leading zeros, is deployed, not '$REF'."
           echo "$REF is a vX.Y.Z tag."
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -110,7 +110,7 @@ jobs:
             workflow_dispatch) ;;
             *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
           esac
-          [[ "$REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Only a vX.Y.Z tag is deployed, not '$REF'."
+          [[ "$REF" =~ ^refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail "Only a vX.Y.Z tag, three numbers without leading zeros, is deployed, not '$REF'."
           echo "$REF is a vX.Y.Z tag."
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0

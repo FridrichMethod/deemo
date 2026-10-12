@@ -256,9 +256,13 @@ class GuardTests(unittest.TestCase):
         for contexts in (
             published(),
             published("v1.2.0", "tip"),
+            published("v10.20.30"),
             dispatched(),
             dispatched("refs/tags/v1.2.0", "tip"),
             dispatched("refs/tags/v10.20.30", "released"),
+            # A zero on its own is a number, and so is a number that ends in zeros.
+            dispatched("refs/tags/v0.0.0"),
+            dispatched("refs/tags/v1.10.0"),
         ):
             self.assert_guards(None, contexts)
 
@@ -285,10 +289,15 @@ class GuardTests(unittest.TestCase):
             "refs/tags/v1.1.0 ",
             "refs/tags/v1.1.0\nrefs/tags/v1.1.0",
             "refs/tags/v1.1.\u0663",  # ARABIC-INDIC DIGIT THREE, a [0-9] in en_US.UTF-8
+            # A leading zero, in each of the three numbers.
+            "refs/tags/v01.1.0",
+            "refs/tags/v1.01.0",
+            "refs/tags/v1.1.00",
+            "refs/tags/v00.0.0",
             "",
         ):
             self.assert_guards(1, dispatched(ref))
-        for tag in ("v1.1", "1.1.0", "v1.1.0-rc1"):
+        for tag in ("v1.1", "1.1.0", "v1.1.0-rc1", "v01.1.0", "v1.1.01"):
             self.assert_guards(1, published(tag))
 
     def test_a_prerelease_or_another_release_action_is_refused(self):
