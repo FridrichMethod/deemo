@@ -33,9 +33,9 @@ workflows = load("test_tooling", "tests/test_tooling.py")
 # ref that starts with v, from a published full release or a manual run; the guard steps check the whole vX.Y.Z tag.
 # Its == coerces null and false both to 0, so `prerelease == false` would also accept a release event without the flag;
 # toJSON() turns false into 'false' and a missing flag into 'null'. The guard job's outputs are the commit its steps
-# approved and the attempt of the run they ran in, both empty unless every one of them passed. A re-run of the deploy job
-# alone, or of later jobs only, keeps the guard job's outputs of the attempt it repeats and looks up no Release, so the
-# attempt must be the run's own (RE_RUNS).
+# approved and the attempt of the run they ran in, both empty unless every one of them passed. A re-run that leaves out
+# the guard job, such as one of the deploy job alone, keeps the guard job's outputs of the attempt it repeats (even when
+# it runs the build job's Release lookup again), so the attempt must be the run's own (RE_RUNS).
 DEPLOY_CONDITION = (
     "startsWith(github.ref, 'refs/tags/v') && needs.guard.outputs.commit == github.sha && "
     "needs.guard.outputs.attempt == github.run_attempt && "
@@ -228,8 +228,8 @@ PUSH_DEPLOYED = {
     "README.zh-CN.md": ("推送到 `main` 后", "只从 `main` 部署", "Pages 工作流会再次运行全部检查"),
 }
 # What each README's deployment section says about the release rules of 2026-10-12: what every run checks, a re-run of
-# a release's run included, that a re-run without the guard job (named as on the Actions page) deploys nothing, the
-# tag form, and the two repository settings that limit which tags can deploy.
+# a release's run included, that a re-run without the guard job (named as on the Actions page) deploys nothing and why,
+# the tag form, and the two repository settings that limit which tags can deploy.
 GUARD_JOB = "Release guard"
 RELEASE_RULES = {
     "README.md": (
@@ -237,8 +237,8 @@ RELEASE_RULES = {
         "one read-only request to the GitHub API",
         "A re-run keeps the event of the run it repeats",
         "also refuses a re-run of a release's run",
-        f"A re-run that leaves out the {GUARD_JOB} job, such as a re-run of the deploy job alone, does not look the"
-        " Release up again and deploys nothing, so re-run the whole run.",
+        f"A re-run that leaves out the {GUARD_JOB} job, such as a re-run of the deploy job alone, deploys nothing,"
+        " because the deploy job requires the guard job's record of the current attempt; re-run the whole run.",
         "a run on a tag without such a Release",
         "three numbers without leading zeros",
         "`v01.1.0`",
@@ -253,8 +253,8 @@ RELEASE_RULES = {
         "向 GitHub API 发出一次只读请求",
         "重新运行（re-run）沿用被重新运行的那次运行的事件",
         "也会被这项检查拒绝",
-        f"不包括 {GUARD_JOB} 任务的重新运行（例如只重新运行部署任务）不会再次查询 Release，也不会部署任何内容，"
-        "因此应重新运行整次运行。",
+        f"不包括 {GUARD_JOB} 任务的重新运行（例如只重新运行部署任务）不会部署任何内容，"
+        f"因为部署任务要求有 {GUARD_JOB} 任务对当前这次尝试（attempt）的记录；应重新运行整次运行。",
         "在没有这样的 Release 的标签上的运行",
         "三个不带前导零的数字",
         "`v01.1.0`",
@@ -294,17 +294,19 @@ HEADER_RULES = (
     "Every run, whichever of the two started it, first asks for the tag's Release",
     "one read-only GitHub API request",
     "a re-run keeps the event of the run it repeats",
-    "a re-run that leaves out the guard job, such as one of the deploy job alone, repeats no lookup and deploys nothing,"
-    " so re-run the whole run",
+    "a re-run that leaves out the guard job, such as one of the deploy job alone, deploys nothing, because the deploy"
+    " job requires the guard job's record of the current attempt; re-run the whole run",
     "the commit the guard job approved in the same attempt",
     "three numbers without leading zeros",
     'A repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags',
     "the github-pages environment accepts deployments only from tags from v1.1.1 on",
     "the two keep anyone but an admin from deploying through the github-pages environment with a workflow of their own",
 )
-# What the READMEs and the header comment of pages.yml said before the github-pages environment accepted deployments
-# only from tags from v1.1.1 on (2026-10-12): an environment rule that allows every v* tag or main, a request to run
-# only tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release.
+# What the READMEs and the comments of pages.yml said before the github-pages environment accepted deployments only
+# from tags from v1.1.1 on (2026-10-12): an environment rule that allows every v* tag or main, a request to run only
+# tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release. And what a
+# draft of them said of a re-run that leaves out the guard job: that it looks up no Release. One that includes the build
+# job does look it up; it deploys nothing all the same.
 RETIRED_DEPLOYMENT_RULES = {
     "README.md": (
         "allows `v*` tags",
@@ -313,8 +315,9 @@ RETIRED_DEPLOYMENT_RULES = {
         "should be run by hand",
         "redeploy",
         "deploys that release again",
+        "does not look the Release up again",
     ),
-    "README.zh-CN.md": ("允许 `v*` 标签", "允许 `main`", "只应手动运行", "重新部署"),
+    "README.zh-CN.md": ("允许 `v*` 标签", "允许 `main`", "只应手动运行", "重新部署", "不会再次查询 Release"),
     ".github/workflows/pages.yml": (
         "allows v* tags",
         "allows main",
@@ -323,6 +326,8 @@ RETIRED_DEPLOYMENT_RULES = {
         "deploys it again",
         "deploys that commit again",
         "does not look up the tag's Release, so",
+        "repeats no lookup",
+        "looks up no Release",
     ),
 }
 # Where a sentence of a deployment section or of the header comment ends: after a full stop and a space, or after 。.
@@ -396,8 +401,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("needs.guard.outputs.attempt == github.run_attempt", DEPLOY_CONDITION)
 
     def test_only_an_attempt_that_ran_the_guard_job_deploys(self):
-        # A re-run of the deploy job alone keeps the guard job's outputs of the attempt it repeats and repeats no
-        # Release lookup, so it deploys nothing; a re-run of the whole run can (RE_RUNS).
+        # A re-run that leaves out the guard job, such as one of the deploy job alone, keeps the guard job's outputs of
+        # the attempt it repeats, so it deploys nothing; a re-run of the whole run can (RE_RUNS).
         condition = workflows.block_text(*self.jobs["deploy"]["keys"]["if"])
         for scenario, (contexts, deploys) in RE_RUNS.items():
             with self.subTest(scenario):
