@@ -531,10 +531,18 @@ class GuardTests(unittest.TestCase):
             "refs/tags/v1.01.0",
             "refs/tags/v1.1.00",
             "refs/tags/v00.0.0",
+            # Another character than a dot between two numbers, in each of the two places: a pattern whose dot is not
+            # escaped there accepts them.
+            "refs/tags/v1-1.0",
+            "refs/tags/v1.1-0",
+            "refs/tags/v1x1.0",
+            "refs/tags/v1.1x0",
+            "refs/tags/v1111.0",
+            "refs/tags/v1.111",
             "",
         ):
             self.assert_guards("event", dispatched(ref))
-        for tag in ("v1.1", "1.1.0", "v1.1.0-rc1", "v01.1.0", "v1.1.01"):
+        for tag in ("v1.1", "1.1.0", "v1.1.0-rc1", "v01.1.0", "v1.1.01", "v1-1.0", "v1.1-0", "v1x1.0", "v1.1x0"):
             self.assert_guards("event", published(tag))
 
     def test_a_prerelease_or_another_release_action_is_refused(self):
