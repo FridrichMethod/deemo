@@ -731,6 +731,11 @@ class DownloadLocationTests(unittest.TestCase):
             ("bwiki", bwiki + "%udf9f%ud842../%udf9f%ud842../otherwiki/x.png"),  # a low surrogate, then a high one
             ("bwiki", bwiki + "%25udc00%25u002e%25u002e/%25udc00%25u002e%25u002e/otherwiki/x.png"),
             ("bwiki", bwiki + "\udc00../\udc00../otherwiki/x.png"),  # as written
+            # A surrogate left unpaired in a file name is no character at all.
+            ("bwiki", bwiki + "a/ab/%udc00x.png"),
+            ("bwiki", bwiki + "a/ab/%ud842.png"),
+            # A surrogate pair is one character: here U+E0001, a format character that a normalising server drops.
+            ("bwiki", bwiki + "..%udb40%udc01/..%udb40%udc01/otherwiki/x.png"),
             ("bwiki", bwiki + "..%20./..%20./otherwiki/x.png"),  # Windows: ".. ."
             ("bwiki", bwiki + ".../.../otherwiki/x.png"),
             ("bwiki", bwiki + "..../..../otherwiki/x.png"),

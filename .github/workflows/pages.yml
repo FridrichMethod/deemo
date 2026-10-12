@@ -5,18 +5,18 @@ name: Publish public gallery
 # pages.yml --ref vX.Y.Z). Every run, whichever of the two started it, first asks for the tag's Release with one
 # read-only GitHub API request and goes on only if that Release is published and is neither a draft nor a prerelease: a
 # re-run keeps the event of the run it repeats, so only the answer says what the Release is now (a re-run that leaves
-# out the guard job, such as one of the deploy job alone, repeats no lookup and deploys nothing, so re-run the whole
-# run). Pushes, pull requests and schedules never start this workflow; tests.yml checks them. The guard job refuses,
-# with an error, every other run: another event, a branch, a release marked as a prerelease, a tag that is not vX.Y.Z
-# (three numbers without leading zeros), a tag without such a Release, a commit that is not on main. It gives the commit
-# of a run that passes all of this, and the run's attempt, as its outputs. The full tests.yml then runs on the release
-# commit, the build job repeats the guards before anything else and stages the site, and the deploy job, whose condition
-# requires a release tag again and the commit the guard job approved in the same attempt, publishes it. A repository
-# ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags, and the github-pages
-# environment accepts deployments only from tags from v1.1.1 on: a run takes this file from the tag's commit, so the two
-# keep anyone but an admin from deploying through the github-pages environment with a workflow of their own. A run on a
-# tag older than v1.1.1 would take that tag's own workflow, which does not look up the Release, and the environment
-# refuses its deployment.
+# out the guard job, such as one of the deploy job alone, deploys nothing, because the deploy job requires the guard
+# job's record of the current attempt; re-run the whole run). Pushes, pull requests and schedules never start this
+# workflow; tests.yml checks them. The guard job refuses, with an error, every other run: another event, a branch, a
+# release marked as a prerelease, a tag that is not vX.Y.Z (three numbers without leading zeros), a tag without such a
+# Release, a commit that is not on main. It gives the commit of a run that passes all of this, and the run's attempt, as
+# its outputs. The full tests.yml then runs on the release commit, the build job repeats the guards before anything else
+# and stages the site, and the deploy job, whose condition requires a release tag again and the commit the guard job
+# approved in the same attempt, publishes it. A repository ruleset ("Release tags v*") lets only repository admins
+# create, move or delete v* tags, and the github-pages environment accepts deployments only from tags from v1.1.1 on: a
+# run takes this file from the tag's commit, so the two keep anyone but an admin from deploying through the github-pages
+# environment with a workflow of their own. A run on a tag older than v1.1.1 would take that tag's own workflow, which
+# does not look up the Release, and the environment refuses its deployment.
 on:
   release:
     types: [published]
@@ -309,10 +309,10 @@ jobs:
     needs: [guard, test, build]
     # The release tag once more, in the expression language, which has no regular expressions: the guard steps check the
     # whole vX.Y.Z tag and the tag's Release. The commit must be the one the guard job approved, in this attempt of the
-    # run: a re-run of the deploy job alone, or of later jobs only, keeps the guard job's outputs of the attempt it
-    # repeats and looks up no Release, so it deploys nothing. Its == takes null for false, so the prerelease flag goes
-    # through toJSON(), which gives 'false' only for false. The job runs no repository code; it only has the Pages and
-    # OIDC grants.
+    # run: a re-run that leaves out the guard job, such as one of the deploy job alone, keeps the guard job's outputs of
+    # the attempt it repeats, so it deploys nothing. Its == takes null for false, so the prerelease flag goes through
+    # toJSON(), which gives 'false' only for false. The job runs no repository code; it only has the Pages and OIDC
+    # grants.
     if: >-
       startsWith(github.ref, 'refs/tags/v') &&
       needs.guard.outputs.commit == github.sha &&
