@@ -112,12 +112,22 @@ def not_utf8(header):
     return ValueError(f"Refusing a redirect whose Location is not UTF-8: {header!r}")
 
 
+def close_redirect(response, *args, **kwargs):
+    """The response hook of send(): closes a redirect response as soon as requests has its status line and headers.
+    Session.send reads the rest of a redirect's body before it goes on, whether it follows the redirect or not (to
+    release the connection, also while it prepares the request Response.next would send); once the response is closed,
+    nothing more of it is read."""
+    if response.is_redirect:
+        response.close()
+
+
 def send(url, headers, **options):
-    """requests.get(url) with headers, this script's timeout and options. requests reads the Location of every redirect
-    response, followed or not (for one it does not follow, Session.send prepares the request Response.next would send),
-    and raises UnicodeDecodeError for a Location that is not UTF-8 before it returns: that is raised as not_utf8()."""
+    """requests.get(url) with headers, this script's timeout and options; a redirect response is closed before its body
+    is read (see close_redirect()). requests reads the Location of every redirect response, followed or not (for one it
+    does not follow, Session.send prepares the request Response.next would send), and raises UnicodeDecodeError for a
+    Location that is not UTF-8 before it returns: that is raised as not_utf8()."""
     try:
-        return requests.get(url, headers=headers, timeout=(15, 60), **options)
+        return requests.get(url, headers=headers, timeout=(15, 60), hooks={"response": close_redirect}, **options)
     except UnicodeDecodeError as error:
         raise not_utf8(bytes(error.object).decode("latin-1")) from None
 

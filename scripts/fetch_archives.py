@@ -112,12 +112,22 @@ def not_utf8(header):
     return requests.exceptions.InvalidURL(f"Refusing a redirect whose Location is not UTF-8: {header!r}")
 
 
+def close_redirect(r, *args, **kwargs):
+    """The response hook of send(): closes a redirect response as soon as requests has its status line and headers.
+    Session.send reads the rest of a redirect's body before it returns, streamed or not, even for a redirect it does
+    not follow (to release the connection, while it prepares the request Response.next would send); once the response
+    is closed, nothing more of it is read."""
+    if r.is_redirect:
+        r.close()
+
+
 def send(url, **options):
-    """session().get(url, **options), following no redirect. requests reads the Location of a redirect response even
-    then (Session.send prepares the request Response.next would send) and raises UnicodeDecodeError, which is no
-    RequestException, for a Location that is not UTF-8 before it returns the response: that is raised as not_utf8()."""
+    """session().get(url, **options), following no redirect; a redirect response is closed before its body is read (see
+    close_redirect()). requests still reads its Location (Session.send prepares the request Response.next would send)
+    and raises UnicodeDecodeError, which is no RequestException, for a Location that is not UTF-8 before it returns the
+    response: that is raised as not_utf8()."""
     try:
-        return session().get(url, allow_redirects=False, **options)
+        return session().get(url, allow_redirects=False, hooks={"response": close_redirect}, **options)
     except UnicodeDecodeError as error:
         raise not_utf8(bytes(error.object).decode("latin-1")) from None
 
@@ -663,8 +673,8 @@ def followed(location, hosts):
 def reach(url):
     """The final response of url, following at most MAX_REDIRECTS redirects over https to url's own host, to its "www."
     sibling, or along a reviewed CROSS_HOST_REDIRECTS entry (see redirect_hosts()), and the target of the first
-    redirect that goes anywhere else (see redirect_target(); not requested), or None. Only the status line and headers
-    are read: the body is never downloaded."""
+    redirect that goes anywhere else (see redirect_target(); not requested), or None. No body is read, a redirect's
+    included (see close_redirect()), except that urllib3 drains a 429 or 5xx response before it retries the request."""
     hosts = redirect_hosts(urlsplit(url).hostname)
     for _ in range(MAX_REDIRECTS + 1):
         r = send(url, timeout=(12, 35), stream=True)

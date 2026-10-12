@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import queue
 import random
 import re
 import sys
@@ -115,8 +116,9 @@ class FakeWeb:
 
     Like requests, it follows redirects itself (with no host check) unless allow_redirects=False,
     so a fetcher that stops passing allow_redirects=False fails the redirect tests. Like
-    Session.send, it reads the Location of every redirect, followed or not, and so raises
-    UnicodeDecodeError for one that is not UTF-8 before it returns the response.
+    Session.send, it runs the response hooks on every response, then reads the Location of every
+    redirect, followed or not, and so raises UnicodeDecodeError for one that is not UTF-8 before it
+    returns the response.
     """
 
     def __init__(self, routes=None):
@@ -124,7 +126,7 @@ class FakeWeb:
         self.requested = []
         self.lock = threading.Lock()
 
-    def __call__(self, url, allow_redirects=True, **kwargs):
+    def __call__(self, url, allow_redirects=True, hooks=None, **kwargs):
         for _ in range(10):
             with self.lock:
                 self.requested.append(url)
@@ -133,6 +135,7 @@ class FakeWeb:
                 raise requests.ConnectionError(f"offline test: {url}")
             status, body, headers = route if isinstance(route, tuple) else (200, route, {})
             result = response(url, status, body, headers)
+            requests.hooks.dispatch_hook("response", hooks, result)
             REQUESTS_SESSION.get_redirect_target(result)
             if not (allow_redirects and result.is_redirect):
                 return result
@@ -2036,11 +2039,13 @@ class CatalogCheckTests(unittest.TestCase):
 
     def test_every_hop_is_judged_against_the_catalogued_pages_host(self):
         # The second hop of each chain goes to a host allowed relative to the first hop's host but not to the page's
-        # host, so the check stops there: www.www.reddit.com is no www sibling of reddit.com, and neither www.b.example
-        # nor c.example is a.example, its www sibling or the target of an entry for a.example.
+        # host, so the check stops there, where judging each hop against the hop before it would follow it:
+        # reddit.com is the www sibling of www.reddit.com but not of www.www.reddit.com (the sibling rule adds or
+        # removes one "www.", so it is not transitive), and neither www.b.example nor c.example is a.example, its www
+        # sibling or the target of an entry for a.example.
         reviewed = (("a.example", "b.example", ("archives:a",)), ("b.example", "c.example", ("archives:b",)))
         for page, hop, target in (
-            ("https://reddit.com/x", "https://www.reddit.com/x", "https://www.www.reddit.com/x"),
+            ("https://www.www.reddit.com/x", "https://www.reddit.com/x", "https://reddit.com/x"),
             ("https://a.example/x", "https://b.example/x", "https://www.b.example/x"),
             ("https://a.example/x", "https://b.example/x", "https://c.example/x"),
         ):
@@ -2573,6 +2578,114 @@ class UnreadableLocationTests(unittest.TestCase):
         self.assertEqual(manifest["assets"], [])
         self.assertEqual(self.paths, ["/p/moved.html", "/img-original/moved/1_p0.png"])
         sleep.assert_not_called()
+
+
+class RedirectBodyTests(unittest.TestCase):
+    """A real requests session against a loopback server whose redirects (on a path with "moved", to the same path with
+    "final") carry a body of BODY bytes. requests reads the rest of a redirect's body before Session.send returns, even
+    for a redirect it does not follow, unless the response is closed first; the server counts the bytes of each such
+    body it could send before the client closed the connection. Socket buffers hold far less than LIMIT."""
+
+    BODY = 64 * 1024 * 1024
+    LIMIT = 8 * 1024 * 1024
+    PAYLOAD = png("red")
+
+    def setUp(self):
+        self.sent = queue.Queue()
+        self.status = 302  # the redirect status the server answers with
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(handler):
+                if "moved" not in handler.path:
+                    handler.send_response(200)
+                    handler.send_header("Content-Length", str(len(self.PAYLOAD)))
+                    handler.end_headers()
+                    handler.wfile.write(self.PAYLOAD)
+                    return
+                handler.send_response(self.status)
+                handler.send_header("Location", handler.path.replace("moved", "final"))
+                handler.send_header("Content-Length", str(self.BODY))
+                handler.end_headers()
+                sent, chunk = 0, bytes(64 * 1024)
+                try:
+                    while sent < self.BODY:
+                        handler.wfile.write(chunk)
+                        sent += len(chunk)
+                except OSError:  # the client closed the connection
+                    pass
+                finally:
+                    self.sent.put(sent)
+
+            def log_message(handler, *args):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        self.port = server.server_address[1]
+        archives.reset()
+        self.addCleanup(archives.reset)
+
+    def assert_redirect_bodies_unread(self, count):
+        sent = [self.sent.get(timeout=60) for _ in range(count)]
+        self.assertTrue(self.sent.empty())
+        for size in sent:
+            self.assertLess(size, self.LIMIT, f"{size} of {self.BODY} redirect body bytes were sent")
+
+    def loopback_session(self):
+        """A requests.Session that sends everything to the loopback server, closed when the test ends."""
+        session = requests.Session()
+        session.trust_env = False
+        for prefix in ("https://", "http://"):
+            session.mount(prefix, Loopback(self.port, []))
+        self.addCleanup(session.close)
+        return session
+
+    def archive_session(self):
+        """fetch_archives' own session, its adapters replaced by ones that send everything to the loopback server."""
+        session = archives.session()
+        session.trust_env = False
+        for prefix in ("https://", "http://"):
+            session.mount(prefix, Loopback(self.port, []))
+        self.addCleanup(lambda: (session.close(), delattr(archives.LOCAL, "session")))
+        return session
+
+    def test_a_reachability_check_reads_no_redirect_body(self):
+        self.archive_session()
+        for self.status in requests.sessions.REDIRECT_STATI:  # every status requests treats as a redirect
+            with self.subTest(status=self.status):
+                entry = ("moved", "Moved", "https://www.reddit.com/r/TrueDeemo/moved/", "index_only", "")
+                row = archives.check_entry(entry)
+                self.assertEqual(
+                    (row["access_status"], row["resolved_url"]),
+                    ("page_reachable", "https://www.reddit.com/r/TrueDeemo/final/"),
+                )
+                self.assert_redirect_bodies_unread(1)
+
+    def test_an_archive_download_or_page_read_reads_no_redirect_body(self):
+        self.archive_session()
+        response = archives.get("https://archive.org/download/moved/1.jpg", archives.CAA_HOSTS)
+        self.assertEqual((response.url, response.content), ("https://archive.org/download/final/1.jpg", self.PAYLOAD))
+        self.assert_redirect_bodies_unread(1)
+
+    def test_an_artist_download_or_page_read_reads_no_redirect_body(self):
+        session = self.loopback_session()
+        for self.status in requests.sessions.REDIRECT_STATI:  # every status requests treats as a redirect
+            with self.subTest(status=self.status), patch.object(artists.requests, "get", session.get):
+                # A download follows its redirects by hand (get_within()); a page read lets requests follow them.
+                image = artists.request(
+                    "https://i.pximg.net/img-original/moved/1_p0.png", PAGE_URL, artists.DOWNLOAD_HOSTS["pixiv"]
+                )
+                page = artists.request("https://princeofglass.blogspot.com/p/moved.html")
+                self.assertEqual(
+                    (image.url, image.content), ("https://i.pximg.net/img-original/final/1_p0.png", self.PAYLOAD)
+                )
+                self.assertEqual(
+                    (page.url, page.content), ("https://princeofglass.blogspot.com/p/final.html", self.PAYLOAD)
+                )
+                self.assertEqual([response.status_code for response in page.history], [self.status])
+                self.assert_redirect_bodies_unread(2)
 
 
 # ----------------------------------------------------------- committed data, code

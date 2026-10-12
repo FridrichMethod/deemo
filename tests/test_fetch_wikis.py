@@ -15,6 +15,7 @@ import io
 import itertools
 import json
 import os
+import queue
 import shutil
 import signal
 import struct
@@ -174,17 +175,17 @@ REQUESTS_SESSION = requests.Session()
 class FakeWeb:
     """Stands in for requests.get. A route is bytes (200), a (status, body, headers) tuple, or a list of these served
     in turn (the last one repeats); any other URL behaves as if the network were down. Like requests, it follows a
-    redirect (a 3xx with a Location) unless allow_redirects=False, and like Session.send it reads the Location of every
-    redirect, followed or not, so it raises UnicodeDecodeError for one that is not UTF-8 before it returns the response.
-    Every request is recorded in calls, its query parameters in params, its allow_redirects and stream options in
-    options, and every response in responses. With a limit, a request past that many fails the test, so a client that
-    would never stop asking cannot hang it."""
+    redirect (a 3xx with a Location) unless allow_redirects=False, and like Session.send it runs the response hooks on
+    every response, then reads the Location of every redirect, followed or not, so it raises UnicodeDecodeError for one
+    that is not UTF-8 before it returns the response. Every request is recorded in calls, its query parameters in
+    params, its allow_redirects and stream options in options, and every response in responses. With a limit, a
+    request past that many fails the test, so a client that would never stop asking cannot hang it."""
 
     def __init__(self):
         self.routes, self.calls, self.params, self.options, self.responses = {}, [], [], [], []
         self.limit = None
 
-    def __call__(self, url, params=None, headers=None, timeout=None, allow_redirects=True, stream=False):
+    def __call__(self, url, params=None, headers=None, timeout=None, allow_redirects=True, stream=False, hooks=None):
         for _ in range(30):  # requests' default max_redirects
             if self.limit is not None and len(self.calls) >= self.limit:
                 raise AssertionError(f"Still requesting after {self.limit} requests: {url}")
@@ -199,6 +200,7 @@ class FakeWeb:
             status, body, served = route if isinstance(route, tuple) else (200, route, {"Content-Type": "image/png"})
             response = FakeResponse(url, status, body, served)
             self.responses.append(response)
+            requests.hooks.dispatch_hook("response", hooks, response)
             REQUESTS_SESSION.get_redirect_target(response)
             if not (allow_redirects and response.is_redirect):
                 return response
@@ -1288,6 +1290,85 @@ class NotUtf8LocationTests(FetcherRun):
         self.assertEqual(len(self.paths), 2)  # one request each, none retried
         self.assertEqual(self.sleeps, [])
         self.assertFalse((self.root / ILLUSTRATOR_INDEX).exists())
+
+
+class RedirectBodyTests(unittest.TestCase):
+    """A real requests.Session against a loopback server whose redirects (on a path with "moved", to the same path with
+    "final") carry a body of BODY bytes, far over the byte limits (patched to LIMIT). read_body() never reads a
+    redirect, and requests reads the rest of a redirect's body before Session.send returns, even for a redirect it does
+    not follow, unless the response is closed first; the server counts the bytes of each such body it could send
+    before the client closed the connection. Socket buffers hold far less than LIMIT."""
+
+    BODY = 64 * 1024 * 1024
+    LIMIT = 8 * 1024 * 1024
+    PAYLOAD = png("red")
+
+    def setUp(self):
+        self.sent = queue.Queue()
+        self.status = 302  # the redirect status the server answers with
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(handler):
+                if "moved" not in handler.path:
+                    handler.send_response(200)
+                    handler.send_header("Content-Length", str(len(self.PAYLOAD)))
+                    handler.end_headers()
+                    handler.wfile.write(self.PAYLOAD)
+                    return
+                handler.send_response(self.status)
+                handler.send_header("Location", handler.path.replace("moved", "final"))
+                handler.send_header("Content-Length", str(self.BODY))
+                handler.end_headers()
+                sent, chunk = 0, bytes(64 * 1024)
+                try:
+                    while sent < self.BODY:
+                        handler.wfile.write(chunk)
+                        sent += len(chunk)
+                except OSError:  # the client closed the connection
+                    pass
+                finally:
+                    self.sent.put(sent)
+
+            def log_message(handler, *args):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        session = requests.Session()
+        session.trust_env = False
+        for prefix in ("https://", "http://"):
+            session.mount(prefix, Loopback(server.server_address[1], []))
+        self.addCleanup(session.close)
+        for patcher in (
+            patch.object(fetch.requests, "get", lambda url, **options: session.get(url, **options)),
+            patch.object(fetch, "MAX_RESPONSE_BYTES", self.LIMIT),
+            patch.object(fetch, "MAX_IMAGE_BYTES", self.LIMIT),
+            patch.object(fetch.time, "sleep", lambda seconds: self.fail("retried")),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def assert_redirect_body_unread(self):
+        size = self.sent.get(timeout=60)
+        self.assertTrue(self.sent.empty())
+        self.assertLess(size, self.LIMIT, f"{size} of {self.BODY} redirect body bytes were sent")
+
+    def test_a_page_read_reads_no_redirect_body(self):
+        for self.status in requests.sessions.REDIRECT_STATI:  # every status requests treats as a redirect
+            with self.subTest(status=self.status):
+                response = fetch.get("https://deemo.fandom.com/moved/api.php", params={"action": "query"})
+                self.assertEqual(
+                    (response.url, response.content),
+                    ("https://deemo.fandom.com/final/api.php?action=query", self.PAYLOAD),
+                )
+                self.assert_redirect_body_unread()
+
+    def test_an_image_download_reads_no_redirect_body(self):
+        response, body = fetch.get_image("fandom", FANDOM_IMAGES + "a/ab/moved.png", {})
+        self.assertEqual((response.url, body), (FANDOM_IMAGES + "a/ab/final.png", self.PAYLOAD))
+        self.assert_redirect_body_unread()
 
 
 class DeliveryNoteTests(FetcherRun):
