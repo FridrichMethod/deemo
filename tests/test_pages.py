@@ -1,10 +1,13 @@
 """Ensure only a release is deployed, and only tracked, allowlisted website files reach the GitHub Pages payload."""
 
 import importlib.util
+import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -35,6 +38,8 @@ DEPLOY_CONDITION = (
     "toJSON(github.event.release.prerelease) == 'false'))"
 )
 # The only contexts the guard steps may read. GitHub renders a property the event does not have as an empty string.
+# github.token is the one context that is not about the run's event, ref or commit: the job's token, which can only read
+# (contents: read). Only the Release lookup of a manual run may read it (TOKEN_READERS).
 GUARD_CONTEXTS = (
     "github.event_name",
     "github.event.action",
@@ -42,8 +47,65 @@ GUARD_CONTEXTS = (
     "github.event.release.tag_name",
     "github.event.release.prerelease",
     "github.sha",
+    "github.token",
 )
+TOKEN_READERS = {"lookup"}
 EXPRESSION = re.compile(r"\$\{\{ ([a-z_.]+) \}\}")
+# The guard steps of both jobs by role, in the order they run. In the guard tests the Checkout class below stands in for
+# the checkout step.
+GUARD_STEPS = (
+    ("event", "Refuse anything but a published release or a manual run on a vX.Y.Z tag"),
+    ("lookup", "Look up the GitHub Release of the tag of a manual run"),
+    ("release", "Refuse a manual run on a tag without a published Release that is not a prerelease"),
+    ("checkout", "Checkout"),
+    ("main", "Refuse a release commit that is not on main"),
+)
+# The repository the runner names in GITHUB_REPOSITORY, the job token behind github.token, and the headers the Release
+# lookup sends with them.
+REPOSITORY = "FridrichMethod/deemo"
+TOKEN = "ghs_job-token-of-the-guard-tests"
+LOOKUP_HEADERS = [
+    f"Authorization: Bearer {TOKEN}",
+    "Accept: application/vnd.github+json",
+    "X-GitHub-Api-Version: 2022-11-28",
+]
+MISSING = object()  # a field release_response() leaves out
+# curl as the Release lookup calls it. It accepts only the options of one plain GET (an option that could change the
+# method, follow a redirect or skip the TLS checks is an error), logs the request to $FAKE_CURL_LOG and answers with
+# $FAKE_RESPONSE: {"status", "body"}, or {"error": [curl's exit code, its message]} for a request that got no answer.
+FAKE_CURL = r"""
+import json
+import os
+import sys
+
+FLAGS = {"--silent", "--show-error"}
+options = {"--proto": [], "--max-time": [], "--header": [], "--write-out": []}
+urls = []
+arguments = iter(sys.argv[1:])
+for argument in arguments:
+    if argument in FLAGS:
+        continue
+    if argument in options:
+        options[argument].append(next(arguments))
+    elif argument.startswith("-"):
+        sys.exit(f"curl (fake): unsupported option {argument}")
+    else:
+        urls.append(argument)
+headers = []
+for header in options["--header"]:
+    headers += sys.stdin.read().splitlines() if header == "@-" else [header]
+with open(os.environ["FAKE_CURL_LOG"], "a", encoding="utf-8") as log:
+    log.write(json.dumps({"argv": sys.argv[1:], "urls": urls, "headers": headers, "options": options}) + "\n")
+with open(os.environ["FAKE_RESPONSE"], encoding="utf-8") as file:
+    response = json.load(file)
+code, message = response.get("error") or (0, "")
+status = "000" if code else response["status"]
+written = "".join(options["--write-out"]).replace("\\n", "\n").replace("%{http_code}", status)
+sys.stdout.write(("" if code else response["body"]) + written)
+if code:
+    print(f"curl: ({code}) {message}", file=sys.stderr)
+    sys.exit(code)
+"""
 COMMITTER = {"NAME": "Release test", "EMAIL": "release@example.invalid", "DATE": "2026-10-11T00:00:00Z"}
 VERSION = r"v[0-9]+\.[0-9]+\.[0-9]+"
 # "[vX.Y.Z](<its release page>) (YYYY-MM-DD)", with ASCII or full-width parentheses around the date.
@@ -75,6 +137,42 @@ def published(tag="v1.1.0", commit="released", **changes):
 def dispatched(ref="refs/tags/v1.1.0", commit="released", event="workflow_dispatch"):
     """The contexts of a run on ref that no release started: a manual run, or another event."""
     return {"github.event_name": event, "github.ref": ref, "github.sha": commit}
+
+
+def answer(status, body):
+    """A response to the Release lookup: its HTTP status and its body."""
+    return {"status": status, "body": body}
+
+
+def release_response(tag="v1.1.0", status="200", **changes):
+    """GitHub's answer to GET /repos/{owner}/{repo}/releases/tags/{tag} for the published full Release of tag, with
+    changes to its fields (MISSING leaves one out)."""
+    release = {
+        "url": f"https://api.github.com/repos/{REPOSITORY}/releases/1",
+        "tag_name": tag,
+        "target_commitish": "main",
+        "name": tag,
+        "draft": False,
+        "prerelease": False,
+        "published_at": "2026-10-11T00:00:00Z",
+        **changes,
+    }
+    return answer(status, json.dumps({key: value for key, value in release.items() if value is not MISSING}))
+
+
+# What the endpoint answers for a tag without a published Release: no Release, or a draft only.
+NOT_FOUND = answer(
+    "404",
+    json.dumps(
+        {
+            "message": "Not Found",
+            "documentation_url": "https://docs.github.com/rest/releases/releases#get-a-release-by-tag-name",
+            "status": "404",
+        }
+    ),
+)
+# A request that got no answer.
+UNREACHABLE = {"error": [6, "Could not resolve host: api.github.com"]}
 
 
 class Checkout:
@@ -142,22 +240,28 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(triggers["workflow_dispatch"], ("", []), "a manual run takes no inputs")
 
     def test_the_artifact_job_repeats_the_guards_before_anything_else(self):
-        # The guard job is the guards alone: the event and ref check, a checkout with every commit, the main check. The
-        # build job starts with the same three steps, so nothing it runs from the checkout precedes them.
+        # The guard job is the guards alone: the event and ref check, the Release lookup of a manual run and its check,
+        # a checkout with every commit, the main check. The build job starts with the same steps, so nothing it runs
+        # from the checkout precedes them.
         guard, build = self.jobs["guard"]["steps"], self.jobs["build"]["steps"]
-        self.assertEqual(len(guard), 3)
-        self.assertEqual(guard[0]["lines"], build[0]["lines"])
-        self.assertEqual(guard[2]["lines"], build[2]["lines"])
+        roles, names = [role for role, _ in GUARD_STEPS], [name for _, name in GUARD_STEPS]
+        self.assertEqual([step["name"] for step in guard], names)
+        self.assertEqual([step["name"] for step in build[: len(names)]], names)
+        for index, role in enumerate(roles):
+            if role == "checkout":
+                continue
+            self.assertEqual(guard[index]["lines"], build[index]["lines"], f"the {role} step differs")
+            for job, steps in (("guard", guard), ("build", build)):
+                with self.subTest(job=job, step=role):
+                    self.assertIsNotNone(steps[index]["run"])
+                    self.assertEqual(set(steps[index]["keys"]) - {"name", "env", "run"}, set(), "no if: or a shell")
         for job, steps in (("guard", guard), ("build", build)):
             with self.subTest(job=job):
-                first, checkout, main = steps[:3]
-                for step in (first, main):
-                    self.assertIsNotNone(step["run"])
-                    self.assertEqual(set(step["keys"]) - {"name", "env", "run"}, set(), "no if: or continue-on-error")
+                checkout = steps[roles.index("checkout")]
                 self.assertTrue(checkout["keys"]["uses"].startswith("actions/checkout@"))
                 self.assertIn("          fetch-depth: 0", checkout["lines"])
                 self.assertIn("          persist-credentials: false", checkout["lines"])
-        later = [step["keys"].get("uses") or step["run"] for step in build[3:]]
+        later = [step["keys"].get("uses") or step["run"] for step in build[len(names) :]]
         self.assertEqual(
             later[:2],
             [
@@ -166,7 +270,7 @@ class WorkflowTests(unittest.TestCase):
             ],
         )
         self.assertTrue(later[2].startswith("actions/upload-pages-artifact@"))
-        self.assertIn("          path: ${{ runner.temp }}/deemo-site", build[5]["lines"])
+        self.assertIn("          path: ${{ runner.temp }}/deemo-site", build[-1]["lines"])
         self.assertEqual(len(later), 3)
 
     def test_only_the_deploy_job_deploys_and_only_for_a_release_tag(self):
@@ -188,27 +292,46 @@ class WorkflowTests(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("bash") and shutil.which("git"), "needs bash and git to run the guard steps")
 class GuardTests(unittest.TestCase):
-    """The guard steps of pages.yml run as GitHub runs them (bash -eo pipefail, the step's env from the run's contexts)
-    in a repository laid out as their checkout leaves it. Each refused run differs from an accepted one in one respect,
-    so it passes if the check of that respect is removed or loosened."""
+    """The guard steps of pages.yml run as GitHub runs them (bash -eo pipefail, the step's env from the run's contexts,
+    RUNNER_TEMP and GITHUB_REPOSITORY as the runner sets them) in a repository laid out as their checkout leaves it.
+    curl is a fake that answers the Release lookup with a fabricated response, and python3 is the interpreter of these
+    tests. Each refused run differs from an accepted one in one respect, so it passes if the check of that respect is
+    removed or loosened."""
 
     @classmethod
     def setUpClass(cls):
         _, jobs = workflows.read_workflow("pages.yml")
-        cls.guards = {job: (jobs[job]["steps"][0], jobs[job]["steps"][2]) for job in ("guard", "build")}
+        # A step missing from a job is left out here; WorkflowTests requires every one.
+        cls.guards = {}
+        for job in ("guard", "build"):
+            steps = {step["name"]: step for step in jobs[job]["steps"]}
+            cls.guards[job] = [
+                (role, steps[name]) for role, name in GUARD_STEPS if role != "checkout" and name in steps
+            ]
         cls.temporary = tempfile.TemporaryDirectory()
         directory = Path(cls.temporary.name)
         (directory / "checkout").mkdir()
         (directory / "no-main").mkdir()
         cls.checkout = Checkout(directory / "checkout")
         cls.without_main = Checkout(directory / "no-main", main=False)
+        # The fake curl and this interpreter as python3, on the steps' PATH ahead of the system's commands.
+        cls.bin = directory / "bin"
+        cls.bin.mkdir()
+        (directory / "curl.py").write_text(FAKE_CURL, encoding="utf-8")
+        python = shlex.quote(sys.executable)
+        for command, line in (
+            ("curl", f'exec {python} -I {shlex.quote(str(directory / "curl.py"))} "$@"'),
+            ("python3", f'exec {python} "$@"'),
+        ):
+            (cls.bin / command).write_text(f"#!/bin/sh\n{line}\n", encoding="utf-8")
+            (cls.bin / command).chmod(0o755)
 
     @classmethod
     def tearDownClass(cls):
         cls.temporary.cleanup()
 
-    def environment(self, step, contexts, checkout):
-        env = {**checkout.env, "LANG": "en_US.UTF-8"}  # a locale whose [0-9] also matches other scripts' digits
+    def environment(self, role, step, contexts, runner):
+        env = {**runner, "LANG": "en_US.UTF-8"}  # a locale whose [0-9] also matches other scripts' digits
         for name, value in step["env"].items():
             expression = EXPRESSION.fullmatch(value)
             if expression is None:
@@ -216,46 +339,84 @@ class GuardTests(unittest.TestCase):
                 env[name] = workflows.yaml_scalar(value, name)
                 continue
             self.assertIn(expression[1], GUARD_CONTEXTS, f"{name} reads a context these tests do not model")
+            if expression[1] == "github.token":
+                self.assertIn(role, TOKEN_READERS, f"{name}: only the Release lookup reads the token")
             env[name] = contexts.get(expression[1], "")
         return env
 
-    def run_guards(self, job, contexts, head=None, checkout=None):
-        """(1 or 2 for the guard step that refused the run, or None, and the output of the last step that ran). The
-        commit of the contexts and head are names of Checkout commits; HEAD is the run's commit unless head is given."""
+    def run_guards(self, job, contexts, response=None, head=None, checkout=None, skip=()):
+        """(The role of the guard step that refused the run, or None; the output of the last step that ran; the requests
+        the fake curl got.) The commit of the contexts and head are names of Checkout commits; HEAD is the run's commit
+        unless head is given. The fake curl answers with response, by default the published full Release of the ref's
+        tag. The steps whose roles are in skip do not run."""
         checkout = checkout or self.checkout
         checkout.detach(head or contexts["github.sha"])
-        contexts = {**contexts, "github.sha": checkout.commits[contexts["github.sha"]]}
-        for number, step in enumerate(self.guards[job], 1):
-            result = subprocess.run(
-                ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
-                cwd=checkout.directory,
-                env=self.environment(step, contexts, checkout),
-                capture_output=True,
-                encoding="utf-8",
-                errors="replace",
-                timeout=60,
-            )
-            if result.returncode != 0:
-                self.assertRegex(result.stdout, r"(?m)^::error::\S", "a refusal says why")
-                return number, result.stdout + result.stderr
-            self.assertNotIn("::error::", result.stdout)
-        return None, result.stdout + result.stderr
+        tag = contexts["github.ref"].removeprefix("refs/tags/")
+        contexts = {**contexts, "github.sha": checkout.commits[contexts["github.sha"]], "github.token": TOKEN}
+        with tempfile.TemporaryDirectory() as temporary:
+            runner = Path(temporary)
+            (runner / "temp").mkdir()
+            (runner / "response.json").write_text(json.dumps(response or release_response(tag)), encoding="utf-8")
+            env = {
+                **checkout.env,
+                "PATH": f"{self.bin}{os.pathsep}{checkout.env['PATH']}",
+                "RUNNER_TEMP": str(runner / "temp"),
+                "GITHUB_REPOSITORY": REPOSITORY,
+                "FAKE_RESPONSE": str(runner / "response.json"),
+                "FAKE_CURL_LOG": str(runner / "requests.jsonl"),
+            }
+            refused, output = None, ""
+            for role, step in self.guards[job]:
+                if role in skip:
+                    continue
+                result = subprocess.run(
+                    ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
+                    cwd=checkout.directory,
+                    env=self.environment(role, step, contexts, env),
+                    capture_output=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=60,
+                )
+                output = result.stdout + result.stderr
+                if result.returncode != 0:
+                    self.assertRegex(result.stdout, r"(?m)^::error::\S", "a refusal says why")
+                    refused = role
+                    break
+                self.assertNotIn("::error::", result.stdout)
+            log = runner / "requests.jsonl"
+            requests = [json.loads(line) for line in log.read_text("utf-8").splitlines()] if log.exists() else []
+        return refused, output, requests
 
-    def assert_guards(self, refused_by, contexts, head=None, checkout=None):
-        """The guard steps of both jobs refuse the run at step `refused_by` (1 or 2), or pass it if that is None."""
+    def assert_guards(self, refused_by, contexts, response=None, head=None, checkout=None, skip=()):
+        """The guard steps of both jobs refuse the run at the step of role `refused_by`, or pass it if that is None. A
+        manual run whose event and ref pass looks up its tag's Release with one request; no other run makes one."""
         run = {key.rsplit(".", 1)[-1]: value for key, value in contexts.items()}
+        if response:
+            run["response"] = json.dumps(response)[:100]
         if head:
             run["head"] = head
         if checkout:
             run["origin_main"] = "missing"
+        if skip:
+            run["skipped"] = ", ".join(skip)
+        manual = contexts["github.event_name"] == "workflow_dispatch"
+        lookups = int(manual and refused_by != "event" and "lookup" not in skip)
+        tag = contexts["github.ref"].removeprefix("refs/tags/")
+        url = f"https://api.github.com/repos/{REPOSITORY}/releases/tags/{tag}"
         for job in self.guards:
             with self.subTest(job=job, **run):
-                refused, output = self.run_guards(job, contexts, head, checkout)
+                refused, output, requests = self.run_guards(job, contexts, response, head, checkout, skip)
                 self.assertEqual(refused, refused_by, output)
                 if refused_by is None:
                     self.assertIn("is on main.", output)
+                self.assertEqual(len(requests), lookups, "requests to the GitHub API")
+                for request in requests:
+                    self.assertEqual(request["urls"], [url])
+                    self.assertEqual(sorted(request["headers"]), sorted(LOOKUP_HEADERS))
 
     def test_a_published_release_or_a_manual_run_on_its_tag_passes(self):
+        # A manual run passes with GitHub's answer for the published full Release of its tag.
         for contexts in (
             published(),
             published("v1.2.0", "tip"),
@@ -271,10 +432,10 @@ class GuardTests(unittest.TestCase):
 
     def test_other_events_are_refused_even_on_a_release_tag(self):
         for event in ("push", "pull_request", "pull_request_target", "schedule", "workflow_run", "repository_dispatch"):
-            self.assert_guards(1, dispatched(event=event))
-        self.assert_guards(1, dispatched("refs/heads/main", "tip", event="push"))
-        self.assert_guards(1, dispatched("refs/pull/7/merge", "aside", event="pull_request"))
-        self.assert_guards(1, dispatched("refs/heads/main", "tip", event="schedule"))
+            self.assert_guards("event", dispatched(event=event))
+        self.assert_guards("event", dispatched("refs/heads/main", "tip", event="push"))
+        self.assert_guards("event", dispatched("refs/pull/7/merge", "aside", event="pull_request"))
+        self.assert_guards("event", dispatched("refs/heads/main", "tip", event="schedule"))
 
     def test_a_ref_that_is_not_a_vXYZ_tag_is_refused(self):
         for ref in (
@@ -291,7 +452,7 @@ class GuardTests(unittest.TestCase):
             "refs/tags/v1..0",
             "refs/tags/v1.1.0 ",
             "refs/tags/v1.1.0\nrefs/tags/v1.1.0",
-            "refs/tags/v1.1.\u0663",  # ARABIC-INDIC DIGIT THREE, a [0-9] in en_US.UTF-8
+            "refs/tags/v1.1.٣",  # ARABIC-INDIC DIGIT THREE, a [0-9] in en_US.UTF-8
             # A leading zero, in each of the three numbers.
             "refs/tags/v01.1.0",
             "refs/tags/v1.01.0",
@@ -299,24 +460,75 @@ class GuardTests(unittest.TestCase):
             "refs/tags/v00.0.0",
             "",
         ):
-            self.assert_guards(1, dispatched(ref))
+            self.assert_guards("event", dispatched(ref))
         for tag in ("v1.1", "1.1.0", "v1.1.0-rc1", "v01.1.0", "v1.1.01"):
-            self.assert_guards(1, published(tag))
+            self.assert_guards("event", published(tag))
 
     def test_a_prerelease_or_another_release_action_is_refused(self):
         for prerelease in ("true", ""):
-            self.assert_guards(1, published(**{"github.event.release.prerelease": prerelease}))
+            self.assert_guards("event", published(**{"github.event.release.prerelease": prerelease}))
         for action in ("created", "released", "prereleased", "edited", ""):
-            self.assert_guards(1, published(**{"github.event.action": action}))
-        self.assert_guards(1, published(**{"github.event.release.tag_name": "v1.2.0"}))
+            self.assert_guards("event", published(**{"github.event.action": action}))
+        self.assert_guards("event", published(**{"github.event.release.tag_name": "v1.2.0"}))
+
+    def test_a_published_release_is_not_looked_up(self):
+        # The release event itself says that the release is published and not a prerelease: the guards make no request
+        # and read no answer, so neither a 404 nor a missing answer refuses it.
+        self.assert_guards(None, published(), NOT_FOUND)
+        self.assert_guards(None, published("v1.2.0", "tip"), skip=("lookup",))
+
+    def test_the_lookup_is_one_get_with_the_job_token_on_stdin(self):
+        for job in self.guards:
+            with self.subTest(job=job):
+                refused, output, requests = self.run_guards(job, dispatched("refs/tags/v1.2.0", "tip"))
+                self.assertIsNone(refused, output)
+                (request,) = requests
+                self.assertEqual(request["urls"], [f"https://api.github.com/repos/{REPOSITORY}/releases/tags/v1.2.0"])
+                # The fake curl refuses every option that could send anything but a GET or follow a redirect.
+                self.assertEqual(request["headers"], LOOKUP_HEADERS)
+                self.assertIn("@-", request["options"]["--header"], "the token comes on stdin")
+                self.assertNotIn(TOKEN, " ".join(request["argv"]), "no command line holds the token")
+                self.assertEqual(request["options"]["--proto"], ["=https"])
+
+    def test_a_manual_run_on_a_tag_without_a_published_release_is_refused(self):
+        # GitHub answers 404 for a tag that has no Release and for one whose Release is still a draft.
+        self.assert_guards("release", dispatched(), NOT_FOUND)
+        self.assert_guards("release", dispatched("refs/tags/v1.2.0", "tip"), NOT_FOUND)
+
+    def test_a_manual_run_on_a_prerelease_or_a_draft_is_refused(self):
+        # Only the JSON value false passes: not true, null, a missing field, a string or a number.
+        for field in ("prerelease", "draft"):
+            for value in (True, None, MISSING, "false", 0):
+                self.assert_guards("release", dispatched(), release_response(**{field: value}))
+
+    def test_a_manual_run_on_the_release_of_another_tag_is_refused(self):
+        for tag_name in ("v1.2.0", "V1.1.0", "v1.1.0 ", "refs/tags/v1.1.0", "", None, MISSING, ["v1.1.0"]):
+            self.assert_guards("release", dispatched(), release_response(tag_name=tag_name))
+
+    def test_a_lookup_answered_with_another_status_than_200_is_refused(self):
+        # Each body is the published full Release of the tag, so the status alone refuses the run.
+        for status in ("201", "203", "301", "304", "401", "403", "429", "500", "502", "2000", " 200", ""):
+            self.assert_guards("release", dispatched(), release_response(status=status))
+
+    def test_a_lookup_answer_that_is_not_a_json_object_is_refused(self):
+        release = release_response()["body"]
+        for body in ("", "Not Found", "<!DOCTYPE html>", release[:-1], f"{release} {{}}", f"[{release}]", "null"):
+            self.assert_guards("release", dispatched(), answer("200", body))
+
+    def test_a_missing_lookup_answer_is_refused(self):
+        # The check reads the answer the lookup left under RUNNER_TEMP; without one, it refuses the run.
+        self.assert_guards("release", dispatched(), skip=("lookup",))
+
+    def test_a_lookup_that_gets_no_answer_is_refused(self):
+        self.assert_guards("lookup", dispatched(), UNREACHABLE)
 
     def test_a_commit_that_is_not_on_main_is_refused(self):
-        self.assert_guards(2, published("v1.3.0", "aside"))
-        self.assert_guards(2, dispatched("refs/tags/v1.3.0", "aside"))
+        self.assert_guards("main", published("v1.3.0", "aside"))
+        self.assert_guards("main", dispatched("refs/tags/v1.3.0", "aside"))
         # The checkout is not the run's commit: the run's commit is on main and the checkout is not, or the reverse.
-        self.assert_guards(2, dispatched(), head="aside")
-        self.assert_guards(2, dispatched("refs/tags/v1.3.0", "aside"), head="released")
-        self.assert_guards(2, published(), checkout=self.without_main)
+        self.assert_guards("main", dispatched(), head="aside")
+        self.assert_guards("main", dispatched("refs/tags/v1.3.0", "aside"), head="released")
+        self.assert_guards("main", published(), checkout=self.without_main)
 
 
 class DocumentationTests(unittest.TestCase):
