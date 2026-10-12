@@ -2125,6 +2125,7 @@ class CatalogCheckTests(unittest.TestCase):
             # IP address literals.
             ("https://wublaze.tumblr.com/post/1/x", "https://192.0.2.1/post/1/x"),
             ("https://wublaze.tumblr.com/post/1/x", "https://[2001:db8::1]/post/1/x"),
+            ("https://wublaze.tumblr.com/post/1/x", "https://2130706433/post/1/x"),
             ("https://www.2.1/page", "https://192.0.2.1/other"),
         ):
             with self.subTest(url=url, location=location):
@@ -2161,6 +2162,73 @@ class CatalogCheckTests(unittest.TestCase):
         self.assertEqual(archives.redirect_hosts("www.www.example.com"), {"www.www.example.com", "www.example.com"})
         for host in ("", None):
             self.assertEqual(archives.redirect_hosts(host), set())
+
+    # IP addresses in every spelling requests sends unchanged and the system resolver reads as one: IPv4 and IPv6,
+    # in brackets or not, with a final dot, with a zone, and the IPv4 shorthands (127.1, decimal, hex, octal).
+    IP_HOSTS = (
+        "192.0.2.1",
+        "192.0.2.1.",
+        "2001:DB8::1",
+        "[2001:db8::1]",
+        "[2001:db8::1].",
+        "::ffff:192.0.2.1",
+        "fe80::1%25eth0",
+        "127.1",
+        "2130706433",
+        "0X7F000001",
+        "0x7f.1",
+        "017700000001",
+        "www.192.0.2.1",  # whose www sibling would be one
+    )
+
+    def test_ip_literal(self):
+        for host in self.IP_HOSTS:
+            with self.subTest(host=host):
+                self.assertTrue(archives.ip_literal(host))
+                self.assertEqual(archives.redirect_hosts(host), set())
+        # Domains with digits in them are not IP addresses: their last label is no number.
+        for host in ("4.example", "1.2.3.4.example", "0x7f.example", "www.example.123a", "0xg", "[example.com]", ""):
+            with self.subTest(host=host):
+                self.assertFalse(archives.ip_literal(host))
+        self.assertEqual(archives.redirect_hosts("4.example"), {"4.example", "www.4.example"})
+
+    def test_a_page_on_an_ip_address_follows_no_redirect(self):
+        for url, location in (
+            ("https://192.0.2.1/x", "/y"),
+            ("https://192.0.2.1./x", "https://192.0.2.1/y"),
+            ("https://[2001:db8::1]/x", "https://[2001:DB8::1]/y"),
+            ("https://127.1/x", "https://127.1/y"),
+            ("https://2130706433/x", "/y"),
+            ("https://www.192.0.2.1/x", "https://192.0.2.1/x"),
+        ):
+            with self.subTest(url=url, location=location):
+                self.assert_not_followed(url, location)
+
+    def test_a_redirect_to_an_ip_address_is_not_followed_even_when_listed(self):
+        reviewed = (
+            ("shop.example.com", "192.0.2.1", ("archives:a",)),
+            ("*.example.org", "2001:db8::1", ("archives:b",)),
+            ("bookwalker.jp", "2130706433", ("archives:c",)),
+        )
+        with patch.object(archives, "CROSS_HOST_REDIRECTS", reviewed):
+            for url, location in (
+                ("https://shop.example.com/x", "https://192.0.2.1/x"),
+                ("https://a.example.org/x", "https://[2001:db8::1]/x"),
+                ("https://bookwalker.jp/de0/", "https://2130706433/de0/"),
+            ):
+                with self.subTest(url=url, location=location):
+                    self.assert_not_followed(url, location)
+        for location in (
+            "https://192.0.2.1/x",
+            "https://192.0.2.1./x",
+            "https://[2001:db8::1]/x",
+            "https://[fe80::1%25eth0]/x",
+            "https://127.1/x",
+            "https://2130706433/x",
+            "https://0x7f000001/x",
+        ):
+            with self.subTest(location=location):
+                self.assertFalse(archives.followed(location, {urlsplit(location).hostname.rstrip(".")}))
 
 
 def as_received(location):

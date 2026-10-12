@@ -11,6 +11,7 @@ from __future__ import annotations
 import concurrent.futures
 import hashlib
 import io
+import ipaddress
 import json
 import os
 import re
@@ -47,7 +48,8 @@ ARCHIVE_ORG_HOSTS = ("archive.org",)
 # "www." sibling (see redirect_hosts()): (page host pattern, target host, evidence). The pattern is one host, or
 # "*.example.com" for every subdomain of example.com. The evidence is the ids of the committed rows of
 # data/sources/archives.json whose page, on a host the pattern matches, ended on the target host (url and resolved_url);
-# an entry is added only for a redirect seen there. No committed row ended on another host, so none is listed.
+# an entry is added only for a redirect seen there. No committed row ended on another host, so none is listed. A
+# target that is an IP address is never followed (see followed()).
 CROSS_HOST_REDIRECTS = ()
 
 
@@ -616,13 +618,27 @@ CATALOG_ENTRIES = [
 ]
 
 
+def ip_literal(host):
+    """Whether host, without case, brackets or a final dot, names an IP address rather than a domain: an IPv4 or IPv6
+    address, or a host whose last label is a number (the WHATWG URL standard's "ends in a number"), such as 127.1,
+    2130706433 or 0x7f000001, which requests sends unchanged and the system resolver reads as an IPv4 address."""
+    host = host.rstrip(".").lower()
+    if host.startswith("[") and host.endswith("]"):
+        host = host[1:-1]
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        return re.fullmatch(r"[0-9]+|0x[0-9a-f]*", host.rpartition(".")[2]) is not None
+
+
 def redirect_hosts(host):
     """The hosts a reachability check of a page on host follows a redirect to: host itself, its "www." sibling (host
     without its leading "www.", or with "www." added when it has none: www.www.example.com is no sibling of
     www.example.com), and the target of each CROSS_HOST_REDIRECTS entry whose pattern matches host. Host names are
-    compared without case or a final dot."""
+    compared without case or a final dot. A page on an IP address (see ip_literal()) follows no redirect."""
     host = (host or "").rstrip(".").lower()
-    if not host:
+    if not host or ip_literal(host):
         return set()
     hosts = {host, host.removeprefix("www.") if host.startswith("www.") else "www." + host}
     hosts.update(
@@ -635,12 +651,12 @@ def redirect_hosts(host):
 
 def followed(location, hosts):
     """Whether a reachability check follows a redirect to location: an https URL (see host_allowed()) whose host is
-    exactly one of hosts (see redirect_hosts()), not merely a subdomain of one."""
+    exactly one of hosts (see redirect_hosts()), not merely a subdomain of one, and no IP address (see ip_literal())."""
     try:
         target = (urlsplit(location).hostname or "").rstrip(".")
     except ValueError:
         return False
-    return target in hosts and host_allowed(location, (target,))
+    return target in hosts and not ip_literal(target) and host_allowed(location, (target,))
 
 
 def reach(url):
