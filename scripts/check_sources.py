@@ -29,6 +29,7 @@ import argparse
 import hashlib
 import json
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, unquote, urlsplit
@@ -54,6 +55,11 @@ BIDI_CONTROL = re.compile(r"[\u202a-\u202e\u2066-\u2069]")
 # Whitespace and control characters at either end of a decoded path segment, which a server may trim before it reads
 # the segment (see reads_as_dot()).
 SEGMENT_PADDING = re.compile(r"^[\s\x00-\x1f\x7f-\x9f]+|[\s\x00-\x1f\x7f-\x9f]+$")
+# A segment of dots and spaces that begins with a dot. Windows drops the trailing dots and spaces of a file name, so a
+# server there may read ". ." as "." and ".. ." or "..." as ".." (see reads_as_dot()).
+WINDOWS_DOTS = re.compile(r"\.[. ]*")
+# IIS's own escape of a UTF-16 code unit, "%u002e" for ".", which it decodes along with "%XX" (see decoded()).
+IIS_ESCAPE = re.compile(r"%u([0-9a-f]{4})", re.I)
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?(?:Z|[+-]\d{2}:?\d{2})?")
 FINGERPRINT_FIELDS = ("sha1", "size", "width", "height")
@@ -214,32 +220,51 @@ def index_candidates(snapshot: dict) -> dict[tuple[str, str], dict]:
 
 def reads_as_dot(piece: str) -> bool:
     """Whether a server could read one piece of a URL path (split at "/" and "\\") as "." or "..": without a ";" path
-    parameter ("..;x=1"), cut at a NUL (a server written in C stops there), or with the whitespace and control
-    characters at either end trimmed ("..%20", "..%0d%0a")."""
+    parameter ("..;x=1"), cut at a NUL (a server written in C stops there), with the whitespace and control characters
+    at either end trimmed ("..%20", "..%0d%0a"), or with the trailing dots and spaces trimmed as Windows trims a file
+    name (".. .", "...": see WINDOWS_DOTS)."""
     name = piece.split(";", 1)[0].split("\x00", 1)[0]
-    return SEGMENT_PADDING.sub("", name) in (".", "..")
+    return WINDOWS_DOTS.fullmatch(SEGMENT_PADDING.sub("", name)) is not None
+
+
+def normalised(text: str) -> str:
+    """text as a server that normalises Unicode may read it: in compatibility form (NFKC), which turns the full-width
+    "．" (U+FF0E) into "." and the two-dot leader "‥" (U+2025) into "..", and without format characters (category Cf,
+    such as the zero-width space U+200B or the soft hyphen U+00AD)."""
+    return "".join(char for char in unicodedata.normalize("NFKC", text) if unicodedata.category(char) != "Cf")
+
+
+def decoded(path: str) -> str:
+    """One round of percent-decoding as IIS does it: "%uXXXX" (IIS's escape of a UTF-16 code unit, "%u002e" for "."),
+    then "%XX" as UTF-8 bytes. Raises UnicodeDecodeError for bytes that are not UTF-8."""
+    return unquote(IIS_ESCAPE.sub(lambda escape: chr(int(escape.group(1), 16)), path), errors="strict")
 
 
 def has_dot_segment(path: str) -> bool:
     """Whether a server could read a segment of the URL path as "." or "..", and so leave the directory it names.
 
-    The path is checked as written and after each round of percent-decoding, repeated until nothing changes (a server
-    that decodes twice reads "%252e" as "."). In every form a backslash counts as "/", and each piece is read as
-    reads_as_dot() says. A round whose bytes are not UTF-8 counts too: a lenient decoder reads the overlong "%c0%ae" as
-    "." (MediaWiki titles cannot hold "%" and two hex digits, so a real file name never decodes to such bytes). The
-    characters themselves are allowed: MediaWiki file names may hold ";", "\\", "%", spaces and dots.
+    The path is checked as written and after each round of decoding (see decoded()) and Unicode normalisation (see
+    normalised()), repeated until nothing changes: a server that decodes twice reads "%252e" as ".", one that also
+    normalises reads "%EF%BC%8E" (the full-width "．") as ".", and the full-width "％２ｅ" as "%2e". In every form a
+    backslash counts as "/", and each piece is read as reads_as_dot() says. A round whose bytes are not UTF-8 counts
+    too: a lenient decoder reads the overlong "%c0%ae" as "." (MediaWiki titles cannot hold "%" and two hex digits, so a
+    real file name never decodes to such bytes). The characters themselves are allowed: MediaWiki file names may hold
+    ";", "\\", "%", spaces and dots.
     """
-    while True:
-        if any(reads_as_dot(piece) for piece in re.split(r"[/\\]", path)):
+    form = path
+    # A round that changes the form normalises it or uses up an escape ("%XX" or "%uXXXX"), so the loop ends long
+    # before this bound; a path still changing after as many rounds as it has characters is refused all the same.
+    for _ in range(len(path) + 1):
+        if any(reads_as_dot(piece) for piece in re.split(r"[/\\]", form)):
             return True
         try:
-            decoded = unquote(path, errors="strict")
+            after = normalised(decoded(form))
         except UnicodeDecodeError:
             return True
-        # Each round that changes the path shortens it (three characters "%XX" become one), so the loop ends.
-        if decoded == path:
+        if after == form:
             return False
-        path = decoded
+        form = after
+    return True
 
 
 def download_url_allowed(source: str, url: object) -> bool:

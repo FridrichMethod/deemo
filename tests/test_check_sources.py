@@ -700,6 +700,45 @@ class DownloadLocationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "not under its wiki's image path"):
                     check.compare(snapshot(), snapshot(row), {})
 
+    def test_dot_segments_in_compatibility_forms_format_characters_iis_escapes_or_windows_trims_are_refused(self):
+        # A server may normalise Unicode (NFKC folds the full-width "．" into "."), drop format characters such as the
+        # zero-width space, decode IIS's "%u002e", or trim the trailing dots and spaces of a name as Windows does.
+        bwiki = "https://patchwiki.biligame.com/images/deemo/"
+        fandom = "https://static.wikia.nocookie.net/deemo/images/"
+        for source, url in (
+            # Each URL holds one spelling, so each spelling is refused on its own.
+            ("bwiki", bwiki + "%EF%BC%8E%EF%BC%8E/%EF%BC%8E%EF%BC%8E/otherwiki/x.png"),  # full-width full stop U+FF0E
+            ("bwiki", bwiki + "．．/．．/otherwiki/x.png"),  # the same, as written
+            ("bwiki", bwiki + "%E2%80%A5/%E2%80%A5/otherwiki/x.png"),  # two-dot leader U+2025: ".."
+            ("bwiki", bwiki + "%E2%80%A4%E2%80%A4/%E2%80%A4%E2%80%A4/otherwiki/x.png"),  # one-dot leader U+2024
+            ("bwiki", bwiki + "%EF%B9%92%EF%B9%92/%EF%B9%92%EF%B9%92/otherwiki/x.png"),  # small full stop U+FE52
+            ("bwiki", bwiki + "..%EF%BC%8F..%EF%BC%8Fotherwiki/x.png"),  # full-width solidus U+FF0F: "/"
+            ("bwiki", bwiki + "..%EF%BC%BC..%EF%BC%BCotherwiki/x.png"),  # full-width reverse solidus U+FF3C: "\\"
+            ("bwiki", bwiki + "%EF%BC%85%EF%BC%92%EF%BD%85%EF%BC%85%EF%BC%92%EF%BD%85/otherwiki/x.png"),  # "％２ｅ"
+            ("bwiki", bwiki + ".%E2%80%8B./.%E2%80%8B./otherwiki/x.png"),  # zero-width space U+200B
+            ("bwiki", bwiki + "..%E2%80%8B/..%E2%80%8B/otherwiki/x.png"),
+            ("bwiki", bwiki + "%C2%AD..%C2%AD/%C2%AD../otherwiki/x.png"),  # soft hyphen U+00AD
+            ("bwiki", bwiki + "..%EF%BB%BF/..%EF%BB%BF/otherwiki/x.png"),  # zero-width no-break space U+FEFF
+            ("bwiki", bwiki + "%u002e%u002e/%u002e%u002e/otherwiki/x.png"),  # IIS
+            ("bwiki", bwiki + "%U002E%U002E/%U002E%U002E/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%u002f..%u002fotherwiki/x.png"),
+            ("bwiki", bwiki + "..%u005c..%u005cotherwiki/x.png"),
+            ("bwiki", bwiki + "%25u002e%25u002e/%25u002e%25u002e/otherwiki/x.png"),
+            ("bwiki", bwiki + "%uff0e%uff0e/%uff0e%uff0e/otherwiki/x.png"),
+            ("bwiki", bwiki + "..%20./..%20./otherwiki/x.png"),  # Windows: ".. ."
+            ("bwiki", bwiki + ".../.../otherwiki/x.png"),
+            ("bwiki", bwiki + "..../..../otherwiki/x.png"),
+            ("bwiki", bwiki + ".%20./.%20./otherwiki/x.png"),
+            ("bwiki", bwiki + "..%2e%20/..%2e%20/otherwiki/x.png"),
+            ("fandom", fandom + "%EF%BC%8E%EF%BC%8E/%EF%BC%8E%EF%BC%8E/otherwiki/images/a/ab/X.png/revision/latest"),
+            ("fandom", fandom + "%u002e%u002e/..%20./otherwiki/images/a/ab/X.png/revision/latest?cb=20210901000000"),
+        ):
+            with self.subTest(source=source, url=url):
+                self.assertFalse(check.download_url_allowed(source, url))
+                row = {**candidate("fandom", "X.png", url=url), "source": source}
+                with self.assertRaisesRegex(ValueError, "not under its wiki's image path"):
+                    check.compare(snapshot(), snapshot(row), {})
+
     def test_names_with_spaces_dots_and_non_ascii_letters_are_accepted(self):
         # Only a piece that is "." or ".." once trimmed is refused: dots, spaces and UTF-8 letters around other text are
         # part of a file name.
@@ -714,6 +753,14 @@ class DownloadLocationTests(unittest.TestCase):
             bwiki + "%2E%2E%2E.png",
             bwiki + "100%25%20Love_%2520.png",
             bwiki + "..%E4%B8%AD.png",
+            # Read as a server that normalises, decodes "%u" escapes or trims as Windows does, these stay file names.
+            bwiki + "%EF%BC%8E%EF%BC%8E.png",
+            bwiki + "%E2%80%A5x.png",
+            bwiki + "..%E2%80%8Bx.png",
+            bwiki + "100%EF%BC%85.png",
+            bwiki + "%u00e9t%u00e9.png",
+            bwiki + "..%20.%20x.png",
+            bwiki + "x....png",
         ):
             with self.subTest(url=url):
                 self.assertTrue(check.download_url_allowed("bwiki", url))
@@ -749,10 +796,21 @@ class DownloadLocationTests(unittest.TestCase):
 
     def test_committed_snapshot_downloads_from_the_wiki_image_paths(self):
         committed = check.load(REPO / "data/sources/wiki-discovery.json")
-        report = check.compare(committed, committed, check.load(REPO / "data/sources/wikis.json"))
+        manifest = check.load(REPO / "data/sources/wikis.json")
+        report = check.compare(committed, committed, manifest)
         self.assertFalse(report["changed"])
         self.assertEqual(report["counts"]["metadata_changed"], 0)
         self.assertGreater(report["counts"]["current"], 800)
+        # So do the URLs the committed records were downloaded from and ended on.
+        sources = {"wikis:fandom": "fandom", "wikis:bwiki": "bwiki"}
+        refused = [
+            asset[field]
+            for asset in manifest["assets"]
+            for field in ("download_url", "resolved_download_url", "wiki_original_url")
+            if not check.download_url_allowed(sources[asset["source_id"]], asset[field])
+        ]
+        self.assertGreater(len(manifest["assets"]), 800)
+        self.assertEqual(refused, [])
 
     def test_cli_fails_without_writing_a_report(self):
         with tempfile.TemporaryDirectory() as temporary:
