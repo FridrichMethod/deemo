@@ -1,12 +1,16 @@
 name: Publish public gallery
 
-# Only a vX.Y.Z tag whose commit is on main is deployed. Publishing a GitHub Release with such a tag deploys its commit,
-# and a manual run on such a tag (gh workflow run pages.yml --ref vX.Y.Z) deploys that commit; a manual run does
-# not look up the tag's Release, so use it only to redeploy a released tag. Pushes, pull requests and schedules never
-# start this workflow; tests.yml checks them. The guard job refuses, with an error, every other run: another event, a
-# branch, a release marked as a prerelease, a tag that is not vX.Y.Z, a commit that is not on main. The full tests.yml
-# then runs on the release commit, the build job repeats the guards before anything else and stages the site, and the
-# deploy job, whose condition requires a release tag again, publishes it.
+# Only a vX.Y.Z tag whose commit is on main and that has a published GitHub Release, not marked as a prerelease, is
+# deployed. Publishing such a Release deploys its commit, and a manual run on such a tag (gh workflow run pages.yml
+# --ref vX.Y.Z) deploys that commit once one read-only GitHub API request has found that Release. Pushes, pull requests
+# and schedules never start this workflow; tests.yml checks them. The guard job refuses, with an error, every other run:
+# another event, a branch, a release marked as a prerelease, a tag that is not vX.Y.Z (three numbers without leading
+# zeros), a manual run on a tag without such a Release, a commit that is not on main. It gives the commit of a run that
+# passes all of this as its output. The full tests.yml then runs on the release commit, the build job repeats the guards
+# before anything else and stages the site, and the deploy job, whose condition requires a release tag again and the
+# commit the guard job approved, publishes it. A repository ruleset ("Release tags v*") lets only repository admins
+# create, move or delete v* tags, and the github-pages environment allows v* tags: a run takes this file from the tag's
+# commit, so the two keep anyone but an admin from deploying with a workflow of their own.
 on:
   release:
     types: [published]
@@ -29,6 +33,9 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
+    outputs:
+      # Set by the last step, so empty unless every guard step passed; the deploy job runs only for this commit.
+      commit: ${{ steps.approve.outputs.commit }}
     steps:
       - name: Refuse anything but a published release or a manual run on a vX.Y.Z tag
         env:
@@ -50,8 +57,80 @@ jobs:
             workflow_dispatch) ;;
             *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
           esac
-          [[ "$REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Only a vX.Y.Z tag is deployed, not '$REF'."
+          [[ "$REF" =~ ^refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail "Only a vX.Y.Z tag, three numbers without leading zeros, is deployed, not '$REF'."
           echo "$REF is a vX.Y.Z tag."
+      - name: Look up the GitHub Release of the tag of a manual run
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          # The job's token, which can only read (contents: read). curl reads it from stdin, so no command line has it.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          fail() { echo "::error::$1"; exit 1; }
+          case "$EVENT_NAME" in
+            release) echo "A published release started this run; its event says whether it is a prerelease."; exit 0 ;;
+            workflow_dispatch) ;;
+            *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
+          esac
+          tag="${REF#refs/tags/}"
+          # One GET, which GitHub answers with 200 only for a published Release. The body, a newline and the HTTP status
+          # go to the file that the next step reads.
+          printf 'Authorization: Bearer %s\n' "$GITHUB_TOKEN" |
+            curl --silent --show-error --proto '=https' --max-time 60 --header @- \
+              --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' \
+              --write-out '\n%{http_code}' "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$tag" \
+              > "$RUNNER_TEMP/release-lookup" ||
+            fail "GitHub could not be asked for the Release of $tag; a manual run deploys only a tag that has a published Release that is not a prerelease."
+          echo "Looked up the Release of $tag."
+      - name: Refuse a manual run on a tag without a published Release that is not a prerelease
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: |
+          fail() { echo "::error::$1"; exit 1; }
+          case "$EVENT_NAME" in
+            release) echo "A published release started this run; the first step checked that it is not a prerelease."; exit 0 ;;
+            workflow_dispatch) ;;
+            *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
+          esac
+          tag="${REF#refs/tags/}"
+          # Says why the lookup's answer ($1: the body, a newline and the HTTP status) is not GitHub's 200 for a published
+          # Release of tag $2 that is neither a draft nor a prerelease, and fails; says nothing if it is.
+          check_release() {
+            python3 -I - "$@" <<'PY'
+          import json
+          import sys
+
+          path, tag = sys.argv[1:]
+          try:
+              with open(path, "rb") as file:
+                  body, newline, status = file.read().rpartition(b"\n")
+          except OSError as error:
+              sys.exit(f"The Release lookup left no answer ({error.strerror}).")
+          if not newline:
+              sys.exit("The answer to the Release lookup has no HTTP status.")
+          status = status.decode("ascii", "replace")
+          if status != "200":
+              sys.exit(f"GitHub answered the Release lookup with HTTP {status or '(none)'}, not 200 (404: the tag has no published Release).")
+          try:
+              release = json.loads(body)
+          except ValueError as error:
+              sys.exit(f"The answer to the Release lookup is not JSON ({error}).")
+          if not isinstance(release, dict):
+              sys.exit("The answer to the Release lookup is not a JSON object.")
+          wrong = []
+          for key, wanted in (("tag_name", tag), ("draft", False), ("prerelease", False)):
+              if key not in release:
+                  wrong.append(f"no {key}")
+              elif type(release[key]) is not type(wanted) or release[key] != wanted:
+                  wrong.append(f"{key} {json.dumps(release[key])}")
+          if wrong:
+              sys.exit(f"The Release GitHub returned has {', '.join(wrong)} (needed: tag_name {json.dumps(tag)}, draft false, prerelease false).")
+          PY
+          }
+          reason="$(check_release "$RUNNER_TEMP/release-lookup" "$tag" 2>&1)" ||
+            fail "A manual run on $tag is refused. $reason A manual run deploys only a tag that has a published Release that is not a prerelease."
+          echo "$tag has a published GitHub Release that is not a prerelease."
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -72,6 +151,11 @@ jobs:
           main="$(git show-ref --verify --hash refs/remotes/origin/main)" || fail "The checkout has no origin/main to look for $SHA on."
           git merge-base --is-ancestor "$SHA" "$main" || fail "$SHA is not on main; only a commit on main is released."
           echo "$SHA is on main."
+      - name: Approve the release commit
+        id: approve
+        env:
+          SHA: ${{ github.sha }}
+        run: echo "commit=$SHA" >> "$GITHUB_OUTPUT"
 
   test:
     # The same checks as on every push and pull request, on the release commit; nothing is built unless they all pass.
@@ -110,8 +194,80 @@ jobs:
             workflow_dispatch) ;;
             *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
           esac
-          [[ "$REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Only a vX.Y.Z tag is deployed, not '$REF'."
+          [[ "$REF" =~ ^refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail "Only a vX.Y.Z tag, three numbers without leading zeros, is deployed, not '$REF'."
           echo "$REF is a vX.Y.Z tag."
+      - name: Look up the GitHub Release of the tag of a manual run
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          # The job's token, which can only read (contents: read). curl reads it from stdin, so no command line has it.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          fail() { echo "::error::$1"; exit 1; }
+          case "$EVENT_NAME" in
+            release) echo "A published release started this run; its event says whether it is a prerelease."; exit 0 ;;
+            workflow_dispatch) ;;
+            *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
+          esac
+          tag="${REF#refs/tags/}"
+          # One GET, which GitHub answers with 200 only for a published Release. The body, a newline and the HTTP status
+          # go to the file that the next step reads.
+          printf 'Authorization: Bearer %s\n' "$GITHUB_TOKEN" |
+            curl --silent --show-error --proto '=https' --max-time 60 --header @- \
+              --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' \
+              --write-out '\n%{http_code}' "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$tag" \
+              > "$RUNNER_TEMP/release-lookup" ||
+            fail "GitHub could not be asked for the Release of $tag; a manual run deploys only a tag that has a published Release that is not a prerelease."
+          echo "Looked up the Release of $tag."
+      - name: Refuse a manual run on a tag without a published Release that is not a prerelease
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: |
+          fail() { echo "::error::$1"; exit 1; }
+          case "$EVENT_NAME" in
+            release) echo "A published release started this run; the first step checked that it is not a prerelease."; exit 0 ;;
+            workflow_dispatch) ;;
+            *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
+          esac
+          tag="${REF#refs/tags/}"
+          # Says why the lookup's answer ($1: the body, a newline and the HTTP status) is not GitHub's 200 for a published
+          # Release of tag $2 that is neither a draft nor a prerelease, and fails; says nothing if it is.
+          check_release() {
+            python3 -I - "$@" <<'PY'
+          import json
+          import sys
+
+          path, tag = sys.argv[1:]
+          try:
+              with open(path, "rb") as file:
+                  body, newline, status = file.read().rpartition(b"\n")
+          except OSError as error:
+              sys.exit(f"The Release lookup left no answer ({error.strerror}).")
+          if not newline:
+              sys.exit("The answer to the Release lookup has no HTTP status.")
+          status = status.decode("ascii", "replace")
+          if status != "200":
+              sys.exit(f"GitHub answered the Release lookup with HTTP {status or '(none)'}, not 200 (404: the tag has no published Release).")
+          try:
+              release = json.loads(body)
+          except ValueError as error:
+              sys.exit(f"The answer to the Release lookup is not JSON ({error}).")
+          if not isinstance(release, dict):
+              sys.exit("The answer to the Release lookup is not a JSON object.")
+          wrong = []
+          for key, wanted in (("tag_name", tag), ("draft", False), ("prerelease", False)):
+              if key not in release:
+                  wrong.append(f"no {key}")
+              elif type(release[key]) is not type(wanted) or release[key] != wanted:
+                  wrong.append(f"{key} {json.dumps(release[key])}")
+          if wrong:
+              sys.exit(f"The Release GitHub returned has {', '.join(wrong)} (needed: tag_name {json.dumps(tag)}, draft false, prerelease false).")
+          PY
+          }
+          reason="$(check_release "$RUNNER_TEMP/release-lookup" "$tag" 2>&1)" ||
+            fail "A manual run on $tag is refused. $reason A manual run deploys only a tag that has a published Release that is not a prerelease."
+          echo "$tag has a published GitHub Release that is not a prerelease."
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -144,11 +300,15 @@ jobs:
     name: Deploy
     needs: [guard, test, build]
     # The release tag once more, in the expression language, which has no regular expressions: the guard steps check
-    # the whole vX.Y.Z tag. The job runs no repository code; it only has the Pages and OIDC grants.
+    # the whole vX.Y.Z tag and a manual run's Release. The commit must be the one the guard job approved. Its == takes
+    # null for false, so the prerelease flag goes through toJSON(), which gives 'false' only for false. The job runs no
+    # repository code; it only has the Pages and OIDC grants.
     if: >-
       startsWith(github.ref, 'refs/tags/v') &&
+      needs.guard.outputs.commit == github.sha &&
       (github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease == false))
+      (github.event_name == 'release' && github.event.action == 'published' &&
+      toJSON(github.event.release.prerelease) == 'false'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
