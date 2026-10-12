@@ -527,7 +527,7 @@ class GuardTests(unittest.TestCase):
             "refs/tags/v1..0",
             "refs/tags/v1.1.0 ",
             "refs/tags/v1.1.0\nrefs/tags/v1.1.0",
-            "refs/tags/v1.1.٣",  # ARABIC-INDIC DIGIT THREE, a [0-9] in en_US.UTF-8
+            "refs/tags/v1.1.\u0663",  # ARABIC-INDIC DIGIT THREE, a [0-9] in en_US.UTF-8
             # A leading zero, in each of the three numbers.
             "refs/tags/v01.1.0",
             "refs/tags/v1.01.0",
