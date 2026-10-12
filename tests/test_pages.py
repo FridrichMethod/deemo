@@ -44,11 +44,12 @@ DEPLOY_CONDITION = (
     "toJSON(github.event.release.prerelease) == 'false'))"
 )
 # The part of GitHub's expression language that the deploy condition uses: string, true, false and null literals,
-# context properties (null when absent), ==, && and || (each gives one of its operands, and takes false, 0, '' and null
-# for false), parentheses, startsWith() and toJSON(). == compares two strings ignoring case and two values of one other
-# type as they are; values of two types become numbers first (null and false 0, true 1, a number itself, '' 0, another
-# string its JSON number or NaN, which equals nothing). startsWith() casts both arguments to strings (null to '') and
-# ignores case. Any other syntax is an error.
+# context properties (null when absent), ==, && and || (each gives one of its operands, and takes false, 0, NaN, '' and
+# null for false, and anything else, an array or an object included, for true), parentheses, startsWith() and toJSON().
+# == compares two strings ignoring case and two values of one other type as they are; values of two types become
+# numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or NaN, an array or an
+# object NaN; NaN equals nothing). startsWith() casts both arguments to strings (null to '') and ignores case. Any other
+# syntax is an error.
 EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|&&|\|\||[(),])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
 JSON_NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
 LITERALS = {"true": True, "false": False, "null": None}
@@ -71,7 +72,9 @@ def as_text(value):
 def truthy(value):
     if value is None or isinstance(value, bool):
         return value is True
-    return value != 0 if isinstance(value, (int, float)) else value != ""
+    if isinstance(value, (int, float)):
+        return value != 0 and not math.isnan(value)
+    return value != ""  # a string, or an array or an object, which is never ''
 
 
 def equal(left, right):
@@ -185,9 +188,10 @@ def deployment(run_attempt, event="release", **outputs):
 
 
 # Attempts of a run whose jobs the deploy job needs all succeeded, and whether its condition then holds. A re-run of the
-# whole run runs the guard job, and with it every guard step and the Release lookup, again in the new attempt. A re-run
-# of the deploy job alone, or of the failed jobs after only a later job than the guard job failed, does not: the deploy
-# job then sees the guard job's outputs of the attempt it repeats. A guard job that refused the run recorded nothing.
+# whole run runs the guard job again, which records the new attempt. A re-run of the deploy job alone, or of the failed
+# jobs after only a later job than the guard job failed, leaves the guard job out: even when it runs the build job,
+# whose guard steps look the Release up again, the deploy job sees the guard job's outputs of the attempt it repeats. A
+# guard job that refused the run recorded nothing.
 RE_RUNS = {
     "the first attempt of a release's run": (deployment("1", commit=COMMIT, attempt="1"), True),
     "the first attempt of a manual run": (deployment("1", "workflow_dispatch", commit=COMMIT, attempt="1"), True),
@@ -311,9 +315,7 @@ HEADER_RULES = (
 )
 # What the READMEs and the comments of pages.yml said before the github-pages environment accepted deployments only
 # from tags from v1.1.1 on (2026-10-12): an environment rule that allows every v* tag or main, a request to run only
-# tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release. And what a
-# draft of them said of a re-run that leaves out the guard job: that it looks up no Release. One that includes the build
-# job does look it up; it deploys nothing all the same.
+# tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release.
 RETIRED_DEPLOYMENT_RULES = {
     "README.md": (
         "allows `v*` tags",
@@ -323,9 +325,8 @@ RETIRED_DEPLOYMENT_RULES = {
         "redeploy",
         "deploys that release again",
         "deploys that tag's commit again",
-        "does not look the Release up again",
     ),
-    "README.zh-CN.md": ("允许 `v*` 标签", "允许 `main`", "只应手动运行", "重新部署", "不会再次查询 Release"),
+    "README.zh-CN.md": ("允许 `v*` 标签", "允许 `main`", "只应手动运行", "重新部署"),
     ".github/workflows/pages.yml": (
         "allows v* tags",
         "allows main",
@@ -334,17 +335,35 @@ RETIRED_DEPLOYMENT_RULES = {
         "deploys it again",
         "deploys that commit again",
         "does not look up the tag's Release, so",
-        "repeats no lookup",
-        "looks up no Release",
     ),
 }
+# What a draft of them said of a re-run that leaves out the guard job: that it looks up no Release. One that runs the
+# build job does look it up; it deploys nothing all the same. The phrases of a language are kept out of every document
+# in that language, read without case and with the line breaks of its comments joined (flowing()).
+DOCUMENT_LANGUAGES = {"README.md": "en", "README.zh-CN.md": "zh", ".github/workflows/pages.yml": "en"}
+NO_LOOKUP_ON_A_RE_RUN = {
+    "en": re.compile(
+        r"does not look (?:up )?the Release (?:up )?again|looks up no Release|repeats no (?:Release )?lookup", re.I
+    ),
+    "zh": re.compile(r"不会再次?查询 ?Release", re.I),
+}
+
+
+def flowing(text):
+    """text with each run of white space and comment marks (#) taken as one space, so a phrase reads the same when the
+    line breaks of a comment fall inside it."""
+    return re.sub(r"[\s#]+", " ", text)
+
+
 # Where a sentence of a deployment section or of the header comment ends: after a full stop and a space, but not after
-# "e.g." or "i.e.", or after 。.
-SENTENCE_END = re.compile(r"(?<=\.)(?<![Ee]\.g\.)(?<![Ii]\.e\.)\s+|(?<=。)")
+# "e.g.", "i.e.", "etc." or "cf.", or after 。.
+SENTENCE_END = re.compile(r"(?<=\.)(?<![Ee]\.g\.)(?<![Ii]\.e\.)(?<!etc\.)(?<![Cc]f\.)\s+|(?<=。)")
 # The same retired rules in other words. A sentence of a deployment section or of the header comment brings one back
 # if it matches every pattern of that rule, read without case: it names the environment and main, or the environment
-# and every (any, all, each) v* tag; it says a manual run is for tags from some vX.Y.Z on; or it says a run deploys
-# again (once more, 再次).
+# and every (any, all, each) v* tag; it says a manual run is for tags from some vX.Y.Z on (onwards, or later, and
+# newer, 及之后, 或之后, 以后, 或更新, 起; "on" only after "from", as "a manual run on v1.2.0 on the Actions page" is
+# not); or it says a run deploys again (once more, 再次, 再一次, 又一次), unless its clause names a re-run of the whole
+# run before that, which does deploy the tag's commit again.
 ENVIRONMENT = re.compile(r"environment|环境", re.I)
 RETIRED_SENTENCES = {
     "the environment and main": (ENVIRONMENT, re.compile(r"(?<![a-z])main(?![a-z])", re.I)),
@@ -356,11 +375,18 @@ RETIRED_SENTENCES = {
     ),
     "a manual run for tags from a vX.Y.Z on": (
         re.compile(r"\bmanual(?:ly)?\b|\bby hand\b|手动", re.I),
-        re.compile(rf"{VERSION}`?\s*(?:on\b|onwards?\b|(?:or|and) (?:later|newer)\b|[及或]?(?:之后|以后))", re.I),
+        re.compile(
+            rf"\bfrom\W+(?:\w+\W+)?{VERSION}`?\s*on\b"
+            rf"|{VERSION}`?\s*(?:onwards?\b|(?:or|and) (?:later|newer)\b|[及或]?(?:之后|以后)|或更新|起)",
+            re.I,
+        ),
     ),
     "a run that deploys again": (
         re.compile(
-            r"\bre-?deploy|\bdeploy(?:s|ed|ing)?\b(?! job)[^,;:]*\b(?:again|once more)\b|(?:再次?|重新|又)部署", re.I
+            # A clause starts at the start of the sentence or after , ; : (or ，；：).
+            r"\bre-?deploy|(?:^|[,;:，；：])(?:(?!re-run of the whole run|重新运行整次运行)[\s\S])*"
+            r"(?:\bdeploy(?:s|ed|ing)?\b(?! job)[^,;:]*\b(?:again|once more)\b|(?:[再又]一次|再次?|重新|又)部署)",
+            re.I,
         ),
     ),
 }
@@ -485,14 +511,22 @@ class ExpressionTests(unittest.TestCase):
             ("startsWith(a.b, 'refs/')", {}, False),
             ("a.b && 'yes' || 'no'", {"a.b": ""}, "no"),
             ("a.b && 'yes' || 'no'", {"a.b": "x"}, "yes"),
-            # A context may hold a number: it stays that number, and only 0 is false.
+            ("a.b && 'yes' || 'no'", {}, "no"),
+            # A context may hold a number: it stays that number, sign included, and only 0 and NaN are false.
             ("a.b == c.d", {"a.b": "2", "c.d": 2}, True),
             ("a.b == c.d", {"a.b": "1", "c.d": 2}, False),
             ("a.b == '0.5'", {"a.b": 0.5}, True),
+            ("a.b == '-1'", {"a.b": -1}, True),
             ("a.b == true", {"a.b": 2}, False),
             ("a.b == null", {"a.b": 0}, True),
             ("a.b && 'yes' || 'no'", {"a.b": 2}, "yes"),
             ("a.b && 'yes' || 'no'", {"a.b": 0}, "no"),
+            ("a.b && 'yes' || 'no'", {"a.b": math.nan}, "no"),
+            # Or an array or an object: it is true, and NaN next to a value of another type.
+            ("a.b && 'yes' || 'no'", {"a.b": []}, "yes"),
+            ("a.b && 'yes' || 'no'", {"a.b": {}}, "yes"),
+            ("a.b == null", {"a.b": []}, False),
+            ("a.b == ''", {"a.b": {}}, False),
             ("('it''s' || a.b) == 'IT''S'", {}, True),
         ):
             with self.subTest(expression, contexts=contexts):
@@ -589,30 +623,118 @@ class DocumentationTests(unittest.TestCase):
             for phrase in phrases:
                 with self.subTest(document=document, stale=phrase):
                     self.assertNotIn(phrase, text)
+            stale = NO_LOOKUP_ON_A_RE_RUN[DOCUMENT_LANGUAGES[document]]
+            with self.subTest(document=document, stale=stale.pattern):
+                self.assertEqual(stale.findall(flowing(text)), [])
             described = self.header() if document.endswith(".yml") else self.section(document)
             for sentence in SENTENCE_END.split(described):
                 with self.subTest(document=document, sentence=sentence[:60]):
                     self.assertEqual(retired_rules(sentence), [])
 
+    def test_a_re_run_that_looks_up_no_release_is_recognised_in_other_words(self):
+        # Each draft phrase and each of its other forms is found in its language, also across the line break of a
+        # comment; what the documents say of a run on an older tag is not.
+        for language, text, found in (
+            ("en", "A re-run of the deploy job alone does not look the Release up again.", True),
+            ("en", "A re-run of the deploy job alone does not look up the Release again.", True),
+            ("en", "A re-run without the guard job looks up no Release.", True),
+            ("en", "A re-run of later jobs repeats no lookup.", True),
+            ("en", "A re-run of later jobs repeats no Release lookup.", True),
+            ("en", "A RE-RUN OF FAILED JOBS DOES NOT LOOK THE RELEASE UP AGAIN.", True),
+            ("en", "# A re-run of failed jobs does not look the\n# Release up again.", True),
+            ("en", OLDER_TAGS[".github/workflows/pages.yml"][0], False),
+            ("zh", "只重新运行部署任务不会再次查询 Release。", True),
+            ("zh", "只重新运行部署任务不会再查询 Release。", True),
+            ("zh", "只重新运行部署任务不会再查询Release。", True),
+            ("zh", "只重新运行部署任务不会再查询 release。", True),
+            ("zh", OLDER_TAGS["README.zh-CN.md"][0], False),
+        ):
+            with self.subTest(text, language=language):
+                self.assertIs(bool(NO_LOOKUP_ON_A_RE_RUN[language].search(flowing(text))), found)
+
     def test_the_retired_rules_are_recognised_in_other_words(self):
-        # Each text, split into sentences as the documents are, brings back the rules named with it, and only those:
-        # "remains" names no main, and the deploy job running again is no run that deploys again.
+        # Each text, split into sentences as the documents are, brings back the rules named with it, and only those: one
+        # sample for each form a pattern knows, and the true sentences next to them that it must not take for one.
+        main, every, manual, again = (
+            "the environment and main",
+            "the environment and every v* tag",
+            "a manual run for tags from a vX.Y.Z on",
+            "a run that deploys again",
+        )
         for text, rules in (
-            ("Environment rules also accept `main`.", ["the environment and main"]),
-            ("Main is accepted by the environment too.", ["the environment and main"]),
-            ("The `github-pages` environment, e.g. for `main`, accepts it.", ["the environment and main"]),
-            ("`github-pages` 环境也接受 `main`。", ["the environment and main"]),
+            ("Environment rules also accept `main`.", [main]),
+            ("Main is accepted by the environment too.", [main]),
+            ("Deployment environments also accept `main`.", [main]),
+            ("`github-pages` 环境也接受 `main`。", [main]),
+            # main must not touch a Latin letter on either side; a Chinese character may.
+            ("部署环境也接受main分支。", [main]),
             ("The `github-pages` environment remains as it is.", []),
-            ("The `github-pages` environment allows every `v*` tag.", ["the environment and every v* tag"]),
-            ("The github-pages environment allows any v* tag.", ["the environment and every v* tag"]),
-            ("`github-pages` 环境允许所有 `v*` 标签。", ["the environment and every v* tag"]),
-            ("Only tags from v1.1.1 on should be run by hand.", ["a manual run for tags from a vX.Y.Z on"]),
-            ("Only tags from `v1.1.1` on are to be run manually.", ["a manual run for tags from a vX.Y.Z on"]),
-            ("只能手动运行 `v1.1.1` 及之后的标签。", ["a manual run for tags from a vX.Y.Z on"]),
-            ("A manual run deploys that tag's commit again.", ["a run that deploys again"]),
-            ("A manual run deploys the release once more.", ["a run that deploys again"]),
-            ("手动运行会再次部署该标签。", ["a run that deploys again"]),
+            ("The environment's domain is github.io.", []),
+            ("The environment is maintained by the admins.", []),
+            # No sentence ends at an abbreviation.
+            ("The `github-pages` environment, e.g. for `main`, accepts it.", [main]),
+            ("The environment covers one branch, E.g. `main`.", [main]),
+            ("The environment, i.e. its rules, admits `main`.", [main]),
+            ("The environment covers one branch, I.e. `main`.", [main]),
+            ("The environment accepts tags etc. and also `main`.", [main]),
+            ("The environment (cf. `main`) accepts it.", [main]),
+            ("The environment accepts it (Cf. `main`).", [main]),
+            ("The `github-pages` environment allows every `v*` tag.", [every]),
+            ("The github-pages environment allows any v* tag.", [every]),
+            ("The environment accepts all `v*` tags.", [every]),
+            ("The environment accepts each `v*` tag.", [every]),
+            ("Every `v*` tag is accepted by the environment.", [every]),
+            ("The environment accepts every tag `v*`.", [every]),
+            ("`github-pages` 环境允许所有 `v*` 标签。", [every]),
+            ("环境允许任何 `v*` 标签。", [every]),
+            ("环境接受任意 v* 标签。", [every]),
+            ("环境接受全部的 `v*` 标签。", [every]),
+            ("环境接受一切 `v*` 标签。", [every]),
+            ("环境接受每个 `v*` 标签。", [every]),
+            # 所有 `v*` 标签都受规则集保护，环境另有规则。 is true and matches too: only what its last clause means
+            # tells it from 所有 `v*` 标签都受规则集保护，环境也接受它们。, so a sentence like it must be put another way.
+            ("Only tags from v1.1.1 on should be run by hand.", [manual]),
+            ("Only tags from `v1.1.1` on are to be run manually.", [manual]),
+            ("Run by hand only the tags from release `v1.2.0` on.", [manual]),
+            ("Manual runs are meant for tags v1.1.1 onwards.", [manual]),
+            ("Manual runs are meant for tags v1.1.1 onward.", [manual]),
+            ("Only run tags v1.1.1 or later manually.", [manual]),
+            ("Run by hand only tags `v1.1.1` and newer.", [manual]),
+            ("MANUAL runs are for tags FROM v1.2.0 ON.", [manual]),
+            ("只能手动运行 `v1.1.1` 及之后的标签。", [manual]),
+            ("只手动运行 v1.1.1 或之后的标签。", [manual]),
+            ("手动运行只适用于 `v1.1.1` 以后的标签。", [manual]),
+            ("只应对 `v1.1.1` 或更新的标签手动运行。", [manual]),
+            ("手动运行仅限 `v1.1.1` 起的标签。", [manual]),
+            # "on" after a tag counts only after "from".
+            ("A manual run on `v1.2.0` on the Actions page deploys that tag's commit.", []),
+            ("A manual run deploys that tag's commit again.", [again]),
+            ("A manual run deploys the release once more.", [again]),
+            ("A manual run deployed the tag again.", [again]),
+            ("Deploying that tag again takes a manual run.", [again]),
+            ("Manual runs deploy it again.", [again]),
+            ("A manual run re-deploys the tag.", [again]),
+            ("A manual run redeploys a released tag.", [again]),
+            ("手动运行会再次部署该标签。", [again]),
+            ("手动运行会把该标签的提交再部署一次。", [again]),
+            ("手动运行会再一次部署该标签。", [again]),
+            ("手动运行会又一次部署该标签。", [again]),
+            ("手动运行会重新部署该提交。", [again]),
+            ("手动运行又部署了该标签。", [again]),
+            # The deploy job running again is no run that deploys again, and "again" counts only in the clause of the
+            # deployment.
             ("A re-run of the deploy job alone runs the deploy job again and deploys nothing.", []),
+            ("A run deploys only a release; to try again, re-run the whole run.", []),
+            # A re-run of the whole run does deploy again, but only a clause that names it first is about it.
+            ("A re-run of the whole run deploys the tag's commit again.", []),
+            ("重新运行整次运行会再次部署该标签的提交。", []),
+            ("A manual run deploys it again, as a re-run of the whole run does.", [again]),
+            ("A re-run of the whole run checks the Release, and a manual run deploys it again.", [again]),
+            ("A re-run of the whole run checks the Release; a manual run deploys it again.", [again]),
+            ("A re-run of the whole run is one way: a manual run deploys it again.", [again]),
+            ("重新运行整次运行会查询 Release，手动运行会再次部署该标签。", [again]),
+            ("重新运行整次运行会查询 Release；手动运行会再次部署该标签。", [again]),
+            ("重新运行整次运行是一种办法：手动运行会再次部署该标签。", [again]),
         ):
             with self.subTest(text):
                 self.assertEqual([found for piece in SENTENCE_END.split(text) for found in retired_rules(piece)], rules)
