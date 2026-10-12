@@ -617,13 +617,14 @@ CATALOG_ENTRIES = [
 
 
 def redirect_hosts(host):
-    """The hosts a reachability check of a page on host follows a redirect to: host itself, host with or without a
-    leading "www.", and the target of each CROSS_HOST_REDIRECTS entry whose pattern matches host. Host names are
+    """The hosts a reachability check of a page on host follows a redirect to: host itself, its "www." sibling (host
+    without its leading "www.", or with "www." added when it has none: www.www.example.com is no sibling of
+    www.example.com), and the target of each CROSS_HOST_REDIRECTS entry whose pattern matches host. Host names are
     compared without case or a final dot."""
     host = (host or "").rstrip(".").lower()
     if not host:
         return set()
-    hosts = {host, "www." + host, host.removeprefix("www.")}
+    hosts = {host, host.removeprefix("www.") if host.startswith("www.") else "www." + host}
     hosts.update(
         target
         for pattern, target, _ in CROSS_HOST_REDIRECTS
@@ -643,10 +644,10 @@ def followed(location, hosts):
 
 
 def reach(url):
-    """The final response of url, following at most MAX_REDIRECTS redirects over https to url's own host, to that host
-    with or without a leading "www.", or along a reviewed CROSS_HOST_REDIRECTS entry (see redirect_hosts()), and the
-    target of the first redirect that goes anywhere else (see redirect_target(); not requested), or None. Only the
-    status line and headers are read: the body is never downloaded."""
+    """The final response of url, following at most MAX_REDIRECTS redirects over https to url's own host, to its "www."
+    sibling, or along a reviewed CROSS_HOST_REDIRECTS entry (see redirect_hosts()), and the target of the first
+    redirect that goes anywhere else (see redirect_target(); not requested), or None. Only the status line and headers
+    are read: the body is never downloaded."""
     hosts = redirect_hosts(urlsplit(url).hostname)
     for _ in range(MAX_REDIRECTS + 1):
         r = send(url, timeout=(12, 35), stream=True)

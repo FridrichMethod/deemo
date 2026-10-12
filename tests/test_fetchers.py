@@ -1982,9 +1982,9 @@ class ManifestWriteTests(TempRoot):
 
 
 class CatalogCheckTests(unittest.TestCase):
-    """A reachability check of a catalogued page follows a redirect only over https to that page's own host, to that
-    host with or without a leading "www.", or along a reviewed CROSS_HOST_REDIRECTS entry; any other redirect is
-    recorded as redirected_off_site and not requested."""
+    """A reachability check of a catalogued page follows a redirect only over https to that page's own host, to its
+    "www." sibling, or along a reviewed CROSS_HOST_REDIRECTS entry; any other redirect is recorded as
+    redirected_off_site and not requested."""
 
     URL = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/"
 
@@ -2113,6 +2113,7 @@ class CatalogCheckTests(unittest.TestCase):
             ("https://www.reddit.com/r/x/", "https://old.reddit.com/r/x/"),
             # A subdomain of the page's host or of its www sibling, and hosts that only look alike.
             ("https://www.reddit.com/r/x/", "https://evil.www.reddit.com/r/x/"),
+            ("https://www.reddit.com/r/x/", "https://www.www.reddit.com/r/x/"),
             ("https://reddit.com/r/x/", "https://evil.reddit.com/r/x/"),
             ("https://reddit.com/r/x/", "https://wwwreddit.com/r/x/"),
             ("https://wublaze.tumblr.com/post/1/x", "https://wublaze.tumblr.com.evil.example/post/1/x"),
@@ -2154,11 +2155,10 @@ class CatalogCheckTests(unittest.TestCase):
                     self.assert_not_followed(url, location)
 
     def test_redirect_hosts(self):
-        self.assertEqual(
-            archives.redirect_hosts("WWW.Kadokawa.CO.JP."),
-            {"www.kadokawa.co.jp", "kadokawa.co.jp", "www.www.kadokawa.co.jp"},
-        )
+        # A host and the one that differs from it only by a leading "www.": one is dropped or added, never stacked.
+        self.assertEqual(archives.redirect_hosts("WWW.Kadokawa.CO.JP."), {"www.kadokawa.co.jp", "kadokawa.co.jp"})
         self.assertEqual(archives.redirect_hosts("bookwalker.jp"), {"bookwalker.jp", "www.bookwalker.jp"})
+        self.assertEqual(archives.redirect_hosts("www.www.example.com"), {"www.www.example.com", "www.example.com"})
         for host in ("", None):
             self.assertEqual(archives.redirect_hosts(host), set())
 
