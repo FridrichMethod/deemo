@@ -127,12 +127,15 @@ PUSH_DEPLOYED = {
     "README.md": ("After a push to `main`", "deploys only from `main`", "Pages workflow runs every check again"),
     "README.zh-CN.md": ("推送到 `main` 后", "只从 `main` 部署", "Pages 工作流会再次运行全部检查"),
 }
-# What each README's deployment section says about the release rules of 2026-10-11: what a manual run checks, the tag
-# form, and the two repository settings that limit which tags can deploy.
+# What each README's deployment section says about the release rules of 2026-10-12: what every run checks, a re-run of
+# a release's run included, the tag form, and the two repository settings that limit which tags can deploy.
 RELEASE_RULES = {
     "README.md": (
+        "Every run, whether a release or a manual run started it, first checks",
         "one read-only request to the GitHub API",
-        "a manual run on a tag without such a Release",
+        "A re-run keeps the event of the run it repeats",
+        "also refuses a re-run of a release's run",
+        "a run on a tag without such a Release",
         "three numbers without leading zeros",
         "`v01.1.0`",
         'A repository ruleset ("Release tags v*"',
@@ -140,8 +143,11 @@ RELEASE_RULES = {
         "the rule of the `github-pages` environment that allows `v*` tags",
     ),
     "README.zh-CN.md": (
+        "每次运行，无论由发布版还是手动触发，都会先",
         "向 GitHub API 发出一次只读请求",
-        "在没有这样的 Release 的标签上的手动运行",
+        "重新运行（re-run）沿用被重新运行的那次运行的事件",
+        "也会被这项检查拒绝",
+        "在没有这样的 Release 的标签上的运行",
         "三个不带前导零的数字",
         "`v01.1.0`",
         '仓库规则集（ruleset）"Release tags v*"',
