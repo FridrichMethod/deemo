@@ -160,6 +160,25 @@ NO_RELEASE_LOOKUP = {
     "README.md": ("does not look up the tag's GitHub Release", "use it only to redeploy a released tag"),
     "README.zh-CN.md": ("不会查询该标签的 GitHub Release", "只用它重新部署已发布的标签"),
 }
+# The first tag whose pages.yml looks up the tag's Release on every run. A run takes pages.yml from the tag's commit, so
+# a run on an older tag runs a workflow that does not, and an example of a manual run names no such tag.
+FIRST_CHECKED_TAG = "v1.1.1"
+MANUAL_RUN = re.compile(rf"gh workflow run pages\.yml --ref ({VERSION})")
+# What each README's deployment section and the header comment of pages.yml say about a run on an older tag.
+OLDER_TAGS = {
+    "README.md": (
+        "a run on a tag older than `v1.1.1` uses that tag's own workflow, which does not look up the Release",
+        "only tags from `v1.1.1` on should be run by hand",
+    ),
+    "README.zh-CN.md": (
+        "在早于 `v1.1.1` 的标签上的运行使用该标签自己的工作流，它不会查询 Release",
+        "只应手动运行 `v1.1.1` 及之后的标签",
+    ),
+    ".github/workflows/pages.yml": (
+        "a run on a tag older than v1.1.1 takes that tag's own workflow, which does not look up the Release",
+        "only tags from v1.1.1 on should be run by hand",
+    ),
+}
 # The same rules in the header comment of pages.yml, whose lines are joined with spaces.
 HEADER_RULES = (
     "a published GitHub Release, not marked as a prerelease",
@@ -659,6 +678,11 @@ class DocumentationTests(unittest.TestCase):
         text = (ROOT / readme).read_text(encoding="utf-8")
         return text[text.index(DEPLOYMENT_SECTIONS[readme]) :].split("\n## ", 1)[0]
 
+    def header(self):
+        """The header comment of pages.yml, its lines joined with spaces."""
+        lines = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8").splitlines()
+        return " ".join(line.removeprefix("# ") for line in lines[: lines.index("on:")] if line.startswith("#"))
+
     def test_both_readmes_describe_the_release_model(self):
         # Releases are vX.Y.Z tags, a manual run on the tag redeploys one, and both READMEs name the same current
         # release, linked to its page; the budget sentence stays.
@@ -685,11 +709,25 @@ class DocumentationTests(unittest.TestCase):
             for phrase in NO_RELEASE_LOOKUP[readme]:
                 with self.subTest(document=readme, stale=phrase):
                     self.assertNotIn(phrase, text)
-        lines = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8").splitlines()
-        header = " ".join(line.removeprefix("# ") for line in lines[: lines.index("on:")] if line.startswith("#"))
+        header = self.header()
         for phrase in HEADER_RULES:
             with self.subTest(document="pages.yml", phrase=phrase):
                 self.assertIn(phrase, header)
+
+    def test_a_manual_run_is_shown_only_on_a_tag_whose_workflow_checks_the_release(self):
+        # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG does not
+        # look up the Release: an example on such a tag would not do what the text around it says.
+        def version(tag):
+            return tuple(int(number) for number in tag.removeprefix("v").split("."))
+
+        for document in OLDER_TAGS:
+            text = self.header() if document.endswith(".yml") else self.section(document)
+            for tag in MANUAL_RUN.findall(text):
+                with self.subTest(document=document, example=tag):
+                    self.assertGreaterEqual(version(tag), version(FIRST_CHECKED_TAG))
+            for phrase in OLDER_TAGS[document]:
+                with self.subTest(document=document, phrase=phrase):
+                    self.assertIn(phrase, text)
 
     def test_no_readme_says_a_push_to_main_deploys(self):
         for readme, phrases in PUSH_DEPLOYED.items():
