@@ -1,9 +1,10 @@
 name: Publish public gallery
 
 # Only a release is deployed. Publishing a GitHub Release whose tag is vX.Y.Z deploys that tag's commit, and a manual
-# run on such a tag (gh workflow run pages.yml --ref vX.Y.Z) deploys it again. Pushes, pull requests and schedules never
+# run on such a tag (gh workflow run pages.yml --ref vX.Y.Z) deploys that commit again; a manual run does not look up
+# the tag's Release, so use it only to redeploy a released tag. Pushes, pull requests and schedules never
 # start this workflow; tests.yml checks them. The guard job refuses, with an error, every other run: another event, a
-# branch, a prerelease, a tag that is not vX.Y.Z, a commit that is not on main. The full tests.yml then runs on the
+# branch, a release marked as a prerelease, a tag that is not vX.Y.Z, a commit that is not on main. The full tests.yml then runs on the
 # release commit, the build job repeats the guards before anything else and stages the site, and the deploy job, whose
 # condition requires a release tag again, publishes it.
 on:
@@ -43,7 +44,7 @@ jobs:
           case "$EVENT_NAME" in
             release)
               [ "$EVENT_ACTION" = "published" ] || fail "Only publishing a release deploys the site, not a release event of type '$EVENT_ACTION'."
-              [ "$PRERELEASE" = "false" ] || fail "Release $RELEASE_TAG is a prerelease, or does not say it is not one; prereleases are never deployed."
+              [ "$PRERELEASE" = "false" ] || fail "Release $RELEASE_TAG is a prerelease, or does not say it is not one; a release marked as a prerelease is not deployed."
               [ "$REF" = "refs/tags/$RELEASE_TAG" ] || fail "The release's tag $RELEASE_TAG is not the run's ref $REF."
               ;;
             workflow_dispatch) ;;
@@ -103,7 +104,7 @@ jobs:
           case "$EVENT_NAME" in
             release)
               [ "$EVENT_ACTION" = "published" ] || fail "Only publishing a release deploys the site, not a release event of type '$EVENT_ACTION'."
-              [ "$PRERELEASE" = "false" ] || fail "Release $RELEASE_TAG is a prerelease, or does not say it is not one; prereleases are never deployed."
+              [ "$PRERELEASE" = "false" ] || fail "Release $RELEASE_TAG is a prerelease, or does not say it is not one; a release marked as a prerelease is not deployed."
               [ "$REF" = "refs/tags/$RELEASE_TAG" ] || fail "The release's tag $RELEASE_TAG is not the run's ref $REF."
               ;;
             workflow_dispatch) ;;
