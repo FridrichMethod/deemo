@@ -185,9 +185,10 @@ def deployment(run_attempt, event="release", **outputs):
 
 
 # Attempts of a run whose jobs the deploy job needs all succeeded, and whether its condition then holds. A re-run of the
-# whole run runs the guard job, and with it every guard step and the Release lookup, again in the new attempt. A re-run
-# of the deploy job alone, or of the failed jobs after only a later job than the guard job failed, does not: the deploy
-# job then sees the guard job's outputs of the attempt it repeats. A guard job that refused the run recorded nothing.
+# whole run runs the guard job again, which records the new attempt. A re-run of the deploy job alone, or of the failed
+# jobs after only a later job than the guard job failed, leaves the guard job out: even when it runs the build job,
+# whose guard steps look the Release up again, the deploy job sees the guard job's outputs of the attempt it repeats. A
+# guard job that refused the run recorded nothing.
 RE_RUNS = {
     "the first attempt of a release's run": (deployment("1", commit=COMMIT, attempt="1"), True),
     "the first attempt of a manual run": (deployment("1", "workflow_dispatch", commit=COMMIT, attempt="1"), True),
