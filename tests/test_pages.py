@@ -312,9 +312,7 @@ HEADER_RULES = (
 )
 # What the READMEs and the comments of pages.yml said before the github-pages environment accepted deployments only
 # from tags from v1.1.1 on (2026-10-12): an environment rule that allows every v* tag or main, a request to run only
-# tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release. And what a
-# draft of them said of a re-run that leaves out the guard job: that it looks up no Release. One that includes the build
-# job does look it up; it deploys nothing all the same.
+# tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release.
 RETIRED_DEPLOYMENT_RULES = {
     "README.md": (
         "allows `v*` tags",
@@ -324,9 +322,8 @@ RETIRED_DEPLOYMENT_RULES = {
         "redeploy",
         "deploys that release again",
         "deploys that tag's commit again",
-        "does not look the Release up again",
     ),
-    "README.zh-CN.md": ("允许 `v*` 标签", "允许 `main`", "只应手动运行", "重新部署", "不会再次查询 Release"),
+    "README.zh-CN.md": ("允许 `v*` 标签", "允许 `main`", "只应手动运行", "重新部署"),
     ".github/workflows/pages.yml": (
         "allows v* tags",
         "allows main",
@@ -335,10 +332,26 @@ RETIRED_DEPLOYMENT_RULES = {
         "deploys it again",
         "deploys that commit again",
         "does not look up the tag's Release, so",
-        "repeats no lookup",
-        "looks up no Release",
     ),
 }
+# What a draft of them said of a re-run that leaves out the guard job: that it looks up no Release. One that runs the
+# build job does look it up; it deploys nothing all the same. The phrases of a language are kept out of every document
+# in that language, read without case and with the line breaks of its comments joined (flowing()).
+DOCUMENT_LANGUAGES = {"README.md": "en", "README.zh-CN.md": "zh", ".github/workflows/pages.yml": "en"}
+NO_LOOKUP_ON_A_RE_RUN = {
+    "en": re.compile(
+        r"does not look (?:up )?the Release (?:up )?again|looks up no Release|repeats no (?:Release )?lookup", re.I
+    ),
+    "zh": re.compile(r"不会再次?查询 ?Release", re.I),
+}
+
+
+def flowing(text):
+    """text with each run of white space and comment marks (#) taken as one space, so a phrase reads the same when the
+    line breaks of a comment fall inside it."""
+    return re.sub(r"[\s#]+", " ", text)
+
+
 # Where a sentence of a deployment section or of the header comment ends: after a full stop and a space, but not after
 # "e.g." or "i.e.", or after 。.
 SENTENCE_END = re.compile(r"(?<=\.)(?<![Ee]\.g\.)(?<![Ii]\.e\.)\s+|(?<=。)")
@@ -590,10 +603,34 @@ class DocumentationTests(unittest.TestCase):
             for phrase in phrases:
                 with self.subTest(document=document, stale=phrase):
                     self.assertNotIn(phrase, text)
+            stale = NO_LOOKUP_ON_A_RE_RUN[DOCUMENT_LANGUAGES[document]]
+            with self.subTest(document=document, stale=stale.pattern):
+                self.assertEqual(stale.findall(flowing(text)), [])
             described = self.header() if document.endswith(".yml") else self.section(document)
             for sentence in SENTENCE_END.split(described):
                 with self.subTest(document=document, sentence=sentence[:60]):
                     self.assertEqual(retired_rules(sentence), [])
+
+    def test_a_re_run_that_looks_up_no_release_is_recognised_in_other_words(self):
+        # Each draft phrase and each of its other forms is found in its language, also across the line break of a
+        # comment; what the documents say of a run on an older tag is not.
+        for language, text, found in (
+            ("en", "A re-run of the deploy job alone does not look the Release up again.", True),
+            ("en", "A re-run of the deploy job alone does not look up the Release again.", True),
+            ("en", "A re-run without the guard job looks up no Release.", True),
+            ("en", "A re-run of later jobs repeats no lookup.", True),
+            ("en", "A re-run of later jobs repeats no Release lookup.", True),
+            ("en", "A RE-RUN OF FAILED JOBS DOES NOT LOOK THE RELEASE UP AGAIN.", True),
+            ("en", "# A re-run of failed jobs does not look the\n# Release up again.", True),
+            ("en", OLDER_TAGS[".github/workflows/pages.yml"][0], False),
+            ("zh", "只重新运行部署任务不会再次查询 Release。", True),
+            ("zh", "只重新运行部署任务不会再查询 Release。", True),
+            ("zh", "只重新运行部署任务不会再查询Release。", True),
+            ("zh", "只重新运行部署任务不会再查询 release。", True),
+            ("zh", OLDER_TAGS["README.zh-CN.md"][0], False),
+        ):
+            with self.subTest(text, language=language):
+                self.assertIs(bool(NO_LOOKUP_ON_A_RE_RUN[language].search(flowing(text))), found)
 
     def test_the_retired_rules_are_recognised_in_other_words(self):
         # Each text, split into sentences as the documents are, brings back the rules named with it, and only those:
