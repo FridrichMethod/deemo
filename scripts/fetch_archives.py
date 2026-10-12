@@ -673,8 +673,8 @@ def followed(location, hosts):
 def reach(url):
     """The final response of url, following at most MAX_REDIRECTS redirects over https to url's own host, to its "www."
     sibling, or along a reviewed CROSS_HOST_REDIRECTS entry (see redirect_hosts()), and the target of the first
-    redirect that goes anywhere else (see redirect_target(); not requested), or None. Only the status line and headers
-    are read: no body is downloaded, a redirect's included (see close_redirect())."""
+    redirect that goes anywhere else (see redirect_target(); not requested), or None. No body is read, a redirect's
+    included (see close_redirect()), except that urllib3 drains a 429 or 5xx response before it retries the request."""
     hosts = redirect_hosts(urlsplit(url).hostname)
     for _ in range(MAX_REDIRECTS + 1):
         r = send(url, timeout=(12, 35), stream=True)
