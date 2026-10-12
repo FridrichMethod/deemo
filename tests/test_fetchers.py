@@ -2358,10 +2358,13 @@ class Loopback(HTTPAdapter):
         return response
 
 
-class NotUtf8LocationTests(unittest.TestCase):
-    """A real requests.Session against a loopback server whose redirects send the raw byte 0xE9 in their Location. On
-    such a Location requests itself raises UnicodeDecodeError inside Session.send, before a fetcher sees the response;
-    each fetcher records it as a failed request of that entry, retries nothing and goes on."""
+class UnreadableLocationTests(unittest.TestCase):
+    """A real requests.Session against a loopback server whose redirects send a Location requests cannot read: the raw
+    byte 0xE9, which is not UTF-8 (on a path with "moved"), or a URL urlparse refuses (on a path with "broken"). On
+    such a Location requests itself raises UnicodeDecodeError or ValueError inside Session.send, before a fetcher sees
+    the response; each fetcher records it as a failed request of that entry, retries nothing and goes on."""
+
+    LOCATIONS = {"moved": "/Caf\xe9.png", "broken": "https://[::1/x"}  # http.server sends them as latin-1: 0xE9
 
     def setUp(self):
         self.paths = []
@@ -2369,10 +2372,11 @@ class NotUtf8LocationTests(unittest.TestCase):
         class Handler(BaseHTTPRequestHandler):
             def do_GET(handler):
                 self.paths.append(handler.path)
-                body = b"" if "moved" in handler.path else b'{"files": []}'
-                handler.send_response(302 if "moved" in handler.path else 200)
-                if "moved" in handler.path:
-                    handler.send_header("Location", "/Caf\xe9.png")  # http.server encodes it as latin-1: byte 0xE9
+                location = next((value for key, value in self.LOCATIONS.items() if key in handler.path), None)
+                body = b"" if location else b'{"files": []}'
+                handler.send_response(302 if location else 200)
+                if location:
+                    handler.send_header("Location", location)
                 handler.send_header("Content-Length", str(len(body)))
                 handler.end_headers()
                 handler.wfile.write(body)
@@ -2396,6 +2400,7 @@ class NotUtf8LocationTests(unittest.TestCase):
     def test_a_reachability_check_fails_as_a_request_and_the_catalog_goes_on(self):
         entries = [
             ("moved", "Moved", "https://www.reddit.com/r/TrueDeemo/moved/", "index_only", ""),
+            ("broken", "Broken", "https://www.reddit.com/r/TrueDeemo/broken/", "index_only", ""),
             ("plain", "Plain", "https://www.reddit.com/r/TrueDeemo/plain/", "index_only", ""),
         ]
         with (
@@ -2408,12 +2413,14 @@ class NotUtf8LocationTests(unittest.TestCase):
         self.assertEqual((moved["access_status"], moved.get("http_status")), ("request_failed", None))
         self.assertIn("Refusing a redirect whose Location is not UTF-8: '/Caf\xe9.png'", moved["access_error"])
         self.assertNotIn("redirect_location", moved)
+        broken = rows["archives:broken"]
+        self.assertEqual((broken["access_status"], broken["access_error"]), ("request_failed", "Invalid IPv6 URL"))
         self.assertEqual(rows["archives:plain"]["access_status"], "page_reachable")
         self.assertEqual(rows["archives:internet-archive-202606"]["file_formats"], {})
         self.assertEqual(archives.MANIFEST["failures"], [])
         self.assertEqual(
             sorted(self.paths),
-            ["/metadata/deemo_ost-_202606", "/r/TrueDeemo/moved/", "/r/TrueDeemo/plain/"],
+            ["/metadata/deemo_ost-_202606", "/r/TrueDeemo/broken/", "/r/TrueDeemo/moved/", "/r/TrueDeemo/plain/"],
         )
 
     def test_a_download_or_page_read_is_a_failure_of_its_entry(self):

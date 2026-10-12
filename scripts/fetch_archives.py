@@ -673,7 +673,9 @@ def check_entry(entry):
             row["access_status"] = "blocked" if r.status_code in (401, 403, 429) else "http_error"
         else:
             row["access_status"] = "page_reachable"
-    except requests.RequestException as exc:
+    except (requests.RequestException, ValueError) as exc:
+        # A ValueError too: for a redirect whose Location urlparse cannot read ("https://[::1/x"), requests raises one,
+        # which is no RequestException, inside Session.send, and redirect_target() would raise it as well.
         row["access_status"] = "request_failed"
         row["access_error"] = str(exc)
     return row
