@@ -11,7 +11,6 @@ from __future__ import annotations
 import concurrent.futures
 import hashlib
 import io
-import ipaddress
 import json
 import os
 import re
@@ -44,9 +43,12 @@ TUMBLR_MEDIA_HOSTS = ("media.tumblr.com",)
 OFFICIAL_HOSTS = ("deemo.com",)
 PROMO_HOSTS = ("rayark.promo",)
 ARCHIVE_ORG_HOSTS = ("archive.org",)
-# Second-level labels that are public under a two-letter country code ("co.jp", "com.cn", "ac.uk"): there a site's
-# registrable domain is its last three labels (see registrable_domain()).
-PUBLIC_SECOND_LEVELS = frozenset({"co", "com", "net", "org", "gov", "ac", "edu", "ne", "or", "go"})
+# The reviewed redirects a reachability check follows from a catalogued page to another host than its own and its
+# "www." sibling (see redirect_hosts()): (page host pattern, target host, evidence). The pattern is one host, or
+# "*.example.com" for every subdomain of example.com. The evidence is the ids of the committed rows of
+# data/sources/archives.json whose page, on a host the pattern matches, ended on the target host (url and resolved_url);
+# an entry is added only for a redirect seen there. No committed row ended on another host, so none is listed.
+CROSS_HOST_REDIRECTS = ()
 
 
 def reset():
@@ -614,44 +616,45 @@ CATALOG_ENTRIES = [
 ]
 
 
-def registrable_domain(host):
-    """The registrable domain of a host name: its last two labels ("wublaze.tumblr.com": "tumblr.com"), or its last
-    three when the second-level label is one of PUBLIC_SECOND_LEVELS under a two-letter country code
-    ("www.kadokawa.co.jp": "kadokawa.co.jp"). None for an IP address, an empty host, or a host that is itself such a
-    public suffix ("co.jp"), none of which has one."""
+def redirect_hosts(host):
+    """The hosts a reachability check of a page on host follows a redirect to: host itself, host with or without a
+    leading "www.", and the target of each CROSS_HOST_REDIRECTS entry whose pattern matches host. Host names are
+    compared without case or a final dot."""
     host = (host or "").rstrip(".").lower()
-    try:
-        ipaddress.ip_address(host)
-        return None
-    except ValueError:
-        pass
-    labels = host.split(".")
     if not host:
-        return None
-    if len(labels) >= 2 and len(labels[-1]) == 2 and labels[-2] in PUBLIC_SECOND_LEVELS:
-        return ".".join(labels[-3:]) if len(labels) >= 3 else None
-    return ".".join(labels[-2:])
+        return set()
+    hosts = {host, "www." + host, host.removeprefix("www.")}
+    hosts.update(
+        target
+        for pattern, target, _ in CROSS_HOST_REDIRECTS
+        if host == pattern or (pattern.startswith("*.") and host.endswith(pattern[1:]))
+    )
+    return hosts
+
+
+def followed(location, hosts):
+    """Whether a reachability check follows a redirect to location: an https URL (see host_allowed()) whose host is
+    exactly one of hosts (see redirect_hosts()), not merely a subdomain of one."""
+    try:
+        target = (urlsplit(location).hostname or "").rstrip(".")
+    except ValueError:
+        return False
+    return target in hosts and host_allowed(location, (target,))
 
 
 def reach(url):
-    """The final response of url, following at most MAX_REDIRECTS redirects that stay on https within its registrable
-    domain (see registrable_domain(); a sibling host such as www.tumblr.com for wublaze.tumblr.com counts, an IP
-    address never does), and the target of the first redirect that would leave it (see redirect_target(); not
-    requested), or None. Only the status line and headers are read: the body is never downloaded."""
-    site = registrable_domain(urlsplit(url).hostname)
+    """The final response of url, following at most MAX_REDIRECTS redirects over https to url's own host, to that host
+    with or without a leading "www.", or along a reviewed CROSS_HOST_REDIRECTS entry (see redirect_hosts()), and the
+    target of the first redirect that goes anywhere else (see redirect_target(); not requested), or None. Only the
+    status line and headers are read: the body is never downloaded."""
+    hosts = redirect_hosts(urlsplit(url).hostname)
     for _ in range(MAX_REDIRECTS + 1):
         r = send(url, timeout=(12, 35), stream=True)
         r.close()
         if not r.is_redirect:
             return r, None
         location = redirect_target(r)
-        # host_allowed() checks the scheme, port and user info too; the registrable domain itself rules out an IP
-        # address, whose labels could end like a numeric site's.
-        if (
-            site is None
-            or not host_allowed(location, (site,))
-            or registrable_domain(urlsplit(location).hostname) != site
-        ):
+        if not followed(location, hosts):
             return r, location
         url = location
     raise requests.TooManyRedirects(f"Too many redirects: {url}")

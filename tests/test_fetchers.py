@@ -16,7 +16,7 @@ import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 import requests
 from PIL import Image
@@ -1982,8 +1982,9 @@ class ManifestWriteTests(TempRoot):
 
 
 class CatalogCheckTests(unittest.TestCase):
-    """A reachability check of a catalogued page follows redirects only on https within that page's registrable
-    domain."""
+    """A reachability check of a catalogued page follows a redirect only over https to that page's own host, to that
+    host with or without a leading "www.", or along a reviewed CROSS_HOST_REDIRECTS entry; any other redirect is
+    recorded as redirected_off_site and not requested."""
 
     URL = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/"
 
@@ -2014,18 +2015,21 @@ class CatalogCheckTests(unittest.TestCase):
             )
 
     def test_a_redirect_within_the_site_is_followed(self):
+        # From the page's host to its www sibling and back: every hop is judged against the catalogued page's host.
         title = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/title/"
+        bare = "https://reddit.com/r/TrueDeemo/comments/c3dw62/title/"
+        final = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/title/?sort=new"
         hops = {
             self.URL: (301, b"", {"Location": "/r/TrueDeemo/comments/c3dw62/title/"}),
-            title: (302, b"", {"Location": "https://old.reddit.com/r/TrueDeemo/comments/c3dw62/"}),
-            "https://old.reddit.com/r/TrueDeemo/comments/c3dw62/": "page",
+            title: (302, b"", {"Location": bare}),
+            bare: (302, b"", {"Location": final}),
+            final: "page",
         }
         web = FakeWeb(hops)
         row = self.check(web)
         self.assertEqual(web.requested, list(hops))
         self.assertEqual(
-            (row["access_status"], row["http_status"], row["resolved_url"]),
-            ("page_reachable", 200, "https://old.reddit.com/r/TrueDeemo/comments/c3dw62/"),
+            (row["access_status"], row["http_status"], row["resolved_url"]), ("page_reachable", 200, final)
         )
         self.assertNotIn("redirect_location", row)
 
@@ -2045,71 +2049,94 @@ class CatalogCheckTests(unittest.TestCase):
             row = archives.check_entry(("page", "Page", url, "index_only", ""))
         return row, web.requested
 
-    def test_a_redirect_within_the_registrable_domain_is_followed(self):
-        # A sibling host of the same organisation: the registrable domain is the last two labels of the host, or the
-        # last three under a country code's public second level (co.jp, com.cn).
+    def assert_followed(self, url, location):
+        row, requested = self.check_page(url, location)
+        target = urljoin(url, location)
+        self.assertEqual(requested, [url, target])
+        self.assertEqual(
+            (row["access_status"], row["http_status"], row["resolved_url"]), ("page_reachable", 200, target)
+        )
+        self.assertNotIn("redirect_location", row)
+
+    def assert_not_followed(self, url, location):
+        row, requested = self.check_page(url, location)
+        self.assertEqual(requested, [url])
+        self.assertEqual(
+            (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
+            ("redirected_off_site", 302, url, urljoin(url, requests.utils.requote_uri(location))),
+        )
+
+    def test_a_redirect_to_the_same_host_or_its_www_sibling_is_followed(self):
         for url, location in (
+            ("https://search.bilibili.com/all?keyword=DEEMO", "/all?keyword=DEEMO&page=1"),
+            ("https://www.kadokawa.co.jp/product/322109001023/", "https://kadokawa.co.jp/product/322109001023/"),
+            ("https://bookwalker.jp/de0/", "https://www.bookwalker.jp/de0/"),
+            ("https://pan.baidu.com/s/1", "https://PAN.Baidu.COM/s/2"),  # host names compare without case,
+            ("https://www.reddit.com/r/x/", "https://www.reddit.com./r/x/"),  # without a final dot
+            ("https://www.reddit.com/r/x/", "https://www.reddit.com:443/r/x/"),  # and on the https port
+        ):
+            with self.subTest(url=url, location=location):
+                self.assert_followed(url, location)
+
+    def test_a_redirect_to_any_other_host_is_not_followed(self):
+        for url, location in (
+            # Sibling hosts of the same organisation: none of them is listed in CROSS_HOST_REDIRECTS.
             ("https://wublaze.tumblr.com/post/129276170315/x", "https://www.tumblr.com/wublaze/129276170315/x"),
             ("https://search.bilibili.com/all?keyword=DEEMO", "https://www.bilibili.com/search?keyword=DEEMO"),
             ("https://www.kadokawa.co.jp/product/322109001023/", "https://store.kadokawa.co.jp/shop/g/g322109001023/"),
             ("https://pan.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA", "https://yun.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA"),
             ("https://bookwalker.jp/de0/", "https://global.bookwalker.jp/de0/"),
-            ("https://news.example.com.cn/a", "https://www.example.com.cn/a"),
-        ):
-            with self.subTest(url=url):
-                row, requested = self.check_page(url, location)
-                self.assertEqual(requested, [url, location])
-                self.assertEqual(
-                    (row["access_status"], row["http_status"], row["resolved_url"]), ("page_reachable", 200, location)
-                )
-                self.assertNotIn("redirect_location", row)
-
-    def test_a_redirect_off_the_registrable_domain_is_not_followed(self):
-        for url, location in (
-            ("https://www.kadokawa.co.jp/product/1/", "https://evil.co.jp/product/1/"),  # another site under co.jp
-            ("https://news.example.com.cn/a", "https://evil.com.cn/a"),
-            ("https://wublaze.tumblr.com/post/1/x", "https://tumblr.com.evil.example/post/1/x"),
-            ("https://wublaze.tumblr.com/post/1/x", "https://eviltumblr.com/post/1/x"),
-            ("https://wublaze.tumblr.com/post/1/x", "http://www.tumblr.com/wublaze/1/x"),  # plain http
-            ("https://search.bilibili.com/all", "https://www.bilibili.com:8443/all"),
-            ("https://search.bilibili.com/all", "https://user@www.bilibili.com/all"),
-            ("https://search.bilibili.com/all", "https://www.bilibili.com\\@evil.example/all"),
-            ("https://wublaze.tumblr.com/post/1/x", "https://192.0.2.1/post/1/x"),  # IP address literals
+            ("https://www.reddit.com/r/x/", "https://old.reddit.com/r/x/"),
+            # A subdomain of the page's host or of its www sibling, and hosts that only look alike.
+            ("https://www.reddit.com/r/x/", "https://evil.www.reddit.com/r/x/"),
+            ("https://reddit.com/r/x/", "https://evil.reddit.com/r/x/"),
+            ("https://reddit.com/r/x/", "https://wwwreddit.com/r/x/"),
+            ("https://wublaze.tumblr.com/post/1/x", "https://wublaze.tumblr.com.evil.example/post/1/x"),
+            # The same host, but not over https on its port without user info, or not as requests would connect.
+            ("https://wublaze.tumblr.com/post/1/x", "http://wublaze.tumblr.com/post/1/x"),
+            ("https://search.bilibili.com/all", "https://search.bilibili.com:8443/all"),
+            ("https://search.bilibili.com/all", "https://user@search.bilibili.com/all"),
+            ("https://search.bilibili.com/all", "https://search.bilibili.com\\@evil.example/all"),
+            # IP address literals.
+            ("https://wublaze.tumblr.com/post/1/x", "https://192.0.2.1/post/1/x"),
             ("https://wublaze.tumblr.com/post/1/x", "https://[2001:db8::1]/post/1/x"),
-            ("https://192.0.2.1/page", "https://192.0.2.1/other"),  # an IP address has no registrable domain
-            ("https://www.2.1/page", "https://192.0.2.1/other"),  # nor is it within one, however its labels end
-            ("https://co.jp/page", "https://evil.co.jp/page"),
+            ("https://www.2.1/page", "https://192.0.2.1/other"),
         ):
             with self.subTest(url=url, location=location):
-                row, requested = self.check_page(url, location)
-                self.assertEqual(requested, [url])
-                self.assertEqual(
-                    (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
-                    ("redirected_off_site", 302, url, urljoin(url, requests.utils.requote_uri(location))),
-                )
+                self.assert_not_followed(url, location)
 
-    def test_registrable_domains(self):
-        for host, domain in (
-            ("www.reddit.com", "reddit.com"),
-            ("wublaze.tumblr.com", "tumblr.com"),
-            ("search.bilibili.com", "bilibili.com"),
-            ("rayark.promo", "rayark.promo"),
-            ("WWW.Kadokawa.CO.JP.", "kadokawa.co.jp"),
-            ("a.b.example.ac.uk", "example.ac.uk"),
-            ("shop.example.ne.jp", "example.ne.jp"),
-            ("x.co.com", "co.com"),  # "co" is a public second level only under a two-letter country code
-            ("example.co", "example.co"),
-            ("example.co.jp", "example.co.jp"),
-            ("co.jp", None),  # a public suffix is no one's site
-            ("CO.UK.", None),
-            ("localhost", "localhost"),
-            ("192.0.2.1", None),
-            ("2001:db8::1", None),
-            ("", None),
-            (None, None),
-        ):
-            with self.subTest(host=host):
-                self.assertEqual(archives.registrable_domain(host), domain)
+    def test_a_reviewed_cross_host_redirect_is_followed_only_where_it_applies(self):
+        reviewed = (
+            ("*.tumblr.com", "www.tumblr.com", ("archives:a",)),
+            ("*.example.com", "cdn.example.net", ("archives:b",)),
+            ("bookwalker.jp", "global.bookwalker.jp", ("archives:c",)),
+        )
+        with patch.object(archives, "CROSS_HOST_REDIRECTS", reviewed):
+            self.assert_followed("https://wublaze.tumblr.com/post/1/x", "https://www.tumblr.com/wublaze/1/x")
+            self.assert_followed("https://a.b.tumblr.com/post/1/x", "https://WWW.Tumblr.com./wublaze/1/x")
+            self.assert_followed("https://shop.example.com/x", "https://cdn.example.net/x")
+            self.assert_followed("https://bookwalker.jp/de0/", "https://global.bookwalker.jp/de0/")
+            for url, location in (
+                ("https://example.com/x", "https://cdn.example.net/x"),  # "*." needs a label in front
+                ("https://wublaze.tumblr.com/post/1/x", "https://other.tumblr.com/post/1/x"),  # only the listed target
+                ("https://wublaze.tumblr.com/post/1/x", "https://evil.www.tumblr.com/post/1/x"),
+                ("https://wublaze.tumblr.com.evil.example/x", "https://www.tumblr.com/x"),
+                ("https://www.bookwalker.jp/de0/", "https://global.bookwalker.jp/de0/"),  # an exact pattern is one host
+                ("https://wublaze.tumblr.com/post/1/x", "http://www.tumblr.com/wublaze/1/x"),
+                ("https://wublaze.tumblr.com/post/1/x", "https://www.tumblr.com:8443/wublaze/1/x"),
+                ("https://wublaze.tumblr.com/post/1/x", "https://user@www.tumblr.com/wublaze/1/x"),
+            ):
+                with self.subTest(url=url, location=location):
+                    self.assert_not_followed(url, location)
+
+    def test_redirect_hosts(self):
+        self.assertEqual(
+            archives.redirect_hosts("WWW.Kadokawa.CO.JP."),
+            {"www.kadokawa.co.jp", "kadokawa.co.jp", "www.www.kadokawa.co.jp"},
+        )
+        self.assertEqual(archives.redirect_hosts("bookwalker.jp"), {"bookwalker.jp", "www.bookwalker.jp"})
+        for host in ("", None):
+            self.assertEqual(archives.redirect_hosts(host), set())
 
 
 def as_received(location):
@@ -2447,6 +2474,25 @@ class CommittedDataTests(unittest.TestCase):
     def test_notes_use_maintainer_wording(self):
         for row in self.manifest["sources"]:
             self.assertIsNone(re.search(r"\buser\b|workspace", row.get("notes", ""), re.I), row["id"])
+
+    def test_every_committed_reachability_row_ended_on_a_host_its_check_follows(self):
+        # The page's own host, its www sibling, or a CROSS_HOST_REDIRECTS target (see redirect_hosts()).
+        rows = [row for row in self.manifest["sources"] if "resolved_url" in row]
+        self.assertTrue(rows)
+        for row in rows:
+            with self.subTest(row=row["id"]):
+                hosts = archives.redirect_hosts(urlsplit(row["url"]).hostname)
+                self.assertIn(urlsplit(row["resolved_url"]).hostname, hosts)
+
+    def test_every_reviewed_cross_host_redirect_cites_committed_rows_that_took_it(self):
+        for pattern, target, evidence in archives.CROSS_HOST_REDIRECTS:
+            with self.subTest(pattern=pattern, target=target):
+                self.assertTrue(evidence)
+                for source_id in evidence:
+                    row = self.sources[source_id]
+                    page = urlsplit(row["url"]).hostname
+                    self.assertTrue(page == pattern or (pattern.startswith("*.") and page.endswith(pattern[1:])))
+                    self.assertEqual(urlsplit(row["resolved_url"]).hostname, target)
 
     def test_illustrator_directory_is_delegated_to_the_wiki_importer(self):
         row = self.sources["archives:illustrator-directory"]
