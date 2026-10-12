@@ -245,6 +245,8 @@ RELEASE_RULES = {
         'A repository ruleset ("Release tags v*"',
         "lets only repository admins create, move or delete `v*` tags",
         "the rules of the `github-pages` environment accept deployments only from tags from `v1.1.1` on",
+        "these rules keep anyone but an admin from deploying through the `github-pages` environment with a workflow of"
+        " their own",
     ),
     "README.zh-CN.md": (
         "每次运行，无论由发布版还是手动触发，都会先",
@@ -259,6 +261,7 @@ RELEASE_RULES = {
         '仓库规则集（ruleset）"Release tags v*"',
         "只允许仓库管理员创建、移动或删除 `v*` 标签",
         "`github-pages` 环境的部署规则只接受 `v1.1.1` 及之后的标签",
+        "这些规则使管理员以外的人无法用自己的工作流经 `github-pages` 环境部署",
     ),
 }
 # What the READMEs said while a manual run did not look up the tag's Release.
@@ -297,7 +300,33 @@ HEADER_RULES = (
     "three numbers without leading zeros",
     'A repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags',
     "the github-pages environment accepts deployments only from tags from v1.1.1 on",
+    "the two keep anyone but an admin from deploying through the github-pages environment with a workflow of their own",
 )
+# What the READMEs and the header comment of pages.yml said before the github-pages environment accepted deployments
+# only from tags from v1.1.1 on (2026-10-12): an environment rule that allows every v* tag or main, a request to run
+# only tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release.
+RETIRED_DEPLOYMENT_RULES = {
+    "README.md": (
+        "allows `v*` tags",
+        "must allow `v*` tags",
+        "allows `main`",
+        "should be run by hand",
+        "redeploy",
+        "deploys that release again",
+    ),
+    "README.zh-CN.md": ("允许 `v*` 标签", "允许 `main`", "只应手动运行", "重新部署"),
+    ".github/workflows/pages.yml": (
+        "allows v* tags",
+        "allows main",
+        "should be run by hand",
+        "redeploy",
+        "deploys it again",
+        "deploys that commit again",
+        "does not look up the tag's Release, so",
+    ),
+}
+# Where a sentence of a deployment section or of the header comment ends: after a full stop and a space, or after 。.
+SENTENCE_END = re.compile(r"(?<=\.)\s+|(?<=。)")
 
 
 class WorkflowTests(unittest.TestCase):
@@ -498,6 +527,20 @@ class DocumentationTests(unittest.TestCase):
             for phrase in phrases:
                 with self.subTest(document=readme, phrase=phrase):
                     self.assertNotIn(phrase, text)
+
+    def test_no_document_brings_back_the_retired_deployment_rules(self):
+        # The github-pages environment accepts deployments only from tags from v1.1.1 on: not every v* tag, and not
+        # main, so no sentence that names the environment names main either.
+        for document, phrases in RETIRED_DEPLOYMENT_RULES.items():
+            text = (ROOT / document).read_text(encoding="utf-8")
+            for phrase in phrases:
+                with self.subTest(document=document, stale=phrase):
+                    self.assertNotIn(phrase, text)
+            described = self.header() if document.endswith(".yml") else self.section(document)
+            for sentence in SENTENCE_END.split(described):
+                if "environment" in sentence or "环境" in sentence:
+                    with self.subTest(document=document, sentence=sentence[:60]):
+                        self.assertNotIn("main", sentence)
 
 
 class PagesTests(unittest.TestCase):
