@@ -27,7 +27,7 @@ from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urljoin, urlsplit
 
 import requests
 from PIL import Image
@@ -814,6 +814,19 @@ class GetTests(FetcherRun):
         with self.assertRaisesRegex(fetch.RefusedDownload, "redirects"):
             fetch.get(self.URL)
         self.assertEqual(self.web.calls, [self.URL] * (fetch.MAX_REDIRECTS + 1))
+
+    def test_a_url_on_another_host_as_written_is_refused_though_requests_sends_it_to_the_host(self):
+        # urllib3 ends the authority at a backslash, so requests sends this URL to the host itself (as "/%5Cdeemo/..."),
+        # while urlsplit reads "wiki.biligame.com\deemo" as its host. With no "@", port or other scheme to give it
+        # away, only on_host()'s comparison of the hostname as written refuses it.
+        host = "wiki.biligame.com"
+        for url in ("https://wiki.biligame.com\\deemo/api.php", "https://wiki.biligame.com\\"):
+            with self.subTest(url=url):
+                sent = requests.Request("GET", url).prepare().url
+                self.assertEqual((urlsplit(sent).hostname, urlsplit(url).port), (host, None))
+                self.assertNotIn("@", url)
+                self.assertFalse(fetch.on_host(url, host))
+        self.assertTrue(fetch.on_host("https://WIKI.biligame.com/deemo/api.php", host))  # case alone is no difference
 
 
 class RetryTests(FetcherRun):
