@@ -41,7 +41,7 @@ DEPLOY_CONDITION = (
 )
 # The only contexts the guard steps may read. GitHub renders a property the event does not have as an empty string.
 # github.token is the one context that is not about the run's event, ref or commit: the job's token, which can only read
-# (contents: read). Only the Release lookup of a manual run may read it (TOKEN_READERS).
+# (contents: read). Only the Release lookup may read it (TOKEN_READERS).
 GUARD_CONTEXTS = (
     "github.event_name",
     "github.event.action",
@@ -57,8 +57,8 @@ EXPRESSION = re.compile(r"\$\{\{ ([a-z_.]+) \}\}")
 # the checkout step.
 GUARD_STEPS = (
     ("event", "Refuse anything but a published release or a manual run on a vX.Y.Z tag"),
-    ("lookup", "Look up the GitHub Release of the tag of a manual run"),
-    ("release", "Refuse a manual run on a tag without a published Release that is not a prerelease"),
+    ("lookup", "Look up the GitHub Release of the tag"),
+    ("release", "Refuse a tag without a published Release that is not a prerelease"),
     ("checkout", "Checkout"),
     ("main", "Refuse a release commit that is not on main"),
 )
@@ -127,12 +127,15 @@ PUSH_DEPLOYED = {
     "README.md": ("After a push to `main`", "deploys only from `main`", "Pages workflow runs every check again"),
     "README.zh-CN.md": ("推送到 `main` 后", "只从 `main` 部署", "Pages 工作流会再次运行全部检查"),
 }
-# What each README's deployment section says about the release rules of 2026-10-11: what a manual run checks, the tag
-# form, and the two repository settings that limit which tags can deploy.
+# What each README's deployment section says about the release rules of 2026-10-12: what every run checks, a re-run of
+# a release's run included, the tag form, and the two repository settings that limit which tags can deploy.
 RELEASE_RULES = {
     "README.md": (
+        "Every run, whether a release or a manual run started it, first checks",
         "one read-only request to the GitHub API",
-        "a manual run on a tag without such a Release",
+        "A re-run keeps the event of the run it repeats",
+        "also refuses a re-run of a release's run",
+        "a run on a tag without such a Release",
         "three numbers without leading zeros",
         "`v01.1.0`",
         'A repository ruleset ("Release tags v*"',
@@ -140,8 +143,11 @@ RELEASE_RULES = {
         "the rule of the `github-pages` environment that allows `v*` tags",
     ),
     "README.zh-CN.md": (
+        "每次运行，无论由发布版还是手动触发，都会先",
         "向 GitHub API 发出一次只读请求",
-        "在没有这样的 Release 的标签上的手动运行",
+        "重新运行（re-run）沿用被重新运行的那次运行的事件",
+        "也会被这项检查拒绝",
+        "在没有这样的 Release 的标签上的运行",
         "三个不带前导零的数字",
         "`v01.1.0`",
         '仓库规则集（ruleset）"Release tags v*"',
@@ -154,10 +160,31 @@ NO_RELEASE_LOOKUP = {
     "README.md": ("does not look up the tag's GitHub Release", "use it only to redeploy a released tag"),
     "README.zh-CN.md": ("不会查询该标签的 GitHub Release", "只用它重新部署已发布的标签"),
 }
+# The first tag whose pages.yml looks up the tag's Release on every run. A run takes pages.yml from the tag's commit, so
+# a run on an older tag runs a workflow that does not, and an example of a manual run names no such tag.
+FIRST_CHECKED_TAG = "v1.1.1"
+MANUAL_RUN = re.compile(rf"gh workflow run pages\.yml --ref ({VERSION})")
+# What each README's deployment section and the header comment of pages.yml say about a run on an older tag.
+OLDER_TAGS = {
+    "README.md": (
+        "a run on a tag older than `v1.1.1` uses that tag's own workflow, which does not look up the Release",
+        "only tags from `v1.1.1` on should be run by hand",
+    ),
+    "README.zh-CN.md": (
+        "在早于 `v1.1.1` 的标签上的运行使用该标签自己的工作流，它不会查询 Release",
+        "只应手动运行 `v1.1.1` 及之后的标签",
+    ),
+    ".github/workflows/pages.yml": (
+        "a run on a tag older than v1.1.1 takes that tag's own workflow, which does not look up the Release",
+        "only tags from v1.1.1 on should be run by hand",
+    ),
+}
 # The same rules in the header comment of pages.yml, whose lines are joined with spaces.
 HEADER_RULES = (
     "a published GitHub Release, not marked as a prerelease",
+    "Every run, whichever of the two started it, first asks for the tag's Release",
     "one read-only GitHub API request",
+    "a re-run keeps the event of the run it repeats",
     "three numbers without leading zeros",
     'A repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags',
     "the github-pages environment allows v* tags",
@@ -180,6 +207,12 @@ def published(tag="v1.1.0", commit="released", **changes):
 def dispatched(ref="refs/tags/v1.1.0", commit="released", event="workflow_dispatch"):
     """The contexts of a run on ref that no release started: a manual run, or another event."""
     return {"github.event_name": event, "github.ref": ref, "github.sha": commit}
+
+
+def runs(tag="v1.1.0", commit="released"):
+    """The contexts of a manual run on tag and of a run started by publishing a full release of tag: the guards judge
+    the Release of either by the same lookup."""
+    return dispatched(f"refs/tags/{tag}", commit), published(tag, commit)
 
 
 def answer(status, body):
@@ -283,9 +316,9 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(triggers["workflow_dispatch"], ("", []), "a manual run takes no inputs")
 
     def test_the_artifact_job_repeats_the_guards_before_anything_else(self):
-        # The guard job is the guards alone: the event and ref check, the Release lookup of a manual run and its check,
-        # a checkout with every commit, the main check. The build job starts with the same steps, so nothing it runs
-        # from the checkout precedes them.
+        # The guard job is the guards alone: the event and ref check, the Release lookup and its check, a checkout with
+        # every commit, the main check. The build job starts with the same steps, so nothing it runs from the checkout
+        # precedes them.
         guard, build = self.jobs["guard"]["steps"], self.jobs["build"]["steps"]
         roles, names = [role for role, _ in GUARD_STEPS], [name for _, name in GUARD_STEPS]
         self.assertEqual([step["name"] for step in guard], [*names, APPROVE])
@@ -463,7 +496,8 @@ class GuardTests(unittest.TestCase):
 
     def assert_guards(self, refused_by, contexts, response=None, head=None, checkout=None, skip=()):
         """The guard steps of both jobs refuse the run at the step of role `refused_by`, or pass it if that is None. A
-        manual run whose event and ref pass looks up its tag's Release with one request; no other run makes one."""
+        run whose event and ref pass looks up its tag's Release with one request, whether a release or a manual run
+        started it; no other run makes one."""
         run = {key.rsplit(".", 1)[-1]: value for key, value in contexts.items()}
         if response:
             run["response"] = json.dumps(response)[:100]
@@ -473,8 +507,7 @@ class GuardTests(unittest.TestCase):
             run["origin_main"] = "missing"
         if skip:
             run["skipped"] = ", ".join(skip)
-        manual = contexts["github.event_name"] == "workflow_dispatch"
-        lookups = int(manual and refused_by != "event" and "lookup" not in skip)
+        lookups = int(refused_by != "event" and "lookup" not in skip)
         tag = contexts["github.ref"].removeprefix("refs/tags/")
         url = f"https://api.github.com/repos/{REPOSITORY}/releases/tags/{tag}"
         commit = (checkout or self.checkout).commits[contexts["github.sha"]]
@@ -492,7 +525,7 @@ class GuardTests(unittest.TestCase):
                     self.assertEqual(sorted(request["headers"]), sorted(LOOKUP_HEADERS))
 
     def test_a_published_release_or_a_manual_run_on_its_tag_passes(self):
-        # A manual run passes with GitHub's answer for the published full Release of its tag.
+        # Either run passes with GitHub's answer for the published full Release of its tag, which it asks for once.
         for contexts in (
             published(),
             published("v1.2.0", "tip"),
@@ -549,67 +582,87 @@ class GuardTests(unittest.TestCase):
             self.assert_guards("event", published(tag))
 
     def test_a_prerelease_or_another_release_action_is_refused(self):
+        # The release event's payload alone refuses these, before the lookup makes any request.
         for prerelease in ("true", ""):
             self.assert_guards("event", published(**{"github.event.release.prerelease": prerelease}))
         for action in ("created", "released", "prereleased", "edited", ""):
             self.assert_guards("event", published(**{"github.event.action": action}))
         self.assert_guards("event", published(**{"github.event.release.tag_name": "v1.2.0"}))
 
-    def test_a_published_release_is_not_looked_up(self):
-        # The release event itself says that the release is published and not a prerelease: the guards make no request
-        # and read no answer, so neither a 404 nor a missing answer refuses it.
-        self.assert_guards(None, published(), NOT_FOUND)
-        self.assert_guards(None, published("v1.2.0", "tip"), skip=("lookup",))
+    def test_a_release_run_is_judged_by_its_release_as_it_is_now(self):
+        # Re-running a run keeps the event it started with, so the payload of a re-run release run still says published
+        # and not a prerelease after the Release was made a prerelease or a draft, or deleted (GitHub then answers 404).
+        # The guards of each job look the Release up once, as for a manual run, and the answer refuses such a run.
+        for response in (
+            release_response(prerelease=True),
+            release_response(draft=True),
+            NOT_FOUND,
+            release_response(tag_name="v1.2.0"),
+            release_response(status="500"),
+            answer("200", "<!DOCTYPE html>"),
+        ):
+            self.assert_guards("release", published(), response)
+        self.assert_guards("lookup", published(), UNREACHABLE)
+        self.assert_guards("release", published(), skip=("lookup",))
 
     def test_the_lookup_is_one_get_with_the_job_token_on_stdin(self):
-        for job in self.guards:
-            with self.subTest(job=job):
-                refused, output, requests, _ = self.run_guards(job, dispatched("refs/tags/v1.2.0", "tip"))
-                self.assertIsNone(refused, output)
-                (request,) = requests
-                self.assertEqual(request["urls"], [f"https://api.github.com/repos/{REPOSITORY}/releases/tags/v1.2.0"])
-                # The fake curl refuses every option that could send anything but a GET or follow a redirect.
-                self.assertEqual(request["headers"], LOOKUP_HEADERS)
-                self.assertIn("@-", request["options"]["--header"], "the token comes on stdin")
-                self.assertNotIn(TOKEN, " ".join(request["argv"]), "no command line holds the token")
-                self.assertEqual(request["options"]["--proto"], ["=https"])
-                # A request that hangs fails the step with its own error before the job's timeout cancels the job.
-                max_time = request["options"]["--max-time"]
-                self.assertEqual(len(max_time), 1, "one --max-time")
-                self.assertRegex(max_time[0], r"^[1-9][0-9]*$", "a positive number of whole seconds")
-                self.assertLessEqual(int(max_time[0]), LOOKUP_MAX_SECONDS)
+        for contexts in runs("v1.2.0", "tip"):
+            for job in self.guards:
+                with self.subTest(job=job, event=contexts["github.event_name"]):
+                    refused, output, requests, _ = self.run_guards(job, contexts)
+                    self.assertIsNone(refused, output)
+                    (request,) = requests
+                    self.assertEqual(
+                        request["urls"], [f"https://api.github.com/repos/{REPOSITORY}/releases/tags/v1.2.0"]
+                    )
+                    # The fake curl refuses every option that could send anything but a GET or follow a redirect.
+                    self.assertEqual(request["headers"], LOOKUP_HEADERS)
+                    self.assertIn("@-", request["options"]["--header"], "the token comes on stdin")
+                    self.assertNotIn(TOKEN, " ".join(request["argv"]), "no command line holds the token")
+                    self.assertEqual(request["options"]["--proto"], ["=https"])
+                    # A request that hangs fails the step with its own error before the job's timeout cancels the job.
+                    max_time = request["options"]["--max-time"]
+                    self.assertEqual(len(max_time), 1, "one --max-time")
+                    self.assertRegex(max_time[0], r"^[1-9][0-9]*$", "a positive number of whole seconds")
+                    self.assertLessEqual(int(max_time[0]), LOOKUP_MAX_SECONDS)
 
-    def test_a_manual_run_on_a_tag_without_a_published_release_is_refused(self):
+    def test_a_run_on_a_tag_without_a_published_release_is_refused(self):
         # GitHub answers 404 for a tag that has no Release and for one whose Release is still a draft.
-        self.assert_guards("release", dispatched(), NOT_FOUND)
-        self.assert_guards("release", dispatched("refs/tags/v1.2.0", "tip"), NOT_FOUND)
+        for contexts in (*runs(), *runs("v1.2.0", "tip")):
+            self.assert_guards("release", contexts, NOT_FOUND)
 
-    def test_a_manual_run_on_a_prerelease_or_a_draft_is_refused(self):
+    def test_a_run_on_a_prerelease_or_a_draft_is_refused(self):
         # Only the JSON value false passes: not true, null, a missing field, a string or a number.
-        for field in ("prerelease", "draft"):
-            for value in (True, None, MISSING, "false", 0):
-                self.assert_guards("release", dispatched(), release_response(**{field: value}))
+        for contexts in runs():
+            for field in ("prerelease", "draft"):
+                for value in (True, None, MISSING, "false", 0):
+                    self.assert_guards("release", contexts, release_response(**{field: value}))
 
-    def test_a_manual_run_on_the_release_of_another_tag_is_refused(self):
-        for tag_name in ("v1.2.0", "V1.1.0", "v1.1.0 ", "refs/tags/v1.1.0", "", None, MISSING, ["v1.1.0"]):
-            self.assert_guards("release", dispatched(), release_response(tag_name=tag_name))
+    def test_a_run_on_the_release_of_another_tag_is_refused(self):
+        for contexts in runs():
+            for tag_name in ("v1.2.0", "V1.1.0", "v1.1.0 ", "refs/tags/v1.1.0", "", None, MISSING, ["v1.1.0"]):
+                self.assert_guards("release", contexts, release_response(tag_name=tag_name))
 
     def test_a_lookup_answered_with_another_status_than_200_is_refused(self):
         # Each body is the published full Release of the tag, so the status alone refuses the run.
-        for status in ("201", "203", "301", "304", "401", "403", "429", "500", "502", "2000", " 200", ""):
-            self.assert_guards("release", dispatched(), release_response(status=status))
+        for contexts in runs():
+            for status in ("201", "203", "301", "304", "401", "403", "429", "500", "502", "2000", " 200", ""):
+                self.assert_guards("release", contexts, release_response(status=status))
 
     def test_a_lookup_answer_that_is_not_a_json_object_is_refused(self):
         release = release_response()["body"]
-        for body in ("", "Not Found", "<!DOCTYPE html>", release[:-1], f"{release} {{}}", f"[{release}]", "null"):
-            self.assert_guards("release", dispatched(), answer("200", body))
+        for contexts in runs():
+            for body in ("", "Not Found", "<!DOCTYPE html>", release[:-1], f"{release} {{}}", f"[{release}]", "null"):
+                self.assert_guards("release", contexts, answer("200", body))
 
     def test_a_missing_lookup_answer_is_refused(self):
         # The check reads the answer the lookup left under RUNNER_TEMP; without one, it refuses the run.
-        self.assert_guards("release", dispatched(), skip=("lookup",))
+        for contexts in runs():
+            self.assert_guards("release", contexts, skip=("lookup",))
 
     def test_a_lookup_that_gets_no_answer_is_refused(self):
-        self.assert_guards("lookup", dispatched(), UNREACHABLE)
+        for contexts in runs():
+            self.assert_guards("lookup", contexts, UNREACHABLE)
 
     def test_a_commit_that_is_not_on_main_is_refused(self):
         self.assert_guards("main", published("v1.3.0", "aside"))
@@ -624,6 +677,11 @@ class DocumentationTests(unittest.TestCase):
     def section(self, readme):
         text = (ROOT / readme).read_text(encoding="utf-8")
         return text[text.index(DEPLOYMENT_SECTIONS[readme]) :].split("\n## ", 1)[0]
+
+    def header(self):
+        """The header comment of pages.yml, its lines joined with spaces."""
+        lines = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8").splitlines()
+        return " ".join(line.removeprefix("# ") for line in lines[: lines.index("on:")] if line.startswith("#"))
 
     def test_both_readmes_describe_the_release_model(self):
         # Releases are vX.Y.Z tags, a manual run on the tag redeploys one, and both READMEs name the same current
@@ -651,11 +709,25 @@ class DocumentationTests(unittest.TestCase):
             for phrase in NO_RELEASE_LOOKUP[readme]:
                 with self.subTest(document=readme, stale=phrase):
                     self.assertNotIn(phrase, text)
-        lines = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8").splitlines()
-        header = " ".join(line.removeprefix("# ") for line in lines[: lines.index("on:")] if line.startswith("#"))
+        header = self.header()
         for phrase in HEADER_RULES:
             with self.subTest(document="pages.yml", phrase=phrase):
                 self.assertIn(phrase, header)
+
+    def test_a_manual_run_is_shown_only_on_a_tag_whose_workflow_checks_the_release(self):
+        # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG does not
+        # look up the Release: an example on such a tag would not do what the text around it says.
+        def version(tag):
+            return tuple(int(number) for number in tag.removeprefix("v").split("."))
+
+        for document in OLDER_TAGS:
+            text = self.header() if document.endswith(".yml") else self.section(document)
+            for tag in MANUAL_RUN.findall(text):
+                with self.subTest(document=document, example=tag):
+                    self.assertGreaterEqual(version(tag), version(FIRST_CHECKED_TAG))
+            for phrase in OLDER_TAGS[document]:
+                with self.subTest(document=document, phrase=phrase):
+                    self.assertIn(phrase, text)
 
     def test_no_readme_says_a_push_to_main_deploys(self):
         for readme, phrases in PUSH_DEPLOYED.items():

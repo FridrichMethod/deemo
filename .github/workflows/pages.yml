@@ -1,16 +1,20 @@
 name: Publish public gallery
 
 # Only a vX.Y.Z tag whose commit is on main and that has a published GitHub Release, not marked as a prerelease, is
-# deployed. Publishing such a Release deploys its commit, and a manual run on such a tag (gh workflow run pages.yml
-# --ref vX.Y.Z) deploys that commit once one read-only GitHub API request has found that Release. Pushes, pull requests
-# and schedules never start this workflow; tests.yml checks them. The guard job refuses, with an error, every other run:
-# another event, a branch, a release marked as a prerelease, a tag that is not vX.Y.Z (three numbers without leading
-# zeros), a manual run on a tag without such a Release, a commit that is not on main. It gives the commit of a run that
-# passes all of this as its output. The full tests.yml then runs on the release commit, the build job repeats the guards
-# before anything else and stages the site, and the deploy job, whose condition requires a release tag again and the
-# commit the guard job approved, publishes it. A repository ruleset ("Release tags v*") lets only repository admins
-# create, move or delete v* tags, and the github-pages environment allows v* tags: a run takes this file from the tag's
-# commit, so the two keep anyone but an admin from deploying with a workflow of their own.
+# deployed. Publishing such a Release deploys its commit, and so does a manual run on such a tag (gh workflow run
+# pages.yml --ref vX.Y.Z). Every run, whichever of the two started it, first asks for the tag's Release with one
+# read-only GitHub API request and goes on only if that Release is published and is neither a draft nor a prerelease: a
+# re-run keeps the event of the run it repeats, so only the answer says what the Release is now (a re-run of the deploy
+# job alone repeats no lookup, so re-run the whole run). Pushes, pull requests and schedules never start this workflow;
+# tests.yml checks them. The guard job refuses, with an error, every other run: another event, a branch, a release
+# marked as a prerelease, a tag that is not vX.Y.Z (three numbers without leading zeros), a tag without such a Release,
+# a commit that is not on main. It gives the commit of a run that passes all of this as its output. The full tests.yml
+# then runs on the release commit, the build job repeats the guards before anything else and stages the site, and the
+# deploy job, whose condition requires a release tag again and the commit the guard job approved, publishes it. A
+# repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags, and the
+# github-pages environment allows v* tags: a run takes this file from the tag's commit, so the two keep anyone but an
+# admin from deploying with a workflow of their own. For the same reason, a run on a tag older than v1.1.1 takes that
+# tag's own workflow, which does not look up the Release, so only tags from v1.1.1 on should be run by hand.
 on:
   release:
     types: [published]
@@ -59,7 +63,7 @@ jobs:
           esac
           [[ "$REF" =~ ^refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail "Only a vX.Y.Z tag, three numbers without leading zeros, is deployed, not '$REF'."
           echo "$REF is a vX.Y.Z tag."
-      - name: Look up the GitHub Release of the tag of a manual run
+      - name: Look up the GitHub Release of the tag
         env:
           EVENT_NAME: ${{ github.event_name }}
           REF: ${{ github.ref }}
@@ -68,29 +72,28 @@ jobs:
         run: |
           fail() { echo "::error::$1"; exit 1; }
           case "$EVENT_NAME" in
-            release) echo "A published release started this run; its event says whether it is a prerelease."; exit 0 ;;
-            workflow_dispatch) ;;
+            release | workflow_dispatch) ;;
             *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
           esac
           tag="${REF#refs/tags/}"
-          # One GET, which GitHub answers with 200 only for a published Release. The body, a newline and the HTTP status
-          # go to the file that the next step reads.
+          # One GET, which GitHub answers with 200 only for a published Release. A release run makes it too: a re-run
+          # keeps the event of the run it repeats, so only the answer says what the Release is now. The body, a newline
+          # and the HTTP status go to the file that the next step reads.
           printf 'Authorization: Bearer %s\n' "$GITHUB_TOKEN" |
             curl --silent --show-error --proto '=https' --max-time 60 --header @- \
               --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' \
               --write-out '\n%{http_code}' "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$tag" \
               > "$RUNNER_TEMP/release-lookup" ||
-            fail "GitHub could not be asked for the Release of $tag; a manual run deploys only a tag that has a published Release that is not a prerelease."
+            fail "GitHub could not be asked for the Release of $tag; only a tag that has a published Release that is not a prerelease is deployed."
           echo "Looked up the Release of $tag."
-      - name: Refuse a manual run on a tag without a published Release that is not a prerelease
+      - name: Refuse a tag without a published Release that is not a prerelease
         env:
           EVENT_NAME: ${{ github.event_name }}
           REF: ${{ github.ref }}
         run: |
           fail() { echo "::error::$1"; exit 1; }
           case "$EVENT_NAME" in
-            release) echo "A published release started this run; the first step checked that it is not a prerelease."; exit 0 ;;
-            workflow_dispatch) ;;
+            release | workflow_dispatch) ;;
             *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
           esac
           tag="${REF#refs/tags/}"
@@ -129,7 +132,7 @@ jobs:
           PY
           }
           reason="$(check_release "$RUNNER_TEMP/release-lookup" "$tag" 2>&1)" ||
-            fail "A manual run on $tag is refused. $reason A manual run deploys only a tag that has a published Release that is not a prerelease."
+            fail "A run on $tag is refused. $reason Only a tag that has a published Release that is not a prerelease is deployed."
           echo "$tag has a published GitHub Release that is not a prerelease."
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -196,7 +199,7 @@ jobs:
           esac
           [[ "$REF" =~ ^refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || fail "Only a vX.Y.Z tag, three numbers without leading zeros, is deployed, not '$REF'."
           echo "$REF is a vX.Y.Z tag."
-      - name: Look up the GitHub Release of the tag of a manual run
+      - name: Look up the GitHub Release of the tag
         env:
           EVENT_NAME: ${{ github.event_name }}
           REF: ${{ github.ref }}
@@ -205,29 +208,28 @@ jobs:
         run: |
           fail() { echo "::error::$1"; exit 1; }
           case "$EVENT_NAME" in
-            release) echo "A published release started this run; its event says whether it is a prerelease."; exit 0 ;;
-            workflow_dispatch) ;;
+            release | workflow_dispatch) ;;
             *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
           esac
           tag="${REF#refs/tags/}"
-          # One GET, which GitHub answers with 200 only for a published Release. The body, a newline and the HTTP status
-          # go to the file that the next step reads.
+          # One GET, which GitHub answers with 200 only for a published Release. A release run makes it too: a re-run
+          # keeps the event of the run it repeats, so only the answer says what the Release is now. The body, a newline
+          # and the HTTP status go to the file that the next step reads.
           printf 'Authorization: Bearer %s\n' "$GITHUB_TOKEN" |
             curl --silent --show-error --proto '=https' --max-time 60 --header @- \
               --header 'Accept: application/vnd.github+json' --header 'X-GitHub-Api-Version: 2022-11-28' \
               --write-out '\n%{http_code}' "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$tag" \
               > "$RUNNER_TEMP/release-lookup" ||
-            fail "GitHub could not be asked for the Release of $tag; a manual run deploys only a tag that has a published Release that is not a prerelease."
+            fail "GitHub could not be asked for the Release of $tag; only a tag that has a published Release that is not a prerelease is deployed."
           echo "Looked up the Release of $tag."
-      - name: Refuse a manual run on a tag without a published Release that is not a prerelease
+      - name: Refuse a tag without a published Release that is not a prerelease
         env:
           EVENT_NAME: ${{ github.event_name }}
           REF: ${{ github.ref }}
         run: |
           fail() { echo "::error::$1"; exit 1; }
           case "$EVENT_NAME" in
-            release) echo "A published release started this run; the first step checked that it is not a prerelease."; exit 0 ;;
-            workflow_dispatch) ;;
+            release | workflow_dispatch) ;;
             *) fail "The site is deployed only by publishing a release or by a manual run on a vX.Y.Z tag, not by a $EVENT_NAME event." ;;
           esac
           tag="${REF#refs/tags/}"
@@ -266,7 +268,7 @@ jobs:
           PY
           }
           reason="$(check_release "$RUNNER_TEMP/release-lookup" "$tag" 2>&1)" ||
-            fail "A manual run on $tag is refused. $reason A manual run deploys only a tag that has a published Release that is not a prerelease."
+            fail "A run on $tag is refused. $reason Only a tag that has a published Release that is not a prerelease is deployed."
           echo "$tag has a published GitHub Release that is not a prerelease."
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -300,7 +302,7 @@ jobs:
     name: Deploy
     needs: [guard, test, build]
     # The release tag once more, in the expression language, which has no regular expressions: the guard steps check
-    # the whole vX.Y.Z tag and a manual run's Release. The commit must be the one the guard job approved. Its == takes
+    # the whole vX.Y.Z tag and the tag's Release. The commit must be the one the guard job approved. Its == takes
     # null for false, so the prerelease flag goes through toJSON(), which gives 'false' only for false. The job runs no
     # repository code; it only has the Pages and OIDC grants.
     if: >-
