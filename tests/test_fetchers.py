@@ -2039,11 +2039,13 @@ class CatalogCheckTests(unittest.TestCase):
 
     def test_every_hop_is_judged_against_the_catalogued_pages_host(self):
         # The second hop of each chain goes to a host allowed relative to the first hop's host but not to the page's
-        # host, so the check stops there: www.www.reddit.com is no www sibling of reddit.com, and neither www.b.example
-        # nor c.example is a.example, its www sibling or the target of an entry for a.example.
+        # host, so the check stops there, where judging each hop against the hop before it would follow it:
+        # reddit.com is the www sibling of www.reddit.com but not of www.www.reddit.com (the sibling rule adds or
+        # removes one "www.", so it is not transitive), and neither www.b.example nor c.example is a.example, its www
+        # sibling or the target of an entry for a.example.
         reviewed = (("a.example", "b.example", ("archives:a",)), ("b.example", "c.example", ("archives:b",)))
         for page, hop, target in (
-            ("https://reddit.com/x", "https://www.reddit.com/x", "https://www.www.reddit.com/x"),
+            ("https://www.www.reddit.com/x", "https://www.reddit.com/x", "https://reddit.com/x"),
             ("https://a.example/x", "https://b.example/x", "https://www.b.example/x"),
             ("https://a.example/x", "https://b.example/x", "https://c.example/x"),
         ):
