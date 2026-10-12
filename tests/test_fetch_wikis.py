@@ -15,7 +15,6 @@ import io
 import itertools
 import json
 import os
-import queue
 import shutil
 import signal
 import struct
@@ -25,14 +24,13 @@ import tempfile
 import threading
 import unittest
 from datetime import datetime, timedelta, timezone
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import quote, urljoin, urlsplit
 
 import requests
 from PIL import Image
-from requests.adapters import HTTPAdapter
 from requests.structures import CaseInsensitiveDict
 
 REPO = Path(__file__).resolve().parents[1]
@@ -40,6 +38,10 @@ SCRIPT = REPO / "scripts/fetch_wikis.py"
 SPEC = importlib.util.spec_from_file_location("fetch_wikis", SCRIPT)
 fetch = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(fetch)
+# The loopback servers and adapter, shared with tests/test_fetchers.py.
+LOOPBACK_SPEC = importlib.util.spec_from_file_location("loopback", REPO / "tests/loopback.py")
+loopback = importlib.util.module_from_spec(LOOPBACK_SPEC)
+LOOPBACK_SPEC.loader.exec_module(loopback)
 MANIFEST = "data/sources/wikis.json"
 DISCOVERY = "data/sources/wiki-discovery.json"
 ILLUSTRATOR_INDEX = "data/sources/wiki-illustrator-index.json"
@@ -1199,24 +1201,6 @@ class DownloadGuardTests(FetcherRun):
             self.assertTrue(fetch.download_allowed("bwiki", "https://images.example.test/deemo/a/ab/Art.png"))
 
 
-class Loopback(HTTPAdapter):
-    """Sends every request, whatever host its URL names, over plain HTTP to the loopback server on port; the response
-    keeps the URL that was requested. Nothing leaves the machine. Each response is kept in responses, so a test can
-    close one that requests raised on before it released the connection."""
-
-    def __init__(self, port, responses):
-        super().__init__()
-        self.port, self.responses = port, responses
-
-    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
-        return self.poolmanager.connection_from_host("127.0.0.1", self.port, scheme="http")
-
-    def build_response(self, req, resp):
-        response = super().build_response(req, resp)
-        self.responses.append(response)
-        return response
-
-
 class NotUtf8LocationTests(FetcherRun):
     """A real requests.Session against a loopback server that answers every request with a redirect whose Location
     holds the raw byte 0xE9. requests itself raises UnicodeDecodeError on it inside Session.send, before the fetcher
@@ -1238,14 +1222,11 @@ class NotUtf8LocationTests(FetcherRun):
             def log_message(handler, *args):
                 pass
 
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        threading.Thread(target=server.serve_forever, daemon=True).start()
-        self.addCleanup(server.server_close)
-        self.addCleanup(server.shutdown)
+        port = loopback.serve(self, Handler)
         session, responses = requests.Session(), []
         session.trust_env = False
         for prefix in ("https://", "http://"):
-            session.mount(prefix, Loopback(server.server_address[1], responses))
+            session.mount(prefix, loopback.Loopback(port, responses))
         self.addCleanup(session.close)
         self.addCleanup(lambda: [response.close() for response in responses])
         patcher = patch.object(fetch.requests, "get", lambda url, **options: session.get(url, **options))
@@ -1304,42 +1285,11 @@ class RedirectBodyTests(unittest.TestCase):
     PAYLOAD = png("red")
 
     def setUp(self):
-        self.sent = queue.Queue()
-        self.status = 302  # the redirect status the server answers with
-
-        class Handler(BaseHTTPRequestHandler):
-            def do_GET(handler):
-                if "moved" not in handler.path:
-                    handler.send_response(200)
-                    handler.send_header("Content-Length", str(len(self.PAYLOAD)))
-                    handler.end_headers()
-                    handler.wfile.write(self.PAYLOAD)
-                    return
-                handler.send_response(self.status)
-                handler.send_header("Location", handler.path.replace("moved", "final"))
-                handler.send_header("Content-Length", str(self.BODY))
-                handler.end_headers()
-                sent, chunk = 0, bytes(64 * 1024)
-                try:
-                    while sent < self.BODY:
-                        handler.wfile.write(chunk)
-                        sent += len(chunk)
-                except OSError:  # the client closed the connection
-                    pass
-                finally:
-                    self.sent.put(sent)
-
-            def log_message(handler, *args):
-                pass
-
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        threading.Thread(target=server.serve_forever, daemon=True).start()
-        self.addCleanup(server.server_close)
-        self.addCleanup(server.shutdown)
+        port = loopback.serve_redirect_bodies(self)  # it sets self.sent and self.status
         session = requests.Session()
         session.trust_env = False
         for prefix in ("https://", "http://"):
-            session.mount(prefix, Loopback(server.server_address[1], []))
+            session.mount(prefix, loopback.Loopback(port, []))
         self.addCleanup(session.close)
         for patcher in (
             patch.object(fetch.requests, "get", lambda url, **options: session.get(url, **options)),

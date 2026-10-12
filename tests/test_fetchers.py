@@ -7,27 +7,25 @@ import hashlib
 import importlib.util
 import io
 import json
-import queue
 import random
 import re
 import sys
 import tempfile
 import threading
 import unittest
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import urljoin, urlsplit
 
 import requests
 from PIL import Image
-from requests.adapters import HTTPAdapter
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def load(name):
-    spec = importlib.util.spec_from_file_location(name, ROOT / f"scripts/{name}.py")
+def load(name, relative=None):
+    spec = importlib.util.spec_from_file_location(name, ROOT / (relative or f"scripts/{name}.py"))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -37,6 +35,8 @@ artists = load("fetch_artists")
 archives = load("fetch_archives")
 wikis = load("fetch_wikis")  # only its copy of redirect_target(), compared with the other two
 catalog = load("build_catalog")
+# The loopback servers and adapter, shared with tests/test_fetch_wikis.py.
+loopback = load("loopback", "tests/loopback.py")
 
 
 def png(color, size=(4, 4)):
@@ -2431,10 +2431,7 @@ class RetryStatusTests(unittest.TestCase):
             def log_message(handler, *args):
                 pass
 
-        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        threading.Thread(target=self.server.serve_forever, daemon=True).start()
-        self.addCleanup(self.server.server_close)
-        self.addCleanup(self.server.shutdown)
+        self.port = loopback.serve(self, Handler)
         archives.reset()
         self.addCleanup(archives.reset)
         session = archives.session()
@@ -2443,7 +2440,7 @@ class RetryStatusTests(unittest.TestCase):
         self.addCleanup(lambda: delattr(archives.LOCAL, "session"))
 
     def check(self, status):
-        base = f"http://127.0.0.1:{self.server.server_address[1]}"
+        base = f"http://127.0.0.1:{self.port}"
         return archives.check_entry((f"t{status}", "Test", f"{base}/{status}", "index_only", ""))
 
     def test_rate_limit_is_blocked_and_server_error_is_http_error(self):
@@ -2453,24 +2450,6 @@ class RetryStatusTests(unittest.TestCase):
         row = self.check(503)
         self.assertEqual((row["access_status"], row["http_status"]), ("http_error", 503))
         self.assertEqual(self.check(403)["access_status"], "blocked")
-
-
-class Loopback(HTTPAdapter):
-    """Sends every request, whatever host its URL names, over plain HTTP to the loopback server on port; the response
-    keeps the URL that was requested. Nothing leaves the machine. Each response is kept in responses, so a test can
-    close one that requests raised on before it released the connection."""
-
-    def __init__(self, port, responses):
-        super().__init__()
-        self.port, self.responses = port, responses
-
-    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
-        return self.poolmanager.connection_from_host("127.0.0.1", self.port, scheme="http")
-
-    def build_response(self, req, resp):
-        response = super().build_response(req, resp)
-        self.responses.append(response)
-        return response
 
 
 class UnreadableLocationTests(unittest.TestCase):
@@ -2499,14 +2478,11 @@ class UnreadableLocationTests(unittest.TestCase):
             def log_message(handler, *args):
                 pass
 
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        threading.Thread(target=server.serve_forever, daemon=True).start()
-        self.addCleanup(server.server_close)
-        self.addCleanup(server.shutdown)
+        port = loopback.serve(self, Handler)
         self.session, responses = requests.Session(), []
         self.session.trust_env = False
         for prefix in ("https://", "http://"):
-            self.session.mount(prefix, Loopback(server.server_address[1], responses))
+            self.session.mount(prefix, loopback.Loopback(port, responses))
         self.addCleanup(self.session.close)
         self.addCleanup(lambda: [response.close() for response in responses])
         archives.reset()
@@ -2591,39 +2567,7 @@ class RedirectBodyTests(unittest.TestCase):
     PAYLOAD = png("red")
 
     def setUp(self):
-        self.sent = queue.Queue()
-        self.status = 302  # the redirect status the server answers with
-
-        class Handler(BaseHTTPRequestHandler):
-            def do_GET(handler):
-                if "moved" not in handler.path:
-                    handler.send_response(200)
-                    handler.send_header("Content-Length", str(len(self.PAYLOAD)))
-                    handler.end_headers()
-                    handler.wfile.write(self.PAYLOAD)
-                    return
-                handler.send_response(self.status)
-                handler.send_header("Location", handler.path.replace("moved", "final"))
-                handler.send_header("Content-Length", str(self.BODY))
-                handler.end_headers()
-                sent, chunk = 0, bytes(64 * 1024)
-                try:
-                    while sent < self.BODY:
-                        handler.wfile.write(chunk)
-                        sent += len(chunk)
-                except OSError:  # the client closed the connection
-                    pass
-                finally:
-                    self.sent.put(sent)
-
-            def log_message(handler, *args):
-                pass
-
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        threading.Thread(target=server.serve_forever, daemon=True).start()
-        self.addCleanup(server.server_close)
-        self.addCleanup(server.shutdown)
-        self.port = server.server_address[1]
+        self.port = loopback.serve_redirect_bodies(self)  # it sets self.sent and self.status
         archives.reset()
         self.addCleanup(archives.reset)
 
@@ -2638,7 +2582,7 @@ class RedirectBodyTests(unittest.TestCase):
         session = requests.Session()
         session.trust_env = False
         for prefix in ("https://", "http://"):
-            session.mount(prefix, Loopback(self.port, []))
+            session.mount(prefix, loopback.Loopback(self.port, []))
         self.addCleanup(session.close)
         return session
 
@@ -2647,7 +2591,7 @@ class RedirectBodyTests(unittest.TestCase):
         session = archives.session()
         session.trust_env = False
         for prefix in ("https://", "http://"):
-            session.mount(prefix, Loopback(self.port, []))
+            session.mount(prefix, loopback.Loopback(self.port, []))
         self.addCleanup(lambda: (session.close(), delattr(archives.LOCAL, "session")))
         return session
 
