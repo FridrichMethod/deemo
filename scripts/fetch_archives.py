@@ -104,15 +104,16 @@ def host_allowed(url, hosts):
 def redirect_target(r):
     """The absolute URL the redirect response r sends to, read from its Location as requests reads it: http.client
     decodes header bytes as latin-1, so the header is encoded back and decoded as UTF-8 (a raw UTF-8 path stays itself
-    instead of turning into mojibake), requoted, and resolved against r's URL. A Location that is not UTF-8 raises
-    InvalidURL, both a ValueError and a RequestException, so it fails a download or a reachability check before
-    anything more is requested."""
+    instead of turning into mojibake), parsed with urlparse (which drops tabs, CR and LF anywhere and C0 controls or
+    spaces at the start), requoted, and resolved against r's URL. A Location that is not UTF-8 raises InvalidURL, both
+    a ValueError and a RequestException, so it fails a download or a reachability check before anything more is
+    requested."""
     header = r.headers["location"]
     try:
         location = header.encode("latin-1").decode("utf-8")
     except UnicodeError:
         raise requests.exceptions.InvalidURL(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
-    return urljoin(r.url, requests.utils.requote_uri(location))
+    return urljoin(r.url, requests.utils.requote_uri(urlparse(location).geturl()))
 
 
 def get(url, hosts):

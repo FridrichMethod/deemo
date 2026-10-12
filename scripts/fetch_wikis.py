@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import quote, urljoin, urlsplit
+from urllib.parse import quote, urljoin, urlparse, urlsplit
 
 import requests
 from PIL import Image
@@ -256,14 +256,15 @@ def image_response(url, headers):
 def redirect_target(response):
     """The absolute URL a redirect response sends to, read from its Location as requests reads it: http.client decodes
     header bytes as latin-1, so the header is encoded back and decoded as UTF-8 (a raw UTF-8 file name stays itself
-    instead of turning into mojibake), requoted, and resolved against the response's URL. A Location that is not UTF-8
-    raises RefusedDownload."""
+    instead of turning into mojibake), parsed with urlparse (which drops tabs, CR and LF anywhere and C0 controls or
+    spaces at the start), requoted, and resolved against the response's URL. A Location that is not UTF-8 raises
+    RefusedDownload."""
     header = response.headers["Location"]
     try:
         location = header.encode("latin-1").decode("utf-8")
     except UnicodeError:
         raise RefusedDownload(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
-    return urljoin(response.url, requests.utils.requote_uri(location))
+    return urljoin(response.url, requests.utils.requote_uri(urlparse(location).geturl()))
 
 
 def get_image(source, url, headers):

@@ -33,6 +33,7 @@ def load(name):
 
 artists = load("fetch_artists")
 archives = load("fetch_archives")
+wikis = load("fetch_wikis")  # only its copy of redirect_target(), compared with the other two
 catalog = load("build_catalog")
 
 
@@ -2108,6 +2109,28 @@ def as_received(location):
     return location.encode().decode("latin-1")
 
 
+def followed(start, header):
+    """The URL requests itself would request after start answered with a redirect whose Location is header (as
+    http.client hands it over): requests.Session.resolve_redirects, asked for its next request instead of sending it."""
+    redirect = response(start, 302, headers={"Location": header})
+    redirect.request = requests.Request("GET", start).prepare()
+    with requests.Session() as session:
+        session.trust_env = False  # no proxy or .netrc settings from the environment
+        return next(session.resolve_redirects(redirect, redirect.request, yield_requests=True)).url
+
+
+# Locations whose target requests reads differently from the raw text: urlparse drops a tab, CR or LF anywhere (an
+# obs-fold continuation line reaches the header with its CRLF), C0 controls or spaces at the start, and an empty ";"
+# parameter at the end.
+UNPARSED_LOCATIONS = (
+    "/x/a\tb.jpg",
+    "/x/a\r\n\tb.jpg",
+    "\x01\x1f /x/c.jpg",
+    "\thttps://ia800.us.archive.org/2.jpg",
+    "/x/d.jpg;",
+)
+
+
 class RedirectLocationTests(unittest.TestCase):
     """get() and the reachability checks read a redirect's Location as requests does: http.client decodes header bytes
     as latin-1, so a raw UTF-8 path arrives as mojibake; it is encoded back, read as UTF-8 and requoted."""
@@ -2162,12 +2185,11 @@ class RedirectLocationTests(unittest.TestCase):
             (self.PAGE, "https://attacker.example\\@www.reddit.com/"),
             (self.PAGE, "?query=é#fragment"),
             (self.PAGE, "/%zz/"),
+            *((self.IMAGE, location) for location in UNPARSED_LOCATIONS),
         ):
             with self.subTest(location=location):
                 redirect = response(start, 302, headers={"Location": as_received(location)})
-                # requests.Session.resolve_redirects: the decoded target, requoted, then resolved against the URL.
-                expected = urljoin(start, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
-                self.assertEqual(archives.redirect_target(redirect), expected)
+                self.assertEqual(archives.redirect_target(redirect), followed(start, as_received(location)))
 
     def test_a_location_that_is_not_utf8_is_refused(self):
         # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
@@ -2220,12 +2242,14 @@ class ArtistRedirectLocationTests(unittest.TestCase):
             "https://attacker.example\\@i.pximg.net/",
             "?query=é#fragment",
             "/%zz/",
+            *UNPARSED_LOCATIONS,
         ):
             with self.subTest(location=location):
                 redirect = response(NEW_P0, 302, headers={"Location": as_received(location)})
-                expected = urljoin(NEW_P0, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
-                self.assertEqual(artists.redirect_target(redirect), expected)
+                self.assertEqual(artists.redirect_target(redirect), followed(NEW_P0, as_received(location)))
+                # The three fetchers keep their own copies of the helper; they must read every Location alike.
                 self.assertEqual(artists.redirect_target(redirect), archives.redirect_target(redirect))
+                self.assertEqual(artists.redirect_target(redirect), wikis.redirect_target(redirect))
 
     def test_a_location_that_is_not_utf8_is_refused_without_a_retry(self):
         # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.

@@ -969,13 +969,23 @@ class DownloadGuardTests(FetcherRun):
             "//patchwiki.biligame.com/images/deemo/d/de/Art.png",
             "../../deemo/e/ef/100%25 (b).png",
             "%2e%2e/x.png",
+            # urlparse, which requests reads a Location with, drops a tab, CR or LF anywhere (an obs-fold continuation
+            # line reaches the header with its CRLF), C0 controls or spaces at the start, and an empty ";" parameter.
+            "/images/deemo/f/fa/a\tb.png",
+            "/images/deemo/f/fa/a\r\n\tb.png",
+            "\x01\x1f /images/deemo/f/fa/c.png",
+            "\thttps://patchwiki.biligame.com/images/deemo/f/fa/d.png",
+            "/images/deemo/f/fa/e.png;",
         ):
             with self.subTest(location=location):
                 redirect = requests.Response()
                 redirect.status_code, redirect.url = 302, start
                 redirect.headers["Location"] = location.encode().decode("latin-1")  # as http.client hands it over
-                # requests.Session.resolve_redirects: the decoded target, requoted, then resolved against the URL.
-                expected = urljoin(start, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
+                redirect.request = requests.Request("GET", start).prepare()
+                # The URL requests itself would request next: Session.resolve_redirects, asked for the request.
+                with requests.Session() as session:
+                    session.trust_env = False  # no proxy or .netrc settings from the environment
+                    expected = next(session.resolve_redirects(redirect, redirect.request, yield_requests=True)).url
                 self.assertEqual(fetch.redirect_target(redirect), expected)
 
     def test_a_redirect_location_that_is_not_utf8_is_refused(self):
