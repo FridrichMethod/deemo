@@ -27,9 +27,12 @@ workflows = load("test_tooling", "tests/test_tooling.py")
 
 # The deploy job's condition, verbatim. The expression language has no regular expressions, so this only requires a tag
 # ref that starts with v, from a published full release or a manual run; the guard steps check the whole vX.Y.Z tag.
+# Its == coerces null and false both to 0, so `prerelease == false` would also accept a release event without the flag;
+# toJSON() turns false into 'false' and a missing flag into 'null'.
 DEPLOY_CONDITION = (
     "startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'workflow_dispatch' || "
-    "(github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease == false))"
+    "(github.event_name == 'release' && github.event.action == 'published' && "
+    "toJSON(github.event.release.prerelease) == 'false'))"
 )
 # The only contexts the guard steps may read. GitHub renders a property the event does not have as an empty string.
 GUARD_CONTEXTS = (
