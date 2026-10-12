@@ -50,6 +50,6 @@ disable_warnings = ["module-not-imported", "module-not-measured", "no-data-colle
 
 [tool.coverage.report]
 # The measured baseline, rounded down; raise it when coverage rises, never lower it to pass.
-fail_under = 88
+fail_under = 89
 precision = 1
 skip_empty = true
