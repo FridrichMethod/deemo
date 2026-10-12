@@ -749,6 +749,32 @@ class GetTests(FetcherRun):
             with self.assertRaisesRegex(fetch.RefusedDownload, "limit"):
                 fetch.get(ILLUSTRATOR_URL)
 
+    def test_the_response_with_body_returns_has_the_public_fields_and_no_private_state(self):
+        # get() hands back with_body()'s Response. It must carry every public field of the original other than the body
+        # (status, headers and URL included, though no caller reads them today), and set nothing private: each private
+        # attribute is what requests.Response() starts with, so requests reads the body from raw as from any response.
+        original = requests.Response()
+        original.status_code, original.url, original.reason = 203, ILLUSTRATOR_URL, "Non-Authoritative Information"
+        original.headers.update({"Content-Type": "text/html; charset=UTF-8", "X-Test": "1"})
+        original.encoding, original.elapsed, original.history = "UTF-8", timedelta(seconds=3), [requests.Response()]
+        original.request = requests.Request("GET", ILLUSTRATOR_URL).prepare()
+        original.cookies.set("test", "1")
+        body = "<h2>アーティスト別リスト</h2>".encode()
+        served = fetch.with_body(original, body)
+        self.assertIsInstance(served, requests.Response)
+        self.assertIsNot(served, original)
+        fresh = vars(requests.Response())
+        self.assertEqual(
+            {name: value for name, value in vars(served).items() if name.startswith("_")},
+            {name: value for name, value in fresh.items() if name.startswith("_")},
+        )
+        public = ("status_code", "headers", "url", "history", "encoding", "reason", "cookies", "elapsed", "request")
+        for field in public:
+            with self.subTest(field=field):
+                self.assertNotEqual(getattr(original, field), fresh[field])  # so a field left out is noticed
+                self.assertEqual(getattr(served, field), getattr(original, field))
+        self.assertEqual((served.content, served.text, served.ok), (body, body.decode(), True))
+
     def test_a_redirect_on_the_same_host_is_followed(self):
         moved = "https://wiki.biligame.com/deemo/w/api.php?action=query&format=json"
         self.web.routes = {
