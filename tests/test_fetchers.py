@@ -2160,6 +2160,9 @@ class CatalogCheckTests(unittest.TestCase):
         self.assertEqual(archives.redirect_hosts("WWW.Kadokawa.CO.JP."), {"www.kadokawa.co.jp", "kadokawa.co.jp"})
         self.assertEqual(archives.redirect_hosts("bookwalker.jp"), {"bookwalker.jp", "www.bookwalker.jp"})
         self.assertEqual(archives.redirect_hosts("www.www.example.com"), {"www.www.example.com", "www.example.com"})
+        # Only "www." followed by a dot counts as the prefix: www2 and wwwexample are names of their own.
+        self.assertEqual(archives.redirect_hosts("www2.example.com"), {"www2.example.com", "www.www2.example.com"})
+        self.assertEqual(archives.redirect_hosts("wwwexample.com"), {"wwwexample.com", "www.wwwexample.com"})
         for host in ("", None):
             self.assertEqual(archives.redirect_hosts(host), set())
 
@@ -2178,6 +2181,8 @@ class CatalogCheckTests(unittest.TestCase):
         "0X7F000001",
         "0x7f.1",
         "017700000001",
+        "0x",  # a bare "0x" is a number to WHATWG too
+        "a.0x",
         "www.192.0.2.1",  # whose www sibling would be one
     )
 
