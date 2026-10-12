@@ -228,13 +228,17 @@ PUSH_DEPLOYED = {
     "README.zh-CN.md": ("推送到 `main` 后", "只从 `main` 部署", "Pages 工作流会再次运行全部检查"),
 }
 # What each README's deployment section says about the release rules of 2026-10-12: what every run checks, a re-run of
-# a release's run included, the tag form, and the two repository settings that limit which tags can deploy.
+# a release's run included, that a re-run without the guard job (named as on the Actions page) deploys nothing, the
+# tag form, and the two repository settings that limit which tags can deploy.
+GUARD_JOB = "Release guard"
 RELEASE_RULES = {
     "README.md": (
         "Every run, whether a release or a manual run started it, first checks",
         "one read-only request to the GitHub API",
         "A re-run keeps the event of the run it repeats",
         "also refuses a re-run of a release's run",
+        f"A re-run that leaves out the {GUARD_JOB} job, such as a re-run of the deploy job alone, does not look the"
+        " Release up again and deploys nothing, so re-run the whole run.",
         "a run on a tag without such a Release",
         "three numbers without leading zeros",
         "`v01.1.0`",
@@ -247,6 +251,8 @@ RELEASE_RULES = {
         "向 GitHub API 发出一次只读请求",
         "重新运行（re-run）沿用被重新运行的那次运行的事件",
         "也会被这项检查拒绝",
+        f"不包括 {GUARD_JOB} 任务的重新运行（例如只重新运行部署任务）不会再次查询 Release，也不会部署任何内容，"
+        "因此应重新运行整次运行。",
         "在没有这样的 Release 的标签上的运行",
         "三个不带前导零的数字",
         "`v01.1.0`",
@@ -285,6 +291,9 @@ HEADER_RULES = (
     "Every run, whichever of the two started it, first asks for the tag's Release",
     "one read-only GitHub API request",
     "a re-run keeps the event of the run it repeats",
+    "a re-run that leaves out the guard job, such as one of the deploy job alone, repeats no lookup and deploys nothing,"
+    " so re-run the whole run",
+    "the commit the guard job approved in the same attempt",
     "three numbers without leading zeros",
     'A repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags',
     "the github-pages environment accepts deployments only from tags from v1.1.1 on",
@@ -465,6 +474,8 @@ class DocumentationTests(unittest.TestCase):
         for phrase in HEADER_RULES:
             with self.subTest(document="pages.yml", phrase=phrase):
                 self.assertIn(phrase, header)
+        _, jobs = workflows.read_workflow("pages.yml")
+        self.assertEqual(workflows.yaml_scalar(jobs["guard"]["keys"]["name"][0], "name"), GUARD_JOB)
 
     def test_a_manual_run_is_shown_only_on_a_tag_whose_workflow_checks_the_release(self):
         # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG does not
