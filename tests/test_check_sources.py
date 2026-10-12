@@ -725,6 +725,12 @@ class DownloadLocationTests(unittest.TestCase):
             ("bwiki", bwiki + "..%u005c..%u005cotherwiki/x.png"),
             ("bwiki", bwiki + "%25u002e%25u002e/%25u002e%25u002e/otherwiki/x.png"),
             ("bwiki", bwiki + "%uff0e%uff0e/%uff0e%uff0e/otherwiki/x.png"),
+            # An unpaired surrogate, which a server may drop, before or after the dots.
+            ("bwiki", bwiki + "%udc00%u002e%u002e/%udc00%u002e%u002e/otherwiki/x.png"),
+            ("bwiki", bwiki + "%u002e%u002e%ud842/%u002e%u002e%ud842/otherwiki/x.png"),
+            ("bwiki", bwiki + "%udf9f%ud842../%udf9f%ud842../otherwiki/x.png"),  # a low surrogate, then a high one
+            ("bwiki", bwiki + "%25udc00%25u002e%25u002e/%25udc00%25u002e%25u002e/otherwiki/x.png"),
+            ("bwiki", bwiki + "\udc00../\udc00../otherwiki/x.png"),  # as written
             ("bwiki", bwiki + "..%20./..%20./otherwiki/x.png"),  # Windows: ".. ."
             ("bwiki", bwiki + ".../.../otherwiki/x.png"),
             ("bwiki", bwiki + "..../..../otherwiki/x.png"),
@@ -759,6 +765,7 @@ class DownloadLocationTests(unittest.TestCase):
             bwiki + "..%E2%80%8Bx.png",
             bwiki + "100%EF%BC%85.png",
             bwiki + "%u00e9t%u00e9.png",
+            bwiki + "%ud842%udf9f.png",  # a surrogate pair: U+20B9F
             bwiki + "..%20.%20x.png",
             bwiki + "x....png",
         ):

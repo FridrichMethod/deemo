@@ -236,8 +236,11 @@ def normalised(text: str) -> str:
 
 def decoded(path: str) -> str:
     """One round of percent-decoding as IIS does it: "%uXXXX" (IIS's escape of a UTF-16 code unit, "%u002e" for "."),
-    then "%XX" as UTF-8 bytes. Raises UnicodeDecodeError for bytes that are not UTF-8."""
-    return unquote(IIS_ESCAPE.sub(lambda escape: chr(int(escape.group(1), 16)), path), errors="strict")
+    then "%XX" as UTF-8 bytes, read as UTF-16 text, so a high surrogate followed by a low one ("%ud842%udf9f") is one
+    character. Raises UnicodeDecodeError for bytes that are not UTF-8 and for a surrogate left unpaired, escaped or
+    not, which is no character at all."""
+    units = unquote(IIS_ESCAPE.sub(lambda escape: chr(int(escape.group(1), 16)), path), errors="strict")
+    return units.encode("utf-16-le", "surrogatepass").decode("utf-16-le")
 
 
 def has_dot_segment(path: str) -> bool:
@@ -248,8 +251,9 @@ def has_dot_segment(path: str) -> bool:
     normalises reads "%EF%BC%8E" (the full-width "．") as ".", and the full-width "％２ｅ" as "%2e". In every form a
     backslash counts as "/", and each piece is read as reads_as_dot() says. A round whose bytes are not UTF-8 counts
     too: a lenient decoder reads the overlong "%c0%ae" as "." (MediaWiki titles cannot hold "%" and two hex digits, so a
-    real file name never decodes to such bytes). The characters themselves are allowed: MediaWiki file names may hold
-    ";", "\\", "%", spaces and dots.
+    real file name never decodes to such bytes). So does a round that leaves a surrogate unpaired: a server that drops
+    it reads "%udc00%u002e%u002e" as "..". The characters themselves are allowed: MediaWiki file names may hold ";",
+    "\\", "%", spaces and dots.
     """
     form = path
     # A round that changes the form normalises it or uses up an escape ("%XX" or "%uXXXX"), so the loop ends long
