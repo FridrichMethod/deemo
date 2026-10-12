@@ -44,19 +44,24 @@ DEPLOY_CONDITION = (
     "toJSON(github.event.release.prerelease) == 'false'))"
 )
 # The part of GitHub's expression language that the deploy condition uses: string, true, false and null literals,
-# context properties (null when absent), ==, && and || (each gives one of its operands), parentheses, startsWith() and
-# toJSON(). == compares two strings ignoring case and two values of one other type as they are; values of two types
-# become numbers first (null and false 0, true 1, '' 0, another string its JSON number or NaN, which equals nothing).
-# startsWith() casts both arguments to strings (null to '') and ignores case. Any other syntax is an error.
+# context properties (null when absent), ==, && and || (each gives one of its operands, and takes false, 0, '' and null
+# for false), parentheses, startsWith() and toJSON(). == compares two strings ignoring case and two values of one other
+# type as they are; values of two types become numbers first (null and false 0, true 1, a number itself, '' 0, another
+# string its JSON number or NaN, which equals nothing). startsWith() casts both arguments to strings (null to '') and
+# ignores case. Any other syntax is an error.
 EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|&&|\|\||[(),])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
 JSON_NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
 LITERALS = {"true": True, "false": False, "null": None}
 
 
 def as_number(value):
+    if value is None or isinstance(value, bool):
+        return float(bool(value))
+    if isinstance(value, (int, float)):
+        return float(value)
     if isinstance(value, str):
         return 0.0 if value == "" else float(value) if JSON_NUMBER.fullmatch(value) else math.nan
-    return float(bool(value))
+    return math.nan  # an array or an object
 
 
 def as_text(value):
@@ -64,7 +69,9 @@ def as_text(value):
 
 
 def truthy(value):
-    return value is True or (isinstance(value, str) and value != "")
+    if value is None or isinstance(value, bool):
+        return value is True
+    return value != 0 if isinstance(value, (int, float)) else value != ""
 
 
 def equal(left, right):
@@ -478,6 +485,14 @@ class ExpressionTests(unittest.TestCase):
             ("startsWith(a.b, 'refs/')", {}, False),
             ("a.b && 'yes' || 'no'", {"a.b": ""}, "no"),
             ("a.b && 'yes' || 'no'", {"a.b": "x"}, "yes"),
+            # A context may hold a number: it stays that number, and only 0 is false.
+            ("a.b == c.d", {"a.b": "2", "c.d": 2}, True),
+            ("a.b == c.d", {"a.b": "1", "c.d": 2}, False),
+            ("a.b == '0.5'", {"a.b": 0.5}, True),
+            ("a.b == true", {"a.b": 2}, False),
+            ("a.b == null", {"a.b": 0}, True),
+            ("a.b && 'yes' || 'no'", {"a.b": 2}, "yes"),
+            ("a.b && 'yes' || 'no'", {"a.b": 0}, "no"),
             ("('it''s' || a.b) == 'IT''S'", {}, True),
         ):
             with self.subTest(expression, contexts=contexts):
