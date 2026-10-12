@@ -111,7 +111,8 @@ if code:
     sys.exit(code)
 """
 COMMITTER = {"NAME": "Release test", "EMAIL": "release@example.invalid", "DATE": "2026-10-11T00:00:00Z"}
-VERSION = r"v[0-9]+\.[0-9]+\.[0-9]+"
+# A release tag as the guard steps accept it: three numbers without leading zeros.
+VERSION = r"v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
 # "[vX.Y.Z](<its release page>) (YYYY-MM-DD)", with ASCII or full-width parentheses around the date.
 CURRENT_RELEASE = re.compile(
     rf"\[({VERSION})\]\(https://github\.com/FridrichMethod/deemo/releases/tag/({VERSION})\) ?[(（]"
@@ -123,6 +124,41 @@ PUSH_DEPLOYED = {
     "README.md": ("After a push to `main`", "deploys only from `main`", "Pages workflow runs every check again"),
     "README.zh-CN.md": ("推送到 `main` 后", "只从 `main` 部署", "Pages 工作流会再次运行全部检查"),
 }
+# What each README's deployment section says about the release rules of 2026-10-11: what a manual run checks, the tag
+# form, and the two repository settings that limit which tags can deploy.
+RELEASE_RULES = {
+    "README.md": (
+        "one read-only request to the GitHub API",
+        "a manual run on a tag without such a Release",
+        "three numbers without leading zeros",
+        "`v01.1.0`",
+        'A repository ruleset ("Release tags v*"',
+        "lets only repository admins create, move or delete `v*` tags",
+        "the rule of the `github-pages` environment that allows `v*` tags",
+    ),
+    "README.zh-CN.md": (
+        "向 GitHub API 发出一次只读请求",
+        "在没有这样的 Release 的标签上的手动运行",
+        "三个不带前导零的数字",
+        "`v01.1.0`",
+        '仓库规则集（ruleset）"Release tags v*"',
+        "只允许仓库管理员创建、移动或删除 `v*` 标签",
+        "`github-pages` 环境中允许 `v*` 标签的部署规则",
+    ),
+}
+# What the READMEs said while a manual run did not look up the tag's Release.
+NO_RELEASE_LOOKUP = {
+    "README.md": ("does not look up the tag's GitHub Release", "use it only to redeploy a released tag"),
+    "README.zh-CN.md": ("不会查询该标签的 GitHub Release", "只用它重新部署已发布的标签"),
+}
+# The same rules in the header comment of pages.yml, whose lines are joined with spaces.
+HEADER_RULES = (
+    "a published GitHub Release, not marked as a prerelease",
+    "one read-only GitHub API request",
+    "three numbers without leading zeros",
+    'A repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags',
+    "the github-pages environment allows v* tags",
+)
 
 
 def published(tag="v1.1.0", commit="released", **changes):
@@ -588,6 +624,22 @@ class DocumentationTests(unittest.TestCase):
                 self.assertIn("`tests/test_pages.py`", section)
                 self.assertIn(f"{pages.MAX_SITE_BYTES // 1_000_000} MB", section)
         self.assertEqual(len(current), 1, "both READMEs name the same current release and date")
+
+    def test_both_readmes_and_the_workflow_state_the_release_rules(self):
+        for readme, phrases in RELEASE_RULES.items():
+            section = self.section(readme)
+            text = (ROOT / readme).read_text(encoding="utf-8")
+            for phrase in phrases:
+                with self.subTest(document=readme, phrase=phrase):
+                    self.assertIn(phrase, section)
+            for phrase in NO_RELEASE_LOOKUP[readme]:
+                with self.subTest(document=readme, stale=phrase):
+                    self.assertNotIn(phrase, text)
+        lines = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8").splitlines()
+        header = " ".join(line.removeprefix("# ") for line in lines[: lines.index("on:")] if line.startswith("#"))
+        for phrase in HEADER_RULES:
+            with self.subTest(document="pages.yml", phrase=phrase):
+                self.assertIn(phrase, header)
 
     def test_no_readme_says_a_push_to_main_deploys(self):
         for readme, phrases in PUSH_DEPLOYED.items():
