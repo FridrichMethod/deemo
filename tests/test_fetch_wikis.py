@@ -1,6 +1,7 @@
 """Offline checks for scripts/fetch_wikis.py: discovery filters, manifest safety, carry-forward and retries.
 
-Nothing touches the network: requests.get is replaced by a fake that serves canned responses, and ROOT points at a
+Nothing touches the network: requests.get is replaced by a fake that serves canned responses (or, in
+NotUtf8LocationTests, by a real Session whose adapter sends every request to a loopback server), and ROOT points at a
 temporary directory, so the repository's own manifests are never read or written.
 """
 
@@ -23,12 +24,14 @@ import tempfile
 import threading
 import unittest
 from datetime import datetime, timedelta, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urljoin, urlsplit
 
 import requests
 from PIL import Image
+from requests.adapters import HTTPAdapter
 from requests.structures import CaseInsensitiveDict
 
 REPO = Path(__file__).resolve().parents[1]
@@ -164,12 +167,18 @@ class FakeResponse:
             raise requests.HTTPError(f"{self.status_code} Error for url: {self.url}", response=self)
 
 
+# Only its get_redirect_target() is used: FakeWeb reads the Location of each redirect with it, as Session.send does.
+REQUESTS_SESSION = requests.Session()
+
+
 class FakeWeb:
     """Stands in for requests.get. A route is bytes (200), a (status, body, headers) tuple, or a list of these served
     in turn (the last one repeats); any other URL behaves as if the network were down. Like requests, it follows a
-    redirect (a 3xx with a Location) unless allow_redirects=False. Every request is recorded in calls, its query
-    parameters in params, its allow_redirects and stream options in options, and every response in responses. With a
-    limit, a request past that many fails the test, so a client that would never stop asking cannot hang it."""
+    redirect (a 3xx with a Location) unless allow_redirects=False, and like Session.send it reads the Location of every
+    redirect, followed or not, so it raises UnicodeDecodeError for one that is not UTF-8 before it returns the response.
+    Every request is recorded in calls, its query parameters in params, its allow_redirects and stream options in
+    options, and every response in responses. With a limit, a request past that many fails the test, so a client that
+    would never stop asking cannot hang it."""
 
     def __init__(self):
         self.routes, self.calls, self.params, self.options, self.responses = {}, [], [], [], []
@@ -190,6 +199,7 @@ class FakeWeb:
             status, body, served = route if isinstance(route, tuple) else (200, route, {"Content-Type": "image/png"})
             response = FakeResponse(url, status, body, served)
             self.responses.append(response)
+            REQUESTS_SESSION.get_redirect_target(response)
             if not (allow_redirects and response.is_redirect):
                 return response
             url = urljoin(url, response.headers["Location"])
@@ -739,6 +749,32 @@ class GetTests(FetcherRun):
             with self.assertRaisesRegex(fetch.RefusedDownload, "limit"):
                 fetch.get(ILLUSTRATOR_URL)
 
+    def test_the_response_with_body_returns_has_the_public_fields_and_no_private_state(self):
+        # get() hands back with_body()'s Response. It must carry every public field of the original other than the body
+        # (status, headers and URL included, though no caller reads them today), and set nothing private: each private
+        # attribute is what requests.Response() starts with, so requests reads the body from raw as from any response.
+        original = requests.Response()
+        original.status_code, original.url, original.reason = 203, ILLUSTRATOR_URL, "Non-Authoritative Information"
+        original.headers.update({"Content-Type": "text/html; charset=UTF-8", "X-Test": "1"})
+        original.encoding, original.elapsed, original.history = "UTF-8", timedelta(seconds=3), [requests.Response()]
+        original.request = requests.Request("GET", ILLUSTRATOR_URL).prepare()
+        original.cookies.set("test", "1")
+        body = "<h2>アーティスト別リスト</h2>".encode()
+        served = fetch.with_body(original, body)
+        self.assertIsInstance(served, requests.Response)
+        self.assertIsNot(served, original)
+        fresh = vars(requests.Response())
+        self.assertEqual(
+            {name: value for name, value in vars(served).items() if name.startswith("_")},
+            {name: value for name, value in fresh.items() if name.startswith("_")},
+        )
+        public = ("status_code", "headers", "url", "history", "encoding", "reason", "cookies", "elapsed", "request")
+        for field in public:
+            with self.subTest(field=field):
+                self.assertNotEqual(getattr(original, field), fresh[field])  # so a field left out is noticed
+                self.assertEqual(getattr(served, field), getattr(original, field))
+        self.assertEqual((served.content, served.text, served.ok), (body, body.decode(), True))
+
     def test_a_redirect_on_the_same_host_is_followed(self):
         moved = "https://wiki.biligame.com/deemo/w/api.php?action=query&format=json"
         self.web.routes = {
@@ -778,6 +814,19 @@ class GetTests(FetcherRun):
         with self.assertRaisesRegex(fetch.RefusedDownload, "redirects"):
             fetch.get(self.URL)
         self.assertEqual(self.web.calls, [self.URL] * (fetch.MAX_REDIRECTS + 1))
+
+    def test_a_url_on_another_host_as_written_is_refused_though_requests_sends_it_to_the_host(self):
+        # urllib3 ends the authority at a backslash, so requests sends this URL to the host itself (as "/%5Cdeemo/..."),
+        # while urlsplit reads "wiki.biligame.com\deemo" as its host. With no "@", port or other scheme to give it
+        # away, only on_host()'s comparison of the hostname as written refuses it.
+        host = "wiki.biligame.com"
+        for url in ("https://wiki.biligame.com\\deemo/api.php", "https://wiki.biligame.com\\"):
+            with self.subTest(url=url):
+                sent = requests.Request("GET", url).prepare().url
+                self.assertEqual((urlsplit(sent).hostname, urlsplit(url).port), (host, None))
+                self.assertNotIn("@", url)
+                self.assertFalse(fetch.on_host(url, host))
+        self.assertTrue(fetch.on_host("https://WIKI.biligame.com/deemo/api.php", host))  # case alone is no difference
 
 
 class RetryTests(FetcherRun):
@@ -969,19 +1018,32 @@ class DownloadGuardTests(FetcherRun):
             "//patchwiki.biligame.com/images/deemo/d/de/Art.png",
             "../../deemo/e/ef/100%25 (b).png",
             "%2e%2e/x.png",
+            # urlparse, which requests reads a Location with, drops a tab, CR or LF anywhere (an obs-fold continuation
+            # line reaches the header with its CRLF), C0 controls or spaces at the start, and an empty ";" parameter.
+            "/images/deemo/f/fa/a\tb.png",
+            "/images/deemo/f/fa/a\r\n\tb.png",
+            "\x01\x1f /images/deemo/f/fa/c.png",
+            "\thttps://patchwiki.biligame.com/images/deemo/f/fa/d.png",
+            "/images/deemo/f/fa/e.png;",
         ):
             with self.subTest(location=location):
                 redirect = requests.Response()
                 redirect.status_code, redirect.url = 302, start
                 redirect.headers["Location"] = location.encode().decode("latin-1")  # as http.client hands it over
-                # requests.Session.resolve_redirects: the decoded target, requoted, then resolved against the URL.
-                expected = urljoin(start, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
+                redirect.request = requests.Request("GET", start).prepare()
+                # The URL requests itself would request next: Session.resolve_redirects, asked for the request.
+                with requests.Session() as session:
+                    session.trust_env = False  # no proxy or .netrc settings from the environment
+                    expected = next(session.resolve_redirects(redirect, redirect.request, yield_requests=True)).url
                 self.assertEqual(fetch.redirect_target(redirect), expected)
 
     def test_a_redirect_location_that_is_not_utf8_is_refused(self):
         start = BWIKI_IMAGES + "a/ab/Art.png"
         offered = self.offer("Art.png", png("red"))
-        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
+        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests itself fails on it (FakeWeb does as well).
+        redirect = FakeResponse(start, 302, headers={"Location": "/images/deemo/b/bc/Caf\xe9.png"})
+        with self.assertRaisesRegex(fetch.RefusedDownload, "Location is not UTF-8: '/images/deemo/b/bc/Caf\xe9.png'$"):
+            fetch.redirect_target(redirect)
         self.serve({start: (302, b"", {"Location": "/images/deemo/b/bc/Caf\xe9.png"})})
         self.refused({**offered, "info": {**offered["info"], "url": start}}, reason="not UTF-8")
         self.assertEqual(self.web.calls, [start])
@@ -1133,6 +1195,99 @@ class DownloadGuardTests(FetcherRun):
         with patch.dict(fetch.check_sources.DOWNLOAD_LOCATIONS, {"bwiki": ("images.example.test", "/deemo/")}):
             self.assertFalse(fetch.download_allowed("bwiki", url))
             self.assertTrue(fetch.download_allowed("bwiki", "https://images.example.test/deemo/a/ab/Art.png"))
+
+
+class Loopback(HTTPAdapter):
+    """Sends every request, whatever host its URL names, over plain HTTP to the loopback server on port; the response
+    keeps the URL that was requested. Nothing leaves the machine. Each response is kept in responses, so a test can
+    close one that requests raised on before it released the connection."""
+
+    def __init__(self, port, responses):
+        super().__init__()
+        self.port, self.responses = port, responses
+
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        return self.poolmanager.connection_from_host("127.0.0.1", self.port, scheme="http")
+
+    def build_response(self, req, resp):
+        response = super().build_response(req, resp)
+        self.responses.append(response)
+        return response
+
+
+class NotUtf8LocationTests(FetcherRun):
+    """A real requests.Session against a loopback server that answers every request with a redirect whose Location
+    holds the raw byte 0xE9. requests itself raises UnicodeDecodeError on it inside Session.send, before the fetcher
+    sees the response; the fetcher refuses it like any other bad redirect: a download fails its candidate with no retry
+    and no other URL tried, the illustrator index records the failure, and get() raises RefusedDownload."""
+
+    def setUp(self):
+        super().setUp()
+        self.paths = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(handler):
+                self.paths.append(handler.path)
+                handler.send_response(302)
+                handler.send_header("Location", "/Caf\xe9.png")  # http.server encodes it as latin-1: byte 0xE9
+                handler.send_header("Content-Length", "0")
+                handler.end_headers()
+
+            def log_message(handler, *args):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        session, responses = requests.Session(), []
+        session.trust_env = False
+        for prefix in ("https://", "http://"):
+            session.mount(prefix, Loopback(server.server_address[1], responses))
+        self.addCleanup(session.close)
+        self.addCleanup(lambda: [response.close() for response in responses])
+        patcher = patch.object(fetch.requests, "get", lambda url, **options: session.get(url, **options))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_a_download_fails_its_candidate_without_a_retry_or_another_url(self):
+        payload = png("green")
+        candidate = {
+            "source": "fandom",
+            "file_title": "File:Song.png",
+            "info": {
+                **image_info(64, 48, "Song.png"),
+                "url": FANDOM_IMAGES + "a/ab/Song.png/revision/latest?cb=20210901000000",
+                "size": len(payload),
+                "sha1": hashlib.sha1(payload).hexdigest(),
+            },
+            "kind": "song_art",
+            "song_titles": ["Song"],
+            "collections": [],
+            "related_pages": [],
+        }
+        self.assertEqual(len(fetch.download_urls(candidate)), 3)
+        manifest = self.resume(candidate)
+        self.assertEqual(manifest["assets"], [])
+        (failure,) = manifest["failures"]
+        self.assertEqual(failure["title"], "File:Song.png")
+        self.assertTrue(
+            failure["error"].startswith("Refusing a redirect whose Location is not UTF-8: '/Caf\xe9.png'"), failure
+        )
+        self.assertEqual(self.paths, ["/deemo/images/a/ab/Song.png?format=original"])
+        self.assertEqual(self.sleeps, [])
+
+    def test_a_page_read_is_refused_and_the_illustrator_index_records_it(self):
+        with self.assertRaisesRegex(fetch.RefusedDownload, "Location is not UTF-8: '/Caf\xe9.png'"):
+            fetch.api("bwiki", list="allimages")
+        manifest = {"sources": [], "failures": []}
+        FETCH_ILLUSTRATOR_INDEX(manifest)
+        (failure,) = manifest["failures"]
+        self.assertEqual(failure["stage"], "reference_index")
+        self.assertIn("Refusing a redirect whose Location is not UTF-8", failure["error"])
+        self.assertEqual(len(self.paths), 2)  # one request each, none retried
+        self.assertEqual(self.sleeps, [])
+        self.assertFalse((self.root / ILLUSTRATOR_INDEX).exists())
 
 
 class DeliveryNoteTests(FetcherRun):

@@ -44,9 +44,13 @@ TUMBLR_MEDIA_HOSTS = ("media.tumblr.com",)
 OFFICIAL_HOSTS = ("deemo.com",)
 PROMO_HOSTS = ("rayark.promo",)
 ARCHIVE_ORG_HOSTS = ("archive.org",)
-# Second-level labels that are public under a two-letter country code ("co.jp", "com.cn", "ac.uk"): there a site's
-# registrable domain is its last three labels (see registrable_domain()).
-PUBLIC_SECOND_LEVELS = frozenset({"co", "com", "net", "org", "gov", "ac", "edu", "ne", "or", "go"})
+# The reviewed redirects a reachability check follows from a catalogued page to another host than its own and its
+# "www." sibling (see redirect_hosts()): (page host pattern, target host, evidence). The pattern is one host, or
+# "*.example.com" for every subdomain of example.com. The evidence is the ids of the committed rows of
+# data/sources/archives.json whose page, on a host the pattern matches, ended on the target host (url and resolved_url);
+# an entry is added only for a redirect seen there. No committed row ended on another host, so none is listed. A
+# target that is an IP address is never followed (see followed()).
+CROSS_HOST_REDIRECTS = ()
 
 
 def reset():
@@ -101,18 +105,35 @@ def host_allowed(url, hosts):
     )
 
 
+def not_utf8(header):
+    """The refusal of a redirect whose Location header (as http.client decodes it, latin-1) is not UTF-8: InvalidURL,
+    both a ValueError and a RequestException, so it fails a download, a page read or a reachability check like any
+    other failed request, and nothing more is requested."""
+    return requests.exceptions.InvalidURL(f"Refusing a redirect whose Location is not UTF-8: {header!r}")
+
+
+def send(url, **options):
+    """session().get(url, **options), following no redirect. requests reads the Location of a redirect response even
+    then (Session.send prepares the request Response.next would send) and raises UnicodeDecodeError, which is no
+    RequestException, for a Location that is not UTF-8 before it returns the response: that is raised as not_utf8()."""
+    try:
+        return session().get(url, allow_redirects=False, **options)
+    except UnicodeDecodeError as error:
+        raise not_utf8(bytes(error.object).decode("latin-1")) from None
+
+
 def redirect_target(r):
     """The absolute URL the redirect response r sends to, read from its Location as requests reads it: http.client
     decodes header bytes as latin-1, so the header is encoded back and decoded as UTF-8 (a raw UTF-8 path stays itself
-    instead of turning into mojibake), requoted, and resolved against r's URL. A Location that is not UTF-8 raises
-    InvalidURL, both a ValueError and a RequestException, so it fails a download or a reachability check before
-    anything more is requested."""
+    instead of turning into mojibake), parsed with urlparse (which drops tabs, CR and LF anywhere and C0 controls or
+    spaces at the start), requoted, and resolved against r's URL. A Location that is not UTF-8 raises not_utf8(); a
+    real requests session refuses it already in send(), so this only guards a response that did not come through it."""
     header = r.headers["location"]
     try:
         location = header.encode("latin-1").decode("utf-8")
     except UnicodeError:
-        raise requests.exceptions.InvalidURL(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
-    return urljoin(r.url, requests.utils.requote_uri(location))
+        raise not_utf8(header) from None
+    return urljoin(r.url, requests.utils.requote_uri(urlparse(location).geturl()))
 
 
 def get(url, hosts):
@@ -121,7 +142,7 @@ def get(url, hosts):
     for _ in range(MAX_REDIRECTS + 1):
         if not host_allowed(url, hosts):
             raise ValueError(f"Refusing URL outside the expected hosts ({', '.join(hosts)}): {url}")
-        r = session().get(url, timeout=(15, 60), allow_redirects=False)
+        r = send(url, timeout=(15, 60))
         if not r.is_redirect:
             r.raise_for_status()
             return r
@@ -597,44 +618,61 @@ CATALOG_ENTRIES = [
 ]
 
 
-def registrable_domain(host):
-    """The registrable domain of a host name: its last two labels ("wublaze.tumblr.com": "tumblr.com"), or its last
-    three when the second-level label is one of PUBLIC_SECOND_LEVELS under a two-letter country code
-    ("www.kadokawa.co.jp": "kadokawa.co.jp"). None for an IP address, an empty host, or a host that is itself such a
-    public suffix ("co.jp"), none of which has one."""
-    host = (host or "").rstrip(".").lower()
+def ip_literal(host):
+    """Whether host, without case, brackets or a final dot, names an IP address rather than a domain: an IPv4 or IPv6
+    address, or a host whose last label is a number (the WHATWG URL standard's "ends in a number"), such as 127.1,
+    2130706433 or 0x7f000001, which requests sends unchanged and the system resolver reads as an IPv4 address."""
+    host = host.rstrip(".").lower()
+    if host.startswith("[") and host.endswith("]"):
+        host = host[1:-1]
     try:
         ipaddress.ip_address(host)
-        return None
+        return True
     except ValueError:
-        pass
-    labels = host.split(".")
-    if not host:
-        return None
-    if len(labels) >= 2 and len(labels[-1]) == 2 and labels[-2] in PUBLIC_SECOND_LEVELS:
-        return ".".join(labels[-3:]) if len(labels) >= 3 else None
-    return ".".join(labels[-2:])
+        return re.fullmatch(r"[0-9]+|0x[0-9a-f]*", host.rpartition(".")[2]) is not None
+
+
+def redirect_hosts(host):
+    """The hosts a reachability check of a page on host follows a redirect to: host itself, its "www." sibling (host
+    without its leading "www.", or with "www." added when it has none: www.www.example.com is no sibling of
+    www.example.com), and the target of each CROSS_HOST_REDIRECTS entry whose pattern matches host. Host names are
+    compared without case or a final dot. A page on an IP address (see ip_literal()) follows no redirect."""
+    host = (host or "").rstrip(".").lower()
+    if not host or ip_literal(host):
+        return set()
+    hosts = {host, host.removeprefix("www.") if host.startswith("www.") else "www." + host}
+    hosts.update(
+        target
+        for pattern, target, _ in CROSS_HOST_REDIRECTS
+        if host == pattern or (pattern.startswith("*.") and host.endswith(pattern[1:]))
+    )
+    return hosts
+
+
+def followed(location, hosts):
+    """Whether a reachability check follows a redirect to location: an https URL (see host_allowed()) whose host is
+    exactly one of hosts (see redirect_hosts()), not merely a subdomain of one, and no IP address (see ip_literal())."""
+    try:
+        target = (urlsplit(location).hostname or "").rstrip(".")
+    except ValueError:
+        # Defensive, for a direct caller: reach() passes a Location that redirect_target() has already parsed.
+        return False
+    return target in hosts and not ip_literal(target) and host_allowed(location, (target,))
 
 
 def reach(url):
-    """The final response of url, following at most MAX_REDIRECTS redirects that stay on https within its registrable
-    domain (see registrable_domain(); a sibling host such as www.tumblr.com for wublaze.tumblr.com counts, an IP
-    address never does), and the target of the first redirect that would leave it (see redirect_target(); not
-    requested), or None. Only the status line and headers are read: the body is never downloaded."""
-    site = registrable_domain(urlsplit(url).hostname)
+    """The final response of url, following at most MAX_REDIRECTS redirects over https to url's own host, to its "www."
+    sibling, or along a reviewed CROSS_HOST_REDIRECTS entry (see redirect_hosts()), and the target of the first
+    redirect that goes anywhere else (see redirect_target(); not requested), or None. Only the status line and headers
+    are read: the body is never downloaded."""
+    hosts = redirect_hosts(urlsplit(url).hostname)
     for _ in range(MAX_REDIRECTS + 1):
-        r = session().get(url, timeout=(12, 35), allow_redirects=False, stream=True)
+        r = send(url, timeout=(12, 35), stream=True)
         r.close()
         if not r.is_redirect:
             return r, None
         location = redirect_target(r)
-        # host_allowed() checks the scheme, port and user info too; the registrable domain itself rules out an IP
-        # address, whose labels could end like a numeric site's.
-        if (
-            site is None
-            or not host_allowed(location, (site,))
-            or registrable_domain(urlsplit(location).hostname) != site
-        ):
+        if not followed(location, hosts):
             return r, location
         url = location
     raise requests.TooManyRedirects(f"Too many redirects: {url}")
@@ -653,7 +691,9 @@ def check_entry(entry):
             row["access_status"] = "blocked" if r.status_code in (401, 403, 429) else "http_error"
         else:
             row["access_status"] = "page_reachable"
-    except requests.RequestException as exc:
+    except (requests.RequestException, ValueError) as exc:
+        # A ValueError too: for a redirect whose Location urlparse cannot read ("https://[::1/x"), requests raises one,
+        # which is no RequestException, inside Session.send, and redirect_target() would raise it as well.
         row["access_status"] = "request_failed"
         row["access_error"] = str(exc)
     return row

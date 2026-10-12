@@ -16,10 +16,11 @@ import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 import requests
 from PIL import Image
+from requests.adapters import HTTPAdapter
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,6 +34,7 @@ def load(name):
 
 artists = load("fetch_artists")
 archives = load("fetch_archives")
+wikis = load("fetch_wikis")  # only its copy of redirect_target(), compared with the other two
 catalog = load("build_catalog")
 
 
@@ -104,11 +106,17 @@ def response(url, status=200, body=b"", headers=None):
     return result
 
 
+# Only its get_redirect_target() is used: FakeWeb reads the Location of each redirect with it, as Session.send does.
+REQUESTS_SESSION = requests.Session()
+
+
 class FakeWeb:
     """Serves canned responses by exact URL; anything else fails like an unreachable host.
 
     Like requests, it follows redirects itself (with no host check) unless allow_redirects=False,
-    so a fetcher that stops passing allow_redirects=False fails the redirect tests.
+    so a fetcher that stops passing allow_redirects=False fails the redirect tests. Like
+    Session.send, it reads the Location of every redirect, followed or not, and so raises
+    UnicodeDecodeError for one that is not UTF-8 before it returns the response.
     """
 
     def __init__(self, routes=None):
@@ -125,6 +133,7 @@ class FakeWeb:
                 raise requests.ConnectionError(f"offline test: {url}")
             status, body, headers = route if isinstance(route, tuple) else (200, route, {})
             result = response(url, status, body, headers)
+            REQUESTS_SESSION.get_redirect_target(result)
             if not (allow_redirects and result.is_redirect):
                 return result
             url = urljoin(url, result.headers["location"])
@@ -1973,8 +1982,9 @@ class ManifestWriteTests(TempRoot):
 
 
 class CatalogCheckTests(unittest.TestCase):
-    """A reachability check of a catalogued page follows redirects only on https within that page's registrable
-    domain."""
+    """A reachability check of a catalogued page follows a redirect only over https to that page's own host, to its
+    "www." sibling, or along a reviewed CROSS_HOST_REDIRECTS entry; any other redirect is recorded as
+    redirected_off_site and not requested."""
 
     URL = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/"
 
@@ -2005,20 +2015,47 @@ class CatalogCheckTests(unittest.TestCase):
             )
 
     def test_a_redirect_within_the_site_is_followed(self):
+        # Several hops from the page's host to its www sibling and back. Each hop's target is also allowed relative to
+        # the hop before it, so which host a hop is judged against is pinned by the next test.
         title = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/title/"
+        bare = "https://reddit.com/r/TrueDeemo/comments/c3dw62/title/"
+        final = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/title/?sort=new"
         hops = {
             self.URL: (301, b"", {"Location": "/r/TrueDeemo/comments/c3dw62/title/"}),
-            title: (302, b"", {"Location": "https://old.reddit.com/r/TrueDeemo/comments/c3dw62/"}),
-            "https://old.reddit.com/r/TrueDeemo/comments/c3dw62/": "page",
+            title: (302, b"", {"Location": bare}),
+            bare: (302, b"", {"Location": final}),
+            final: "page",
         }
         web = FakeWeb(hops)
         row = self.check(web)
         self.assertEqual(web.requested, list(hops))
         self.assertEqual(
-            (row["access_status"], row["http_status"], row["resolved_url"]),
-            ("page_reachable", 200, "https://old.reddit.com/r/TrueDeemo/comments/c3dw62/"),
+            (row["access_status"], row["http_status"], row["resolved_url"]), ("page_reachable", 200, final)
         )
         self.assertNotIn("redirect_location", row)
+
+    def test_every_hop_is_judged_against_the_catalogued_pages_host(self):
+        # The second hop of each chain goes to a host allowed relative to the first hop's host but not to the page's
+        # host, so the check stops there: www.www.reddit.com is no www sibling of reddit.com, and neither www.b.example
+        # nor c.example is a.example, its www sibling or the target of an entry for a.example.
+        reviewed = (("a.example", "b.example", ("archives:a",)), ("b.example", "c.example", ("archives:b",)))
+        for page, hop, target in (
+            ("https://reddit.com/x", "https://www.reddit.com/x", "https://www.www.reddit.com/x"),
+            ("https://a.example/x", "https://b.example/x", "https://www.b.example/x"),
+            ("https://a.example/x", "https://b.example/x", "https://c.example/x"),
+        ):
+            web = FakeWeb({page: (302, b"", {"Location": hop}), hop: (302, b"", {"Location": target}), target: "bait"})
+            with (
+                self.subTest(page=page, target=target),
+                patch.object(archives, "CROSS_HOST_REDIRECTS", reviewed),
+                patch.object(archives, "session", return_value=web),
+            ):
+                row = archives.check_entry(("page", "Page", page, "index_only", ""))
+                self.assertEqual(web.requested, [page, hop])
+                self.assertEqual(
+                    (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
+                    ("redirected_off_site", 302, hop, target),
+                )
 
     def test_a_redirect_loop_is_a_failed_request(self):
         web = FakeWeb({self.URL: (302, b"", {"Location": self.URL})})
@@ -2036,76 +2073,207 @@ class CatalogCheckTests(unittest.TestCase):
             row = archives.check_entry(("page", "Page", url, "index_only", ""))
         return row, web.requested
 
-    def test_a_redirect_within_the_registrable_domain_is_followed(self):
-        # A sibling host of the same organisation: the registrable domain is the last two labels of the host, or the
-        # last three under a country code's public second level (co.jp, com.cn).
+    def assert_followed(self, url, location):
+        row, requested = self.check_page(url, location)
+        target = urljoin(url, location)
+        self.assertEqual(requested, [url, target])
+        self.assertEqual(
+            (row["access_status"], row["http_status"], row["resolved_url"]), ("page_reachable", 200, target)
+        )
+        self.assertNotIn("redirect_location", row)
+
+    def assert_not_followed(self, url, location):
+        row, requested = self.check_page(url, location)
+        self.assertEqual(requested, [url])
+        self.assertEqual(
+            (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
+            ("redirected_off_site", 302, url, urljoin(url, requests.utils.requote_uri(location))),
+        )
+
+    def test_a_redirect_to_the_same_host_or_its_www_sibling_is_followed(self):
         for url, location in (
+            ("https://search.bilibili.com/all?keyword=DEEMO", "/all?keyword=DEEMO&page=1"),
+            ("https://www.kadokawa.co.jp/product/322109001023/", "https://kadokawa.co.jp/product/322109001023/"),
+            ("https://bookwalker.jp/de0/", "https://www.bookwalker.jp/de0/"),
+            ("https://pan.baidu.com/s/1", "https://PAN.Baidu.COM/s/2"),  # host names compare without case,
+            ("https://www.reddit.com/r/x/", "https://www.reddit.com./r/x/"),  # without a final dot
+            ("https://www.reddit.com/r/x/", "https://www.reddit.com:443/r/x/"),  # and on the https port
+        ):
+            with self.subTest(url=url, location=location):
+                self.assert_followed(url, location)
+
+    def test_a_redirect_to_any_other_host_is_not_followed(self):
+        for url, location in (
+            # Sibling hosts of the same organisation: none of them is listed in CROSS_HOST_REDIRECTS.
             ("https://wublaze.tumblr.com/post/129276170315/x", "https://www.tumblr.com/wublaze/129276170315/x"),
             ("https://search.bilibili.com/all?keyword=DEEMO", "https://www.bilibili.com/search?keyword=DEEMO"),
             ("https://www.kadokawa.co.jp/product/322109001023/", "https://store.kadokawa.co.jp/shop/g/g322109001023/"),
             ("https://pan.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA", "https://yun.baidu.com/s/1HAux7DxzkJqcVysQ2hBCLA"),
             ("https://bookwalker.jp/de0/", "https://global.bookwalker.jp/de0/"),
-            ("https://news.example.com.cn/a", "https://www.example.com.cn/a"),
-        ):
-            with self.subTest(url=url):
-                row, requested = self.check_page(url, location)
-                self.assertEqual(requested, [url, location])
-                self.assertEqual(
-                    (row["access_status"], row["http_status"], row["resolved_url"]), ("page_reachable", 200, location)
-                )
-                self.assertNotIn("redirect_location", row)
-
-    def test_a_redirect_off_the_registrable_domain_is_not_followed(self):
-        for url, location in (
-            ("https://www.kadokawa.co.jp/product/1/", "https://evil.co.jp/product/1/"),  # another site under co.jp
-            ("https://news.example.com.cn/a", "https://evil.com.cn/a"),
-            ("https://wublaze.tumblr.com/post/1/x", "https://tumblr.com.evil.example/post/1/x"),
-            ("https://wublaze.tumblr.com/post/1/x", "https://eviltumblr.com/post/1/x"),
-            ("https://wublaze.tumblr.com/post/1/x", "http://www.tumblr.com/wublaze/1/x"),  # plain http
-            ("https://search.bilibili.com/all", "https://www.bilibili.com:8443/all"),
-            ("https://search.bilibili.com/all", "https://user@www.bilibili.com/all"),
-            ("https://search.bilibili.com/all", "https://www.bilibili.com\\@evil.example/all"),
-            ("https://wublaze.tumblr.com/post/1/x", "https://192.0.2.1/post/1/x"),  # IP address literals
+            ("https://www.reddit.com/r/x/", "https://old.reddit.com/r/x/"),
+            # A subdomain of the page's host or of its www sibling, and hosts that only look alike.
+            ("https://www.reddit.com/r/x/", "https://evil.www.reddit.com/r/x/"),
+            ("https://www.reddit.com/r/x/", "https://www.www.reddit.com/r/x/"),
+            ("https://reddit.com/r/x/", "https://evil.reddit.com/r/x/"),
+            ("https://reddit.com/r/x/", "https://wwwreddit.com/r/x/"),
+            ("https://wublaze.tumblr.com/post/1/x", "https://wublaze.tumblr.com.evil.example/post/1/x"),
+            # The same host, but not over https on its port without user info, or not as requests would connect.
+            ("https://wublaze.tumblr.com/post/1/x", "http://wublaze.tumblr.com/post/1/x"),
+            ("https://search.bilibili.com/all", "https://search.bilibili.com:8443/all"),
+            ("https://search.bilibili.com/all", "https://user@search.bilibili.com/all"),
+            ("https://search.bilibili.com/all", "https://search.bilibili.com\\@evil.example/all"),
+            # IP address literals.
+            ("https://wublaze.tumblr.com/post/1/x", "https://192.0.2.1/post/1/x"),
             ("https://wublaze.tumblr.com/post/1/x", "https://[2001:db8::1]/post/1/x"),
-            ("https://192.0.2.1/page", "https://192.0.2.1/other"),  # an IP address has no registrable domain
-            ("https://www.2.1/page", "https://192.0.2.1/other"),  # nor is it within one, however its labels end
-            ("https://co.jp/page", "https://evil.co.jp/page"),
+            ("https://wublaze.tumblr.com/post/1/x", "https://2130706433/post/1/x"),
+            ("https://www.2.1/page", "https://192.0.2.1/other"),
         ):
             with self.subTest(url=url, location=location):
-                row, requested = self.check_page(url, location)
-                self.assertEqual(requested, [url])
-                self.assertEqual(
-                    (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
-                    ("redirected_off_site", 302, url, urljoin(url, requests.utils.requote_uri(location))),
-                )
+                self.assert_not_followed(url, location)
 
-    def test_registrable_domains(self):
-        for host, domain in (
-            ("www.reddit.com", "reddit.com"),
-            ("wublaze.tumblr.com", "tumblr.com"),
-            ("search.bilibili.com", "bilibili.com"),
-            ("rayark.promo", "rayark.promo"),
-            ("WWW.Kadokawa.CO.JP.", "kadokawa.co.jp"),
-            ("a.b.example.ac.uk", "example.ac.uk"),
-            ("shop.example.ne.jp", "example.ne.jp"),
-            ("x.co.com", "co.com"),  # "co" is a public second level only under a two-letter country code
-            ("example.co", "example.co"),
-            ("example.co.jp", "example.co.jp"),
-            ("co.jp", None),  # a public suffix is no one's site
-            ("CO.UK.", None),
-            ("localhost", "localhost"),
-            ("192.0.2.1", None),
-            ("2001:db8::1", None),
-            ("", None),
-            (None, None),
-        ):
+    def test_a_reviewed_cross_host_redirect_is_followed_only_where_it_applies(self):
+        reviewed = (
+            ("*.tumblr.com", "www.tumblr.com", ("archives:a",)),
+            ("*.example.com", "cdn.example.net", ("archives:b",)),
+            ("bookwalker.jp", "global.bookwalker.jp", ("archives:c",)),
+        )
+        with patch.object(archives, "CROSS_HOST_REDIRECTS", reviewed):
+            self.assert_followed("https://wublaze.tumblr.com/post/1/x", "https://www.tumblr.com/wublaze/1/x")
+            self.assert_followed("https://a.b.tumblr.com/post/1/x", "https://WWW.Tumblr.com./wublaze/1/x")
+            self.assert_followed("https://shop.example.com/x", "https://cdn.example.net/x")
+            self.assert_followed("https://bookwalker.jp/de0/", "https://global.bookwalker.jp/de0/")
+            for url, location in (
+                ("https://example.com/x", "https://cdn.example.net/x"),  # "*." needs a label in front
+                ("https://wublaze.tumblr.com/post/1/x", "https://other.tumblr.com/post/1/x"),  # only the listed target
+                ("https://wublaze.tumblr.com/post/1/x", "https://evil.www.tumblr.com/post/1/x"),
+                ("https://wublaze.tumblr.com.evil.example/x", "https://www.tumblr.com/x"),
+                ("https://www.bookwalker.jp/de0/", "https://global.bookwalker.jp/de0/"),  # an exact pattern is one host
+                ("https://wublaze.tumblr.com/post/1/x", "http://www.tumblr.com/wublaze/1/x"),
+                ("https://wublaze.tumblr.com/post/1/x", "https://www.tumblr.com:8443/wublaze/1/x"),
+                ("https://wublaze.tumblr.com/post/1/x", "https://user@www.tumblr.com/wublaze/1/x"),
+            ):
+                with self.subTest(url=url, location=location):
+                    self.assert_not_followed(url, location)
+
+    def test_redirect_hosts(self):
+        # A host and the one that differs from it only by a leading "www.": one is dropped or added, never stacked.
+        self.assertEqual(archives.redirect_hosts("WWW.Kadokawa.CO.JP."), {"www.kadokawa.co.jp", "kadokawa.co.jp"})
+        self.assertEqual(archives.redirect_hosts("bookwalker.jp"), {"bookwalker.jp", "www.bookwalker.jp"})
+        self.assertEqual(archives.redirect_hosts("www.www.example.com"), {"www.www.example.com", "www.example.com"})
+        # Only "www." followed by a dot counts as the prefix: www2 and wwwexample are names of their own.
+        self.assertEqual(archives.redirect_hosts("www2.example.com"), {"www2.example.com", "www.www2.example.com"})
+        self.assertEqual(archives.redirect_hosts("wwwexample.com"), {"wwwexample.com", "www.wwwexample.com"})
+        for host in ("", None):
+            self.assertEqual(archives.redirect_hosts(host), set())
+
+    # IP addresses in every spelling requests sends unchanged and the system resolver reads as one: IPv4 and IPv6,
+    # in brackets or not, with a final dot, with a zone, and the IPv4 shorthands (127.1, decimal, hex, octal).
+    IP_HOSTS = (
+        "192.0.2.1",
+        "192.0.2.1.",
+        "2001:DB8::1",
+        "[2001:db8::1]",
+        "[2001:db8::1].",
+        "::ffff:192.0.2.1",
+        "fe80::1%25eth0",
+        "127.1",
+        "2130706433",
+        "0X7F000001",
+        "0x7f.1",
+        "017700000001",
+        "0x",  # a bare "0x" is a number to WHATWG too
+        "a.0x",
+        "www.192.0.2.1",  # whose www sibling would be one
+    )
+
+    def test_ip_literal(self):
+        for host in self.IP_HOSTS:
             with self.subTest(host=host):
-                self.assertEqual(archives.registrable_domain(host), domain)
+                self.assertTrue(archives.ip_literal(host))
+                self.assertEqual(archives.redirect_hosts(host), set())
+        # Domains with digits in them are not IP addresses: their last label is no number.
+        for host in ("4.example", "1.2.3.4.example", "0x7f.example", "www.example.123a", "0xg", "[example.com]", ""):
+            with self.subTest(host=host):
+                self.assertFalse(archives.ip_literal(host))
+        self.assertEqual(archives.redirect_hosts("4.example"), {"4.example", "www.4.example"})
+
+    def test_a_page_on_an_ip_address_follows_no_redirect(self):
+        for url, location in (
+            ("https://192.0.2.1/x", "/y"),
+            ("https://192.0.2.1./x", "https://192.0.2.1/y"),
+            ("https://[2001:db8::1]/x", "https://[2001:DB8::1]/y"),
+            ("https://127.1/x", "https://127.1/y"),
+            ("https://2130706433/x", "/y"),
+            ("https://www.192.0.2.1/x", "https://192.0.2.1/x"),
+        ):
+            with self.subTest(url=url, location=location):
+                self.assert_not_followed(url, location)
+
+    def test_followed_refuses_a_location_urlsplit_cannot_read(self):
+        # reach() never passes one (redirect_target() has read the Location with urlparse); a direct caller gets False
+        # instead of the ValueError, as from host_allowed().
+        hosts = {"example.com", "::1", "ex#ample.com"}
+        for location in (
+            "https://[::1/x",
+            "https://example.com]/x",
+            "https://[example.com]/x",
+            "https://ex\uff03ample.com/x",  # a FULLWIDTH NUMBER SIGN, which NFKC turns into "#"
+        ):
+            with self.subTest(location=location):
+                self.assertFalse(archives.followed(location, hosts))
+
+    def test_a_redirect_to_an_ip_address_is_not_followed_even_when_listed(self):
+        reviewed = (
+            ("shop.example.com", "192.0.2.1", ("archives:a",)),
+            ("*.example.org", "2001:db8::1", ("archives:b",)),
+            ("bookwalker.jp", "2130706433", ("archives:c",)),
+        )
+        with patch.object(archives, "CROSS_HOST_REDIRECTS", reviewed):
+            for url, location in (
+                ("https://shop.example.com/x", "https://192.0.2.1/x"),
+                ("https://a.example.org/x", "https://[2001:db8::1]/x"),
+                ("https://bookwalker.jp/de0/", "https://2130706433/de0/"),
+            ):
+                with self.subTest(url=url, location=location):
+                    self.assert_not_followed(url, location)
+        for location in (
+            "https://192.0.2.1/x",
+            "https://192.0.2.1./x",
+            "https://[2001:db8::1]/x",
+            "https://[fe80::1%25eth0]/x",
+            "https://127.1/x",
+            "https://2130706433/x",
+            "https://0x7f000001/x",
+        ):
+            with self.subTest(location=location):
+                self.assertFalse(archives.followed(location, {urlsplit(location).hostname.rstrip(".")}))
 
 
 def as_received(location):
     """location as http.client hands a Location header over: its UTF-8 bytes decoded as latin-1."""
     return location.encode().decode("latin-1")
+
+
+def followed(start, header):
+    """The URL requests itself would request after start answered with a redirect whose Location is header (as
+    http.client hands it over): requests.Session.resolve_redirects, asked for its next request instead of sending it."""
+    redirect = response(start, 302, headers={"Location": header})
+    redirect.request = requests.Request("GET", start).prepare()
+    with requests.Session() as session:
+        session.trust_env = False  # no proxy or .netrc settings from the environment
+        return next(session.resolve_redirects(redirect, redirect.request, yield_requests=True)).url
+
+
+# Locations whose target requests reads differently from the raw text: urlparse drops a tab, CR or LF anywhere (an
+# obs-fold continuation line reaches the header with its CRLF), C0 controls or spaces at the start, and an empty ";"
+# parameter at the end.
+UNPARSED_LOCATIONS = (
+    "/x/a\tb.jpg",
+    "/x/a\r\n\tb.jpg",
+    "\x01\x1f /x/c.jpg",
+    "\thttps://ia800.us.archive.org/2.jpg",
+    "/x/d.jpg;",
+)
 
 
 class RedirectLocationTests(unittest.TestCase):
@@ -2162,16 +2330,17 @@ class RedirectLocationTests(unittest.TestCase):
             (self.PAGE, "https://attacker.example\\@www.reddit.com/"),
             (self.PAGE, "?query=é#fragment"),
             (self.PAGE, "/%zz/"),
+            *((self.IMAGE, location) for location in UNPARSED_LOCATIONS),
         ):
             with self.subTest(location=location):
                 redirect = response(start, 302, headers={"Location": as_received(location)})
-                # requests.Session.resolve_redirects: the decoded target, requoted, then resolved against the URL.
-                expected = urljoin(start, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
-                self.assertEqual(archives.redirect_target(redirect), expected)
+                self.assertEqual(archives.redirect_target(redirect), followed(start, as_received(location)))
 
     def test_a_location_that_is_not_utf8_is_refused(self):
-        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
+        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests itself fails on it (FakeWeb does as well).
         location = "/items/x/Caf\xe9.jpg"
+        with self.assertRaisesRegex(requests.exceptions.InvalidURL, "Location is not UTF-8: '/items/x/Caf\xe9.jpg'$"):
+            archives.redirect_target(response(self.IMAGE, 302, headers={"Location": location}))
         web = FakeWeb({self.IMAGE: (302, b"", {"Location": location}), urljoin(self.IMAGE, location): png("red")})
         with (
             patch.object(archives, "session", return_value=web),
@@ -2220,16 +2389,20 @@ class ArtistRedirectLocationTests(unittest.TestCase):
             "https://attacker.example\\@i.pximg.net/",
             "?query=é#fragment",
             "/%zz/",
+            *UNPARSED_LOCATIONS,
         ):
             with self.subTest(location=location):
                 redirect = response(NEW_P0, 302, headers={"Location": as_received(location)})
-                expected = urljoin(NEW_P0, requests.utils.requote_uri(requests.Session().get_redirect_target(redirect)))
-                self.assertEqual(artists.redirect_target(redirect), expected)
+                self.assertEqual(artists.redirect_target(redirect), followed(NEW_P0, as_received(location)))
+                # The three fetchers keep their own copies of the helper; they must read every Location alike.
                 self.assertEqual(artists.redirect_target(redirect), archives.redirect_target(redirect))
+                self.assertEqual(artists.redirect_target(redirect), wikis.redirect_target(redirect))
 
     def test_a_location_that_is_not_utf8_is_refused_without_a_retry(self):
-        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests would fail on it as well.
+        # The latin-1 byte 0xE9 ("é") on its own is not UTF-8; requests itself fails on it (FakeWeb does as well).
         location = "/img-original/Caf\xe9.png"
+        with self.assertRaisesRegex(ValueError, "Location is not UTF-8: '/img-original/Caf\xe9.png'$"):
+            artists.redirect_target(response(NEW_P0, 302, headers={"Location": location}))
         web = FakeWeb({NEW_P0: (302, b"", {"Location": location}), urljoin(NEW_P0, location): png("red")})
         with patch.object(artists.time, "sleep") as sleep, self.assertRaisesRegex(ValueError, "Location is not UTF-8"):
             self.download(web)
@@ -2277,6 +2450,131 @@ class RetryStatusTests(unittest.TestCase):
         self.assertEqual(self.check(403)["access_status"], "blocked")
 
 
+class Loopback(HTTPAdapter):
+    """Sends every request, whatever host its URL names, over plain HTTP to the loopback server on port; the response
+    keeps the URL that was requested. Nothing leaves the machine. Each response is kept in responses, so a test can
+    close one that requests raised on before it released the connection."""
+
+    def __init__(self, port, responses):
+        super().__init__()
+        self.port, self.responses = port, responses
+
+    def get_connection_with_tls_context(self, request, verify, proxies=None, cert=None):
+        return self.poolmanager.connection_from_host("127.0.0.1", self.port, scheme="http")
+
+    def build_response(self, req, resp):
+        response = super().build_response(req, resp)
+        self.responses.append(response)
+        return response
+
+
+class UnreadableLocationTests(unittest.TestCase):
+    """A real requests.Session against a loopback server whose redirects send a Location requests cannot read: the raw
+    byte 0xE9, which is not UTF-8 (on a path with "moved"), or a URL urlparse refuses (on a path with "broken"). On
+    such a Location requests itself raises UnicodeDecodeError or ValueError inside Session.send, before a fetcher sees
+    the response; each fetcher records it as a failed request of that entry, retries nothing and goes on."""
+
+    LOCATIONS = {"moved": "/Caf\xe9.png", "broken": "https://[::1/x"}  # http.server sends them as latin-1: 0xE9
+
+    def setUp(self):
+        self.paths = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(handler):
+                self.paths.append(handler.path)
+                location = next((value for key, value in self.LOCATIONS.items() if key in handler.path), None)
+                body = b"" if location else b'{"files": []}'
+                handler.send_response(302 if location else 200)
+                if location:
+                    handler.send_header("Location", location)
+                handler.send_header("Content-Length", str(len(body)))
+                handler.end_headers()
+                handler.wfile.write(body)
+
+            def log_message(handler, *args):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        self.session, responses = requests.Session(), []
+        self.session.trust_env = False
+        for prefix in ("https://", "http://"):
+            self.session.mount(prefix, Loopback(server.server_address[1], responses))
+        self.addCleanup(self.session.close)
+        self.addCleanup(lambda: [response.close() for response in responses])
+        archives.reset()
+        self.addCleanup(archives.reset)
+
+    def test_a_reachability_check_fails_as_a_request_and_the_catalog_goes_on(self):
+        entries = [
+            ("moved", "Moved", "https://www.reddit.com/r/TrueDeemo/moved/", "index_only", ""),
+            ("broken", "Broken", "https://www.reddit.com/r/TrueDeemo/broken/", "index_only", ""),
+            ("plain", "Plain", "https://www.reddit.com/r/TrueDeemo/plain/", "index_only", ""),
+        ]
+        with (
+            patch.object(archives, "session", return_value=self.session),
+            patch.object(archives, "CATALOG_ENTRIES", entries),
+        ):
+            archives.catalog()
+        rows = {row["id"]: row for row in archives.MANIFEST["sources"]}
+        moved = rows["archives:moved"]
+        self.assertEqual((moved["access_status"], moved.get("http_status")), ("request_failed", None))
+        self.assertIn("Refusing a redirect whose Location is not UTF-8: '/Caf\xe9.png'", moved["access_error"])
+        self.assertNotIn("redirect_location", moved)
+        broken = rows["archives:broken"]
+        self.assertEqual((broken["access_status"], broken["access_error"]), ("request_failed", "Invalid IPv6 URL"))
+        self.assertEqual(rows["archives:plain"]["access_status"], "page_reachable")
+        self.assertEqual(rows["archives:internet-archive-202606"]["file_formats"], {})
+        self.assertEqual(archives.MANIFEST["failures"], [])
+        self.assertEqual(
+            sorted(self.paths),
+            ["/metadata/deemo_ost-_202606", "/r/TrueDeemo/broken/", "/r/TrueDeemo/moved/", "/r/TrueDeemo/plain/"],
+        )
+
+    def test_a_download_or_page_read_is_a_failure_of_its_entry(self):
+        image = "https://archive.org/download/moved/1.jpg"
+        with patch.object(archives, "session", return_value=self.session), patch.object(archives, "CAA_MBID", "moved"):
+            self.assertIsNone(
+                archives.download("cover-art-archive", "1", "Scan", "", image, "reference", archives.CAA_HOSTS)
+            )
+            archives.cover_art_archive()
+        self.assertEqual(
+            [(row["url"], row.get("asset_id")) for row in archives.MANIFEST["failures"]],
+            [(image, "archives:cover-art-archive:1"), ("https://coverartarchive.org/release/moved", None)],
+        )
+        for row in archives.MANIFEST["failures"]:
+            self.assertIn("Refusing a redirect whose Location is not UTF-8", row["error"])
+        self.assertEqual(self.paths, ["/download/moved/1.jpg", "/release/moved"])
+
+    def test_an_artist_download_or_page_read_fails_at_once(self):
+        job = {
+            "id": "artists:pixiv:1:p0",
+            "source_id": "artists:pixiv:1",
+            "page_url": PAGE_URL,
+            "download_url": "https://i.pximg.net/img-original/moved/1_p0.png",
+        }
+        manifest = {"sources": [], "assets": [], "failures": []}
+        with (
+            patch.object(artists.requests, "get", lambda url, **options: self.session.get(url, **options)),
+            patch.object(artists, "REFERENCE_URL", "https://princeofglass.blogspot.com/p/moved.html"),
+            patch.object(artists.time, "sleep") as sleep,
+            patch("builtins.print"),
+        ):
+            artists.collect_reference(manifest)
+            artists.fetch_all(manifest, [job], {}, False, 1)
+        self.assertEqual(
+            [(row["source_id"], row.get("asset_id")) for row in manifest["failures"]],
+            [("artists:blogspot:siyouko-career", None), ("artists:pixiv:1", "artists:pixiv:1:p0")],
+        )
+        for row in manifest["failures"]:
+            self.assertIn("Refusing a redirect whose Location is not UTF-8", row["error"])
+        self.assertEqual(manifest["assets"], [])
+        self.assertEqual(self.paths, ["/p/moved.html", "/img-original/moved/1_p0.png"])
+        sleep.assert_not_called()
+
+
 # ----------------------------------------------------------- committed data, code
 
 
@@ -2293,6 +2591,25 @@ class CommittedDataTests(unittest.TestCase):
     def test_notes_use_maintainer_wording(self):
         for row in self.manifest["sources"]:
             self.assertIsNone(re.search(r"\buser\b|workspace", row.get("notes", ""), re.I), row["id"])
+
+    def test_every_committed_reachability_row_ended_on_a_host_its_check_follows(self):
+        # The page's own host, its www sibling, or a CROSS_HOST_REDIRECTS target (see redirect_hosts()).
+        rows = [row for row in self.manifest["sources"] if "resolved_url" in row]
+        self.assertTrue(rows)
+        for row in rows:
+            with self.subTest(row=row["id"]):
+                hosts = archives.redirect_hosts(urlsplit(row["url"]).hostname)
+                self.assertIn(urlsplit(row["resolved_url"]).hostname, hosts)
+
+    def test_every_reviewed_cross_host_redirect_cites_committed_rows_that_took_it(self):
+        for pattern, target, evidence in archives.CROSS_HOST_REDIRECTS:
+            with self.subTest(pattern=pattern, target=target):
+                self.assertTrue(evidence)
+                for source_id in evidence:
+                    row = self.sources[source_id]
+                    page = urlsplit(row["url"]).hostname
+                    self.assertTrue(page == pattern or (pattern.startswith("*.") and page.endswith(pattern[1:])))
+                    self.assertEqual(urlsplit(row["resolved_url"]).hostname, target)
 
     def test_illustrator_directory_is_delegated_to_the_wiki_importer(self):
         row = self.sources["archives:illustrator-directory"]
