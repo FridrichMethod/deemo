@@ -2015,7 +2015,8 @@ class CatalogCheckTests(unittest.TestCase):
             )
 
     def test_a_redirect_within_the_site_is_followed(self):
-        # From the page's host to its www sibling and back: every hop is judged against the catalogued page's host.
+        # Several hops from the page's host to its www sibling and back. Each hop's target is also allowed relative to
+        # the hop before it, so which host a hop is judged against is pinned by the next test.
         title = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/title/"
         bare = "https://reddit.com/r/TrueDeemo/comments/c3dw62/title/"
         final = "https://www.reddit.com/r/TrueDeemo/comments/c3dw62/title/?sort=new"
@@ -2032,6 +2033,29 @@ class CatalogCheckTests(unittest.TestCase):
             (row["access_status"], row["http_status"], row["resolved_url"]), ("page_reachable", 200, final)
         )
         self.assertNotIn("redirect_location", row)
+
+    def test_every_hop_is_judged_against_the_catalogued_pages_host(self):
+        # The second hop of each chain goes to a host allowed relative to the first hop's host but not to the page's
+        # host, so the check stops there: www.www.reddit.com is no www sibling of reddit.com, and neither www.b.example
+        # nor c.example is a.example, its www sibling or the target of an entry for a.example.
+        reviewed = (("a.example", "b.example", ("archives:a",)), ("b.example", "c.example", ("archives:b",)))
+        for page, hop, target in (
+            ("https://reddit.com/x", "https://www.reddit.com/x", "https://www.www.reddit.com/x"),
+            ("https://a.example/x", "https://b.example/x", "https://www.b.example/x"),
+            ("https://a.example/x", "https://b.example/x", "https://c.example/x"),
+        ):
+            web = FakeWeb({page: (302, b"", {"Location": hop}), hop: (302, b"", {"Location": target}), target: "bait"})
+            with (
+                self.subTest(page=page, target=target),
+                patch.object(archives, "CROSS_HOST_REDIRECTS", reviewed),
+                patch.object(archives, "session", return_value=web),
+            ):
+                row = archives.check_entry(("page", "Page", page, "index_only", ""))
+                self.assertEqual(web.requested, [page, hop])
+                self.assertEqual(
+                    (row["access_status"], row["http_status"], row["resolved_url"], row["redirect_location"]),
+                    ("redirected_off_site", 302, hop, target),
+                )
 
     def test_a_redirect_loop_is_a_failed_request(self):
         web = FakeWeb({self.URL: (302, b"", {"Location": self.URL})})
