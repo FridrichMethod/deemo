@@ -436,6 +436,19 @@ class GuardTests(unittest.TestCase):
             env[name] = contexts.get(expression[1], "")
         return env
 
+    def run_step(self, role, step, contexts, runner, directory, **variables):
+        """The result of step, run as GitHub runs it: bash -eo pipefail in directory, with the runner's variables, the
+        step's env from contexts and then variables; its output decoded as UTF-8."""
+        return subprocess.run(
+            ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
+            cwd=directory,
+            env={**self.environment(role, step, contexts, runner), **variables},
+            capture_output=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=60,
+        )
+
     def run_guards(self, job, contexts, response=None, head=None, checkout=None, skip=()):
         """(The role of the guard step that refused the run, or None; the output of the last step that ran; the requests
         the fake curl got; the commit the guard job approved, or None.) The commit of the contexts and head are names of
@@ -462,15 +475,7 @@ class GuardTests(unittest.TestCase):
             for role, step in self.guards[job]:
                 if role in skip:
                     continue
-                result = subprocess.run(
-                    ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
-                    cwd=checkout.directory,
-                    env=self.environment(role, step, contexts, env),
-                    capture_output=True,
-                    encoding="utf-8",
-                    errors="replace",
-                    timeout=60,
-                )
+                result = self.run_step(role, step, contexts, env, checkout.directory)
                 output = result.stdout + result.stderr
                 if result.returncode != 0:
                     self.assertRegex(result.stdout, r"(?m)^::error::\S", "a refusal says why")
@@ -479,14 +484,9 @@ class GuardTests(unittest.TestCase):
                 self.assertNotIn("::error::", result.stdout)
             approved = None
             if refused is None and job == "guard" and self.approve is not None:
-                step, outputs = self.approve, runner / "outputs"
-                result = subprocess.run(
-                    ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
-                    cwd=checkout.directory,
-                    env={**self.environment("approve", step, contexts, env), "GITHUB_OUTPUT": str(outputs)},
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
+                outputs = runner / "outputs"
+                result = self.run_step(
+                    "approve", self.approve, contexts, env, checkout.directory, GITHUB_OUTPUT=str(outputs)
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 (approved,) = re.fullmatch(r"commit=([0-9a-f]{40})\n", outputs.read_text("utf-8")).groups()
