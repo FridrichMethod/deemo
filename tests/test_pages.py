@@ -289,14 +289,20 @@ OLDER_TAGS = {
     "README.md": (
         "A run on a tag older than `v1.1.1` would use that tag's own workflow, which does not look up the Release",
         "the environment refuses its deployment",
+        "A run on `v1.1.1` uses that tag's own workflow too, whose deploy job does not yet require the guard job's record"
+        " of the current attempt, so re-run such a run whole.",
     ),
     "README.zh-CN.md": (
         "在早于 `v1.1.1` 的标签上的运行会使用该标签自己的工作流，它不会查询 Release",
         "环境会拒绝它的部署",
+        f"在 `v1.1.1` 上的运行同样使用该标签自己的工作流，其部署任务尚不要求 {GUARD_JOB} 任务对当前这次尝试的记录，"
+        "因此这样的运行应整次重新运行。",
     ),
     ".github/workflows/pages.yml": (
         "A run on a tag older than v1.1.1 would take that tag's own workflow, which does not look up the Release",
         "the environment refuses its deployment",
+        "A run on v1.1.1 takes v1.1.1's workflow, whose deploy job does not yet require the guard job's record of the"
+        " current attempt.",
     ),
 }
 # The same rules in the header comment of pages.yml, whose lines are joined with spaces.
