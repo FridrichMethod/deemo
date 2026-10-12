@@ -364,6 +364,8 @@ class GuardTests(unittest.TestCase):
                 (role, steps[name]) for role, name in GUARD_STEPS if role != "checkout" and name in steps
             ]
         cls.approve = next((step for step in jobs["guard"]["steps"] if step["name"] == APPROVE), None)
+        # Each job's timeout-minutes in seconds, the bound of the Release lookup's --max-time.
+        cls.timeouts = {job: int(jobs[job]["keys"]["timeout-minutes"][0]) * 60 for job in cls.guards}
         cls.temporary = tempfile.TemporaryDirectory()
         directory = Path(cls.temporary.name)
         (directory / "checkout").mkdir()
@@ -570,6 +572,12 @@ class GuardTests(unittest.TestCase):
                 self.assertIn("@-", request["options"]["--header"], "the token comes on stdin")
                 self.assertNotIn(TOKEN, " ".join(request["argv"]), "no command line holds the token")
                 self.assertEqual(request["options"]["--proto"], ["=https"])
+                # A request that hangs fails the step with its own error before the job's timeout cancels the job.
+                max_time = request["options"]["--max-time"]
+                self.assertEqual(len(max_time), 1, "one --max-time")
+                self.assertRegex(max_time[0], r"^[0-9]+(\.[0-9]+)?$", "--max-time in seconds")
+                self.assertGreater(float(max_time[0]), 0, "a positive --max-time")
+                self.assertLess(float(max_time[0]), self.timeouts[job], "--max-time within the job's timeout-minutes")
 
     def test_a_manual_run_on_a_tag_without_a_published_release_is_refused(self):
         # GitHub answers 404 for a tag that has no Release and for one whose Release is still a draft.
