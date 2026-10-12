@@ -106,15 +106,29 @@ def host_allowed(url, hosts):
     )
 
 
+def redirect_target(response):
+    """The absolute URL the redirect response sends to, read from its Location as requests reads it (and as
+    fetch_archives.py and fetch_wikis.py read it): http.client decodes header bytes as latin-1, so the header is encoded
+    back and decoded as UTF-8 (a raw UTF-8 path stays itself instead of turning into mojibake), requoted, and resolved
+    against the response's URL. A Location that is not UTF-8 raises ValueError, which request() does not retry, so
+    nothing more is requested."""
+    header = response.headers["location"]
+    try:
+        location = header.encode("latin-1").decode("utf-8")
+    except UnicodeError:
+        raise ValueError(f"Refusing a redirect whose Location is not UTF-8: {header!r}") from None
+    return urljoin(response.url, requests.utils.requote_uri(location))
+
+
 def get_within(url, headers, hosts):
-    """GET url, following redirects only while every hop stays on https within hosts."""
+    """GET url, following redirects (see redirect_target()) only while every hop stays on https within hosts."""
     for _ in range(MAX_REDIRECTS + 1):
         if not host_allowed(url, hosts):
             raise ValueError(f"Refusing URL outside the expected hosts ({', '.join(hosts)}): {url}")
         response = requests.get(url, headers=headers, timeout=(15, 60), allow_redirects=False)
         if not response.is_redirect:
             return response
-        url = urljoin(response.url, response.headers["location"])
+        url = redirect_target(response)
     raise ValueError(f"Too many redirects: {url}")
 
 
