@@ -2691,6 +2691,40 @@ class RedirectBodyTests(unittest.TestCase):
 # ----------------------------------------------------------- committed data, code
 
 
+def host(url):
+    """The host name of url as redirect_hosts() and followed() compare it: without case or a final dot."""
+    return (urlsplit(url).hostname or "").rstrip(".")
+
+
+def shows_redirect(row, pattern, target):
+    """Whether a row of data/sources/archives.json shows the redirect of a CROSS_HOST_REDIRECTS entry: its page (url) is
+    on a host the pattern matches, and it was redirected from there to the target host. A run without the entry
+    records the redirect it did not follow (access_status redirected_off_site, the target in redirect_location); a run
+    with it ends there (resolved_url)."""
+    page = host(row["url"])
+    if page == target or not (page == pattern or (pattern.startswith("*.") and page.endswith(pattern[1:]))):
+        return False
+    if row.get("access_status") == "redirected_off_site" and host(row.get("redirect_location", "")) == target:
+        return True
+    return host(row.get("resolved_url", "")) == target
+
+
+def unshown_redirects(sources):
+    """(pattern, target, cited id) for each CROSS_HOST_REDIRECTS entry that cites no row (cited id None), and for each
+    cited id that names no row of sources (by id) or a row that does not show the entry's redirect (see
+    shows_redirect())."""
+    unshown = []
+    for pattern, target, evidence in archives.CROSS_HOST_REDIRECTS:
+        if not evidence:
+            unshown.append((pattern, target, None))
+        unshown.extend(
+            (pattern, target, source_id)
+            for source_id in evidence
+            if source_id not in sources or not shows_redirect(sources[source_id], pattern, target)
+        )
+    return unshown
+
+
 class CommittedDataTests(unittest.TestCase):
     def setUp(self):
         self.manifest = json.loads((ROOT / "data/sources/archives.json").read_text(encoding="utf-8"))
@@ -2714,15 +2748,44 @@ class CommittedDataTests(unittest.TestCase):
                 hosts = archives.redirect_hosts(urlsplit(row["url"]).hostname)
                 self.assertIn(urlsplit(row["resolved_url"]).hostname, hosts)
 
-    def test_every_reviewed_cross_host_redirect_cites_committed_rows_that_took_it(self):
-        for pattern, target, evidence in archives.CROSS_HOST_REDIRECTS:
-            with self.subTest(pattern=pattern, target=target):
-                self.assertTrue(evidence)
-                for source_id in evidence:
-                    row = self.sources[source_id]
-                    page = urlsplit(row["url"]).hostname
-                    self.assertTrue(page == pattern or (pattern.startswith("*.") and page.endswith(pattern[1:])))
-                    self.assertEqual(urlsplit(row["resolved_url"]).hostname, target)
+    def test_every_reviewed_cross_host_redirect_cites_committed_rows_that_show_it(self):
+        self.assertEqual(unshown_redirects(self.sources), [])
+
+    def test_a_cited_row_shows_the_redirect_whether_or_not_its_check_followed_it(self):
+        # The committed list is empty, so the check above runs here against a patched list and rows made for it: what
+        # check_entry() records for a page that redirects to the target, from a run without the entry and one with it.
+        page, location = "https://wublaze.tumblr.com/post/1/x", "https://www.tumblr.com/wublaze/1/x"
+        pattern, target = "*.tumblr.com", "www.tumblr.com"
+        entry = (pattern, target, ("archives:stopped", "archives:followed"))
+        archives.reset()
+        self.addCleanup(archives.reset)
+        web = FakeWeb({page: (302, b"", {"Location": location}), location: "page"})
+        with patch.object(archives, "session", return_value=web):
+            stopped = archives.check_entry(("stopped", "Post", page, "index_only", ""))
+            with patch.object(archives, "CROSS_HOST_REDIRECTS", (entry,)):
+                followed = archives.check_entry(("followed", "Post", page, "index_only", ""))
+        self.assertEqual((stopped["access_status"], stopped["redirect_location"]), ("redirected_off_site", location))
+        self.assertEqual((followed["access_status"], followed["resolved_url"]), ("page_reachable", location))
+        sources = {"archives:stopped": stopped, "archives:followed": followed}
+        with patch.object(archives, "CROSS_HOST_REDIRECTS", (entry,)):
+            self.assertEqual(unshown_redirects(sources), [])
+            for name, row in (
+                ("redirected to another host", {**stopped, "redirect_location": "https://other.tumblr.com/post/1/x"}),
+                ("not marked redirected_off_site", {**stopped, "access_status": "page_reachable"}),
+                ("not redirected", {**followed, "resolved_url": page}),
+                ("on the target host itself", {**followed, "url": location}),
+                ("on a host the pattern does not match", {**followed, "url": "https://tumblr.com.example/post/1/x"}),
+            ):
+                with self.subTest(row=name):
+                    cited = {**sources, "archives:stopped": row}
+                    self.assertEqual(unshown_redirects(cited), [(pattern, target, "archives:stopped")])
+        # An entry must cite at least one row, and only rows that are committed.
+        with patch.object(
+            archives, "CROSS_HOST_REDIRECTS", ((pattern, target, ("archives:missing",)), (pattern, target, ()))
+        ):
+            self.assertEqual(
+                unshown_redirects(sources), [(pattern, target, "archives:missing"), (pattern, target, None)]
+            )
 
     def test_illustrator_directory_is_delegated_to_the_wiki_importer(self):
         row = self.sources["archives:illustrator-directory"]

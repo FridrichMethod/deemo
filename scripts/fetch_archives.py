@@ -47,9 +47,11 @@ ARCHIVE_ORG_HOSTS = ("archive.org",)
 # The reviewed redirects a reachability check follows from a catalogued page to another host than its own and its
 # "www." sibling (see redirect_hosts()): (page host pattern, target host, evidence). The pattern is one host, or
 # "*.example.com" for every subdomain of example.com. The evidence is the ids of the committed rows of
-# data/sources/archives.json whose page, on a host the pattern matches, ended on the target host (url and resolved_url);
-# an entry is added only for a redirect seen there. No committed row ended on another host, so none is listed. A
-# target that is an IP address is never followed (see followed()).
+# data/sources/archives.json whose page (url), on a host the pattern matches, was redirected to the target host: a row
+# from a run without the entry records the redirect it did not follow (access_status redirected_off_site, the target in
+# redirect_location), and one from a run with it ends there (resolved_url). An entry is added only for a redirect seen
+# there. No committed row was redirected to another host, so none is listed. A target that is an IP address is never
+# followed (see followed()).
 CROSS_HOST_REDIRECTS = ()
 
 
