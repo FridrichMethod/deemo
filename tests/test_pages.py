@@ -31,9 +31,11 @@ workflows = load("test_tooling", "tests/test_tooling.py")
 # The deploy job's condition, verbatim. The expression language has no regular expressions, so this only requires a tag
 # ref that starts with v, from a published full release or a manual run; the guard steps check the whole vX.Y.Z tag.
 # Its == coerces null and false both to 0, so `prerelease == false` would also accept a release event without the flag;
-# toJSON() turns false into 'false' and a missing flag into 'null'.
+# toJSON() turns false into 'false' and a missing flag into 'null'. The guard job's output is the commit its steps
+# approved, which is empty unless every one of them passed.
 DEPLOY_CONDITION = (
-    "startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'workflow_dispatch' || "
+    "startsWith(github.ref, 'refs/tags/v') && needs.guard.outputs.commit == github.sha && "
+    "(github.event_name == 'workflow_dispatch' || "
     "(github.event_name == 'release' && github.event.action == 'published' && "
     "toJSON(github.event.release.prerelease) == 'false'))"
 )
@@ -60,6 +62,8 @@ GUARD_STEPS = (
     ("checkout", "Checkout"),
     ("main", "Refuse a release commit that is not on main"),
 )
+# The guard job's last step, which gives the commit that every guard step passed as the job's output.
+APPROVE = "Approve the release commit"
 # The repository the runner names in GITHUB_REPOSITORY, the job token behind github.token, and the headers the Release
 # lookup sends with them.
 REPOSITORY = "FridrichMethod/deemo"
@@ -245,7 +249,7 @@ class WorkflowTests(unittest.TestCase):
         # from the checkout precedes them.
         guard, build = self.jobs["guard"]["steps"], self.jobs["build"]["steps"]
         roles, names = [role for role, _ in GUARD_STEPS], [name for _, name in GUARD_STEPS]
-        self.assertEqual([step["name"] for step in guard], names)
+        self.assertEqual([step["name"] for step in guard], [*names, APPROVE])
         self.assertEqual([step["name"] for step in build[: len(names)]], names)
         for index, role in enumerate(roles):
             if role == "checkout":
@@ -272,6 +276,21 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(later[2].startswith("actions/upload-pages-artifact@"))
         self.assertIn("          path: ${{ runner.temp }}/deemo-site", build[-1]["lines"])
         self.assertEqual(len(later), 3)
+
+    def test_the_guard_job_gives_the_deploy_job_the_commit_it_approved(self):
+        # The guard job's last step sets its output, so the output is empty unless every guard step before it passed;
+        # the deploy job's condition requires it to be the run's commit (DEPLOY_CONDITION).
+        guard = self.jobs["guard"]
+        outputs = workflows.mapping(guard["keys"]["outputs"][1], 6, "outputs")
+        self.assertEqual(
+            {key: value for key, (value, _) in outputs.items()}, {"commit": "${{ steps.approve.outputs.commit }}"}
+        )
+        approve = guard["steps"][-1]
+        self.assertEqual(approve["name"], APPROVE)
+        self.assertEqual(set(approve["keys"]), {"name", "id", "env", "run"}, "no if: or continue-on-error")
+        self.assertEqual(approve["keys"]["id"], "approve")
+        self.assertEqual(approve["env"], {"SHA": "${{ github.sha }}"})
+        self.assertIn("needs.guard.outputs.commit == github.sha", DEPLOY_CONDITION)
 
     def test_only_the_deploy_job_deploys_and_only_for_a_release_tag(self):
         deployers = [
@@ -308,6 +327,7 @@ class GuardTests(unittest.TestCase):
             cls.guards[job] = [
                 (role, steps[name]) for role, name in GUARD_STEPS if role != "checkout" and name in steps
             ]
+        cls.approve = next((step for step in jobs["guard"]["steps"] if step["name"] == APPROVE), None)
         cls.temporary = tempfile.TemporaryDirectory()
         directory = Path(cls.temporary.name)
         (directory / "checkout").mkdir()
@@ -346,9 +366,10 @@ class GuardTests(unittest.TestCase):
 
     def run_guards(self, job, contexts, response=None, head=None, checkout=None, skip=()):
         """(The role of the guard step that refused the run, or None; the output of the last step that ran; the requests
-        the fake curl got.) The commit of the contexts and head are names of Checkout commits; HEAD is the run's commit
-        unless head is given. The fake curl answers with response, by default the published full Release of the ref's
-        tag. The steps whose roles are in skip do not run."""
+        the fake curl got; the commit the guard job approved, or None.) The commit of the contexts and head are names of
+        Checkout commits; HEAD is the run's commit unless head is given. The fake curl answers with response, by default
+        the published full Release of the ref's tag. The steps whose roles are in skip do not run. The guard job's
+        approve step runs after its guard steps, as GitHub runs it: only if none of them failed."""
         checkout = checkout or self.checkout
         checkout.detach(head or contexts["github.sha"])
         tag = contexts["github.ref"].removeprefix("refs/tags/")
@@ -384,9 +405,22 @@ class GuardTests(unittest.TestCase):
                     refused = role
                     break
                 self.assertNotIn("::error::", result.stdout)
+            approved = None
+            if refused is None and job == "guard" and self.approve is not None:
+                step, outputs = self.approve, runner / "outputs"
+                result = subprocess.run(
+                    ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", step["run"]],
+                    cwd=checkout.directory,
+                    env={**self.environment("approve", step, contexts, env), "GITHUB_OUTPUT": str(outputs)},
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                (approved,) = re.fullmatch(r"commit=([0-9a-f]{40})\n", outputs.read_text("utf-8")).groups()
             log = runner / "requests.jsonl"
             requests = [json.loads(line) for line in log.read_text("utf-8").splitlines()] if log.exists() else []
-        return refused, output, requests
+        return refused, output, requests, approved
 
     def assert_guards(self, refused_by, contexts, response=None, head=None, checkout=None, skip=()):
         """The guard steps of both jobs refuse the run at the step of role `refused_by`, or pass it if that is None. A
@@ -404,12 +438,15 @@ class GuardTests(unittest.TestCase):
         lookups = int(manual and refused_by != "event" and "lookup" not in skip)
         tag = contexts["github.ref"].removeprefix("refs/tags/")
         url = f"https://api.github.com/repos/{REPOSITORY}/releases/tags/{tag}"
+        commit = (checkout or self.checkout).commits[contexts["github.sha"]]
         for job in self.guards:
             with self.subTest(job=job, **run):
-                refused, output, requests = self.run_guards(job, contexts, response, head, checkout, skip)
+                refused, output, requests, approved = self.run_guards(job, contexts, response, head, checkout, skip)
                 self.assertEqual(refused, refused_by, output)
                 if refused_by is None:
                     self.assertIn("is on main.", output)
+                if job == "guard":
+                    self.assertEqual(approved, None if refused_by else commit, "the commit the guard job approved")
                 self.assertEqual(len(requests), lookups, "requests to the GitHub API")
                 for request in requests:
                     self.assertEqual(request["urls"], [url])
@@ -480,7 +517,7 @@ class GuardTests(unittest.TestCase):
     def test_the_lookup_is_one_get_with_the_job_token_on_stdin(self):
         for job in self.guards:
             with self.subTest(job=job):
-                refused, output, requests = self.run_guards(job, dispatched("refs/tags/v1.2.0", "tip"))
+                refused, output, requests, _ = self.run_guards(job, dispatched("refs/tags/v1.2.0", "tip"))
                 self.assertIsNone(refused, output)
                 (request,) = requests
                 self.assertEqual(request["urls"], [f"https://api.github.com/repos/{REPOSITORY}/releases/tags/v1.2.0"])
