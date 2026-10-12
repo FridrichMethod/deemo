@@ -3,7 +3,8 @@ a published GitHub Release, not marked as a prerelease, passes them, and only it
 
 The steps run under bash -eo pipefail with their env from the run's contexts, in Git repositories laid out as their
 checkout leaves them; a fake curl answers the Release lookup. tests/test_pages.py pins the steps' names and order in
-both jobs (GUARD_STEPS, APPROVE) and the deploy job's condition.
+both jobs (GUARD_STEPS, APPROVE) and the deploy job's condition, which these tests evaluate with the outputs that the
+guard job's last step records.
 """
 
 import importlib.util
@@ -28,8 +29,8 @@ def load(name, relative):
     return module
 
 
-# The workflow reader of the tooling tests (see tests/test_pages.py), and the guard steps of both jobs by role and the
-# guard job's last step as the workflow tests of tests/test_pages.py pin them.
+# The workflow reader of the tooling tests (see tests/test_pages.py), and the guard steps of both jobs by role, the
+# guard job's last step and the expression evaluator of the workflow tests in tests/test_pages.py.
 workflows = load("test_tooling", "tests/test_tooling.py")
 structure = load("test_pages", "tests/test_pages.py")
 GUARD_STEPS, APPROVE = structure.GUARD_STEPS, structure.APPROVE
@@ -47,6 +48,9 @@ GUARD_CONTEXTS = (
 )
 TOKEN_READERS = {"lookup"}
 EXPRESSION = re.compile(r"\$\{\{ ([a-z_.]+) \}\}")
+# A guard job output, which gives an output of its approve step; and what that step records in GITHUB_OUTPUT.
+APPROVED_OUTPUT = re.compile(r"\$\{\{ steps\.approve\.outputs\.([a-z_]+) \}\}")
+RECORDED = re.compile(r"commit=(?P<commit>[0-9a-f]{40})\nattempt=(?P<attempt>[1-9][0-9]*)\n")
 # The repository the runner names in GITHUB_REPOSITORY, the job token behind github.token, and the headers the Release
 # lookup sends with them.
 REPOSITORY = "FridrichMethod/deemo"
@@ -211,10 +215,10 @@ class Checkout:
 @unittest.skipUnless(shutil.which("bash") and shutil.which("git"), "needs bash and git to run the guard steps")
 class GuardTests(unittest.TestCase):
     """The guard steps of pages.yml run as GitHub runs them (bash -eo pipefail, the step's env from the run's contexts,
-    RUNNER_TEMP and GITHUB_REPOSITORY as the runner sets them) in a repository laid out as their checkout leaves it.
-    curl is a fake that answers the Release lookup with a fabricated response, and python3 is the interpreter of these
-    tests. Each refused run differs from an accepted one in one respect, so it passes if the check of that respect is
-    removed or loosened."""
+    RUNNER_TEMP, GITHUB_REPOSITORY and GITHUB_RUN_ATTEMPT as the runner sets them) in a repository laid out as their
+    checkout leaves it. curl is a fake that answers the Release lookup with a fabricated response, and python3 is the
+    interpreter of these tests. Each refused run differs from an accepted one in one respect, so it passes if the check
+    of that respect is removed or loosened."""
 
     @classmethod
     def setUpClass(cls):
@@ -227,6 +231,9 @@ class GuardTests(unittest.TestCase):
                 (role, steps[name]) for role, name in GUARD_STEPS if role != "checkout" and name in steps
             ]
         cls.approve = next((step for step in jobs["guard"]["steps"] if step["name"] == APPROVE), None)
+        outputs = workflows.mapping(jobs["guard"]["keys"].get("outputs", ("", []))[1], 6, "outputs")
+        cls.outputs = {name: value for name, (value, _) in outputs.items()}
+        cls.condition = workflows.block_text(*jobs["deploy"]["keys"].get("if", ("", [])))
         cls.temporary = tempfile.TemporaryDirectory()
         directory = Path(cls.temporary.name)
         (directory / "checkout").mkdir()
@@ -276,12 +283,21 @@ class GuardTests(unittest.TestCase):
             timeout=60,
         )
 
-    def run_guards(self, job, contexts, response=None, head=None, checkout=None, skip=()):
+    def run_approve(self, contexts, runner, directory, outputs):
+        """What the guard job's approve step records in the file outputs: {"commit": ..., "attempt": ...}."""
+        result = self.run_step("approve", self.approve, contexts, runner, directory, GITHUB_OUTPUT=str(outputs))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        recorded = RECORDED.fullmatch(outputs.read_text("utf-8"))
+        self.assertIsNotNone(recorded, "the commit and the attempt, once each")
+        return recorded.groupdict()
+
+    def run_guards(self, job, contexts, response=None, head=None, checkout=None, skip=(), attempt="1"):
         """(The role of the guard step that refused the run, or None; the output of the last step that ran; the requests
-        the fake curl got; the commit the guard job approved, or None.) The commit of the contexts and head are names of
+        the fake curl got; what the guard job approved, or None.) The commit of the contexts and head are names of
         Checkout commits; HEAD is the run's commit unless head is given. The fake curl answers with response, by default
-        the published full Release of the ref's tag. The steps whose roles are in skip do not run. The guard job's
-        approve step runs after its guard steps, as GitHub runs it: only if none of them failed."""
+        the published full Release of the ref's tag. The steps whose roles are in skip do not run; the run's attempt
+        (GITHUB_RUN_ATTEMPT) is attempt. The guard job's approve step runs after its guard steps, as GitHub runs it:
+        only if none of them failed."""
         checkout = checkout or self.checkout
         checkout.detach(head or contexts["github.sha"])
         tag = contexts["github.ref"].removeprefix("refs/tags/")
@@ -295,6 +311,7 @@ class GuardTests(unittest.TestCase):
                 "PATH": f"{self.bin}{os.pathsep}{checkout.env['PATH']}",
                 "RUNNER_TEMP": str(runner / "temp"),
                 "GITHUB_REPOSITORY": REPOSITORY,
+                "GITHUB_RUN_ATTEMPT": attempt,
                 "FAKE_RESPONSE": str(runner / "response.json"),
                 "FAKE_CURL_LOG": str(runner / "requests.jsonl"),
             }
@@ -311,12 +328,7 @@ class GuardTests(unittest.TestCase):
                 self.assertNotIn("::error::", result.stdout)
             approved = None
             if refused is None and job == "guard" and self.approve is not None:
-                outputs = runner / "outputs"
-                result = self.run_step(
-                    "approve", self.approve, contexts, env, checkout.directory, GITHUB_OUTPUT=str(outputs)
-                )
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                (approved,) = re.fullmatch(r"commit=([0-9a-f]{40})\n", outputs.read_text("utf-8")).groups()
+                approved = self.run_approve(contexts, env, checkout.directory, runner / "outputs")
             log = runner / "requests.jsonl"
             requests = [json.loads(line) for line in log.read_text("utf-8").splitlines()] if log.exists() else []
         return refused, output, requests, approved
@@ -345,7 +357,8 @@ class GuardTests(unittest.TestCase):
                 if refused_by is None:
                     self.assertIn("is on main.", output)
                 if job == "guard":
-                    self.assertEqual(approved, None if refused_by else commit, "the commit the guard job approved")
+                    approved_by = None if refused_by else {"commit": commit, "attempt": "1"}
+                    self.assertEqual(approved, approved_by, "the commit the guard job approved, and the attempt")
                 self.assertEqual(len(requests), lookups, "requests to the GitHub API")
                 for request in requests:
                     self.assertEqual(request["urls"], [url])
@@ -365,6 +378,34 @@ class GuardTests(unittest.TestCase):
             dispatched("refs/tags/v1.10.0"),
         ):
             self.assert_guards(None, contexts)
+
+    def deployment(self, contexts, approved, run_attempt):
+        """The deploy job's contexts in the attempt run_attempt of a run with contexts, whose guard job recorded
+        approved: the guard job's outputs as its outputs: mapping gives them, and the prerelease flag of a release
+        event's payload as the JSON value it is there."""
+        needs = {}
+        for name, value in self.outputs.items():
+            source = APPROVED_OUTPUT.fullmatch(value)
+            self.assertIsNotNone(source, f"the guard job's output {name} is an output of its approve step")
+            needs[f"needs.guard.outputs.{name}"] = approved.get(source[1])
+        payload = {"github.event.release.prerelease": False} if contexts["github.event_name"] == "release" else {}
+        commit = self.checkout.commits[contexts["github.sha"]]
+        return {**contexts, **payload, "github.sha": commit, "github.run_attempt": run_attempt, **needs}
+
+    def test_the_deploy_job_runs_only_in_the_attempt_whose_guard_job_approved_the_commit(self):
+        # The approve step records the run's attempt with the commit, and the guard job gives both as its outputs. The
+        # deploy job's condition then holds in that attempt and not in a later one: a re-run of the deploy job alone
+        # keeps the guard job's outputs of the attempt it repeats, and looks up no Release.
+        for contexts in runs("v1.2.0", "tip"):
+            for attempt in ("1", "2", "10"):
+                with self.subTest(event=contexts["github.event_name"], attempt=attempt):
+                    refused, output, _, approved = self.run_guards("guard", contexts, attempt=attempt)
+                    self.assertIsNone(refused, output)
+                    self.assertEqual(approved, {"commit": self.checkout.commits["tip"], "attempt": attempt})
+                    for deploy_attempt in (attempt, str(int(attempt) + 1)):
+                        deployment = self.deployment(contexts, approved, deploy_attempt)
+                        deploys = structure.truthy(structure.evaluate(self.condition, deployment))
+                        self.assertIs(deploys, deploy_attempt == attempt, f"the deploy job in attempt {deploy_attempt}")
 
     def test_other_events_are_refused_even_on_a_release_tag(self):
         for event in ("push", "pull_request", "pull_request_target", "schedule", "workflow_run", "repository_dispatch"):

@@ -39,8 +39,10 @@ jobs:
     permissions:
       contents: read
     outputs:
-      # Set by the last step, so empty unless every guard step passed; the deploy job runs only for this commit.
+      # Set by the last step, so empty unless every guard step passed; the deploy job runs only for this commit and only
+      # in this attempt of the run: a re-run of later jobs alone keeps these outputs of the attempt it repeats.
       commit: ${{ steps.approve.outputs.commit }}
+      attempt: ${{ steps.approve.outputs.attempt }}
     steps:
       - name: Refuse anything but a published release or a manual run on a vX.Y.Z tag
         env:
@@ -159,7 +161,9 @@ jobs:
         id: approve
         env:
           SHA: ${{ github.sha }}
-        run: echo "commit=$SHA" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "commit=$SHA" >> "$GITHUB_OUTPUT"
+          echo "attempt=$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
 
   test:
     # The same checks as on every push and pull request, on the release commit; nothing is built unless they all pass.
@@ -302,13 +306,16 @@ jobs:
   deploy:
     name: Deploy
     needs: [guard, test, build]
-    # The release tag once more, in the expression language, which has no regular expressions: the guard steps check
-    # the whole vX.Y.Z tag and the tag's Release. The commit must be the one the guard job approved. Its == takes
-    # null for false, so the prerelease flag goes through toJSON(), which gives 'false' only for false. The job runs no
-    # repository code; it only has the Pages and OIDC grants.
+    # The release tag once more, in the expression language, which has no regular expressions: the guard steps check the
+    # whole vX.Y.Z tag and the tag's Release. The commit must be the one the guard job approved, in this attempt of the
+    # run: a re-run of the deploy job alone, or of later jobs only, keeps the guard job's outputs of the attempt it
+    # repeats and looks up no Release, so it deploys nothing. Its == takes null for false, so the prerelease flag goes
+    # through toJSON(), which gives 'false' only for false. The job runs no repository code; it only has the Pages and
+    # OIDC grants.
     if: >-
       startsWith(github.ref, 'refs/tags/v') &&
       needs.guard.outputs.commit == github.sha &&
+      needs.guard.outputs.attempt == github.run_attempt &&
       (github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'release' && github.event.action == 'published' &&
       toJSON(github.event.release.prerelease) == 'false'))

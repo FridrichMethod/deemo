@@ -4,6 +4,8 @@ tests/test_pages_guards.py runs the guard steps whose names and order these test
 """
 
 import importlib.util
+import json
+import math
 import re
 import shutil
 import subprocess
@@ -30,14 +32,177 @@ workflows = load("test_tooling", "tests/test_tooling.py")
 # The deploy job's condition, verbatim. The expression language has no regular expressions, so this only requires a tag
 # ref that starts with v, from a published full release or a manual run; the guard steps check the whole vX.Y.Z tag.
 # Its == coerces null and false both to 0, so `prerelease == false` would also accept a release event without the flag;
-# toJSON() turns false into 'false' and a missing flag into 'null'. The guard job's output is the commit its steps
-# approved, which is empty unless every one of them passed.
+# toJSON() turns false into 'false' and a missing flag into 'null'. The guard job's outputs are the commit its steps
+# approved and the attempt of the run they ran in, both empty unless every one of them passed. A re-run of the deploy job
+# alone, or of later jobs only, keeps the guard job's outputs of the attempt it repeats and looks up no Release, so the
+# attempt must be the run's own (RE_RUNS).
 DEPLOY_CONDITION = (
     "startsWith(github.ref, 'refs/tags/v') && needs.guard.outputs.commit == github.sha && "
+    "needs.guard.outputs.attempt == github.run_attempt && "
     "(github.event_name == 'workflow_dispatch' || "
     "(github.event_name == 'release' && github.event.action == 'published' && "
     "toJSON(github.event.release.prerelease) == 'false'))"
 )
+# The part of GitHub's expression language that the deploy condition uses: string, true, false and null literals,
+# context properties (null when absent), ==, && and || (each gives one of its operands), parentheses, startsWith() and
+# toJSON(). == compares two strings ignoring case and two values of one other type as they are; values of two types
+# become numbers first (null and false 0, true 1, '' 0, another string its JSON number or NaN, which equals nothing).
+# startsWith() casts both arguments to strings (null to '') and ignores case. Any other syntax is an error.
+EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|&&|\|\||[(),])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
+JSON_NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
+LITERALS = {"true": True, "false": False, "null": None}
+
+
+def as_number(value):
+    if isinstance(value, str):
+        return 0.0 if value == "" else float(value) if JSON_NUMBER.fullmatch(value) else math.nan
+    return float(bool(value))
+
+
+def as_text(value):
+    return "" if value is None else str(value).lower() if isinstance(value, bool) else value
+
+
+def truthy(value):
+    return value is True or (isinstance(value, str) and value != "")
+
+
+def equal(left, right):
+    if isinstance(left, str) and isinstance(right, str):
+        return left.casefold() == right.casefold()
+    return left == right if type(left) is type(right) else as_number(left) == as_number(right)
+
+
+FUNCTIONS = {
+    "startsWith": (2, lambda text, prefix: as_text(text).casefold().startswith(as_text(prefix).casefold())),
+    "toJSON": (1, lambda value: json.dumps(value, ensure_ascii=False)),
+}
+
+
+def tokenize(expression):
+    """(string, operator, name) for each token of expression, with only one of the three set, and an end marker."""
+    tokens, position = [], 0
+    while expression[position:].strip():
+        match = EXPRESSION_TOKEN.match(expression, position)
+        if match is None:
+            raise ValueError(f"unsupported expression syntax: {expression[position:]!r}")
+        tokens.append(match.groups())
+        position = match.end()
+    return [*tokens, (None, None, None)]
+
+
+class Evaluation:
+    """An expression evaluated with contexts. Each method reads the tokens from index on and gives the value of what it
+    read and the index after it: either() an || chain, both() an && chain, comparison() an == or one operand."""
+
+    def __init__(self, expression, contexts):
+        self.expression, self.contexts, self.tokens = expression, contexts, tokenize(expression)
+
+    def expect(self, index, operator):
+        if self.tokens[index][1] != operator:
+            raise ValueError(f"expected {operator!r} in {self.expression!r}")
+        return index + 1
+
+    def operand(self, index):
+        string, operator, name = self.tokens[index]
+        if operator == "(":
+            value, index = self.either(index + 1)
+            return value, self.expect(index, ")")
+        if string is not None:
+            return string[1:-1].replace("''", "'"), index + 1
+        if name is None:
+            raise ValueError(f"expected an operand in {self.expression!r}")
+        if name in LITERALS:
+            return LITERALS[name], index + 1
+        if self.tokens[index + 1][1] == "(":
+            return self.call(name, index + 1)
+        return self.contexts.get(name), index + 1
+
+    def call(self, name, index):
+        if name not in FUNCTIONS:
+            raise ValueError(f"unsupported function {name}()")
+        arity, function = FUNCTIONS[name]
+        arguments = []
+        while not arguments or self.tokens[index][1] == ",":
+            value, index = self.either(index + 1)
+            arguments.append(value)
+        if len(arguments) != arity:
+            raise ValueError(f"{name}() takes {arity} arguments")
+        return function(*arguments), self.expect(index, ")")
+
+    def comparison(self, index):
+        value, index = self.operand(index)
+        if self.tokens[index][1] == "==":
+            right, index = self.operand(index + 1)
+            value = equal(value, right)
+        return value, index
+
+    def both(self, index):
+        value, index = self.comparison(index)
+        while self.tokens[index][1] == "&&":
+            right, index = self.comparison(index + 1)
+            value = right if truthy(value) else value
+        return value, index
+
+    def either(self, index):
+        value, index = self.both(index)
+        while self.tokens[index][1] == "||":
+            right, index = self.both(index + 1)
+            value = value if truthy(value) else right
+        return value, index
+
+
+def evaluate(expression, contexts):
+    """The value of expression, with contexts mapping property paths such as github.ref to their values."""
+    evaluation = Evaluation(expression, contexts)
+    value, index = evaluation.either(0)
+    if index != len(evaluation.tokens) - 1:
+        raise ValueError(f"unexpected {evaluation.tokens[index]} in {expression!r}")
+    return value
+
+
+# A release commit, and the deploy job's contexts in the attempt run_attempt of a run on its tag v1.1.2 that event
+# started, with the guard job's outputs as the deploy job sees them.
+COMMIT = "0123456789abcdef0123456789abcdef01234567"
+
+
+def deployment(run_attempt, event="release", **outputs):
+    contexts = {"github.event_name": event, "github.ref": "refs/tags/v1.1.2", "github.sha": COMMIT}
+    if event == "release":
+        contexts.update({"github.event.action": "published", "github.event.release.prerelease": False})
+    return {
+        **contexts,
+        "github.run_attempt": run_attempt,
+        **{f"needs.guard.outputs.{name}": value for name, value in outputs.items()},
+    }
+
+
+# Attempts of a run whose jobs the deploy job needs all succeeded, and whether its condition then holds. A re-run of the
+# whole run runs the guard job, and with it every guard step and the Release lookup, again in the new attempt. A re-run
+# of the deploy job alone, or of the failed jobs after only a later job than the guard job failed, does not: the deploy
+# job then sees the guard job's outputs of the attempt it repeats. A guard job that refused the run recorded nothing.
+RE_RUNS = {
+    "the first attempt of a release's run": (deployment("1", commit=COMMIT, attempt="1"), True),
+    "the first attempt of a manual run": (deployment("1", "workflow_dispatch", commit=COMMIT, attempt="1"), True),
+    "a re-run of the whole run": (deployment("2", commit=COMMIT, attempt="2"), True),
+    "a re-run of the whole manual run": (deployment("2", "workflow_dispatch", commit=COMMIT, attempt="2"), True),
+    "a third attempt, a re-run of the whole run": (deployment("3", commit=COMMIT, attempt="3"), True),
+    "a re-run of the deploy job alone": (deployment("2", commit=COMMIT, attempt="1"), False),
+    "a re-run of the deploy job alone, in a manual run": (
+        deployment("2", "workflow_dispatch", commit=COMMIT, attempt="1"),
+        False,
+    ),
+    "a re-run of the failed jobs after only the build job failed": (deployment("2", commit=COMMIT, attempt="1"), False),
+    "a re-run of the deploy job alone after a re-run of the whole run": (
+        deployment("3", commit=COMMIT, attempt="2"),
+        False,
+    ),
+    "attempt 11 with the guard job's outputs of attempt 1": (deployment("11", commit=COMMIT, attempt="1"), False),
+    "a guard job without the attempt output": (deployment("1", commit=COMMIT), False),
+    "a guard job whose attempt output is empty": (deployment("1", commit=COMMIT, attempt=""), False),
+    "a guard job without outputs": (deployment("1"), False),
+    "a guard job whose outputs are empty": (deployment("1", commit="", attempt=""), False),
+}
 # The guard steps of both jobs by role, in the order they run. In tests/test_pages_guards.py its Checkout class stands
 # in for the checkout step.
 GUARD_STEPS = (
@@ -175,13 +340,14 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("          path: ${{ runner.temp }}/deemo-site", build[-1]["lines"])
         self.assertEqual(len(later), 3)
 
-    def test_the_guard_job_gives_the_deploy_job_the_commit_it_approved(self):
-        # The guard job's last step sets its output, so the output is empty unless every guard step before it passed;
-        # the deploy job's condition requires it to be the run's commit (DEPLOY_CONDITION).
+    def test_the_guard_job_gives_the_deploy_job_the_commit_it_approved_and_its_attempt(self):
+        # The guard job's last step sets its outputs, so they are empty unless every guard step before it passed; the
+        # deploy job's condition requires them to be the run's commit and its attempt (DEPLOY_CONDITION).
         guard = self.jobs["guard"]
         outputs = workflows.mapping(guard["keys"]["outputs"][1], 6, "outputs")
         self.assertEqual(
-            {key: value for key, (value, _) in outputs.items()}, {"commit": "${{ steps.approve.outputs.commit }}"}
+            {key: value for key, (value, _) in outputs.items()},
+            {"commit": "${{ steps.approve.outputs.commit }}", "attempt": "${{ steps.approve.outputs.attempt }}"},
         )
         approve = guard["steps"][-1]
         self.assertEqual(approve["name"], APPROVE)
@@ -189,6 +355,15 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(approve["keys"]["id"], "approve")
         self.assertEqual(approve["env"], {"SHA": "${{ github.sha }}"})
         self.assertIn("needs.guard.outputs.commit == github.sha", DEPLOY_CONDITION)
+        self.assertIn("needs.guard.outputs.attempt == github.run_attempt", DEPLOY_CONDITION)
+
+    def test_only_an_attempt_that_ran_the_guard_job_deploys(self):
+        # A re-run of the deploy job alone keeps the guard job's outputs of the attempt it repeats and repeats no
+        # Release lookup, so it deploys nothing; a re-run of the whole run can (RE_RUNS).
+        condition = workflows.block_text(*self.jobs["deploy"]["keys"]["if"])
+        for scenario, (contexts, deploys) in RE_RUNS.items():
+            with self.subTest(scenario):
+                self.assertIs(truthy(evaluate(condition, contexts)), deploys)
 
     def test_only_the_deploy_job_deploys_and_only_for_a_release_tag(self):
         deployers = [
@@ -205,6 +380,49 @@ class WorkflowTests(unittest.TestCase):
             {key: value for key, (value, _) in concurrency.items()},
             {"group": "github-pages", "cancel-in-progress": "false"},
         )
+
+
+class ExpressionTests(unittest.TestCase):
+    """evaluate() follows GitHub's documented rules for the expressions it reads and refuses every other one, so the
+    deploy condition cannot pass these tests by being misread."""
+
+    def test_values_compare_and_combine_as_on_github(self):
+        for expression, contexts, value in (
+            ("'Refs/Tags/V1' == 'refs/tags/v1'", {}, True),
+            ("'1' == '01'", {}, False),
+            ("a.b == '1'", {}, False),
+            ("a.b == ''", {}, True),
+            ("a.b == '2'", {"a.b": ""}, False),
+            ("a.b == 'x'", {}, False),
+            ("true == '1'", {}, True),
+            ("false == null", {}, True),
+            ("toJSON(false) == 'false'", {}, True),
+            ("toJSON(a.b)", {}, "null"),
+            ("toJSON(a.b)", {"a.b": "false"}, '"false"'),
+            ("startsWith(a.b, 'REFS/')", {"a.b": "refs/tags/v1"}, True),
+            ("startsWith(a.b, 'refs/')", {}, False),
+            ("a.b && 'yes' || 'no'", {"a.b": ""}, "no"),
+            ("a.b && 'yes' || 'no'", {"a.b": "x"}, "yes"),
+            ("('it''s' || a.b) == 'IT''S'", {}, True),
+        ):
+            with self.subTest(expression, contexts=contexts):
+                self.assertEqual(evaluate(expression, contexts), value)
+
+    def test_other_syntax_is_refused(self):
+        for expression in (
+            "a != b",
+            "!a",
+            "a[0]",
+            "1 == 1",
+            "a == b == c",
+            "fromJSON(a)",
+            "startsWith(a)",
+            "(a",
+            "a)",
+            "",
+        ):
+            with self.subTest(expression), self.assertRaises(ValueError):
+                evaluate(expression, {})
 
 
 class DocumentationTests(unittest.TestCase):
