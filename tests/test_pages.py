@@ -140,7 +140,7 @@ RELEASE_RULES = {
         "`v01.1.0`",
         'A repository ruleset ("Release tags v*"',
         "lets only repository admins create, move or delete `v*` tags",
-        "the rule of the `github-pages` environment that allows `v*` tags",
+        "the rules of the `github-pages` environment accept deployments only from tags from `v1.1.1` on",
     ),
     "README.zh-CN.md": (
         "每次运行，无论由发布版还是手动触发，都会先",
@@ -152,7 +152,7 @@ RELEASE_RULES = {
         "`v01.1.0`",
         '仓库规则集（ruleset）"Release tags v*"',
         "只允许仓库管理员创建、移动或删除 `v*` 标签",
-        "`github-pages` 环境中允许 `v*` 标签的部署规则",
+        "`github-pages` 环境的部署规则只接受 `v1.1.1` 及之后的标签",
     ),
 }
 # What the READMEs said while a manual run did not look up the tag's Release.
@@ -167,16 +167,16 @@ MANUAL_RUN = re.compile(rf"gh workflow run pages\.yml --ref ({VERSION})")
 # What each README's deployment section and the header comment of pages.yml say about a run on an older tag.
 OLDER_TAGS = {
     "README.md": (
-        "a run on a tag older than `v1.1.1` uses that tag's own workflow, which does not look up the Release",
-        "only tags from `v1.1.1` on should be run by hand",
+        "A run on a tag older than `v1.1.1` would use that tag's own workflow, which does not look up the Release",
+        "the environment refuses its deployment",
     ),
     "README.zh-CN.md": (
-        "在早于 `v1.1.1` 的标签上的运行使用该标签自己的工作流，它不会查询 Release",
-        "只应手动运行 `v1.1.1` 及之后的标签",
+        "在早于 `v1.1.1` 的标签上的运行会使用该标签自己的工作流，它不会查询 Release",
+        "环境会拒绝它的部署",
     ),
     ".github/workflows/pages.yml": (
-        "a run on a tag older than v1.1.1 takes that tag's own workflow, which does not look up the Release",
-        "only tags from v1.1.1 on should be run by hand",
+        "A run on a tag older than v1.1.1 would take that tag's own workflow, which does not look up the Release",
+        "the environment refuses its deployment",
     ),
 }
 # The same rules in the header comment of pages.yml, whose lines are joined with spaces.
@@ -187,7 +187,7 @@ HEADER_RULES = (
     "a re-run keeps the event of the run it repeats",
     "three numbers without leading zeros",
     'A repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags',
-    "the github-pages environment allows v* tags",
+    "the github-pages environment accepts deployments only from tags from v1.1.1 on",
 )
 
 

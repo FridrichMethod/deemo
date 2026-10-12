@@ -12,9 +12,10 @@ name: Publish public gallery
 # then runs on the release commit, the build job repeats the guards before anything else and stages the site, and the
 # deploy job, whose condition requires a release tag again and the commit the guard job approved, publishes it. A
 # repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags, and the
-# github-pages environment allows v* tags: a run takes this file from the tag's commit, so the two keep anyone but an
-# admin from deploying a tag with a workflow of their own. For the same reason, a run on a tag older than v1.1.1 takes
-# that tag's own workflow, which does not look up the Release, so only tags from v1.1.1 on should be run by hand.
+# github-pages environment accepts deployments only from tags from v1.1.1 on: a run takes this file from the tag's
+# commit, so the two keep anyone but an admin from deploying with a workflow of their own. A run on a tag older than
+# v1.1.1 would take that tag's own workflow, which does not look up the Release, and the environment refuses its
+# deployment.
 on:
   release:
     types: [published]
