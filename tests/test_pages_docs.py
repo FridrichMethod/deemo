@@ -224,8 +224,9 @@ def retired_phrases(document, text):
 
 
 # Where a sentence of a deployment section or of the header comment ends: after a full stop and a space, but not after
-# "e.g.", "i.e." or "cf.", and after "etc." only if a capital letter follows; or after 。.
-SENTENCE_END = re.compile(r"(?<=\.)(?<![Ee]\.g\.)(?<![Ii]\.e\.)(?<![Cc]f\.)(?:(?<!etc\.)\s+|\s+(?=[A-Z]))|(?<=。)")
+# "e.g.", "i.e.", "etc." or "cf.", or after 。. A sentence that ends in "etc." is read with the next one, so a claim that
+# runs on after it is found; a true pair can be taken for a claim (see the samples): put such a sentence another way.
+SENTENCE_END = re.compile(r"(?<=\.)(?<![Ee]\.g\.)(?<![Ii]\.e\.)(?<!etc\.)(?<![Cc]f\.)\s+|(?<=。)")
 # The same retired rules in other words. A sentence of a deployment section or of the header comment brings one back if
 # it matches every pattern of that rule, read without case: it names the environment and main, unless all it says is
 # that the environment refuses main (ENVIRONMENT_REFUSES_MAIN), or the environment and every (any, all, each) v* tag;
@@ -509,8 +510,10 @@ class DocumentationTests(unittest.TestCase):
             ("The environment, i.e. its rules, admits `main`.", [main]),
             ("The environment covers one branch, I.e. `main`.", [main]),
             ("The environment accepts tags etc. and also `main`.", [main]),
-            # A sentence can end at "etc.": the next one starts with a capital letter.
-            ("The environment accepts `v1.2.0`, `v1.3.0` etc. Main is a branch, not a tag.", []),
+            # A sentence that ends in "etc." is read with the next one, so "etc. Also `main`." brings the claim back;
+            # so does the true pair after it, a known false positive: put such a pair another way.
+            ("The environment accepts `v1.2.0`, `v1.3.0` etc. Also `main`.", [main]),
+            ("The environment accepts `v1.2.0`, `v1.3.0` etc. Main is a branch, not a tag.", [main]),
             ("The environment (cf. `main`) accepts it.", [main]),
             ("The environment accepts it (Cf. `main`).", [main]),
             ("The `github-pages` environment allows every `v*` tag.", [every]),
