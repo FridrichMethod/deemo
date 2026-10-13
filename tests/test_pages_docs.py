@@ -356,6 +356,7 @@ class DocumentationTests(unittest.TestCase):
             ("en", "A re-run of later jobs repeats no Release lookup.", True),
             ("en", "A RE-RUN OF FAILED JOBS DOES NOT LOOK THE RELEASE UP AGAIN.", True),
             ("en", "# A re-run of failed jobs does not look the\n# Release up again.", True),
+            ("en", "    # A re-run of failed jobs does not look the\n    # Release up again.", True),
             ("en", OLDER_TAGS[".github/workflows/pages.yml"][0], False),
             ("en", "A run on an older tag takes that tag's own workflow, which does not look up the Release.", False),
             ("zh", "只重新运行部署任务不会再次查询 Release。", True),
@@ -400,6 +401,8 @@ class DocumentationTests(unittest.TestCase):
             ("The environment accepts each `v*` tag.", [every]),
             ("Every `v*` tag is accepted by the environment.", [every]),
             ("The environment accepts every tag `v*`.", [every]),
+            # every, any, all and each count as whole words only: "many" is not "any".
+            ("The environment accepts many `v*` tags.", []),
             ("`github-pages` 环境允许所有 `v*` 标签。", [every]),
             ("环境允许任何 `v*` 标签。", [every]),
             ("环境接受任意 v* 标签。", [every]),
@@ -440,6 +443,8 @@ class DocumentationTests(unittest.TestCase):
             # deployment.
             ("A re-run of the deploy job alone runs the deploy job again and deploys nothing.", []),
             ("A run deploys only a release; to try again, re-run the whole run.", []),
+            ("A run deploys only a release, and to try again you re-run the whole run.", []),
+            ("A run deploys only a release: to try again, re-run the whole run.", []),
             # A re-run of the whole run does deploy again, but only a clause that names it first is about it.
             ("A re-run of the whole run deploys the tag's commit again.", []),
             ("重新运行整次运行会再次部署该标签的提交。", []),
