@@ -104,8 +104,8 @@ OLDER_TAGS = {
         "环境会拒绝它的部署。",
     ),
     ".github/workflows/pages.yml": (
-        f"A run on a tag older than {FIRST_CHECKED_TAG} would take that tag's own workflow, which lacks some of the checks"
-        " described above, and the environment refuses its deployment.",
+        f"A run on a tag older than {FIRST_CHECKED_TAG} would take that tag's own workflow, which lacks some of the"
+        " checks described above, and the environment refuses its deployment.",
     ),
 }
 # The same rules in the header comment of pages.yml, whose lines are joined with spaces, and the guard job's outputs.
@@ -231,7 +231,8 @@ RETIRED_SENTENCES = {
         re.compile(r"\bmanual(?:ly)?\b|\bby hand\b|手动", re.I),
         re.compile(
             rf"\bfrom\W+(?:\w+\W+)?{VERSION}`?\s*on\b"
-            rf"|{VERSION}`?\s*(?:onwards?\b|(?:or|and) (?:later|newer)\b|[及或]?(?:之后|以后)|或更新(?=的|[^\w\s`])|起)",
+            rf"|{VERSION}`?\s*(?:onwards?\b|(?:or|and) (?:later|newer)\b"
+            r"|[及或]?(?:之后|以后)|或更新(?=的|[^\w\s`])|起)",
             re.I,
         ),
     ),
@@ -298,9 +299,9 @@ class DocumentationTests(unittest.TestCase):
         self.assertEqual(workflows.yaml_scalar(jobs[RERUN_CHECK]["keys"]["name"][0], "name"), RERUN_CHECK_NAME)
 
     def test_a_manual_run_is_shown_only_on_a_tag_whose_workflow_checks_the_release(self):
-        # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG lacks some
-        # of the checks the documents describe, and the environment refuses its deployment: an example on such a tag
-        # would not do what the text around it says.
+        # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG lacks
+        # some of the checks the documents describe, and the environment refuses its deployment: an example on such a
+        # tag would not do what the text around it says.
         def version(tag):
             return tuple(int(number) for number in tag.removeprefix("v").split("."))
 
