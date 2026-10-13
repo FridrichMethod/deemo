@@ -14,11 +14,10 @@ name: Publish public gallery
 # outputs. The full tests.yml then runs on the release commit, the build job repeats the guards before anything else and
 # stages the site, and the deploy job, whose condition requires a release tag again and the commit the guard job
 # approved in the same attempt, publishes it. A repository ruleset ("Release tags v*") lets only repository admins
-# create, move or delete v* tags, and the github-pages environment accepts deployments only from tags from v1.1.1 on: a
+# create, move or delete v* tags, and the github-pages environment accepts deployments only from tags from v1.1.2 on: a
 # run takes this file from the tag's commit, so the two keep anyone but an admin from deploying through the github-pages
-# environment with a workflow of their own. A run on a tag older than v1.1.1 would take that tag's own workflow, which
-# does not look up the Release, and the environment refuses its deployment. A run on v1.1.1 takes v1.1.1's workflow,
-# whose deploy job does not yet require the guard job's record of the current attempt.
+# environment with a workflow of their own. A run on a tag older than v1.1.2 would take that tag's own workflow, which
+# lacks some of the checks described above, and the environment refuses its deployment.
 on:
   release:
     types: [published]

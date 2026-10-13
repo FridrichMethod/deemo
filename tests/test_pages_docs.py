@@ -39,7 +39,13 @@ PUSH_DEPLOYED = {
     "README.md": ("After a push to `main`", "deploys only from `main`", "Pages workflow runs every check again"),
     "README.zh-CN.md": ("推送到 `main` 后", "只从 `main` 部署", "Pages 工作流会再次运行全部检查"),
 }
-# What each README's deployment section says about the release rules of 2026-10-12: what every run checks, a re-run of
+# The first tag whose pages.yml has every check the documents describe: the Release lookup (from v1.1.1 on), the guard
+# job's record of the current attempt and the re-run check job (from v1.1.2 on). A run takes pages.yml from the tag's
+# commit, so a run on an older tag runs a workflow without some of them; the github-pages environment accepts
+# deployments only from this tag on (2026-10-13), and an example of a manual run names no older tag.
+FIRST_CHECKED_TAG = "v1.1.2"
+MANUAL_RUN = re.compile(rf"gh workflow run pages\.yml --ref ({VERSION})")
+# What each README's deployment section says about the release rules of 2026-10-13: what every run checks, a re-run of
 # a release's run included, that a re-run without the guard job (jobs named as on the Actions page) deploys nothing and
 # why, and fails with the re-run check job's error, the tag form, and the two repository settings that limit which tags
 # can deploy.
@@ -60,7 +66,7 @@ RELEASE_RULES = {
         "`v01.1.0`",
         'A repository ruleset ("Release tags v*"',
         "lets only repository admins create, move or delete `v*` tags",
-        "the rules of the `github-pages` environment accept deployments only from tags from `v1.1.1` on",
+        f"the rules of the `github-pages` environment accept deployments only from tags from `{FIRST_CHECKED_TAG}` on",
         "these rules keep anyone but an admin from deploying through the `github-pages` environment with a workflow of"
         " their own",
     ),
@@ -78,7 +84,7 @@ RELEASE_RULES = {
         "`v01.1.0`",
         '仓库规则集（ruleset）"Release tags v*"',
         "只允许仓库管理员创建、移动或删除 `v*` 标签",
-        "`github-pages` 环境的部署规则只接受 `v1.1.1` 及之后的标签",
+        f"`github-pages` 环境的部署规则只接受 `{FIRST_CHECKED_TAG}` 及之后的标签",
         "这些规则使管理员以外的人无法用自己的工作流经 `github-pages` 环境部署",
     ),
 }
@@ -87,29 +93,19 @@ NO_RELEASE_LOOKUP = {
     "README.md": ("does not look up the tag's GitHub Release", "use it only to redeploy a released tag"),
     "README.zh-CN.md": ("不会查询该标签的 GitHub Release", "只用它重新部署已发布的标签"),
 }
-# The first tag whose pages.yml looks up the tag's Release on every run. A run takes pages.yml from the tag's commit, so
-# a run on an older tag runs a workflow that does not, and an example of a manual run names no such tag.
-FIRST_CHECKED_TAG = "v1.1.1"
-MANUAL_RUN = re.compile(rf"gh workflow run pages\.yml --ref ({VERSION})")
 # What each README's deployment section and the header comment of pages.yml say about a run on an older tag.
 OLDER_TAGS = {
     "README.md": (
-        "A run on a tag older than `v1.1.1` would use that tag's own workflow, which does not look up the Release",
-        "the environment refuses its deployment",
-        "A run on `v1.1.1` uses that tag's own workflow too, whose deploy job does not yet require the guard job's record"
-        " of the current attempt, so re-run such a run whole.",
+        f"A run on a tag older than `{FIRST_CHECKED_TAG}` would use that tag's own workflow, which lacks some of the"
+        " checks described above, and the environment refuses its deployment.",
     ),
     "README.zh-CN.md": (
-        "在早于 `v1.1.1` 的标签上的运行会使用该标签自己的工作流，它不会查询 Release",
-        "环境会拒绝它的部署",
-        f"在 `v1.1.1` 上的运行同样使用该标签自己的工作流，其部署任务尚不要求 {GUARD_JOB} 任务对当前这次尝试的记录，"
-        "因此这样的运行应整次重新运行。",
+        f"在早于 `{FIRST_CHECKED_TAG}` 的标签上的运行会使用该标签自己的工作流，它缺少上文所述的部分检查，"
+        "环境会拒绝它的部署。",
     ),
     ".github/workflows/pages.yml": (
-        "A run on a tag older than v1.1.1 would take that tag's own workflow, which does not look up the Release",
-        "the environment refuses its deployment",
-        "A run on v1.1.1 takes v1.1.1's workflow, whose deploy job does not yet require the guard job's record of the"
-        " current attempt.",
+        f"A run on a tag older than {FIRST_CHECKED_TAG} would take that tag's own workflow, which lacks some of the checks"
+        " described above, and the environment refuses its deployment.",
     ),
 }
 # The same rules in the header comment of pages.yml, whose lines are joined with spaces, and the guard job's outputs.
@@ -125,12 +121,15 @@ HEADER_RULES = (
     "the commit the guard job approved in the same attempt",
     "three numbers without leading zeros",
     'A repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags',
-    "the github-pages environment accepts deployments only from tags from v1.1.1 on",
+    f"the github-pages environment accepts deployments only from tags from {FIRST_CHECKED_TAG} on",
     "the two keep anyone but an admin from deploying through the github-pages environment with a workflow of their own",
 )
 # What the READMEs and the comments of pages.yml said before the github-pages environment accepted deployments only
 # from tags from v1.1.1 on (2026-10-12): an environment rule that allows every v* tag or main, a request to run only
-# tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release.
+# tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release. Then,
+# until it accepted them only from tags from v1.1.2 on (2026-10-13): that it accepted them from v1.1.1 on, that the
+# workflow of an older tag does not look up the Release, and that a run on v1.1.1 takes a workflow whose deploy job does
+# not yet require the guard job's record of the current attempt, so such a run must be re-run whole.
 RETIRED_DEPLOYMENT_RULES = {
     "README.md": (
         "allows `v*` tags",
@@ -140,8 +139,23 @@ RETIRED_DEPLOYMENT_RULES = {
         "redeploy",
         "deploys that release again",
         "deploys that tag's commit again",
+        "from `v1.1.1` on",
+        "which does not look up the Release",
+        "A run on `v1.1.1` uses that tag's own workflow",
+        "does not yet require",
+        "re-run such a run whole",
     ),
-    "README.zh-CN.md": ("允许 `v*` 标签", "允许 `main`", "只应手动运行", "重新部署"),
+    "README.zh-CN.md": (
+        "允许 `v*` 标签",
+        "允许 `main`",
+        "只应手动运行",
+        "重新部署",
+        "`v1.1.1` 及之后",
+        "它不会查询 Release",
+        "在 `v1.1.1` 上的运行同样使用该标签自己的工作流",
+        "尚不要求",
+        "这样的运行应整次重新运行",
+    ),
     ".github/workflows/pages.yml": (
         "allows v* tags",
         "allows main",
@@ -150,6 +164,10 @@ RETIRED_DEPLOYMENT_RULES = {
         "deploys it again",
         "deploys that commit again",
         "does not look up the tag's Release, so",
+        "from v1.1.1 on",
+        "which does not look up the Release",
+        "A run on v1.1.1 takes v1.1.1's workflow",
+        "does not yet require",
     ),
 }
 # What a draft of them said of a re-run that leaves out the guard job: that it looks up no Release. One that runs the
@@ -259,8 +277,9 @@ class DocumentationTests(unittest.TestCase):
         self.assertEqual(workflows.yaml_scalar(jobs[RERUN_CHECK]["keys"]["name"][0], "name"), RERUN_CHECK_NAME)
 
     def test_a_manual_run_is_shown_only_on_a_tag_whose_workflow_checks_the_release(self):
-        # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG does not
-        # look up the Release: an example on such a tag would not do what the text around it says.
+        # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG lacks some
+        # of the checks the documents describe, and the environment refuses its deployment: an example on such a tag
+        # would not do what the text around it says.
         def version(tag):
             return tuple(int(number) for number in tag.removeprefix("v").split("."))
 
@@ -281,9 +300,9 @@ class DocumentationTests(unittest.TestCase):
                     self.assertNotIn(phrase, text)
 
     def test_no_document_brings_back_the_retired_deployment_rules(self):
-        # The github-pages environment accepts deployments only from tags from v1.1.1 on: not every v* tag, and not
-        # main; that is a rule the environment enforces, not a request about manual runs, and every run looks up the
-        # Release, so none deploys a release again without it.
+        # The github-pages environment accepts deployments only from tags from FIRST_CHECKED_TAG on: not every v* tag,
+        # and not main; that is a rule the environment enforces, not a request about manual runs, and every run looks up
+        # the Release, so none deploys a release again without it.
         for document, phrases in RETIRED_DEPLOYMENT_RULES.items():
             text = (ROOT / document).read_text(encoding="utf-8")
             for phrase in phrases:
@@ -309,6 +328,7 @@ class DocumentationTests(unittest.TestCase):
             ("en", "A RE-RUN OF FAILED JOBS DOES NOT LOOK THE RELEASE UP AGAIN.", True),
             ("en", "# A re-run of failed jobs does not look the\n# Release up again.", True),
             ("en", OLDER_TAGS[".github/workflows/pages.yml"][0], False),
+            ("en", "A run on an older tag takes that tag's own workflow, which does not look up the Release.", False),
             ("zh", "只重新运行部署任务不会再次查询 Release。", True),
             ("zh", "只重新运行部署任务不会再查询 Release。", True),
             ("zh", "只重新运行部署任务不会再查询Release。", True),
