@@ -691,9 +691,11 @@ class WorkflowTests(unittest.TestCase):
                 self.assertEqual(step["keys"].get("if"), "${{ !cancelled() && steps.install.outcome == 'success' }}")
 
     def test_pages_deploys_only_after_the_tests_workflow(self):
-        # guard -> test (all of tests.yml) -> build (the artifact) -> deploy. None of the later jobs has an if: that could
-        # run it after an earlier one failed: a job runs only when every job it needs succeeded, unless its condition
-        # calls a status function (the deploy job's condition, pinned in tests/test_pages.py, calls none).
+        # guard -> test (all of tests.yml) -> build (the artifact) -> deploy. None of the jobs up to the deploy job has an
+        # if: that could run it after an earlier one failed: a job runs only when every job it needs succeeded, unless its
+        # condition calls a status function (the deploy job's condition, pinned in tests/test_pages.py, calls none). The
+        # re-run check job comes after them all; its condition calls always(), but it has no permissions and only fails
+        # the run (pinned in tests/test_pages.py).
         _, jobs = self.workflows["pages.yml"]
 
         def needs(job_id):
@@ -717,6 +719,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(needs("test"), {"guard"})
         self.assertEqual(needs("build"), {"guard", "test"})
         self.assertEqual(needs("deploy"), {"guard", "test", "build"})
+        self.assertEqual(needs("rerun-check"), {"guard", "test", "build", "deploy"})
         for job_id in ("guard", "test", "build"):
             self.assertNotIn("if", jobs[job_id]["keys"], job_id)
         self.assertNotRegex(
@@ -737,6 +740,7 @@ class WorkflowTests(unittest.TestCase):
                 "test": {"contents": "read"},
                 "build": {"contents": "read"},
                 "deploy": {"pages": "write", "id-token": "write"},
+                "rerun-check": "{}",
             },
         )
         lines = (WORKFLOWS / "pages.yml").read_text(encoding="utf-8").splitlines()
