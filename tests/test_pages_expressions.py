@@ -13,8 +13,8 @@ import unittest
 # context properties (null when absent), ! (true exactly when its operand is false, taken as && and || take it; it binds
 # tighter than == and !=), == and !=, && and || (each gives one of its operands, and takes false, 0, NaN, '' and null for
 # false, and anything else, an array or an object included, for true), parentheses, always(), cancelled(), startsWith()
-# and toJSON(). == compares two strings ignoring case and two values of one other type as they are; values of two types
-# become numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or NaN, an array
+# and toJSON(). == compares two strings ignoring case, two arrays or two objects as one instance or two, and two values
+# of one other type as they are; values of two types become numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or NaN, an array
 # or an object NaN; NaN equals nothing), and != is true exactly when == is false. always() is true, and cancelled() is
 # true when the run was cancelled (the contexts say so under CANCELLED); in a job's condition both are status functions:
 # GitHub then evaluates the condition whatever the jobs it needs did. startsWith() casts both arguments to strings (null
@@ -49,7 +49,9 @@ def truthy(value):
 def equal(left, right):
     if isinstance(left, str) and isinstance(right, str):
         return left.casefold() == right.casefold()
-    return left == right if type(left) is type(right) else as_number(left) == as_number(right)
+    if type(left) is type(right):
+        return left is right if isinstance(left, (list, dict)) else left == right
+    return as_number(left) == as_number(right)
 
 
 # Where the contexts say that the run was cancelled: no expression can name it, as a property path has no spaces.
@@ -183,6 +185,7 @@ class ExpressionTests(unittest.TestCase):
             ("a.b == true", {"a.b": 2}, False),
             ("a.b == null", {"a.b": 0}, True),
             ("a.b && 'yes' || 'no'", {"a.b": 2}, "yes"),
+            ("a.b && 'yes' || 'no'", {"a.b": -1}, "yes"),
             ("a.b && 'yes' || 'no'", {"a.b": 0}, "no"),
             ("a.b && 'yes' || 'no'", {"a.b": math.nan}, "no"),
             # Or an array or an object: it is true, and NaN next to a value of another type.
@@ -190,6 +193,14 @@ class ExpressionTests(unittest.TestCase):
             ("a.b && 'yes' || 'no'", {"a.b": {}}, "yes"),
             ("a.b == null", {"a.b": []}, False),
             ("a.b == ''", {"a.b": {}}, False),
+            ("a.b == 'x'", {"a.b": []}, False),
+            ("a.b == c.d", {"a.b": {}, "c.d": "y"}, False),
+            # Two arrays or two objects are equal only as one instance, whatever they hold.
+            ("a.b == a.b", {"a.b": []}, True),
+            ("a.b == a.b", {"a.b": {"x": 1}}, True),
+            ("a.b == c.d", {"a.b": [], "c.d": []}, False),
+            ("a.b == c.d", {"a.b": {"x": 1}, "c.d": {"x": 1}}, False),
+            ("a.b != c.d", {"a.b": ["x"], "c.d": ["x"]}, True),
             ("('it''s' || a.b) == 'IT''S'", {}, True),
             # != is true exactly when == is false, with the same casts: case, null and '', strings and numbers, NaN.
             ("'Refs/Tags/V1' != 'refs/tags/v1'", {}, False),
