@@ -2725,6 +2725,9 @@ class CommittedDataTests(unittest.TestCase):
                 ("redirected to another host", {**stopped, "redirect_location": "https://other.tumblr.com/post/1/x"}),
                 ("not marked redirected_off_site", {**stopped, "access_status": "page_reachable"}),
                 ("not redirected", {**followed, "resolved_url": page}),
+                # The target host itself, not a host whose name only ends with it.
+                ("redirected to notwww.tumblr.com", {**stopped, "redirect_location": "https://notwww.tumblr.com/x"}),
+                ("ended on notwww.tumblr.com", {**followed, "resolved_url": "https://notwww.tumblr.com/wublaze/1/x"}),
                 ("on the target host itself", {**followed, "url": location}),
                 ("on a host the pattern does not match", {**followed, "url": "https://tumblr.com.example/post/1/x"}),
                 # The host must end with the pattern's domain, not merely contain it.
