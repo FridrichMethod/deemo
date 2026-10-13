@@ -305,7 +305,7 @@ OLDER_TAGS = {
         " current attempt.",
     ),
 }
-# The same rules in the header comment of pages.yml, whose lines are joined with spaces.
+# The same rules in the header comment of pages.yml, whose lines are joined with spaces, and the guard job's outputs.
 HEADER_RULES = (
     "a published GitHub Release, not marked as a prerelease",
     "Every run, whichever of the two started it, first asks for the tag's Release",
@@ -313,6 +313,7 @@ HEADER_RULES = (
     "a re-run keeps the event of the run it repeats",
     "a re-run that leaves out the guard job, such as one of the deploy job alone, deploys nothing, because the deploy"
     " job requires the guard job's record of the current attempt; re-run the whole run",
+    "It gives the commit of a run that passes all of this, and the run's attempt, as its outputs",
     "the commit the guard job approved in the same attempt",
     "three numbers without leading zeros",
     'A repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags',
