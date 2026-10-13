@@ -3,8 +3,8 @@ a published GitHub Release, not marked as a prerelease, passes them, and only it
 
 The steps run under bash -eo pipefail with their env from the run's contexts, in Git repositories laid out as their
 checkout leaves them; a fake curl answers the Release lookup. tests/test_pages.py pins the steps' names and order in
-both jobs (GUARD_STEPS, APPROVE) and the deploy job's condition, which these tests evaluate with the outputs that the
-guard job's last step records.
+both jobs (GUARD_STEPS, APPROVE), the deploy job's condition and the re-run check job, whose condition these tests
+evaluate with the outputs that the guard job's last step records, and whose one step they run.
 """
 
 import importlib.util
@@ -30,10 +30,12 @@ def load(name, relative):
 
 
 # The workflow reader of the tooling tests (see tests/test_pages.py), and the guard steps of both jobs by role, the
-# guard job's last step and the expression evaluator of the workflow tests in tests/test_pages.py.
+# guard job's last step, the re-run check job and its error, and the expression evaluator of the workflow tests in
+# tests/test_pages.py.
 workflows = load("test_tooling", "tests/test_tooling.py")
 structure = load("test_pages", "tests/test_pages.py")
 GUARD_STEPS, APPROVE = structure.GUARD_STEPS, structure.APPROVE
+RERUN_CHECK, RERUN_ERROR = structure.RERUN_CHECK, structure.RERUN_ERROR
 # The only contexts the guard steps may read. GitHub renders a property the event does not have as an empty string.
 # github.token is the one context that is not about the run's event, ref or commit: the job's token, which can only read
 # (contents: read). Only the Release lookup may read it (TOKEN_READERS).
@@ -234,6 +236,9 @@ class GuardTests(unittest.TestCase):
         outputs = workflows.mapping(jobs["guard"]["keys"].get("outputs", ("", []))[1], 6, "outputs")
         cls.outputs = {name: value for name, (value, _) in outputs.items()}
         cls.condition = workflows.block_text(*jobs["deploy"]["keys"].get("if", ("", [])))
+        rerun = jobs.get(RERUN_CHECK, {"keys": {}, "steps": []})
+        cls.rerun_condition = workflows.block_text(*rerun["keys"].get("if", ("", [])))
+        cls.rerun_steps = rerun["steps"]
         cls.temporary = tempfile.TemporaryDirectory()
         directory = Path(cls.temporary.name)
         (directory / "checkout").mkdir()
@@ -395,7 +400,8 @@ class GuardTests(unittest.TestCase):
     def test_the_deploy_job_runs_only_in_the_attempt_whose_guard_job_approved_the_commit(self):
         # The approve step records the run's attempt with the commit, and the guard job gives both as its outputs. The
         # deploy job's condition then holds in that attempt and not in a later one: a re-run of the deploy job alone
-        # keeps the guard job's outputs of the attempt it repeats, and looks up no Release.
+        # keeps the guard job's outputs of the attempt it repeats, and looks up no Release. The re-run check job's
+        # condition holds exactly where the deploy job's does not, so that later attempt fails in it.
         for contexts in runs("v1.2.0", "tip"):
             for attempt in ("1", "2", "10"):
                 with self.subTest(event=contexts["github.event_name"], attempt=attempt):
@@ -406,6 +412,35 @@ class GuardTests(unittest.TestCase):
                         deployment = self.deployment(contexts, approved, deploy_attempt)
                         deploys = structure.truthy(structure.evaluate(self.condition, deployment))
                         self.assertIs(deploys, deploy_attempt == attempt, f"the deploy job in attempt {deploy_attempt}")
+                        checking = {**deployment, "needs.guard.result": "success"}
+                        checks = structure.truthy(structure.evaluate(self.rerun_condition, checking))
+                        self.assertIs(checks, not deploys, f"the re-run check job in attempt {deploy_attempt}")
+
+    def test_a_run_the_guard_job_refused_does_not_run_the_re_run_check_job(self):
+        # A guard job that refused the run failed and recorded nothing, in the attempt that ran it or in one that kept
+        # it: neither the deploy job nor the re-run check job runs, and the run fails in the guard job.
+        for contexts in runs("v1.2.0", "tip"):
+            with self.subTest(event=contexts["github.event_name"]):
+                refused, output, _, approved = self.run_guards("guard", contexts, NOT_FOUND)
+                self.assertEqual(refused, "release", output)
+                self.assertIsNone(approved)
+                for attempt in ("1", "2"):
+                    deployment = self.deployment(contexts, {}, attempt)
+                    self.assertFalse(structure.truthy(structure.evaluate(self.condition, deployment)))
+                    checking = {**deployment, "needs.guard.result": "failure"}
+                    self.assertFalse(structure.truthy(structure.evaluate(self.rerun_condition, checking)))
+
+    def test_the_re_run_check_job_fails_with_its_reason(self):
+        # Its one step, run as GitHub runs it, prints the error annotation alone and exits 1, whatever the attempt.
+        (step,) = self.rerun_steps
+        with tempfile.TemporaryDirectory() as temporary:
+            for attempt in ("2", "10"):
+                with self.subTest(attempt=attempt):
+                    runner = {"PATH": os.environ.get("PATH", ""), "GITHUB_RUN_ATTEMPT": attempt}
+                    result = self.run_step("rerun", step, {}, runner, temporary)
+                    self.assertEqual(result.returncode, 1)
+                    self.assertEqual(result.stdout, f"{RERUN_ERROR}\n")
+                    self.assertEqual(result.stderr, "")
 
     def test_other_events_are_refused_even_on_a_release_tag(self):
         for event in ("push", "pull_request", "pull_request_target", "schedule", "workflow_run", "repository_dispatch"):
