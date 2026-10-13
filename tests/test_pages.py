@@ -403,8 +403,9 @@ PUSH_DEPLOYED = {
     "README.zh-CN.md": ("推送到 `main` 后", "只从 `main` 部署", "Pages 工作流会再次运行全部检查"),
 }
 # What each README's deployment section says about the release rules of 2026-10-12: what every run checks, a re-run of
-# a release's run included, that a re-run without the guard job (named as on the Actions page) deploys nothing and why,
-# the tag form, and the two repository settings that limit which tags can deploy.
+# a release's run included, that a re-run without the guard job (jobs named as on the Actions page) deploys nothing and
+# why, and fails with the re-run check job's error, the tag form, and the two repository settings that limit which tags
+# can deploy.
 GUARD_JOB = "Release guard"
 RELEASE_RULES = {
     "README.md": (
@@ -412,8 +413,11 @@ RELEASE_RULES = {
         "one read-only request to the GitHub API",
         "A re-run keeps the event of the run it repeats",
         "also refuses a re-run of a release's run",
-        f"A re-run that leaves out the {GUARD_JOB} job, such as a re-run of the deploy job alone, deploys nothing,"
-        " because the deploy job requires the guard job's record of the current attempt; re-run the whole run.",
+        f"A re-run that leaves out the {GUARD_JOB} job, such as a re-run of the deploy job alone or of the failed jobs"
+        " after the test, build or deploy job failed, deploys nothing, because the deploy job requires the guard job's"
+        " record of the current attempt; re-run the whole run.",
+        f"Such a re-run fails: its {RERUN_CHECK_NAME} job ends with an error that says the attempt did not run the"
+        f" {GUARD_JOB} job and deployed nothing, and that all jobs must be re-run.",
         "a run on a tag without such a Release",
         "three numbers without leading zeros",
         "`v01.1.0`",
@@ -428,8 +432,10 @@ RELEASE_RULES = {
         "向 GitHub API 发出一次只读请求",
         "重新运行（re-run）沿用被重新运行的那次运行的事件",
         "也会被这项检查拒绝",
-        f"不包括 {GUARD_JOB} 任务的重新运行（例如只重新运行部署任务）不会部署任何内容，"
-        f"因为部署任务要求有 {GUARD_JOB} 任务对当前这次尝试（attempt）的记录；应重新运行整次运行。",
+        f"不包括 {GUARD_JOB} 任务的重新运行（例如只重新运行部署任务，或在测试、构建或部署任务失败后重新运行失败的任务）"
+        f"不会部署任何内容，因为部署任务要求有 {GUARD_JOB} 任务对当前这次尝试（attempt）的记录；应重新运行整次运行。",
+        f"这样的重新运行会失败：其 {RERUN_CHECK_NAME} 任务以错误结束，说明这次尝试没有运行 {GUARD_JOB} 任务、"
+        "没有部署任何内容，必须重新运行全部任务。",
         "在没有这样的 Release 的标签上的运行",
         "三个不带前导零的数字",
         "`v01.1.0`",
@@ -476,7 +482,8 @@ HEADER_RULES = (
     "one read-only GitHub API request",
     "a re-run keeps the event of the run it repeats",
     "a re-run that leaves out the guard job, such as one of the deploy job alone, deploys nothing, because the deploy"
-    " job requires the guard job's record of the current attempt; re-run the whole run",
+    " job requires the guard job's record of the current attempt, and fails with the re-run check job's error that the"
+    " attempt did not run the guard job and deployed nothing; re-run the whole run",
     "It gives the commit of a run that passes all of this, and the run's attempt, as its outputs",
     "the commit the guard job approved in the same attempt",
     "three numbers without leading zeros",
@@ -842,6 +849,7 @@ class DocumentationTests(unittest.TestCase):
                 self.assertIn(phrase, header)
         _, jobs = workflows.read_workflow("pages.yml")
         self.assertEqual(workflows.yaml_scalar(jobs["guard"]["keys"]["name"][0], "name"), GUARD_JOB)
+        self.assertEqual(workflows.yaml_scalar(jobs[RERUN_CHECK]["keys"]["name"][0], "name"), RERUN_CHECK_NAME)
 
     def test_a_manual_run_is_shown_only_on_a_tag_whose_workflow_checks_the_release(self):
         # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG does not
