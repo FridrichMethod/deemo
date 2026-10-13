@@ -6,12 +6,13 @@ name: Publish public gallery
 # read-only GitHub API request and goes on only if that Release is published and is neither a draft nor a prerelease: a
 # re-run keeps the event of the run it repeats, so only the answer says what the Release is now (a re-run that leaves
 # out the guard job, such as one of the deploy job alone, deploys nothing, because the deploy job requires the guard
-# job's record of the current attempt; re-run the whole run). Pushes, pull requests and schedules never start this
-# workflow; tests.yml checks them. The guard job refuses, with an error, every other run: another event, a branch, a
-# release marked as a prerelease, a tag that is not vX.Y.Z (three numbers without leading zeros), a tag without such a
-# Release, a commit that is not on main. It gives the commit of a run that passes all of this, and the run's attempt, as
-# its outputs. The full tests.yml then runs on the release commit, the build job repeats the guards before anything else
-# and stages the site, and the deploy job, whose condition requires a release tag again and the commit the guard job
+# job's record of the current attempt, and fails with the re-run check job's error that the attempt did not run the
+# guard job and deployed nothing; re-run the whole run). Pushes, pull requests and schedules never start this workflow;
+# tests.yml checks them. The guard job refuses, with an error, every other run: another event, a branch, a release
+# marked as a prerelease, a tag that is not vX.Y.Z (three numbers without leading zeros), a tag without such a Release,
+# a commit that is not on main. It gives the commit of a run that passes all of this, and the run's attempt, as its
+# outputs. The full tests.yml then runs on the release commit, the build job repeats the guards before anything else and
+# stages the site, and the deploy job, whose condition requires a release tag again and the commit the guard job
 # approved in the same attempt, publishes it. A repository ruleset ("Release tags v*") lets only repository admins
 # create, move or delete v* tags, and the github-pages environment accepts deployments only from tags from v1.1.1 on: a
 # run takes this file from the tag's commit, so the two keep anyone but an admin from deploying through the github-pages
@@ -311,9 +312,9 @@ jobs:
     # The release tag once more, in the expression language, which has no regular expressions: the guard steps check the
     # whole vX.Y.Z tag and the tag's Release. The commit must be the one the guard job approved, in this attempt of the
     # run: a re-run that leaves out the guard job, such as one of the deploy job alone, keeps the guard job's outputs of
-    # the attempt it repeats, so it deploys nothing. Its == takes null for false, so the prerelease flag goes through
-    # toJSON(), which gives 'false' only for false. The job runs no repository code; it only has the Pages and OIDC
-    # grants.
+    # the attempt it repeats, so it deploys nothing, and the re-run check job below fails it. Its == takes null for
+    # false, so the prerelease flag goes through toJSON(), which gives 'false' only for false. The job runs no
+    # repository code; it only has the Pages and OIDC grants.
     if: >-
       startsWith(github.ref, 'refs/tags/v') &&
       needs.guard.outputs.commit == github.sha &&
@@ -335,3 +336,26 @@ jobs:
       - name: Deploy website
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  rerun-check:
+    # A re-run that leaves out the guard job (the deploy job alone, or the failed jobs after the test, build or deploy
+    # job failed) skips the deploy job, and would end green with nothing deployed. GitHub re-runs a job together with
+    # every job that needs it, so such a re-run runs this job too, and it fails the run with the reason. always() has
+    # GitHub evaluate the condition whatever the jobs it needs did; it holds only if the guard job succeeded and its
+    # outputs name another attempt than this one, as they do when a re-run keeps them from the attempt it repeats. So
+    # this job is skipped in an attempt that ran the guard job, whether the deploy job deployed or not, and in a run
+    # that the guard job refused. It needs every job before it, as the deploy job does, runs no checkout and no action,
+    # and has no permissions.
+    name: Re-run check
+    needs: [guard, test, build, deploy]
+    if: >-
+      always() && needs.guard.result == 'success' &&
+      needs.guard.outputs.attempt != github.run_attempt
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    permissions: {}
+    steps:
+      - name: Refuse an attempt that did not run the Release guard job
+        run: |
+          echo "::error::This attempt did not run the Release guard job, so it deployed nothing. Re-run all jobs to deploy the release."
+          exit 1

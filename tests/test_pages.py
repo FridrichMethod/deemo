@@ -43,14 +43,15 @@ DEPLOY_CONDITION = (
     "(github.event_name == 'release' && github.event.action == 'published' && "
     "toJSON(github.event.release.prerelease) == 'false'))"
 )
-# The part of GitHub's expression language that the deploy condition uses: string, true, false and null literals,
-# context properties (null when absent), ==, && and || (each gives one of its operands, and takes false, 0, NaN, '' and
-# null for false, and anything else, an array or an object included, for true), parentheses, startsWith() and toJSON().
-# == compares two strings ignoring case and two values of one other type as they are; values of two types become
-# numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or NaN, an array or an
-# object NaN; NaN equals nothing). startsWith() casts both arguments to strings (null to '') and ignores case. Any other
-# syntax is an error.
-EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|&&|\|\||[(),])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
+# The part of GitHub's expression language that the conditions of pages.yml use: string, true, false and null literals,
+# context properties (null when absent), == and !=, && and || (each gives one of its operands, and takes false, 0, NaN,
+# '' and null for false, and anything else, an array or an object included, for true), parentheses, always(),
+# startsWith() and toJSON(). == compares two strings ignoring case and two values of one other type as they are; values
+# of two types become numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or
+# NaN, an array or an object NaN; NaN equals nothing), and != is true exactly when == is false. always() is true (in a
+# job's condition it is also a status function: GitHub then evaluates the condition whatever the jobs it needs did).
+# startsWith() casts both arguments to strings (null to '') and ignores case. Any other syntax is an error.
+EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|!=|&&|\|\||[(),])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
 JSON_NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
 LITERALS = {"true": True, "false": False, "null": None}
 
@@ -84,6 +85,7 @@ def equal(left, right):
 
 
 FUNCTIONS = {
+    "always": (0, lambda: True),
     "startsWith": (2, lambda text, prefix: as_text(text).casefold().startswith(as_text(prefix).casefold())),
     "toJSON": (1, lambda value: json.dumps(value, ensure_ascii=False)),
 }
@@ -103,7 +105,7 @@ def tokenize(expression):
 
 class Evaluation:
     """An expression evaluated with contexts. Each method reads the tokens from index on and gives the value of what it
-    read and the index after it: either() an || chain, both() an && chain, comparison() an == or one operand."""
+    read and the index after it: either() an || chain, both() an && chain, comparison() an == or a != or one operand."""
 
     def __init__(self, expression, contexts):
         self.expression, self.contexts, self.tokens = expression, contexts, tokenize(expression)
@@ -133,18 +135,22 @@ class Evaluation:
             raise ValueError(f"unsupported function {name}()")
         arity, function = FUNCTIONS[name]
         arguments = []
-        while not arguments or self.tokens[index][1] == ",":
-            value, index = self.either(index + 1)
-            arguments.append(value)
+        if self.tokens[index + 1][1] == ")":
+            index += 1  # no arguments: the ")" follows the "("
+        else:
+            while not arguments or self.tokens[index][1] == ",":
+                value, index = self.either(index + 1)
+                arguments.append(value)
         if len(arguments) != arity:
             raise ValueError(f"{name}() takes {arity} arguments")
         return function(*arguments), self.expect(index, ")")
 
     def comparison(self, index):
         value, index = self.operand(index)
-        if self.tokens[index][1] == "==":
+        operator = self.tokens[index][1]
+        if operator in ("==", "!="):
             right, index = self.operand(index + 1)
-            value = equal(value, right)
+            value = equal(value, right) if operator == "==" else not equal(value, right)
         return value, index
 
     def both(self, index):
@@ -214,6 +220,164 @@ RE_RUNS = {
     "a guard job without outputs": (deployment("1"), False),
     "a guard job whose outputs are empty": (deployment("1", commit="", attempt=""), False),
 }
+# The job that fails an attempt that did not run the guard job, as the Actions page names it, and its condition and its
+# one step, verbatim. The deploy job skips such an attempt (RE_RUNS), which would then end green with nothing deployed.
+# GitHub re-runs a job together with every job that needs it, so a re-run of the deploy job, or of any job before it but
+# the guard job, runs this job too. always() makes GitHub evaluate its condition whatever the jobs it needs did, and
+# the condition holds when the guard job succeeded and its attempt output is not the run's attempt: only when the
+# attempt kept the guard job's outputs of an earlier one (RERUN_CHECKS, RUNS).
+RERUN_CHECK, RERUN_CHECK_NAME = "rerun-check", "Re-run check"
+RERUN_CONDITION = "always() && needs.guard.result == 'success' && needs.guard.outputs.attempt != github.run_attempt"
+RERUN_ERROR = (
+    "::error::This attempt did not run the Release guard job, so it deployed nothing. Re-run all jobs to deploy the"
+    " release."
+)
+RERUN_STEP = ("Refuse an attempt that did not run the Release guard job", f'echo "{RERUN_ERROR}"\nexit 1\n')
+# The jobs of pages.yml in the order they run. Each needs every job before it, so a job's needs are all the jobs it
+# depends on, directly or not.
+JOBS = ("guard", "test", "build", "deploy", RERUN_CHECK)
+
+
+def checking(run_attempt, result, **outputs):
+    """The re-run check job's contexts in the attempt run_attempt of a release's run, with the guard job's result and
+    outputs as it sees them."""
+    return {**deployment(run_attempt, **outputs), "needs.guard.result": result}
+
+
+# Attempts of a run and whether the re-run check job's condition holds in them. It does not in an attempt that ran the
+# guard job, nor after a guard job that refused the run or was cancelled; it does in an attempt that kept the guard
+# job's outputs of an earlier one, and if those outputs ever lacked the attempt. GitHub's run_attempt is a string; as a
+# number it would compare the same.
+RERUN_CHECKS = {
+    "the first attempt": (checking("1", "success", commit=COMMIT, attempt="1"), False),
+    "a re-run of all jobs": (checking("2", "success", commit=COMMIT, attempt="2"), False),
+    "attempt 10, a re-run of all jobs": (checking("10", "success", commit=COMMIT, attempt="10"), False),
+    "a re-run that kept the guard job of attempt 1": (checking("2", "success", commit=COMMIT, attempt="1"), True),
+    "attempt 10 with the guard job of attempt 1": (checking("10", "success", commit=COMMIT, attempt="1"), True),
+    "attempt 3 with the guard job of attempt 2": (checking("3", "success", commit=COMMIT, attempt="2"), True),
+    "a run the guard job refused": (checking("1", "failure"), False),
+    "a re-run of all jobs the guard job refused": (checking("2", "failure"), False),
+    "a re-run that kept a guard job that refused the run": (checking("2", "failure"), False),
+    "a cancelled guard job": (checking("1", "cancelled"), False),
+    "a guard job that succeeded without the attempt output": (checking("2", "success", commit=COMMIT), True),
+    "the first attempt, its number as a number": (checking(1, "success", commit=COMMIT, attempt="1"), False),
+    "a re-run that kept the guard job of attempt 1, its number as a number": (
+        checking(2, "success", commit=COMMIT, attempt="1"),
+        True,
+    ),
+}
+# A condition that calls none of these runs its job only if every job it needs succeeded (GitHub adds success()).
+STATUS_FUNCTION = re.compile(r"\b(?:always|success|failure|cancelled)\s*\(")
+
+
+def run_attempt(jobs, number, event, previous=None, again=(), failing=()):
+    """({job id: (result, outputs)}, [the jobs that ran]) for attempt `number` of a run of pages.yml on v1.1.2 that
+    event started, as GitHub runs it. jobs maps each job id to (its needs, its condition), in the order they run.
+
+    A first attempt (previous None) runs every job. A re-run runs again the jobs in `again` and every job that needs one
+    of them, and keeps the result and the outputs of every other job of `previous`, the attempt it repeats. A job that
+    runs is skipped if its condition does not hold, or calls no status function and a job it needs did not succeed.
+    Otherwise it fails if it is in `failing`, or is the re-run check job, whose one step exits 1 (RERUN_STEP), and
+    succeeds if not; the guard job then records the run's commit and the attempt, as its approve step does."""
+    again, results, ran = set(jobs if previous is None else again), {}, []
+    for job_id, (needs, condition) in jobs.items():
+        if again & set(needs):
+            again.add(job_id)
+        if job_id not in again:
+            results[job_id] = previous[job_id]
+            continue
+        contexts = deployment(str(number), event)
+        for need in needs:
+            result, outputs = results[need]
+            contexts[f"needs.{need}.result"] = result
+            contexts.update({f"needs.{need}.outputs.{name}": value for name, value in outputs.items()})
+        ready = STATUS_FUNCTION.search(condition) or all(results[need][0] == "success" for need in needs)
+        if not (ready and truthy(evaluate(condition or "true", contexts))):
+            results[job_id] = ("skipped", {})
+        elif job_id in failing or job_id == RERUN_CHECK:
+            ran.append(job_id)
+            results[job_id] = ("failure", {})
+        else:
+            ran.append(job_id)
+            results[job_id] = ("success", {"commit": COMMIT, "attempt": str(number)} if job_id == "guard" else {})
+    return results, ran
+
+
+# Runs as a list of attempts, each (what it re-runs, the jobs that fail in it), and whether the last attempt deployed
+# and whether it ran the re-run check job. A first attempt re-runs nothing (None); "all" is "Re-run all jobs", "failed"
+# "Re-run failed jobs" (the jobs that failed in the attempt it repeats), and a job id "Re-run this job" on that job. A
+# run that only the guard job's record of an earlier attempt kept from deploying fails in the re-run check job; a run
+# that the guard job refused fails in the guard job and does not run the re-run check job.
+FIRST = (None, ())
+RUNS = {
+    "the first attempt of a release's run": ("release", [FIRST], (True, False)),
+    "the first attempt of a manual run": ("workflow_dispatch", [FIRST], (True, False)),
+    "a re-run of all jobs": ("release", [FIRST, ("all", ())], (True, False)),
+    "a re-run of all jobs of a manual run": ("workflow_dispatch", [FIRST, ("all", ())], (True, False)),
+    "a re-run of all jobs after the deploy job failed": ("release", [(None, ("deploy",)), ("all", ())], (True, False)),
+    "a re-run of the guard job, which re-runs every job": ("release", [FIRST, ("guard", ())], (True, False)),
+    "a re-run of the failed jobs after the guard job failed": (
+        "release",
+        [(None, ("guard",)), ("failed", ())],
+        (True, False),
+    ),
+    "a re-run of the deploy job alone": ("release", [FIRST, ("deploy", ())], (False, True)),
+    "a re-run of the deploy job alone, in a manual run": ("workflow_dispatch", [FIRST, ("deploy", ())], (False, True)),
+    "a re-run of the failed jobs after the deploy job failed": (
+        "release",
+        [(None, ("deploy",)), ("failed", ())],
+        (False, True),
+    ),
+    "a re-run of the failed jobs after the test job failed": (
+        "release",
+        [(None, ("test",)), ("failed", ())],
+        (False, True),
+    ),
+    "a re-run of the failed jobs after the build job failed": (
+        "release",
+        [(None, ("build",)), ("failed", ())],
+        (False, True),
+    ),
+    "a re-run of the failed jobs in which the test job fails again": (
+        "release",
+        [(None, ("test",)), ("failed", ("test",))],
+        (False, True),
+    ),
+    "a re-run of the test job alone": ("release", [FIRST, ("test", ())], (False, True)),
+    "a re-run of the build job alone": ("release", [FIRST, ("build", ())], (False, True)),
+    "a re-run of the deploy job alone after a re-run of all jobs": (
+        "release",
+        [FIRST, ("all", ()), ("deploy", ())],
+        (False, True),
+    ),
+    "a re-run of the failed jobs after a re-run of the deploy job alone": (
+        "release",
+        [FIRST, ("deploy", ()), ("failed", ())],
+        (False, True),
+    ),
+    "a re-run of all jobs after a re-run of the deploy job alone": (
+        "release",
+        [FIRST, ("deploy", ()), ("all", ())],
+        (True, False),
+    ),
+    "a run the guard job refused": ("release", [(None, ("guard",))], (False, False)),
+    "a manual run the guard job refused": ("workflow_dispatch", [(None, ("guard",))], (False, False)),
+    "a re-run of all jobs the guard job refuses again": (
+        "release",
+        [(None, ("guard",)), ("all", ("guard",))],
+        (False, False),
+    ),
+    "a re-run of the failed jobs the guard job refuses again": (
+        "release",
+        [(None, ("guard",)), ("failed", ("guard",))],
+        (False, False),
+    ),
+    "a re-run of the deploy job alone after the guard job refused the run": (
+        "release",
+        [(None, ("guard",)), ("deploy", ())],
+        (False, False),
+    ),
+}
 # The guard steps of both jobs by role, in the order they run. In tests/test_pages_guards.py its Checkout class stands
 # in for the checkout step.
 GUARD_STEPS = (
@@ -239,8 +403,9 @@ PUSH_DEPLOYED = {
     "README.zh-CN.md": ("推送到 `main` 后", "只从 `main` 部署", "Pages 工作流会再次运行全部检查"),
 }
 # What each README's deployment section says about the release rules of 2026-10-12: what every run checks, a re-run of
-# a release's run included, that a re-run without the guard job (named as on the Actions page) deploys nothing and why,
-# the tag form, and the two repository settings that limit which tags can deploy.
+# a release's run included, that a re-run without the guard job (jobs named as on the Actions page) deploys nothing and
+# why, and fails with the re-run check job's error, the tag form, and the two repository settings that limit which tags
+# can deploy.
 GUARD_JOB = "Release guard"
 RELEASE_RULES = {
     "README.md": (
@@ -248,8 +413,11 @@ RELEASE_RULES = {
         "one read-only request to the GitHub API",
         "A re-run keeps the event of the run it repeats",
         "also refuses a re-run of a release's run",
-        f"A re-run that leaves out the {GUARD_JOB} job, such as a re-run of the deploy job alone, deploys nothing,"
-        " because the deploy job requires the guard job's record of the current attempt; re-run the whole run.",
+        f"A re-run that leaves out the {GUARD_JOB} job, such as a re-run of the deploy job alone or of the failed jobs"
+        " after the test, build or deploy job failed, deploys nothing, because the deploy job requires the guard job's"
+        " record of the current attempt; re-run the whole run.",
+        f"Such a re-run fails: its {RERUN_CHECK_NAME} job ends with an error that says the attempt did not run the"
+        f" {GUARD_JOB} job and deployed nothing, and that all jobs must be re-run.",
         "a run on a tag without such a Release",
         "three numbers without leading zeros",
         "`v01.1.0`",
@@ -264,8 +432,10 @@ RELEASE_RULES = {
         "向 GitHub API 发出一次只读请求",
         "重新运行（re-run）沿用被重新运行的那次运行的事件",
         "也会被这项检查拒绝",
-        f"不包括 {GUARD_JOB} 任务的重新运行（例如只重新运行部署任务）不会部署任何内容，"
-        f"因为部署任务要求有 {GUARD_JOB} 任务对当前这次尝试（attempt）的记录；应重新运行整次运行。",
+        f"不包括 {GUARD_JOB} 任务的重新运行（例如只重新运行部署任务，或在测试、构建或部署任务失败后重新运行失败的任务）"
+        f"不会部署任何内容，因为部署任务要求有 {GUARD_JOB} 任务对当前这次尝试（attempt）的记录；应重新运行整次运行。",
+        f"这样的重新运行会失败：其 {RERUN_CHECK_NAME} 任务以错误结束，说明这次尝试没有运行 {GUARD_JOB} 任务、"
+        "没有部署任何内容，必须重新运行全部任务。",
         "在没有这样的 Release 的标签上的运行",
         "三个不带前导零的数字",
         "`v01.1.0`",
@@ -305,14 +475,16 @@ OLDER_TAGS = {
         " current attempt.",
     ),
 }
-# The same rules in the header comment of pages.yml, whose lines are joined with spaces.
+# The same rules in the header comment of pages.yml, whose lines are joined with spaces, and the guard job's outputs.
 HEADER_RULES = (
     "a published GitHub Release, not marked as a prerelease",
     "Every run, whichever of the two started it, first asks for the tag's Release",
     "one read-only GitHub API request",
     "a re-run keeps the event of the run it repeats",
     "a re-run that leaves out the guard job, such as one of the deploy job alone, deploys nothing, because the deploy"
-    " job requires the guard job's record of the current attempt; re-run the whole run",
+    " job requires the guard job's record of the current attempt, and fails with the re-run check job's error that the"
+    " attempt did not run the guard job and deployed nothing; re-run the whole run",
+    "It gives the commit of a run that passes all of this, and the run's attempt, as its outputs",
     "the commit the guard job approved in the same attempt",
     "three numbers without leading zeros",
     'A repository ruleset ("Release tags v*") lets only repository admins create, move or delete v* tags',
@@ -479,6 +651,65 @@ class WorkflowTests(unittest.TestCase):
             with self.subTest(scenario):
                 self.assertIs(truthy(evaluate(condition, contexts)), deploys)
 
+    def test_the_re_run_check_job_only_fails_the_attempt(self):
+        # The jobs in the order they run, each needing every job before it; the re-run check job last, with no
+        # permissions, no checkout and no action: one step that prints its error and exits 1 (run under bash in
+        # tests/test_pages_guards.py). No environment, outputs, strategy or continue-on-error.
+        self.assertEqual(list(self.jobs), list(JOBS))
+        for index, job_id in enumerate(JOBS[1:], 1):
+            with self.subTest(job=job_id):
+                needs = workflows.yaml_scalar(self.jobs[job_id]["keys"]["needs"][0], "needs")
+                self.assertEqual(needs if isinstance(needs, list) else [needs], list(JOBS[:index]))
+        job = self.jobs[RERUN_CHECK]
+        self.assertEqual(
+            set(job["keys"]), {"name", "needs", "if", "runs-on", "timeout-minutes", "permissions", "steps"}
+        )
+        self.assertEqual(workflows.yaml_scalar(job["keys"]["name"][0], "name"), RERUN_CHECK_NAME)
+        self.assertEqual(workflows.block_text(*job["keys"]["if"]), RERUN_CONDITION)
+        self.assertEqual(workflows.job_permissions(job), "{}")
+        self.assertEqual(job["keys"]["runs-on"][0], "ubuntu-latest")
+        self.assertEqual(job["keys"]["timeout-minutes"][0], "1")
+        (step,) = job["steps"]
+        self.assertEqual(set(step["keys"]), {"name", "run"}, "no uses:, env:, if: or shell")
+        self.assertEqual((step["name"], step["run"]), RERUN_STEP)
+
+    def test_the_re_run_check_job_runs_only_in_an_attempt_that_kept_the_guard_jobs_record(self):
+        condition = workflows.block_text(*self.jobs[RERUN_CHECK]["keys"]["if"])
+        for scenario, (contexts, checks) in RERUN_CHECKS.items():
+            with self.subTest(scenario):
+                self.assertIs(truthy(evaluate(condition, contexts)), checks)
+
+    def test_a_re_run_that_leaves_out_the_guard_job_fails_and_deploys_nothing(self):
+        # The jobs of pages.yml run as GitHub runs them (run_attempt()) in first attempts and re-runs (RUNS): an attempt
+        # that ran the guard job deploys unless a job fails or the guard job refuses the run, and skips the re-run check
+        # job; an attempt that kept the guard job's record of an earlier one deploys nothing and fails in the re-run
+        # check job. So no attempt ends green without deploying.
+        def condition(job):
+            return workflows.block_text(*job["keys"]["if"]) if "if" in job["keys"] else ""
+
+        def needs(job):
+            value = workflows.yaml_scalar(job["keys"].get("needs", ("",))[0], "needs")
+            return value if isinstance(value, list) else [value] if value else []
+
+        jobs = {job_id: (needs(job), condition(job)) for job_id, job in self.jobs.items()}
+        for scenario, (event, attempts, (deploys, checks)) in RUNS.items():
+            with self.subTest(scenario):
+                results = None
+                for number, (rerun, failing) in enumerate(attempts, 1):
+                    if rerun is None:
+                        again = set()  # a first attempt runs every job
+                    elif rerun == "failed":
+                        again = {job_id for job_id, (result, _) in results.items() if result == "failure"}
+                    else:
+                        again = set(jobs) if rerun == "all" else {rerun}
+                    results, ran = run_attempt(jobs, number, event, results, again, failing)
+                deployed = "deploy" in ran and results["deploy"][0] == "success"
+                green = all(result != "failure" for result, _ in results.values())
+                self.assertIs(green, deployed, "an attempt ends green only if it deployed")
+                self.assertEqual((deployed, RERUN_CHECK in ran), (deploys, checks))
+                if checks:
+                    self.assertEqual(results[RERUN_CHECK][0], "failure")
+
     def test_only_the_deploy_job_deploys_and_only_for_a_release_tag(self):
         deployers = [
             job_id
@@ -534,14 +765,35 @@ class ExpressionTests(unittest.TestCase):
             ("a.b == null", {"a.b": []}, False),
             ("a.b == ''", {"a.b": {}}, False),
             ("('it''s' || a.b) == 'IT''S'", {}, True),
+            # != is true exactly when == is false, with the same casts: case, null and '', strings and numbers, NaN.
+            ("'Refs/Tags/V1' != 'refs/tags/v1'", {}, False),
+            ("a.b != '1'", {"a.b": "2"}, True),
+            ("a.b != '10'", {"a.b": "1"}, True),
+            ("a.b != ''", {}, False),
+            ("a.b != c.d", {"a.b": "2", "c.d": 2}, False),
+            ("a.b != c.d", {"a.b": "1", "c.d": 2}, True),
+            ("a.b != a.b", {"a.b": math.nan}, True),
+            ("a.b != null", {"a.b": []}, True),
+            ("true != '1'", {}, False),
+            ("a.b != 'x' && 'yes' || 'no'", {"a.b": "X"}, "no"),
+            # always() takes no argument and is true.
+            ("always()", {}, True),
+            ("always() && a.b", {"a.b": "x"}, "x"),
+            ("always() && a.b == 'x' && 'yes' || 'no'", {}, "no"),
         ):
             with self.subTest(expression, contexts=contexts):
                 self.assertEqual(evaluate(expression, contexts), value)
 
     def test_other_syntax_is_refused(self):
         for expression in (
-            "a != b",
+            "a !== b",
+            "a <> b",
+            "a != b != c",
+            "a == b != c",
             "!a",
+            "!always()",
+            "always(a)",
+            "success()",
             "a[0]",
             "1 == 1",
             "a == b == c",
@@ -597,6 +849,7 @@ class DocumentationTests(unittest.TestCase):
                 self.assertIn(phrase, header)
         _, jobs = workflows.read_workflow("pages.yml")
         self.assertEqual(workflows.yaml_scalar(jobs["guard"]["keys"]["name"][0], "name"), GUARD_JOB)
+        self.assertEqual(workflows.yaml_scalar(jobs[RERUN_CHECK]["keys"]["name"][0], "name"), RERUN_CHECK_NAME)
 
     def test_a_manual_run_is_shown_only_on_a_tag_whose_workflow_checks_the_release(self):
         # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG does not
