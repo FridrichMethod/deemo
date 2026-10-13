@@ -43,14 +43,15 @@ DEPLOY_CONDITION = (
     "(github.event_name == 'release' && github.event.action == 'published' && "
     "toJSON(github.event.release.prerelease) == 'false'))"
 )
-# The part of GitHub's expression language that the deploy condition uses: string, true, false and null literals,
-# context properties (null when absent), ==, && and || (each gives one of its operands, and takes false, 0, NaN, '' and
-# null for false, and anything else, an array or an object included, for true), parentheses, startsWith() and toJSON().
-# == compares two strings ignoring case and two values of one other type as they are; values of two types become
-# numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or NaN, an array or an
-# object NaN; NaN equals nothing). startsWith() casts both arguments to strings (null to '') and ignores case. Any other
-# syntax is an error.
-EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|&&|\|\||[(),])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
+# The part of GitHub's expression language that the conditions of pages.yml use: string, true, false and null literals,
+# context properties (null when absent), == and !=, && and || (each gives one of its operands, and takes false, 0, NaN,
+# '' and null for false, and anything else, an array or an object included, for true), parentheses, always(),
+# startsWith() and toJSON(). == compares two strings ignoring case and two values of one other type as they are; values
+# of two types become numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or
+# NaN, an array or an object NaN; NaN equals nothing), and != is true exactly when == is false. always() is true (in a
+# job's condition it is also a status function: GitHub then evaluates the condition whatever the jobs it needs did).
+# startsWith() casts both arguments to strings (null to '') and ignores case. Any other syntax is an error.
+EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|!=|&&|\|\||[(),])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
 JSON_NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
 LITERALS = {"true": True, "false": False, "null": None}
 
@@ -84,6 +85,7 @@ def equal(left, right):
 
 
 FUNCTIONS = {
+    "always": (0, lambda: True),
     "startsWith": (2, lambda text, prefix: as_text(text).casefold().startswith(as_text(prefix).casefold())),
     "toJSON": (1, lambda value: json.dumps(value, ensure_ascii=False)),
 }
@@ -103,7 +105,7 @@ def tokenize(expression):
 
 class Evaluation:
     """An expression evaluated with contexts. Each method reads the tokens from index on and gives the value of what it
-    read and the index after it: either() an || chain, both() an && chain, comparison() an == or one operand."""
+    read and the index after it: either() an || chain, both() an && chain, comparison() an == or a != or one operand."""
 
     def __init__(self, expression, contexts):
         self.expression, self.contexts, self.tokens = expression, contexts, tokenize(expression)
@@ -133,18 +135,22 @@ class Evaluation:
             raise ValueError(f"unsupported function {name}()")
         arity, function = FUNCTIONS[name]
         arguments = []
-        while not arguments or self.tokens[index][1] == ",":
-            value, index = self.either(index + 1)
-            arguments.append(value)
+        if self.tokens[index + 1][1] == ")":
+            index += 1  # no arguments: the ")" follows the "("
+        else:
+            while not arguments or self.tokens[index][1] == ",":
+                value, index = self.either(index + 1)
+                arguments.append(value)
         if len(arguments) != arity:
             raise ValueError(f"{name}() takes {arity} arguments")
         return function(*arguments), self.expect(index, ")")
 
     def comparison(self, index):
         value, index = self.operand(index)
-        if self.tokens[index][1] == "==":
+        operator = self.tokens[index][1]
+        if operator in ("==", "!="):
             right, index = self.operand(index + 1)
-            value = equal(value, right)
+            value = equal(value, right) if operator == "==" else not equal(value, right)
         return value, index
 
     def both(self, index):
@@ -535,14 +541,35 @@ class ExpressionTests(unittest.TestCase):
             ("a.b == null", {"a.b": []}, False),
             ("a.b == ''", {"a.b": {}}, False),
             ("('it''s' || a.b) == 'IT''S'", {}, True),
+            # != is true exactly when == is false, with the same casts: case, null and '', strings and numbers, NaN.
+            ("'Refs/Tags/V1' != 'refs/tags/v1'", {}, False),
+            ("a.b != '1'", {"a.b": "2"}, True),
+            ("a.b != '10'", {"a.b": "1"}, True),
+            ("a.b != ''", {}, False),
+            ("a.b != c.d", {"a.b": "2", "c.d": 2}, False),
+            ("a.b != c.d", {"a.b": "1", "c.d": 2}, True),
+            ("a.b != a.b", {"a.b": math.nan}, True),
+            ("a.b != null", {"a.b": []}, True),
+            ("true != '1'", {}, False),
+            ("a.b != 'x' && 'yes' || 'no'", {"a.b": "X"}, "no"),
+            # always() takes no argument and is true.
+            ("always()", {}, True),
+            ("always() && a.b", {"a.b": "x"}, "x"),
+            ("always() && a.b == 'x' && 'yes' || 'no'", {}, "no"),
         ):
             with self.subTest(expression, contexts=contexts):
                 self.assertEqual(evaluate(expression, contexts), value)
 
     def test_other_syntax_is_refused(self):
         for expression in (
-            "a != b",
+            "a !== b",
+            "a <> b",
+            "a != b != c",
+            "a == b != c",
             "!a",
+            "!always()",
+            "always(a)",
+            "success()",
             "a[0]",
             "1 == 1",
             "a == b == c",
