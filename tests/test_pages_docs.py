@@ -129,7 +129,8 @@ HEADER_RULES = (
 # tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release. Then,
 # until it accepted them only from tags from v1.1.2 on (2026-10-13): that it accepted them from v1.1.1 on, that the
 # workflow of an older tag does not look up the Release, and that a run on v1.1.1 takes a workflow whose deploy job does
-# not yet require the guard job's record of the current attempt, so such a run must be re-run whole.
+# not yet require the guard job's record of the current attempt, so such a run must be re-run whole. Each phrase is
+# kept out of its document read without case and with the line breaks of its comments joined (retired_phrases()).
 RETIRED_DEPLOYMENT_RULES = {
     "README.md": (
         "allows `v*` tags",
@@ -186,6 +187,13 @@ def flowing(text):
     """text with each run of white space and comment marks (#) taken as one space, so a phrase reads the same when the
     line breaks of a comment fall inside it."""
     return re.sub(r"[\s#]+", " ", text)
+
+
+def retired_phrases(document, text):
+    """The phrases of RETIRED_DEPLOYMENT_RULES[document] that text holds, read without case and with the line breaks of
+    its comments joined (flowing()), so a phrase wrapped across two comment lines is found too."""
+    read = flowing(text).casefold()
+    return [phrase for phrase in RETIRED_DEPLOYMENT_RULES[document] if phrase.casefold() in read]
 
 
 # Where a sentence of a deployment section or of the header comment ends: after a full stop and a space, but not after
@@ -305,9 +313,10 @@ class DocumentationTests(unittest.TestCase):
         # the Release, so none deploys a release again without it.
         for document, phrases in RETIRED_DEPLOYMENT_RULES.items():
             text = (ROOT / document).read_text(encoding="utf-8")
+            found = retired_phrases(document, text)
             for phrase in phrases:
                 with self.subTest(document=document, stale=phrase):
-                    self.assertNotIn(phrase, text)
+                    self.assertNotIn(phrase, found)
             stale = NO_LOOKUP_ON_A_RE_RUN[DOCUMENT_LANGUAGES[document]]
             with self.subTest(document=document, stale=stale.pattern):
                 self.assertEqual(stale.findall(flowing(text)), [])
@@ -315,6 +324,26 @@ class DocumentationTests(unittest.TestCase):
             for sentence in SENTENCE_END.split(described):
                 with self.subTest(document=document, sentence=sentence[:60]):
                     self.assertEqual(retired_rules(sentence), [])
+
+    def test_a_retired_phrase_is_found_in_other_case_and_across_a_comment_line_break(self):
+        # A comment of pages.yml may wrap at any space, at the left margin or indented in a job, and a phrase in other
+        # case is the same phrase; another phrase is not one.
+        workflow = ".github/workflows/pages.yml"
+        for document, text, found in (
+            (workflow, "# The environment allows\n# main.", ["allows main"]),
+            (workflow, "    # The environment allows\n    # main for now.", ["allows main"]),
+            (
+                workflow,
+                "    # A run on an older tag takes a workflow which\n    # does not look up the Release.",
+                ["which does not look up the Release"],
+            ),
+            (workflow, "# THE ENVIRONMENT ALLOWS MAIN.", ["allows main"]),
+            (workflow, "# The environment allows the main branch.", []),
+            ("README.md", "The environment allows\n`main`.", ["allows `main`"]),
+            ("README.zh-CN.md", "环境的部署规则只接受 `v1.1.1`\n及之后的标签。", ["`v1.1.1` 及之后"]),
+        ):
+            with self.subTest(text, document=document):
+                self.assertEqual(retired_phrases(document, text), found)
 
     def test_a_re_run_that_looks_up_no_release_is_recognised_in_other_words(self):
         # Each draft phrase and each of its other forms is found in its language, also across the line break of a
