@@ -203,7 +203,7 @@ SENTENCE_END = re.compile(r"(?<=\.)(?<![Ee]\.g\.)(?<![Ii]\.e\.)(?<![Cc]f\.)(?:(?
 # if it matches every pattern of that rule, read without case: it names the environment and main, or the environment
 # and every (any, all, each) v* tag; it says a manual run is for tags from some vX.Y.Z on (onwards, or later, and
 # newer, 及之后, 或之后, 以后, 或更新, 起; "on" only after "from", as "a manual run on v1.2.0 on the Actions page" is
-# not); or it says a run deploys again (once more, 再次, 再一次, 又一次), unless its clause names a re-run of the whole
+# not; 或更新 only before 的 or a punctuation mark, as 或更新 README, "or update README", is not); or it says a run deploys again (once more, 再次, 再一次, 又一次), unless its clause names a re-run of the whole
 # run before that, which does deploy the tag's commit again.
 ENVIRONMENT = re.compile(r"environment|环境", re.I)
 RETIRED_SENTENCES = {
@@ -218,7 +218,7 @@ RETIRED_SENTENCES = {
         re.compile(r"\bmanual(?:ly)?\b|\bby hand\b|手动", re.I),
         re.compile(
             rf"\bfrom\W+(?:\w+\W+)?{VERSION}`?\s*on\b"
-            rf"|{VERSION}`?\s*(?:onwards?\b|(?:or|and) (?:later|newer)\b|[及或]?(?:之后|以后)|或更新|起)",
+            rf"|{VERSION}`?\s*(?:onwards?\b|(?:or|and) (?:later|newer)\b|[及或]?(?:之后|以后)|或更新(?=的|[^\w\s`])|起)",
             re.I,
         ),
     ),
@@ -425,6 +425,11 @@ class DocumentationTests(unittest.TestCase):
             ("只手动运行 v1.1.1 或之后的标签。", [manual]),
             ("手动运行只适用于 `v1.1.1` 以后的标签。", [manual]),
             ("只应对 `v1.1.1` 或更新的标签手动运行。", [manual]),
+            ("手动运行仅限 `v1.1.1` 或更新。", [manual]),
+            # 或更新 before an object is "or update" it.
+            ("手动运行 `v1.1.3` 或更新 README 中的版本号。", []),
+            ("手动运行 `v1.1.3` 或更新该标签的 Release。", []),
+            ("手动运行 `v1.1.3` 或更新`README.md`。", []),
             ("手动运行仅限 `v1.1.1` 起的标签。", [manual]),
             # "on" after a tag counts only after "from".
             ("A manual run on `v1.2.0` on the Actions page deploys that tag's commit.", []),
