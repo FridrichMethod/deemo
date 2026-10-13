@@ -10,14 +10,16 @@ import re
 import unittest
 
 # The part of GitHub's expression language that the conditions of pages.yml use: string, true, false and null literals,
-# context properties (null when absent), == and !=, && and || (each gives one of its operands, and takes false, 0, NaN,
-# '' and null for false, and anything else, an array or an object included, for true), parentheses, always(),
-# startsWith() and toJSON(). == compares two strings ignoring case and two values of one other type as they are; values
-# of two types become numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or
-# NaN, an array or an object NaN; NaN equals nothing), and != is true exactly when == is false. always() is true (in a
-# job's condition it is also a status function: GitHub then evaluates the condition whatever the jobs it needs did).
-# startsWith() casts both arguments to strings (null to '') and ignores case. Any other syntax is an error.
-EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|!=|&&|\|\||[(),])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
+# context properties (null when absent), ! (true exactly when its operand is false, taken as && and || take it; it binds
+# tighter than == and !=), == and !=, && and || (each gives one of its operands, and takes false, 0, NaN, '' and null for
+# false, and anything else, an array or an object included, for true), parentheses, always(), cancelled(), startsWith()
+# and toJSON(). == compares two strings ignoring case and two values of one other type as they are; values of two types
+# become numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or NaN, an array
+# or an object NaN; NaN equals nothing), and != is true exactly when == is false. always() is true, and cancelled() is
+# true when the run was cancelled (the contexts say so under CANCELLED); in a job's condition both are status functions:
+# GitHub then evaluates the condition whatever the jobs it needs did. startsWith() casts both arguments to strings (null
+# to '') and ignores case. Any other syntax is an error.
+EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|!=|&&|\|\||[(),!])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
 JSON_NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
 LITERALS = {"true": True, "false": False, "null": None}
 
@@ -50,10 +52,14 @@ def equal(left, right):
     return left == right if type(left) is type(right) else as_number(left) == as_number(right)
 
 
+# Where the contexts say that the run was cancelled: no expression can name it, as a property path has no spaces.
+CANCELLED = "the run was cancelled"
+# Each function's number of arguments, and what it gives for the contexts and those arguments.
 FUNCTIONS = {
-    "always": (0, lambda: True),
-    "startsWith": (2, lambda text, prefix: as_text(text).casefold().startswith(as_text(prefix).casefold())),
-    "toJSON": (1, lambda value: json.dumps(value, ensure_ascii=False)),
+    "always": (0, lambda contexts: True),
+    "cancelled": (0, lambda contexts: contexts.get(CANCELLED) is True),
+    "startsWith": (2, lambda contexts, text, prefix: as_text(text).casefold().startswith(as_text(prefix).casefold())),
+    "toJSON": (1, lambda contexts, value: json.dumps(value, ensure_ascii=False)),
 }
 
 
@@ -71,7 +77,8 @@ def tokenize(expression):
 
 class Evaluation:
     """An expression evaluated with contexts. Each method reads the tokens from index on and gives the value of what it
-    read and the index after it: either() an || chain, both() an && chain, comparison() an == or a != or one operand."""
+    read and the index after it: either() an || chain, both() an && chain, comparison() an == or a != or one operand,
+    operand() a literal, a property, a call, a parenthesised expression or ! and its operand."""
 
     def __init__(self, expression, contexts):
         self.expression, self.contexts, self.tokens = expression, contexts, tokenize(expression)
@@ -86,6 +93,9 @@ class Evaluation:
         if operator == "(":
             value, index = self.either(index + 1)
             return value, self.expect(index, ")")
+        if operator == "!":
+            value, index = self.operand(index + 1)
+            return not truthy(value), index
         if string is not None:
             return string[1:-1].replace("''", "'"), index + 1
         if name is None:
@@ -109,7 +119,7 @@ class Evaluation:
                 arguments.append(value)
         if len(arguments) != arity:
             raise ValueError(f"{name}() takes {arity} arguments")
-        return function(*arguments), self.expect(index, ")")
+        return function(self.contexts, *arguments), self.expect(index, ")")
 
     def comparison(self, index):
         value, index = self.operand(index)
@@ -196,6 +206,28 @@ class ExpressionTests(unittest.TestCase):
             ("always()", {}, True),
             ("always() && a.b", {"a.b": "x"}, "x"),
             ("always() && a.b == 'x' && 'yes' || 'no'", {}, "no"),
+            # cancelled() takes no argument and is true only when the contexts say the run was cancelled.
+            ("cancelled()", {}, False),
+            ("cancelled()", {CANCELLED: True}, True),
+            ("cancelled()", {CANCELLED: "true"}, False),
+            # ! gives true or false: true exactly for what && and || take for false. It binds tighter than ==, !=, &&
+            # and ||, and applies to a parenthesised expression or a call as a whole.
+            ("!a.b", {}, True),
+            ("!a.b", {"a.b": ""}, True),
+            ("!a.b", {"a.b": "x"}, False),
+            ("!a.b", {"a.b": 0}, True),
+            ("!a.b", {"a.b": []}, False),
+            ("toJSON(!a.b)", {"a.b": "x"}, "false"),
+            ("!!a.b", {"a.b": "x"}, True),
+            ("! a.b", {"a.b": "x"}, False),
+            ("!a.b == true", {"a.b": "0"}, False),
+            ("!a.b != false", {"a.b": "0"}, False),
+            ("!a.b && 'yes' || 'no'", {"a.b": ""}, "yes"),
+            ("!(a.b == 'x')", {"a.b": "X"}, False),
+            ("!always()", {}, False),
+            ("!cancelled()", {}, True),
+            ("!cancelled()", {CANCELLED: True}, False),
+            ("!cancelled() && a.b == 'x'", {"a.b": "x"}, True),
         ):
             with self.subTest(expression, contexts=contexts):
                 self.assertEqual(evaluate(expression, contexts), value)
@@ -206,9 +238,13 @@ class ExpressionTests(unittest.TestCase):
             "a <> b",
             "a != b != c",
             "a == b != c",
-            "!a",
-            "!always()",
+            "!",
+            "a !",
+            "a ! b",
+            "!= a",
+            "!(a",
             "always(a)",
+            "cancelled(a)",
             "success()",
             "a[0]",
             "1 == 1",

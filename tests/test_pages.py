@@ -30,7 +30,7 @@ pages = load("prepare_pages", "scripts/prepare_pages.py")
 workflows = load("test_tooling", "tests/test_tooling.py")
 # The reader of the expressions in the jobs' conditions, which reads them as GitHub does.
 expressions = load("test_pages_expressions", "tests/test_pages_expressions.py")
-evaluate, truthy = expressions.evaluate, expressions.truthy
+evaluate, truthy, CANCELLED = expressions.evaluate, expressions.truthy, expressions.CANCELLED
 
 # The deploy job's condition, verbatim. The expression language has no regular expressions, so this only requires a tag
 # ref that starts with v, from a published full release or a manual run; the guard steps check the whole vX.Y.Z tag.
@@ -94,11 +94,11 @@ RE_RUNS = {
 # The job that fails an attempt that did not run the guard job, as the Actions page names it, and its condition and its
 # one step, verbatim. The deploy job skips such an attempt (RE_RUNS), which would then end green with nothing deployed.
 # GitHub re-runs a job together with every job that needs it, so a re-run of the deploy job, or of any job before it but
-# the guard job, runs this job too. always() makes GitHub evaluate its condition whatever the jobs it needs did, and
-# the condition holds when the guard job succeeded and its attempt output is not the run's attempt: only when the
-# attempt kept the guard job's outputs of an earlier one (RERUN_CHECKS, RUNS).
+# the guard job, runs this job too. !cancelled() makes GitHub evaluate its condition whatever the jobs it needs did,
+# unless the run was cancelled, and the condition holds when the guard job succeeded and its attempt output is not the
+# run's attempt: only when the attempt kept the guard job's outputs of an earlier one (RERUN_CHECKS, RUNS).
 RERUN_CHECK, RERUN_CHECK_NAME = "rerun-check", "Re-run check"
-RERUN_CONDITION = "always() && needs.guard.result == 'success' && needs.guard.outputs.attempt != github.run_attempt"
+RERUN_CONDITION = "!cancelled() && needs.guard.result == 'success' && needs.guard.outputs.attempt != github.run_attempt"
 RERUN_ERROR = (
     "::error::This attempt did not run the Release guard job, so it deployed nothing. Re-run all jobs to deploy the"
     " release."
@@ -116,9 +116,9 @@ def checking(run_attempt, result, **outputs):
 
 
 # Attempts of a run and whether the re-run check job's condition holds in them. It does not in an attempt that ran the
-# guard job, nor after a guard job that refused the run or was cancelled; it does in an attempt that kept the guard
-# job's outputs of an earlier one, and if those outputs ever lacked the attempt. GitHub's run_attempt is a string; as a
-# number it would compare the same.
+# guard job, nor after a guard job that refused the run or was cancelled, nor in a cancelled run; it does in an attempt
+# that kept the guard job's outputs of an earlier one, and if those outputs ever lacked the attempt. GitHub's run_attempt
+# is a string; as a number it would compare the same.
 RERUN_CHECKS = {
     "the first attempt": (checking("1", "success", commit=COMMIT, attempt="1"), False),
     "a re-run of all jobs": (checking("2", "success", commit=COMMIT, attempt="2"), False),
@@ -136,20 +136,30 @@ RERUN_CHECKS = {
         checking(2, "success", commit=COMMIT, attempt="1"),
         True,
     ),
+    "a re-run that kept the guard job of attempt 1, cancelled": (
+        {**checking("2", "success", commit=COMMIT, attempt="1"), CANCELLED: True},
+        False,
+    ),
+    "a re-run of all jobs, cancelled": (
+        {**checking("2", "success", commit=COMMIT, attempt="2"), CANCELLED: True},
+        False,
+    ),
 }
 # A condition that calls none of these runs its job only if every job it needs succeeded (GitHub adds success()).
 STATUS_FUNCTION = re.compile(r"\b(?:always|success|failure|cancelled)\s*\(")
 
 
-def run_attempt(jobs, number, event, previous=None, again=(), failing=()):
+def run_attempt(jobs, number, event, previous=None, again=(), failing=(), cancelled=False):
     """({job id: (result, outputs)}, [the jobs that ran]) for attempt `number` of a run of pages.yml on v1.1.2 that
     event started, as GitHub runs it. jobs maps each job id to (its needs, its condition), in the order they run.
 
     A first attempt (previous None) runs every job. A re-run runs again the jobs in `again` and every job that needs one
-    of them, and keeps the result and the outputs of every other job of `previous`, the attempt it repeats. A job that
-    runs is skipped if its condition does not hold, or calls no status function and a job it needs did not succeed.
-    Otherwise it fails if it is in `failing`, or is the re-run check job, whose one step exits 1 (RERUN_STEP), and
-    succeeds if not; the guard job then records the run's commit and the attempt, as its approve step does."""
+    of them, and keeps the result and the outputs of every other job of `previous`, the attempt it repeats. In an
+    attempt that someone cancelled before its jobs ran (cancelled), cancelled() is true, and a job that would run is
+    cancelled unless its condition calls a status function. A job that runs is skipped if its condition does not hold,
+    or calls no status function and a job it needs did not succeed. Otherwise it fails if it is in `failing`, or is the
+    re-run check job, whose one step exits 1 (RERUN_STEP), and succeeds if not; the guard job then records the run's
+    commit and the attempt, as its approve step does."""
     again, results, ran = set(jobs if previous is None else again), {}, []
     for job_id, (needs, condition) in jobs.items():
         if again & set(needs):
@@ -157,13 +167,16 @@ def run_attempt(jobs, number, event, previous=None, again=(), failing=()):
         if job_id not in again:
             results[job_id] = previous[job_id]
             continue
-        contexts = deployment(str(number), event)
+        contexts = {**deployment(str(number), event), CANCELLED: cancelled}
         for need in needs:
             result, outputs = results[need]
             contexts[f"needs.{need}.result"] = result
             contexts.update({f"needs.{need}.outputs.{name}": value for name, value in outputs.items()})
-        ready = STATUS_FUNCTION.search(condition) or all(results[need][0] == "success" for need in needs)
-        if not (ready and truthy(evaluate(condition or "true", contexts))):
+        status = STATUS_FUNCTION.search(condition)
+        ready = status or all(results[need][0] == "success" for need in needs)
+        if cancelled and not status:
+            results[job_id] = ("cancelled", {})
+        elif not (ready and truthy(evaluate(condition or "true", contexts))):
             results[job_id] = ("skipped", {})
         elif job_id in failing or job_id == RERUN_CHECK:
             ran.append(job_id)
@@ -178,8 +191,10 @@ def run_attempt(jobs, number, event, previous=None, again=(), failing=()):
 # and whether it ran the re-run check job. A first attempt re-runs nothing (None); "all" is "Re-run all jobs", "failed"
 # "Re-run failed jobs" (the jobs that failed in the attempt it repeats), and a job id "Re-run this job" on that job. A
 # run that only the guard job's record of an earlier attempt kept from deploying fails in the re-run check job; a run
-# that the guard job refused fails in the guard job and does not run the re-run check job.
-FIRST = (None, ())
+# that the guard job refused fails in the guard job and does not run the re-run check job. An attempt whose failing
+# jobs are CANCEL was cancelled by hand before its jobs ran: it deploys nothing, ends cancelled and does not run the
+# re-run check job either.
+FIRST, CANCEL = (None, ()), "cancelled by hand"
 RUNS = {
     "the first attempt of a release's run": ("release", [FIRST], (True, False)),
     "the first attempt of a manual run": ("workflow_dispatch", [FIRST], (True, False)),
@@ -248,7 +263,46 @@ RUNS = {
         [(None, ("guard",)), ("deploy", ())],
         (False, False),
     ),
+    "a first attempt that is cancelled": ("release", [(None, CANCEL)], (False, False)),
+    "a re-run of all jobs that is cancelled": ("release", [FIRST, ("all", CANCEL)], (False, False)),
+    "a re-run of the deploy job alone that is cancelled": ("release", [FIRST, ("deploy", CANCEL)], (False, False)),
+    "a re-run of the failed jobs after the build job failed, cancelled": (
+        "release",
+        [(None, ("build",)), ("failed", CANCEL)],
+        (False, False),
+    ),
 }
+
+
+def job_graph(jobs):
+    """{job id: (its needs, its condition)} of the jobs of a workflow as read_workflow() gives them, in their order."""
+
+    def condition(job):
+        return workflows.block_text(*job["keys"]["if"]) if "if" in job["keys"] else ""
+
+    def needs(job):
+        value = workflows.yaml_scalar(job["keys"].get("needs", ("",))[0], "needs")
+        return value if isinstance(value, list) else [value] if value else []
+
+    return {job_id: (needs(job), condition(job)) for job_id, job in jobs.items()}
+
+
+def play(jobs, event, attempts):
+    """run_attempt()'s ({job id: (result, outputs)}, [the jobs that ran]) for the last of attempts (as in RUNS) of a run
+    of the jobs (job_graph()) that event started."""
+    results = None
+    for number, (rerun, failing) in enumerate(attempts, 1):
+        if rerun is None:
+            again = set()  # a first attempt runs every job
+        elif rerun == "failed":
+            again = {job_id for job_id, (result, _) in results.items() if result == "failure"}
+        else:
+            again = set(jobs) if rerun == "all" else {rerun}
+        cancelled = failing == CANCEL
+        results, ran = run_attempt(jobs, number, event, results, again, () if cancelled else failing, cancelled)
+    return results, ran
+
+
 # The guard steps of both jobs by role, in the order they run. In tests/test_pages_guards.py its Checkout class stands
 # in for the checkout step.
 GUARD_STEPS = (
@@ -368,32 +422,30 @@ class WorkflowTests(unittest.TestCase):
         # The jobs of pages.yml run as GitHub runs them (run_attempt()) in first attempts and re-runs (RUNS): an attempt
         # that ran the guard job deploys unless a job fails or the guard job refuses the run, and skips the re-run check
         # job; an attempt that kept the guard job's record of an earlier one deploys nothing and fails in the re-run
-        # check job. So no attempt ends green without deploying.
-        def condition(job):
-            return workflows.block_text(*job["keys"]["if"]) if "if" in job["keys"] else ""
-
-        def needs(job):
-            value = workflows.yaml_scalar(job["keys"].get("needs", ("",))[0], "needs")
-            return value if isinstance(value, list) else [value] if value else []
-
-        jobs = {job_id: (needs(job), condition(job)) for job_id, job in self.jobs.items()}
+        # check job, unless someone cancelled it. So no attempt ends green (no job failed or was cancelled) without
+        # deploying.
+        jobs = job_graph(self.jobs)
         for scenario, (event, attempts, (deploys, checks)) in RUNS.items():
             with self.subTest(scenario):
-                results = None
-                for number, (rerun, failing) in enumerate(attempts, 1):
-                    if rerun is None:
-                        again = set()  # a first attempt runs every job
-                    elif rerun == "failed":
-                        again = {job_id for job_id, (result, _) in results.items() if result == "failure"}
-                    else:
-                        again = set(jobs) if rerun == "all" else {rerun}
-                    results, ran = run_attempt(jobs, number, event, results, again, failing)
+                results, ran = play(jobs, event, attempts)
                 deployed = "deploy" in ran and results["deploy"][0] == "success"
-                green = all(result != "failure" for result, _ in results.values())
+                green = all(result not in ("failure", "cancelled") for result, _ in results.values())
                 self.assertIs(green, deployed, "an attempt ends green only if it deployed")
                 self.assertEqual((deployed, RERUN_CHECK in ran), (deploys, checks))
                 if checks:
                     self.assertEqual(results[RERUN_CHECK][0], "failure")
+
+    def test_only_always_would_run_the_re_run_check_job_in_a_cancelled_re_run(self):
+        # With always() instead of !cancelled(), the re-run check job would run in a re-run of the deploy job alone that
+        # someone cancelled, and add its error to the cancelled run; run_attempt() tells the two conditions apart.
+        jobs = job_graph(self.jobs)
+        needs, condition = jobs[RERUN_CHECK]
+        always = {**jobs, RERUN_CHECK: (needs, condition.replace("!cancelled()", "always()", 1))}
+        cancelled = [FIRST, ("deploy", CANCEL)]
+        self.assertNotIn(RERUN_CHECK, play(jobs, "release", cancelled)[1])
+        results, ran = play(always, "release", cancelled)
+        self.assertIn(RERUN_CHECK, ran)
+        self.assertEqual(results[RERUN_CHECK][0], "failure")
 
     def test_only_the_deploy_job_deploys_and_only_for_a_release_tag(self):
         deployers = [

@@ -339,16 +339,16 @@ jobs:
   rerun-check:
     # A re-run that leaves out the guard job (the deploy job alone, or the failed jobs after the test, build or deploy
     # job failed) skips the deploy job, and would end green with nothing deployed. GitHub re-runs a job together with
-    # every job that needs it, so such a re-run runs this job too, and it fails the run with the reason. always() has
-    # GitHub evaluate the condition whatever the jobs it needs did; it holds only if the guard job succeeded and its
-    # outputs name another attempt than this one, as they do when a re-run keeps them from the attempt it repeats. So
-    # this job is skipped in an attempt that ran the guard job, whether the deploy job deployed or not, and in a run
-    # that the guard job refused. It needs every job before it, as the deploy job does, runs no checkout and no action,
-    # and has no permissions.
+    # every job that needs it, so such a re-run runs this job too, and it fails the run with the reason. !cancelled()
+    # has GitHub evaluate the condition whatever the jobs it needs did, unless the run was cancelled; it holds only if
+    # the guard job succeeded and its outputs name another attempt than this one, as they do when a re-run keeps them
+    # from the attempt it repeats. So this job is skipped in an attempt that ran the guard job, whether the deploy job
+    # deployed or not, in a run that the guard job refused, and in a cancelled run. It needs every job before it, as the
+    # deploy job does, runs no checkout and no action, and has no permissions.
     name: Re-run check
     needs: [guard, test, build, deploy]
     if: >-
-      always() && needs.guard.result == 'success' &&
+      !cancelled() && needs.guard.result == 'success' &&
       needs.guard.outputs.attempt != github.run_attempt
     runs-on: ubuntu-latest
     timeout-minutes: 1

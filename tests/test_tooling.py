@@ -694,8 +694,8 @@ class WorkflowTests(unittest.TestCase):
         # guard -> test (all of tests.yml) -> build (the artifact) -> deploy. None of the jobs up to the deploy job has an
         # if: that could run it after an earlier one failed: a job runs only when every job it needs succeeded, unless its
         # condition calls a status function (the deploy job's condition, pinned in tests/test_pages.py, calls none). The
-        # re-run check job comes after them all; its condition calls always(), but it has no permissions and only fails
-        # the run (pinned in tests/test_pages.py).
+        # re-run check job comes after them all; its condition calls !cancelled(), but it has no permissions and only
+        # fails the run (pinned in tests/test_pages.py).
         _, jobs = self.workflows["pages.yml"]
 
         def needs(job_id):
