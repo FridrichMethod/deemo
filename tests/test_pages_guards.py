@@ -29,11 +29,12 @@ def load(name, relative):
     return module
 
 
-# The workflow reader of the tooling tests (see tests/test_pages.py), and the guard steps of both jobs by role, the
-# guard job's last step, the re-run check job and its error, and the expression evaluator of the workflow tests in
-# tests/test_pages.py.
+# The workflow reader of the tooling tests (see tests/test_pages.py); the guard steps of both jobs by role, the guard
+# job's last step, the re-run check job and its error, from tests/test_pages.py; and the expression evaluator of the
+# workflow tests (tests/test_pages_expressions.py).
 workflows = load("test_tooling", "tests/test_tooling.py")
 structure = load("test_pages", "tests/test_pages.py")
+expressions = load("test_pages_expressions", "tests/test_pages_expressions.py")
 GUARD_STEPS, APPROVE = structure.GUARD_STEPS, structure.APPROVE
 RERUN_CHECK, RERUN_ERROR = structure.RERUN_CHECK, structure.RERUN_ERROR
 # The only contexts the guard steps may read. GitHub renders a property the event does not have as an empty string.
@@ -410,10 +411,10 @@ class GuardTests(unittest.TestCase):
                     self.assertEqual(approved, {"commit": self.checkout.commits["tip"], "attempt": attempt})
                     for deploy_attempt in (attempt, str(int(attempt) + 1)):
                         deployment = self.deployment(contexts, approved, deploy_attempt)
-                        deploys = structure.truthy(structure.evaluate(self.condition, deployment))
+                        deploys = expressions.truthy(expressions.evaluate(self.condition, deployment))
                         self.assertIs(deploys, deploy_attempt == attempt, f"the deploy job in attempt {deploy_attempt}")
                         checking = {**deployment, "needs.guard.result": "success"}
-                        checks = structure.truthy(structure.evaluate(self.rerun_condition, checking))
+                        checks = expressions.truthy(expressions.evaluate(self.rerun_condition, checking))
                         self.assertIs(checks, not deploys, f"the re-run check job in attempt {deploy_attempt}")
 
     def test_a_run_the_guard_job_refused_does_not_run_the_re_run_check_job(self):
@@ -426,9 +427,9 @@ class GuardTests(unittest.TestCase):
                 self.assertIsNone(approved)
                 for attempt in ("1", "2"):
                     deployment = self.deployment(contexts, {}, attempt)
-                    self.assertFalse(structure.truthy(structure.evaluate(self.condition, deployment)))
+                    self.assertFalse(expressions.truthy(expressions.evaluate(self.condition, deployment)))
                     checking = {**deployment, "needs.guard.result": "failure"}
-                    self.assertFalse(structure.truthy(structure.evaluate(self.rerun_condition, checking)))
+                    self.assertFalse(expressions.truthy(expressions.evaluate(self.rerun_condition, checking)))
 
     def test_the_re_run_check_job_fails_with_its_reason(self):
         # Its one step, run as GitHub runs it, prints the error annotation alone and exits 1, whatever the attempt.
