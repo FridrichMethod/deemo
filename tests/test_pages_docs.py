@@ -443,6 +443,10 @@ class DocumentationTests(unittest.TestCase):
             # A re-run of the whole run does deploy again, but only a clause that names it first is about it.
             ("A re-run of the whole run deploys the tag's commit again.", []),
             ("重新运行整次运行会再次部署该标签的提交。", []),
+            # Only a re-run of the whole run: another re-run that is said to deploy again is the false claim itself.
+            ("A re-run of the deploy job alone deploys the tag's commit again.", [again]),
+            ("A re-run of the failed jobs deploys the release again.", [again]),
+            ("只重新运行部署任务会再次部署该标签的提交。", [again]),
             ("A manual run deploys it again, as a re-run of the whole run does.", [again]),
             ("A re-run of the whole run checks the Release, and a manual run deploys it again.", [again]),
             ("A re-run of the whole run checks the Release; a manual run deploys it again.", [again]),
