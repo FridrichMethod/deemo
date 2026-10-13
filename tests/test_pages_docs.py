@@ -227,26 +227,31 @@ def retired_phrases(document, text):
 # "e.g.", "i.e." or "cf.", and after "etc." only if a capital letter follows; or after 。.
 SENTENCE_END = re.compile(r"(?<=\.)(?<![Ee]\.g\.)(?<![Ii]\.e\.)(?<![Cc]f\.)(?:(?<!etc\.)\s+|\s+(?=[A-Z]))|(?<=。)")
 # The same retired rules in other words. A sentence of a deployment section or of the header comment brings one back if
-# it matches every pattern of that rule, read without case: it names the environment and main (not as what a refusal
-# refuses, REFUSED_MAIN), or the environment and every (any, all, each) v* tag; it says a manual run is for tags from
-# some vX.Y.Z on (onwards, or later, and newer, 及之后, 或之后, 以后, 或更新, 起; "on" only after "from", as "a manual
-# run on v1.2.0 on the Actions page" is not; 或更新 only before 的 or a punctuation mark, as 或更新 README, "or update
-# README", is not); or it says a run deploys again (once more, 再次, 再一次, 又一次), unless its clause names a re-run
-# of the whole run before that, which does deploy the tag's commit again.
+# it matches every pattern of that rule, read without case: it names the environment and main, unless all it says is
+# that the environment refuses main (ENVIRONMENT_REFUSES_MAIN), or the environment and every (any, all, each) v* tag;
+# it says a manual run is for tags from some vX.Y.Z on (onwards, or later, and newer, 及之后, 或之后, 以后, 或更新, 起;
+# "on" only after "from", as "a manual run on v1.2.0 on the Actions page" is not; 或更新 only before 的 or a punctuation
+# mark, as 或更新 README, "or update README", is not); or it says a run deploys again (once more, 再次, 再一次, 又一次),
+# unless its clause names a re-run of the whole run before that, which does deploy the tag's commit again.
 ENVIRONMENT = re.compile(r"environment|环境", re.I)
-# main as a word, and main as what a refusal refuses: rejects or refuses (the) main, does not accept main, 拒绝 main or
-# 不接受 main, which states the environment's rule; a negated refusal (does not reject, never refuses, 不拒绝, 未拒绝,
-# 没有拒绝) is none.
 MAIN = r"(?<![a-z])main(?![a-z])"
-REFUSED_MAIN = (
-    rf"(?:(?<!not )(?<!never )(?<!n't )(?:rejects?|refuses?)|does not accept|(?<![不未])(?<!没有)拒绝|不接受)"
-    rf"\W*(?:the\W+)?{MAIN}"
+# A whole sentence that says the environment refuses main and nothing that could make it false: the environment or its
+# rules as the subject, right before the refusal (rejects, refuses, does not accept, 拒绝, 不接受), so that no negation,
+# hedge or "no longer" stands between them; (the) main (branch, 分支) right after the refusal; then at most the other tags
+# it refuses, "and every tag older than `v1.1.2`" (和早于 `v1.1.2` 的所有标签), and a full stop. A word before the
+# subject, between the subject and the refusal or between the refusal and main, and anything else after main leave the
+# sentence to the rule, as does an adverb such as also, always or 也: such a sentence must be put another way.
+FIRST_CHECKED = re.escape(FIRST_CHECKED_TAG)
+ENVIRONMENT_REFUSES_MAIN = (
+    r"\s*(?:the\s+|该\s*)?(?:`?github-pages`?\s*)?(?:environment|环境)(?:'s\s+rules|\s+rules|的(?:部署)?规则)?\s*"
+    r"(?:rejects?|refuses?|does\s+not\s+accept|拒绝|不接受)\s*(?:the\s+)?`?main`?(?:\s*(?:branch|分支))?"
+    rf"(?:\s+and\s+every\s+tag\s+older\s+than\s+`?{FIRST_CHECKED}`?|\s*和早于\s*`?{FIRST_CHECKED}`?\s*的所有标签)?[.。]?"
 )
 RETIRED_SENTENCES = {
-    # A main that no refusal refuses: from the start of the sentence, a refusal of main is passed over whole.
+    # A main in a sentence that says more than that the environment refuses main, or says it in other words.
     "the environment and main": (
         ENVIRONMENT,
-        re.compile(rf"^(?:(?!{MAIN}|{REFUSED_MAIN})[\s\S]|{REFUSED_MAIN})*?{MAIN}", re.I),
+        re.compile(rf"^(?!{ENVIRONMENT_REFUSES_MAIN}\Z)[\s\S]*?{MAIN}", re.I),
     ),
     "the environment and every v* tag": (
         ENVIRONMENT,
@@ -440,24 +445,63 @@ class DocumentationTests(unittest.TestCase):
             ("The `github-pages` environment remains as it is.", []),
             ("The environment's domain is github.io.", []),
             ("The environment is maintained by the admins.", []),
-            # A sentence that says the environment refuses main states its rule.
+            # A sentence that says only that the environment refuses main states its rule, in each form the pattern
+            # knows.
             ("The environment rejects `main` and every tag older than `v1.1.2`.", []),
             ("The environment refuses main.", []),
+            ("The `github-pages` environment rejects the `main` branch.", []),
+            ("The github-pages environment does not accept main.", []),
             ("The environment's rules reject `main`.", []),
             ("The environment rules refuse the `main` branch.", []),
             ("The environment does not accept `main`.", []),
+            ("Environment rules refuse the main branch and every tag older than v1.1.2.", []),
             ("该环境拒绝 `main`。", []),
             ("该环境不接受 `main` 分支。", []),
-            # Only main itself, as what is refused, and no negated refusal.
+            ("该 `github-pages` 环境不接受 `main` 分支。", []),
+            ("环境的部署规则拒绝 `main` 和早于 `v1.1.2` 的所有标签。", []),
+            ("环境的规则拒绝main分支和早于v1.1.2的所有标签。", []),
+            ("该环境拒绝 `main`。\n\n该环境不接受 `main`。", []),
+            ("The environment refuses main", []),
+            # These two are true as well, but an adverb stands between the subject and the refusal, so they are taken
+            # for the claim (known false positives): put such a sentence another way.
+            ("The environment also rejects `main`.", [main]),
+            ("该环境也拒绝 `main`。", [main]),
+            # Every other sentence that names main is taken for it: one that says the environment accepts main after
+            # a refusal of something else or of main itself, or in a clause of its own; a refusal by another subject;
+            # a refusal with a negation, a hedge or "no longer" in front of it, or one that a word before the subject
+            # denies; a refusal of something other than main; and one that names other tags than those it refuses.
             ("The environment rejects old tags and accepts `main`.", [main]),
             ("The environment rejects `v1.1.1`; it accepts `main`.", [main]),
             ("环境拒绝旧标签，但接受 `main`。", [main]),
+            ("The environment refuses main and also accepts main.", [main]),
+            ("The environment rejects `main` and accepts it.", [main]),
+            ("The environment rejects `main`, but accepts `main` for manual runs.", [main]),
+            ("The environment refuses main.It accepts main.", [main]),
+            ("该环境拒绝 `main` 以外的分支。", [main]),
+            ("The guard job refuses `main`, but the environment accepts it.", [main]),
+            ("Release guard 任务拒绝 `main`，但环境接受它。", [main]),
             ("The environment does not reject `main`.", [main]),
             ("The environment never rejects `main`.", [main]),
             ("The environment doesn't refuse `main`.", [main]),
+            ("The environment no longer rejects `main`.", [main]),
+            ("The environment doesn't ever reject `main`.", [main]),
+            ("The environment does not always reject `main`.", [main]),
             ("该环境不拒绝 `main`。", [main]),
             ("该环境并未拒绝 `main`。", [main]),
             ("该环境没有拒绝 `main`。", [main]),
+            ("该环境不会拒绝 `main`。", [main]),
+            ("该环境不再拒绝 `main`。", [main]),
+            ("该环境没拒绝 `main`。", [main]),
+            ("该环境不能拒绝 `main`。", [main]),
+            ("该环境无法拒绝 `main`。", [main]),
+            ("该环境不曾拒绝 `main`。", [main]),
+            ("该环境没再拒绝 `main`。", [main]),
+            ("该环境已不再拒绝 `main`。", [main]),
+            ("It is not true that the environment refuses main.", [main]),
+            ("The environment rejects non-main.", [main]),
+            ("该环境拒绝非 `main` 分支。", [main]),
+            ("The environment rejects `main` and every tag older than `v1.1.3`.", [main]),
+            ("该环境拒绝 `main` 和早于 `v1.1.3` 的所有标签。", [main]),
             # No sentence ends at an abbreviation.
             ("The `github-pages` environment, e.g. for `main`, accepts it.", [main]),
             ("The environment covers one branch, E.g. `main`.", [main]),
