@@ -114,9 +114,10 @@ HEADER_RULES = (
     "Every run, whichever of the two started it, first asks for the tag's Release",
     "one read-only GitHub API request",
     "a re-run keeps the event of the run it repeats",
-    "a re-run that leaves out the guard job, such as one of the deploy job alone, deploys nothing, because the deploy"
-    " job requires the guard job's record of the current attempt, and fails with the re-run check job's error that the"
-    " attempt did not run the guard job and deployed nothing; re-run the whole run",
+    "A re-run that leaves out the guard job, such as one of the deploy job alone, deploys nothing, because the deploy"
+    " job requires the guard job's record of the current attempt.",
+    "Such a re-run fails in the re-run check job, with an error that says the attempt did not run the guard job and"
+    " deployed nothing; re-run the whole run.",
     "It gives the commit of a run that passes all of this, and the run's attempt, as its outputs",
     "the commit the guard job approved in the same attempt",
     "three numbers without leading zeros",
@@ -124,13 +125,38 @@ HEADER_RULES = (
     f"the github-pages environment accepts deployments only from tags from {FIRST_CHECKED_TAG} on",
     "the two keep anyone but an admin from deploying through the github-pages environment with a workflow of their own",
 )
+# What the comments of the deploy job and of the re-run check job say about a re-run without the guard job: why the
+# deploy job deploys nothing in it and that the re-run check job fails it; when the re-run check job runs, as GitHub
+# runs it, and why its condition holds only in such a re-run; and what it may not do. Each comment is read at the job's
+# own indent, its lines joined with spaces.
+JOB_COMMENTS = {
+    "deploy": (
+        "The commit must be the one the guard job approved, in this attempt of the run: a re-run that leaves out the"
+        " guard job, such as one of the deploy job alone, keeps the guard job's outputs of the attempt it repeats, so"
+        " it deploys nothing, and the re-run check job below fails it.",
+    ),
+    RERUN_CHECK: (
+        "A re-run that leaves out the guard job (the deploy job alone, or the failed jobs after the test, build or"
+        " deploy job failed) skips the deploy job, and would end green with nothing deployed.",
+        "GitHub re-runs a job together with every job that needs it, so such a re-run runs this job too, and it fails"
+        " the run with the reason.",
+        "!cancelled() has GitHub evaluate the condition whatever the jobs it needs did, unless the run was cancelled;"
+        " it holds only if the guard job succeeded and its outputs name another attempt than this one, as they do when"
+        " a re-run keeps them from the attempt it repeats.",
+        "So this job is skipped in an attempt that ran the guard job, whether the deploy job deployed or not, in a run"
+        " that the guard job refused, and in a cancelled run.",
+        "It needs every job before it, as the deploy job does, runs no checkout and no action, and has no permissions.",
+    ),
+}
 # What the READMEs and the comments of pages.yml said before the github-pages environment accepted deployments only
 # from tags from v1.1.1 on (2026-10-12): an environment rule that allows every v* tag or main, a request to run only
 # tags from v1.1.1 on by hand, and a manual run that deploys a release again without looking up its Release. Then,
 # until it accepted them only from tags from v1.1.2 on (2026-10-13): that it accepted them from v1.1.1 on, that the
 # workflow of an older tag does not look up the Release, and that a run on v1.1.1 takes a workflow whose deploy job does
-# not yet require the guard job's record of the current attempt, so such a run must be re-run whole. Each phrase is
-# kept out of its document read without case and with the line breaks of its comments joined (retired_phrases()).
+# not yet require the guard job's record of the current attempt, so such a run must be re-run whole. And a clause of
+# the header that could be read as the deploy job failing ("deploys nothing, because ..., and fails with the re-run
+# check job's error"). Each phrase is kept out of its document read without case and with the line breaks of its
+# comments joined (retired_phrases()).
 RETIRED_DEPLOYMENT_RULES = {
     "README.md": (
         "allows `v*` tags",
@@ -165,6 +191,7 @@ RETIRED_DEPLOYMENT_RULES = {
         "deploys it again",
         "deploys that commit again",
         "does not look up the tag's Release, so",
+        "and fails with the re-run check job's error",
         "from v1.1.1 on",
         "which does not look up the Release",
         "A run on v1.1.1 takes v1.1.1's workflow",
@@ -264,6 +291,11 @@ class DocumentationTests(unittest.TestCase):
         lines = (ROOT / ".github/workflows/pages.yml").read_text(encoding="utf-8").splitlines()
         return " ".join(line.removeprefix("# ") for line in lines[: lines.index("on:")] if line.startswith("#"))
 
+    def job_comment(self, job_id):
+        """The comment lines of a job of pages.yml at the job's own indent, joined with spaces."""
+        _, jobs = workflows.read_workflow("pages.yml")
+        return " ".join(line.removeprefix("    # ") for line in jobs[job_id]["lines"] if line.startswith("    # "))
+
     def test_both_readmes_describe_the_release_model(self):
         # Releases are vX.Y.Z tags, a manual run on the tag redeploys one, and both READMEs name the same current
         # release, linked to its page; the budget sentence stays.
@@ -297,6 +329,13 @@ class DocumentationTests(unittest.TestCase):
         _, jobs = workflows.read_workflow("pages.yml")
         self.assertEqual(workflows.yaml_scalar(jobs["guard"]["keys"]["name"][0], "name"), GUARD_JOB)
         self.assertEqual(workflows.yaml_scalar(jobs[RERUN_CHECK]["keys"]["name"][0], "name"), RERUN_CHECK_NAME)
+
+    def test_the_job_comments_state_what_a_re_run_without_the_guard_job_does(self):
+        for job_id, phrases in JOB_COMMENTS.items():
+            comment = self.job_comment(job_id)
+            for phrase in phrases:
+                with self.subTest(job=job_id, phrase=phrase):
+                    self.assertIn(phrase, comment)
 
     def test_a_manual_run_is_shown_only_on_a_tag_whose_workflow_checks_the_release(self):
         # A run takes pages.yml from the tag's commit, and the pages.yml of a tag older than FIRST_CHECKED_TAG lacks

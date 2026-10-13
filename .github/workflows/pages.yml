@@ -4,15 +4,15 @@ name: Publish public gallery
 # deployed. Publishing such a Release deploys its commit, and so does a manual run on such a tag (gh workflow run
 # pages.yml --ref vX.Y.Z). Every run, whichever of the two started it, first asks for the tag's Release with one
 # read-only GitHub API request and goes on only if that Release is published and is neither a draft nor a prerelease: a
-# re-run keeps the event of the run it repeats, so only the answer says what the Release is now (a re-run that leaves
+# re-run keeps the event of the run it repeats, so only the answer says what the Release is now. A re-run that leaves
 # out the guard job, such as one of the deploy job alone, deploys nothing, because the deploy job requires the guard
-# job's record of the current attempt, and fails with the re-run check job's error that the attempt did not run the
-# guard job and deployed nothing; re-run the whole run). Pushes, pull requests and schedules never start this workflow;
-# tests.yml checks them. The guard job refuses, with an error, every other run: another event, a branch, a release
-# marked as a prerelease, a tag that is not vX.Y.Z (three numbers without leading zeros), a tag without such a Release,
-# a commit that is not on main. It gives the commit of a run that passes all of this, and the run's attempt, as its
-# outputs. The full tests.yml then runs on the release commit, the build job repeats the guards before anything else and
-# stages the site, and the deploy job, whose condition requires a release tag again and the commit the guard job
+# job's record of the current attempt. Such a re-run fails in the re-run check job, with an error that says the attempt
+# did not run the guard job and deployed nothing; re-run the whole run. Pushes, pull requests and schedules never start
+# this workflow; tests.yml checks them. The guard job refuses, with an error, every other run: another event, a branch,
+# a release marked as a prerelease, a tag that is not vX.Y.Z (three numbers without leading zeros), a tag without such a
+# Release, a commit that is not on main. It gives the commit of a run that passes all of this, and the run's attempt, as
+# its outputs. The full tests.yml then runs on the release commit, the build job repeats the guards before anything else
+# and stages the site, and the deploy job, whose condition requires a release tag again and the commit the guard job
 # approved in the same attempt, publishes it. A repository ruleset ("Release tags v*") lets only repository admins
 # create, move or delete v* tags, and the github-pages environment accepts deployments only from tags from v1.1.2 on: a
 # run takes this file from the tag's commit, so the two keep anyone but an admin from deploying through the github-pages
