@@ -11,14 +11,15 @@ import unittest
 
 # The part of GitHub's expression language that the conditions of pages.yml use: string, true, false and null literals,
 # context properties (null when absent), ! (true exactly when its operand is false, taken as && and || take it; it binds
-# tighter than == and !=), == and !=, && and || (each gives one of its operands, and takes false, 0, NaN, '' and null for
-# false, and anything else, an array or an object included, for true), parentheses, always(), cancelled(), startsWith()
-# and toJSON(). == compares two strings ignoring case, two arrays or two objects as one instance or two, and two values
-# of one other type as they are; values of two types become numbers first (null and false 0, true 1, a number itself, '' 0, another string its JSON number or NaN, an array
-# or an object NaN; NaN equals nothing), and != is true exactly when == is false. always() is true, and cancelled() is
-# true when the run was cancelled (the contexts say so under CANCELLED); in a job's condition both are status functions:
-# GitHub then evaluates the condition whatever the jobs it needs did. startsWith() casts both arguments to strings (null
-# to '') and ignores case. Any other syntax is an error.
+# tighter than == and !=), == and !=, && and || (each gives one of its operands, and takes false, 0, NaN, '' and null
+# for false, and anything else, an array or an object included, for true), parentheses, always(), cancelled(),
+# startsWith() and toJSON(). == compares two strings ignoring case, two arrays or two objects as one instance or two,
+# and two values of one other type as they are; values of two types become numbers first (null and false 0, true 1, a
+# number itself, '' 0, another string its JSON number or NaN, an array or an object NaN; NaN equals nothing), and != is
+# true exactly when == is false. always() is true, and cancelled() is true when the run was cancelled (the contexts say
+# so under CANCELLED); in a job's condition both are status functions: GitHub then evaluates the condition whatever the
+# jobs it needs did. startsWith() casts both arguments to strings (null to '') and ignores case. Any other syntax is an
+# error.
 EXPRESSION_TOKEN = re.compile(r"\s*(?:('(?:[^']|'')*')|(==|!=|&&|\|\||[(),!])|([A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*))")
 JSON_NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
 LITERALS = {"true": True, "false": False, "null": None}

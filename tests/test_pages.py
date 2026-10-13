@@ -117,8 +117,8 @@ def checking(run_attempt, result, **outputs):
 
 # Attempts of a run and whether the re-run check job's condition holds in them. It does not in an attempt that ran the
 # guard job, nor after a guard job that refused the run or was cancelled, nor in a cancelled run; it does in an attempt
-# that kept the guard job's outputs of an earlier one, and if those outputs ever lacked the attempt. GitHub's run_attempt
-# is a string; as a number it would compare the same.
+# that kept the guard job's outputs of an earlier one, and if those outputs ever lacked the attempt. GitHub's
+# run_attempt is a string; as a number it would compare the same.
 RERUN_CHECKS = {
     "the first attempt": (checking("1", "success", commit=COMMIT, attempt="1"), False),
     "a re-run of all jobs": (checking("2", "success", commit=COMMIT, attempt="2"), False),
