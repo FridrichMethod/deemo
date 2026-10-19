@@ -52,6 +52,12 @@ HEADERS = {"User-Agent": "DEEMO-Public-Art-Archive/1.0 (personal research; 4 wor
 # Transient statuses worth another attempt; 567 is BWIKI's EdgeOne rate limiting.
 RETRY_STATUSES = {429, 500, 502, 503, 504, 567}
 ATTEMPTS = 3
+# Rate limiting outlasts a server hiccup, so these statuses get RATE_LIMIT_ATTEMPTS attempts, counted apart from the
+# other errors (see retried()), and without a Retry-After the waits start at RATE_LIMIT_DELAY seconds and double up to
+# MAX_RETRY_AFTER (5, 10, 20, 30 and 30 s).
+RATE_LIMITED = {429, 567}
+RATE_LIMIT_ATTEMPTS = 6
+RATE_LIMIT_DELAY = 5
 MAX_RETRY_AFTER = 30  # seconds; a longer Retry-After is capped so a run stays bounded
 TIMEOUT = (10, 25)  # seconds to connect, and to wait for each read
 # A request follows at most this many redirects, each checked like the first URL (see download_allowed() and get()).
@@ -116,9 +122,15 @@ def now():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def http_status(error):
+    """The status of an HTTPError's response, or None for any other requests error."""
+    return error.response.status_code if isinstance(error, requests.HTTPError) else None
+
+
 def retry_delay(error, attempt):
-    """Seconds to wait before the next attempt: the server's Retry-After (seconds or an HTTP date), capped at
-    MAX_RETRY_AFTER, or else exponential backoff."""
+    """Seconds to wait before the next attempt, where attempt counts (from 0) the earlier failures of error's kind (see
+    retried()): the server's Retry-After (seconds or an HTTP date), capped at MAX_RETRY_AFTER, or else exponential
+    backoff, from RATE_LIMIT_DELAY seconds for a RATE_LIMITED status and from 1 second for any other error."""
     response = getattr(error, "response", None)
     value = response.headers.get("Retry-After") if response is not None else None
     if value:
@@ -131,21 +143,30 @@ def retry_delay(error, attempt):
                 seconds = math.nan
         if not math.isnan(seconds):
             return min(max(seconds, 0.0), MAX_RETRY_AFTER)
+    if http_status(error) in RATE_LIMITED:
+        return min(RATE_LIMIT_DELAY * 2**attempt, MAX_RETRY_AFTER)
     return min(2**attempt, 8)
 
 
 def retried(call, *args, **kwargs):
     """call(*args, **kwargs), called again after a connection error, a timeout or an HTTP error whose status is in
-    RETRY_STATUSES (ATTEMPTS calls in all, waiting retry_delay() in between); any other HTTP error is raised at once."""
-    for attempt in range(ATTEMPTS):
+    RETRY_STATUSES, waiting retry_delay() in between; any other HTTP error is raised at once. Rate limiting (a
+    RATE_LIMITED status) and the other retried errors are counted apart: the error that is the RATE_LIMIT_ATTEMPTS-th
+    of the one kind or the ATTEMPTS-th of the other is raised, so call is made at most
+    ATTEMPTS + RATE_LIMIT_ATTEMPTS - 1 times."""
+    failures = Counter()  # the failed calls so far, keyed by whether they were rate limited
+    while True:
         try:
             return call(*args, **kwargs)
         except requests.RequestException as error:
-            if isinstance(error, requests.HTTPError) and error.response.status_code not in RETRY_STATUSES:
+            status = http_status(error)
+            if status is not None and status not in RETRY_STATUSES:
                 raise
-            if attempt == ATTEMPTS - 1:
+            limited = status in RATE_LIMITED
+            if failures[limited] + 1 >= (RATE_LIMIT_ATTEMPTS if limited else ATTEMPTS):
                 raise
-            time.sleep(retry_delay(error, attempt))
+            time.sleep(retry_delay(error, failures[limited]))
+            failures[limited] += 1
 
 
 def on_host(url, host):
@@ -787,13 +808,16 @@ def download(candidate, existing):
                 record["delivery_note"] = note
             return record
     attempted_failures = []
-    # A RefusedDownload is not a network error: it fails the candidate at once, with no other URL tried.
+    # A RefusedDownload is not a network error: it fails the candidate at once, with no other URL tried. Nor is another
+    # URL tried after rate limiting: every URL of a candidate is on one host, the one that limits the rate.
     for url in download_urls(candidate):
         try:
             response, payload = get_image(source, url, {"Referer": quote(SOURCES[source]["url"], safe=":/")})
             break
         except requests.RequestException as error:
             attempted_failures.append({"url": url, "error": str(error)})
+            if http_status(error) in RATE_LIMITED:
+                raise RuntimeError(json.dumps(attempted_failures)) from None
     else:
         raise RuntimeError(json.dumps(attempted_failures))
     with Image.open(BytesIO(payload)) as image:
