@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import importlib.util
+import itertools
 import json
 import math
 import os
@@ -52,6 +53,11 @@ HEADERS = {"User-Agent": "DEEMO-Public-Art-Archive/1.0 (personal research; 4 wor
 # Transient statuses worth another attempt; 567 is BWIKI's EdgeOne rate limiting.
 RETRY_STATUSES = {429, 500, 502, 503, 504, 567}
 ATTEMPTS = 3
+# Rate limiting outlasts a server hiccup, so these statuses get RATE_LIMIT_ATTEMPTS calls, and without a Retry-After
+# the waits start at RATE_LIMIT_DELAY seconds and double up to MAX_RETRY_AFTER (5, 10, 20, 30 and 30 s).
+RATE_LIMITED = {429, 567}
+RATE_LIMIT_ATTEMPTS = 6
+RATE_LIMIT_DELAY = 5
 MAX_RETRY_AFTER = 30  # seconds; a longer Retry-After is capped so a run stays bounded
 TIMEOUT = (10, 25)  # seconds to connect, and to wait for each read
 # A request follows at most this many redirects, each checked like the first URL (see download_allowed() and get()).
@@ -118,7 +124,8 @@ def now():
 
 def retry_delay(error, attempt):
     """Seconds to wait before the next attempt: the server's Retry-After (seconds or an HTTP date), capped at
-    MAX_RETRY_AFTER, or else exponential backoff."""
+    MAX_RETRY_AFTER, or else exponential backoff, from RATE_LIMIT_DELAY seconds for a RATE_LIMITED status and from
+    1 second for any other error."""
     response = getattr(error, "response", None)
     value = response.headers.get("Retry-After") if response is not None else None
     if value:
@@ -131,19 +138,23 @@ def retry_delay(error, attempt):
                 seconds = math.nan
         if not math.isnan(seconds):
             return min(max(seconds, 0.0), MAX_RETRY_AFTER)
+    if getattr(response, "status_code", None) in RATE_LIMITED:
+        return min(RATE_LIMIT_DELAY * 2**attempt, MAX_RETRY_AFTER)
     return min(2**attempt, 8)
 
 
 def retried(call, *args, **kwargs):
     """call(*args, **kwargs), called again after a connection error, a timeout or an HTTP error whose status is in
-    RETRY_STATUSES (ATTEMPTS calls in all, waiting retry_delay() in between); any other HTTP error is raised at once."""
-    for attempt in range(ATTEMPTS):
+    RETRY_STATUSES, waiting retry_delay() in between: ATTEMPTS calls in all, or RATE_LIMIT_ATTEMPTS when the latest
+    error is a RATE_LIMITED status. Any other HTTP error is raised at once."""
+    for attempt in itertools.count():
         try:
             return call(*args, **kwargs)
         except requests.RequestException as error:
-            if isinstance(error, requests.HTTPError) and error.response.status_code not in RETRY_STATUSES:
+            status = error.response.status_code if isinstance(error, requests.HTTPError) else None
+            if status is not None and status not in RETRY_STATUSES:
                 raise
-            if attempt == ATTEMPTS - 1:
+            if attempt + 1 >= (RATE_LIMIT_ATTEMPTS if status in RATE_LIMITED else ATTEMPTS):
                 raise
             time.sleep(retry_delay(error, attempt))
 

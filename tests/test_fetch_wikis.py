@@ -836,10 +836,23 @@ class GetTests(FetcherRun):
 class RetryTests(FetcherRun):
     URL = "https://wiki.biligame.com/deemo/api.php"
 
+    def restart(self, route):
+        self.web.calls.clear()
+        self.sleeps.clear()
+        self.web.routes[self.URL] = route
+
     def test_bwiki_edgeone_567_is_retried(self):
         self.web.routes[self.URL] = [(567, b"", {}), (200, b"{}", {})]
         self.assertEqual(fetch.get(self.URL).content, b"{}")
-        self.assertEqual((len(self.web.calls), self.sleeps), (2, [1]))
+        self.assertEqual((len(self.web.calls), self.sleeps), (2, [5]))
+
+    def test_rate_limiting_is_waited_out_longer_than_a_server_error(self):
+        # The source check of 2026-10-19 stopped at a third 567 in a row from BWIKI, 1 s and 2 s after the first.
+        for status in (429, 567):
+            with self.subTest(status=status):
+                self.restart([(status, b"", {})] * 5 + [(200, b"{}", {})])
+                self.assertEqual(fetch.get(self.URL).content, b"{}")
+                self.assertEqual((len(self.web.calls), self.sleeps), (6, [5, 10, 20, 30, 30]))
 
     def test_retry_after_is_honoured_up_to_a_cap(self):
         self.web.routes[self.URL] = [
@@ -857,16 +870,30 @@ class RetryTests(FetcherRun):
         self.assertTrue(5 <= self.sleeps[0] <= 20, self.sleeps)
 
     def test_attempts_are_bounded_and_client_errors_fail_at_once(self):
-        self.web.routes[self.URL] = (567, b"", {})
+        for route, error, sleeps in (
+            ((503, b"", {}), requests.HTTPError, [1, 2]),
+            (None, requests.ConnectionError, [1, 2]),  # FakeWeb answers a URL without a route as if offline
+            ((429, b"", {}), requests.HTTPError, [5, 10, 20, 30, 30]),
+            ((567, b"", {}), requests.HTTPError, [5, 10, 20, 30, 30]),
+            ((404, b"", {}), requests.HTTPError, []),
+        ):
+            with self.subTest(route=route):
+                self.restart(route)
+                with self.assertRaises(error):
+                    fetch.get(self.URL)
+                self.assertEqual((len(self.web.calls), self.sleeps), (len(sleeps) + 1, sleeps))
+
+    def test_the_latest_error_decides_how_many_attempts_a_request_gets(self):
+        """Attempts count across statuses: a server error after three rate-limited ones ends the request (a fourth
+        attempt is past the three a server error gets), and rate limiting after two server errors still gets six."""
+        self.web.limit = 10
+        self.restart([(567, b"", {})] * 3 + [(503, b"", {})])
         with self.assertRaises(requests.HTTPError):
             fetch.get(self.URL)
-        self.assertEqual((len(self.web.calls), len(self.sleeps)), (3, 2))
-        self.web.calls.clear()
-        self.sleeps.clear()
-        self.web.routes[self.URL] = (404, b"", {})
-        with self.assertRaises(requests.HTTPError):
-            fetch.get(self.URL)
-        self.assertEqual((len(self.web.calls), self.sleeps), (1, []))
+        self.assertEqual((len(self.web.calls), self.sleeps), (4, [5, 10, 20]))
+        self.restart([(503, b"", {})] * 2 + [(567, b"", {})] * 3 + [(200, b"{}", {})])
+        self.assertEqual(fetch.get(self.URL).content, b"{}")
+        self.assertEqual((len(self.web.calls), self.sleeps), (6, [1, 2, 20, 30, 30]))
 
 
 class DownloadIntegrityTests(FetcherRun):
@@ -1891,6 +1918,50 @@ class DocumentationTests(unittest.TestCase):
                 (
                     f"在首次请求之后最多再发出 {limit} 次续查请求，即共 {limit + 1} 次请求",
                     "页面内容与 `imageinfo` 分别按每批 30 个与 50 个标题请求，每一批各算作一个列表",
+                ),
+            ),
+        ):
+            text = (REPO / document).read_text(encoding="utf-8")
+            for phrase in phrases:
+                with self.subTest(document=document, phrase=phrase):
+                    self.assertTrue(phrase in text, f"{document} does not say: {phrase}")
+
+    def test_the_retries_are_documented_as_they_are_made(self):
+        """docs/sources-wikis.md and its Chinese mirror state which errors are retried, how many attempts each gets
+        and the waits retry_delay() puts between them when the server sends no Retry-After."""
+
+        def waits(status, attempts):
+            response = requests.Response()
+            response.status_code = status
+            error = requests.HTTPError(response=response)
+            return [f"{fetch.retry_delay(error, attempt):g}" for attempt in range(attempts - 1)]
+
+        def listed(items):
+            return ", ".join(items[:-1]) + " and " + items[-1]
+
+        server = [str(status) for status in sorted(fetch.RETRY_STATUSES - fetch.RATE_LIMITED)]
+        self.assertEqual(sorted(fetch.RATE_LIMITED), [429, 567])
+        server_waits, limit_waits = waits(503, fetch.ATTEMPTS), waits(567, fetch.RATE_LIMIT_ATTEMPTS)
+        cap = fetch.MAX_RETRY_AFTER
+        for document, phrases in (
+            (
+                "docs/sources-wikis.md",
+                (
+                    f"at most {fetch.ATTEMPTS} attempts on connection errors, timeouts and HTTP {listed(server)}, "
+                    f"waiting {listed(server_waits)} s between them",
+                    f"at most {fetch.RATE_LIMIT_ATTEMPTS} attempts on the rate-limit statuses HTTP 429 and BWIKI's "
+                    f"EdgeOne 567, waiting {listed(limit_waits)} s",
+                    f"the server's `Retry-After` replaces any of these waits, capped at {cap} s",
+                ),
+            ),
+            (
+                "docs/sources-wikis.zh-CN.md",
+                (
+                    f"连接错误、超时与 HTTP {'、'.join(server)} 最多尝试 {fetch.ATTEMPTS} 次，"
+                    f"间隔 {'、'.join(server_waits)} 秒",
+                    f"限流状态 HTTP 429 与 BWIKI 的 EdgeOne 567 最多尝试 {fetch.RATE_LIMIT_ATTEMPTS} 次，"
+                    f"间隔 {'、'.join(limit_waits)} 秒",
+                    f"服务器给出 `Retry-After` 时改按它等待，上限 {cap} 秒",
                 ),
             ),
         ):
