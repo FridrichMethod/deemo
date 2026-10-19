@@ -836,6 +836,10 @@ class GetTests(FetcherRun):
 class RetryTests(FetcherRun):
     URL = "https://wiki.biligame.com/deemo/api.php"
 
+    def setUp(self):
+        super().setUp()
+        self.web.limit = 20  # retried() loops until it returns or raises; a broken bound fails here instead of hanging
+
     def restart(self, route):
         self.web.calls.clear()
         self.sleeps.clear()
@@ -883,17 +887,26 @@ class RetryTests(FetcherRun):
                     fetch.get(self.URL)
                 self.assertEqual((len(self.web.calls), self.sleeps), (len(sleeps) + 1, sleeps))
 
-    def test_the_latest_error_decides_how_many_attempts_a_request_gets(self):
-        """Attempts count across statuses: a server error after three rate-limited ones ends the request (a fourth
-        attempt is past the three a server error gets), and rate limiting after two server errors still gets six."""
-        self.web.limit = 10
-        self.restart([(567, b"", {})] * 3 + [(503, b"", {})])
-        with self.assertRaises(requests.HTTPError):
-            fetch.get(self.URL)
-        self.assertEqual((len(self.web.calls), self.sleeps), (4, [5, 10, 20]))
-        self.restart([(503, b"", {})] * 2 + [(567, b"", {})] * 3 + [(200, b"{}", {})])
-        self.assertEqual(fetch.get(self.URL).content, b"{}")
-        self.assertEqual((len(self.web.calls), self.sleeps), (6, [1, 2, 20, 30, 30]))
+    def test_rate_limiting_and_other_errors_are_counted_apart(self):
+        """Each kind of failure has its own attempts and its own waits, whatever came before it, so a request is made
+        at most ATTEMPTS + RATE_LIMIT_ATTEMPTS - 1 times."""
+        limited, server = (567, b"", {}), (503, b"", {})
+        for route, sleeps in (
+            ([limited, limited, server, (200, b"{}", {})], [5, 10, 1]),
+            ([server, server, limited, limited, limited, (200, b"{}", {})], [1, 2, 5, 10, 20]),
+            ([limited] * 3 + [server], [5, 10, 20, 1, 2]),  # the third 503 in a row ends it
+            ([server] * 2 + [limited] * 5 + [server], [1, 2, 5, 10, 20, 30, 30]),
+            ([server] * 2 + [limited], [1, 2, 5, 10, 20, 30, 30]),  # the sixth 567 ends it
+        ):
+            with self.subTest(route=route):
+                self.restart(list(route))  # FakeWeb pops the responses it serves; the subtest keeps the whole route
+                if route[-1][0] == 200:
+                    self.assertEqual(fetch.get(self.URL).content, b"{}")
+                else:
+                    with self.assertRaises(requests.HTTPError):
+                        fetch.get(self.URL)
+                self.assertEqual((len(self.web.calls), self.sleeps), (len(sleeps) + 1, sleeps))
+        self.assertEqual(len(self.web.calls), fetch.ATTEMPTS + fetch.RATE_LIMIT_ATTEMPTS - 1)
 
 
 class DownloadIntegrityTests(FetcherRun):
@@ -1218,6 +1231,25 @@ class DownloadGuardTests(FetcherRun):
                 self.assertEqual(set(self.web.calls), {first} if moved is None else set())
                 self.assertEqual(self.sleeps, [])
                 self.assertTrue(failure["error"].startswith("Refusing"), failure["error"])
+
+    def test_rate_limiting_fails_the_candidate_without_trying_its_other_urls(self):
+        # Every URL of a candidate is on the host that limits the rate. A server error moves on to the next URL.
+        payload = png("blue")
+        candidate, (first, second, _) = self.fandom(payload)
+        manifest = (self.root / MANIFEST).read_bytes()
+        for status in (429, 567, 503):
+            with self.subTest(status=status):
+                (self.root / MANIFEST).write_bytes(manifest)  # no earlier failure, so the URLs keep their order
+                shutil.rmtree(self.root / "assets", ignore_errors=True)
+                self.serve({first: (status, b"", {}), second: payload})
+                self.sleeps.clear()
+                if status == 503:
+                    self.assertEqual(len(self.resume(candidate)["assets"]), 1)
+                    self.assertEqual(self.web.calls, [first] * fetch.ATTEMPTS + [second])
+                else:
+                    self.refused(candidate, reason=f"{status} Error")
+                    self.assertEqual(self.web.calls, [first] * fetch.RATE_LIMIT_ATTEMPTS)
+                    self.assertEqual(self.sleeps, [5, 10, 20, 30, 30])
 
     def test_downloads_and_the_source_check_share_one_list_of_image_paths(self):
         self.assertEqual(Path(fetch.check_sources.__file__), REPO / "scripts/check_sources.py")
@@ -1888,6 +1920,14 @@ class ContinuationLimitTests(FetcherRun):
 
 
 class DocumentationTests(unittest.TestCase):
+    def assertDocumented(self, documents):
+        """Each document (a path under the repository) says each of its phrases word for word."""
+        for document, phrases in documents.items():
+            text = (REPO / document).read_text(encoding="utf-8")
+            for phrase in phrases:
+                with self.subTest(document=document, phrase=phrase):
+                    self.assertTrue(phrase in text, f"{document} does not say: {phrase}")
+
     def test_the_continuation_limit_is_documented_as_it_is_applied(self):
         """docs/sources-wikis.md and its Chinese mirror state the limit continued() applies: MAX_CONTINUATIONS
         continuation requests after a list's first request, one more in all, where pages() and imageinfo() continue
@@ -1904,31 +1944,24 @@ class DocumentationTests(unittest.TestCase):
             fetch.imageinfo("fandom", titles)
         self.assertEqual(batches, {"pages": [30, 30, 30, 11], "imageinfo": [50, 50, 1]})
         limit = fetch.MAX_CONTINUATIONS
-        for document, phrases in (
-            (
-                "docs/sources-wikis.md",
-                (
+        self.assertDocumented(
+            {
+                "docs/sources-wikis.md": (
                     f"for at most {limit:,} continuation requests after its first request, {limit + 1:,} requests in all",
                     "page contents and `imageinfo` are requested for 30 and 50 titles at a time, and each such batch "
                     "counts as one list",
                 ),
-            ),
-            (
-                "docs/sources-wikis.zh-CN.md",
-                (
+                "docs/sources-wikis.zh-CN.md": (
                     f"在首次请求之后最多再发出 {limit} 次续查请求，即共 {limit + 1} 次请求",
                     "页面内容与 `imageinfo` 分别按每批 30 个与 50 个标题请求，每一批各算作一个列表",
                 ),
-            ),
-        ):
-            text = (REPO / document).read_text(encoding="utf-8")
-            for phrase in phrases:
-                with self.subTest(document=document, phrase=phrase):
-                    self.assertTrue(phrase in text, f"{document} does not say: {phrase}")
+            }
+        )
 
     def test_the_retries_are_documented_as_they_are_made(self):
-        """docs/sources-wikis.md and its Chinese mirror state which errors are retried, how many attempts each gets
-        and the waits retry_delay() puts between them when the server sends no Retry-After."""
+        """docs/sources-wikis.md and its Chinese mirror state which errors are retried, how many attempts each kind
+        gets, the waits retry_delay() puts between them when the server sends no Retry-After, and that download() tries
+        no other URL after rate limiting."""
 
         def waits(status, attempts):
             response = requests.Response()
@@ -1937,38 +1970,32 @@ class DocumentationTests(unittest.TestCase):
             return [f"{fetch.retry_delay(error, attempt):g}" for attempt in range(attempts - 1)]
 
         def listed(items):
-            return ", ".join(items[:-1]) + " and " + items[-1]
+            return items[-1] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
 
         server = [str(status) for status in sorted(fetch.RETRY_STATUSES - fetch.RATE_LIMITED)]
         self.assertEqual(sorted(fetch.RATE_LIMITED), [429, 567])
         server_waits, limit_waits = waits(503, fetch.ATTEMPTS), waits(567, fetch.RATE_LIMIT_ATTEMPTS)
         cap = fetch.MAX_RETRY_AFTER
-        for document, phrases in (
-            (
-                "docs/sources-wikis.md",
-                (
+        self.assertDocumented(
+            {
+                "docs/sources-wikis.md": (
                     f"at most {fetch.ATTEMPTS} attempts on connection errors, timeouts and HTTP {listed(server)}, "
                     f"waiting {listed(server_waits)} s between them",
                     f"at most {fetch.RATE_LIMIT_ATTEMPTS} attempts on the rate-limit statuses HTTP 429 and BWIKI's "
-                    f"EdgeOne 567, waiting {listed(limit_waits)} s",
+                    f"EdgeOne 567, waiting {listed(limit_waits)} s, counted apart from the other errors",
                     f"the server's `Retry-After` replaces any of these waits, capped at {cap} s",
+                    "Rate limiting (HTTP 429 or 567) instead fails the file at once, with no other URL tried",
                 ),
-            ),
-            (
-                "docs/sources-wikis.zh-CN.md",
-                (
+                "docs/sources-wikis.zh-CN.md": (
                     f"连接错误、超时与 HTTP {'、'.join(server)} 最多尝试 {fetch.ATTEMPTS} 次，"
                     f"间隔 {'、'.join(server_waits)} 秒",
                     f"限流状态 HTTP 429 与 BWIKI 的 EdgeOne 567 最多尝试 {fetch.RATE_LIMIT_ATTEMPTS} 次，"
-                    f"间隔 {'、'.join(limit_waits)} 秒",
+                    f"间隔 {'、'.join(limit_waits)} 秒，与其他错误分开计数",
                     f"服务器给出 `Retry-After` 时改按它等待，上限 {cap} 秒",
+                    "遇到限流（HTTP 429 或 567）则立即判该文件失败，不再尝试其他 URL",
                 ),
-            ),
-        ):
-            text = (REPO / document).read_text(encoding="utf-8")
-            for phrase in phrases:
-                with self.subTest(document=document, phrase=phrase):
-                    self.assertTrue(phrase in text, f"{document} does not say: {phrase}")
+            }
+        )
 
 
 class EncodingTests(unittest.TestCase):
